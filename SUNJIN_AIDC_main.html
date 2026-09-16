@@ -3084,6 +3084,62 @@
     }
   }
 
+
+  /* ===== MAIN HERO / TRANSPARENT HEADER v7 ===== */
+
+  /* Public main: let the hero image continue behind the fixed header. */
+  body:not(.workspace-view) #main .hero {
+    margin-top:0 !important;
+    height:100vh !important;
+    min-height:100vh !important;
+  }
+
+  /* Public main header: no white rectangle, border or shadow. */
+  body:not(.workspace-view) .topbar,
+  body:not(.workspace-view) .topbar.is-scrolled {
+    background:transparent !important;
+    border-bottom-color:transparent !important;
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  /* Only the right-side controls are white on the main hero. */
+  body:not(.workspace-view) .top-actions .workspace-action,
+  body:not(.workspace-view) .top-actions .login {
+    color:#fff !important;
+  }
+
+  body:not(.workspace-view) .top-actions .search-open svg {
+    stroke:#fff !important;
+  }
+
+  /* Keep the expanded search usable over the hero image. */
+  body:not(.workspace-view) .top-search.is-open input {
+    color:#fff !important;
+    border-bottom-color:rgba(255,255,255,.8) !important;
+  }
+
+  body:not(.workspace-view) .top-search.is-open input::placeholder {
+    color:rgba(255,255,255,.7) !important;
+  }
+
+  body:not(.workspace-view) .top-search.is-open .search-close {
+    color:#fff !important;
+  }
+
+  @media (max-width:760px) {
+    body:not(.workspace-view) #main .hero {
+      margin-top:0 !important;
+      height:100vh !important;
+      min-height:100vh !important;
+    }
+
+    body:not(.workspace-view) .top-search.is-open {
+      background:transparent !important;
+    }
+  }
+
 </style>
 </head>
 <body>
