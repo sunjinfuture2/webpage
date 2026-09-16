@@ -1843,6 +1843,244 @@
     }
   }
 
+
+  /* ===== LOGIN UI v6 ===== */
+  .mobile-menu-head-actions {
+    display:flex;
+    align-items:center;
+    gap:13px;
+  }
+
+  .mobile-login-top {
+    display:none;
+    border:0;
+    background:transparent;
+    color:var(--orange);
+    font-size:13px;
+    font-weight:600;
+    padding:5px 0;
+    cursor:pointer;
+  }
+
+  .login-modal-backdrop {
+    position:fixed;
+    inset:0;
+    z-index:180;
+    background:rgba(0,0,0,.34);
+    opacity:0;
+    transition:opacity .22s ease;
+  }
+
+  .login-modal-backdrop.is-open {
+    opacity:1;
+  }
+
+  .login-modal {
+    position:fixed;
+    z-index:181;
+    top:50%;
+    left:50%;
+    width:min(460px, calc(100vw - 48px));
+    transform:translate(-50%, -46%);
+    background:#fff;
+    border:1px solid #e4e4e4;
+    box-shadow:0 24px 70px rgba(0,0,0,.14);
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .22s ease, transform .22s ease, visibility .22s ease;
+  }
+
+  .login-modal.is-open {
+    opacity:1;
+    visibility:visible;
+    transform:translate(-50%, -50%);
+  }
+
+  .login-modal-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:30px 32px 22px;
+    border-bottom:1px solid #ededed;
+  }
+
+  .login-modal-kicker {
+    display:block;
+    margin-bottom:7px;
+    color:var(--orange);
+    font-size:10px;
+    letter-spacing:.15em;
+  }
+
+  .login-modal-head h2 {
+    margin:0;
+    font-size:32px;
+    line-height:1;
+    letter-spacing:-.03em;
+    font-weight:600;
+  }
+
+  .login-modal-close {
+    border:0;
+    background:transparent;
+    color:#777;
+    font-size:28px;
+    line-height:1;
+    cursor:pointer;
+    padding:0;
+  }
+
+  .login-modal-body {
+    padding:28px 32px 32px;
+  }
+
+  .login-modal-desc {
+    margin:0 0 24px;
+    color:#777;
+    font-size:13px;
+  }
+
+  .login-field {
+    display:block;
+    margin-bottom:18px;
+  }
+
+  .login-field > span {
+    display:block;
+    margin-bottom:8px;
+    color:#666;
+    font-size:11px;
+    letter-spacing:.04em;
+  }
+
+  .login-field input {
+    width:100%;
+    height:48px;
+    border:0;
+    border-bottom:1px solid #cfcfcf;
+    outline:0;
+    background:#fafafa;
+    padding:0 14px;
+    color:#111;
+    font-size:14px;
+    transition:border-color .18s ease, background .18s ease;
+  }
+
+  .login-field input:focus {
+    border-bottom-color:var(--orange);
+    background:#fff;
+  }
+
+  .login-options {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin:4px 0 24px;
+    color:#777;
+    font-size:11px;
+  }
+
+  .login-options label {
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+
+  .login-help {
+    border:0;
+    background:transparent;
+    color:#777;
+    padding:0;
+    cursor:pointer;
+  }
+
+  .login-help:hover {
+    color:var(--orange);
+  }
+
+  .login-submit {
+    width:100%;
+    height:50px;
+    border:0;
+    background:#111;
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .18s ease;
+  }
+
+  .login-submit:hover,
+  .login-submit:focus-visible {
+    background:var(--orange);
+    outline:none;
+  }
+
+  .login-note {
+    margin:15px 0 0;
+    color:#aaa;
+    font-size:10px;
+    text-align:center;
+  }
+
+  body.login-modal-open {
+    overflow:hidden;
+  }
+
+  @media (max-width:760px) {
+    .mobile-login-top {
+      display:block;
+    }
+
+    .mobile-menu-head > #mobileMenuClose {
+      display:none;
+    }
+
+    .login-modal {
+      top:auto;
+      bottom:0;
+      left:0;
+      width:100%;
+      max-width:none;
+      border-left:0;
+      border-right:0;
+      border-bottom:0;
+      border-radius:22px 22px 0 0;
+      transform:translateY(102%);
+      box-shadow:0 -18px 55px rgba(0,0,0,.14);
+    }
+
+    .login-modal.is-open {
+      transform:translateY(0);
+    }
+
+    .login-modal-head {
+      padding:22px 20px 18px;
+    }
+
+    .login-modal-head h2 {
+      font-size:27px;
+    }
+
+    .login-modal-body {
+      padding:22px 20px calc(26px + env(safe-area-inset-bottom));
+    }
+
+    .login-modal-desc {
+      margin-bottom:20px;
+    }
+
+    .login-field input {
+      height:52px;
+      font-size:16px;
+    }
+
+    .login-submit {
+      height:54px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1886,15 +2124,12 @@
   <aside class="mobile-menu-drawer" id="mobileMenuDrawer" aria-hidden="true">
     <div class="mobile-menu-head">
       <span>MENU</span>
-      <button type="button" id="mobileMenuClose" aria-label="메뉴 닫기">×</button>
+      <div class="mobile-menu-head-actions">
+        <button type="button" class="mobile-login-top" id="mobileLoginTop">Login</button>
+        <button type="button" id="mobileMenuClose" aria-label="메뉴 닫기">×</button>
+      </div>
     </div>
-
-    
-    <button type="button" class="mobile-login-button mobile-view-link" data-view="LOGIN">
-      <span>Login</span><small>사내 계정 로그인</small>
-    </button>
-
-    <nav class="mobile-menu-nav" aria-label="Mobile">
+<nav class="mobile-menu-nav" aria-label="Mobile">
       <button type="button" class="mobile-view-link" data-view="ABOUT">
         <span>About</span><small>플랫폼 소개</small>
       </button>
@@ -2108,13 +2343,7 @@
         </article>
       </div>
     </section>
-
-<section id="login" class="login-placeholder">
-      <span>Login area</span>
-      <span>사내 계정 연동 예정</span>
-    </section>
-
-    <footer class="site-footer">
+<footer class="site-footer">
       <div>
         <strong>SUNJIN ENGINEERING</strong>
         <span>AI Data Center Research Platform</span>
@@ -2129,6 +2358,45 @@
       </div>
     </footer>
 </main>
+
+  <div class="login-modal-backdrop" id="loginModalBackdrop" hidden></div>
+
+  <section class="login-modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle" aria-hidden="true">
+    <div class="login-modal-head">
+      <div>
+        <span class="login-modal-kicker">SUNJIN AI</span>
+        <h2 id="loginModalTitle">Login</h2>
+      </div>
+      <button type="button" class="login-modal-close" id="loginModalClose" aria-label="로그인 창 닫기">×</button>
+    </div>
+
+    <div class="login-modal-body">
+      <p class="login-modal-desc">사내 계정으로 로그인합니다.</p>
+
+      <label class="login-field">
+        <span>ID</span>
+        <input type="text" id="loginUserId" placeholder="사내 계정 ID" autocomplete="username">
+      </label>
+
+      <label class="login-field">
+        <span>Password</span>
+        <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password">
+      </label>
+
+      <div class="login-options">
+        <label>
+          <input type="checkbox" id="rememberLogin">
+          <span>로그인 상태 유지</span>
+        </label>
+        <button type="button" class="login-help" id="loginHelp">로그인 문의</button>
+      </div>
+
+      <button type="button" class="login-submit" id="loginSubmit">Login</button>
+
+      <p class="login-note">현재 로그인 연동은 준비 중입니다.</p>
+    </div>
+  </section>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -2539,6 +2807,81 @@ const toast = document.getElementById('toast');
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && mobileMenuDrawer?.classList.contains('is-open')) {
       closeMobileMenu();
+    }
+  });
+
+
+
+  /* Login modal */
+  const loginModal = document.getElementById('loginModal');
+  const loginModalBackdrop = document.getElementById('loginModalBackdrop');
+  const loginModalClose = document.getElementById('loginModalClose');
+  const mobileLoginTop = document.getElementById('mobileLoginTop');
+  const loginSubmit = document.getElementById('loginSubmit');
+  const loginHelp = document.getElementById('loginHelp');
+
+  function openLoginModal() {
+    if (!loginModal || !loginModalBackdrop) return;
+
+    /* On mobile, close drawer first */
+    if (typeof closeMobileMenu === 'function') closeMobileMenu();
+
+    loginModalBackdrop.hidden = false;
+    requestAnimationFrame(() => {
+      loginModal.classList.add('is-open');
+      loginModalBackdrop.classList.add('is-open');
+    });
+    loginModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('login-modal-open');
+
+    setTimeout(() => {
+      document.getElementById('loginUserId')?.focus();
+    }, 240);
+  }
+
+  function closeLoginModal() {
+    if (!loginModal || !loginModalBackdrop) return;
+
+    loginModal.classList.remove('is-open');
+    loginModalBackdrop.classList.remove('is-open');
+    loginModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('login-modal-open');
+
+    setTimeout(() => {
+      if (!loginModalBackdrop.classList.contains('is-open')) {
+        loginModalBackdrop.hidden = true;
+      }
+    }, 220);
+  }
+
+  /* Existing desktop Login link/button */
+  document.querySelectorAll('.login').forEach((loginButton) => {
+    loginButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openLoginModal();
+    }, true);
+  });
+
+  mobileLoginTop?.addEventListener('click', openLoginModal);
+  loginModalClose?.addEventListener('click', closeLoginModal);
+  loginModalBackdrop?.addEventListener('click', closeLoginModal);
+
+  loginSubmit?.addEventListener('click', () => {
+    if (typeof showPlannedToast === 'function') {
+      showPlannedToast('사내 계정 로그인');
+    }
+  });
+
+  loginHelp?.addEventListener('click', () => {
+    if (typeof showPlannedToast === 'function') {
+      showPlannedToast('로그인 문의');
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && loginModal?.classList.contains('is-open')) {
+      closeLoginModal();
     }
   });
 
