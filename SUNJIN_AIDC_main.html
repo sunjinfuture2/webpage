@@ -3906,6 +3906,7 @@ const toast = document.getElementById('toast');
 
   /* ===== WORKSPACE AUTHENTICATION PROTOTYPE ===== */
   let workspaceAuthenticated = false;
+  let workspaceLoginRequested = false;
 
   const workspaceDashboard = document.getElementById('workspaceDashboard');
   const workspaceMain = document.getElementById('main');
@@ -3967,6 +3968,7 @@ const toast = document.getElementById('toast');
     if (workspaceAuthenticated) {
       showWorkspaceDashboard();
     } else {
+      workspaceLoginRequested = true;
       openLoginModal();
     }
   }
@@ -3994,9 +3996,15 @@ const toast = document.getElementById('toast');
     closeLoginModal();
     updateWorkspaceAuthUI();
 
-    setTimeout(() => {
-      showWorkspaceDashboard();
-    }, 120);
+    if (workspaceLoginRequested) {
+      workspaceLoginRequested = false;
+      setTimeout(() => {
+        showWorkspaceDashboard();
+      }, 120);
+    } else {
+      /* Login button on the public main: stay on the main page after login. */
+      showPublicMain();
+    }
   }
 
   function logoutWorkspace() {
@@ -4017,6 +4025,8 @@ const toast = document.getElementById('toast');
     if (workspaceAuthenticated) {
       logoutWorkspace();
     } else {
+      /* Login clicked from the main page should not auto-open Workspace. */
+      workspaceLoginRequested = false;
       openLoginModal();
     }
   }
