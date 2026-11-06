@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.tsbuildinfo
+test-results/
+
+# Local source documents, fixtures, validation evidence, and private planning notes.
+public/data/
+tests/private-fixtures/
+tests/engine.test.ts
+tests/files.test.ts
+tests/browser_*.py
+docs/screenshots/
+docs/feature-traceability.csv
+docs/implementation-plan.md
+docs/validation.md
+docs/unit-results.json
+docs/validation-results.json
