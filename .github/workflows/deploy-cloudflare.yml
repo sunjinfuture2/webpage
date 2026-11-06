@@ -1,0 +1,59 @@
+name: Deploy to Cloudflare
+
+# aidc-workspace-new 변경이 main 또는 claude/** 브랜치에 푸시될 때마다
+# sunjin-aidc-workspace-demo Worker에 자동 배포합니다.
+# 필요한 설정: GitHub 저장소 시크릿 CLOUDFLARE_API_TOKEN (README.txt 참고)
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'aidc-workspace-new/**'
+      - '.github/workflows/deploy-cloudflare.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare-deploy-sunjin-aidc-workspace-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy sunjin-aidc-workspace-demo
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aidc-workspace-new
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: aidc-workspace-new/package-lock.json
+
+      - name: Install pinned Wrangler
+        run: npm ci --no-audit --no-fund
+
+      - name: Check Cloudflare API token
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN 시크릿이 없습니다. GitHub 저장소 Settings > Secrets and variables > Actions 에 추가하세요. (aidc-workspace-new/README.txt 참고)"
+            exit 1
+          fi
+
+      - name: Build and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run deploy

@@ -33,3 +33,16 @@ Claude에게 전달할 요청
 Cloudflare 실제 재배포는 수행하지 않았습니다.
 
 Cloudflare 자동 배포 연결
+GitHub 저장소(sunjinfuture2/webpage)의 GitHub Actions 워크플로 .github/workflows/deploy-cloudflare.yml 이 배포를 담당합니다.
+main 브랜치 또는 claude/ 로 시작하는 브랜치에 aidc-workspace-new 변경이 푸시되면 자동으로 npm ci → npm run deploy 를 실행하여
+sunjin-aidc-workspace-demo Worker에 배포합니다. GitHub 저장소의 Actions 탭에서 수동 실행(Run workflow)도 가능합니다.
+package-lock.json 은 CI가 동일한 Wrangler 버전을 설치하기 위한 파일이므로 함께 커밋합니다.
+
+최초 1회 설정 (GitHub 저장소 관리자가 수행)
+1. Cloudflare 대시보드 → 내 프로필 → API 토큰 → 토큰 생성 → "Cloudflare Workers 편집" 템플릿 선택
+   (wrangler.jsonc의 account_id 계정을 선택, Workers Scripts 편집 권한 포함)
+2. GitHub 저장소 → Settings → Secrets and variables → Actions → New repository secret
+   이름: CLOUDFLARE_API_TOKEN / 값: 1번에서 만든 토큰
+3. 이후 푸시마다 Actions 탭에서 배포 결과를 확인합니다. 시크릿이 없으면 워크플로가 안내 메시지와 함께 실패합니다.
+
+토큰은 저장소 파일이나 채팅에 적지 마세요. 자동 배포는 기존 Worker 이름, WORKSPACE 바인딩, Durable Object 데이터를 그대로 유지합니다.
