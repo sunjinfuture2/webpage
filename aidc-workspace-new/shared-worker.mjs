@@ -58,7 +58,7 @@ export class Workspace {
  if(JSON.stringify(value??null)!==JSON.stringify(c.before??null)&&JSON.stringify(value??null)!==JSON.stringify(c.after??null)){conflict=c.id;break;}}
  if(conflict)return;
  for(const c of changes){let v=this.get(c.id);if(c.field){v=v||{};v[c.field]=c.after;}else v=c.after;
- if(v&&(c.id.startsWith('item:')||c.id.startsWith('project:'))){v.authorId=this.get(c.id)?.authorId||session.employee;v.authorName=this.users()[v.authorId]||this.get(c.id)?.authorName||v.authorId;v.updatedBy=session.employee;v.updatedAt=new Date().toISOString();delete v.editing;delete v._editOriginal;}
+ if(v&&(c.id.startsWith('item:')||c.id.startsWith('project:'))){v.authorId=this.get(c.id)?.authorId||session.employee;v.authorName=this.users()[v.authorId]||this.get(c.id)?.authorName||v.authorId;v.updatedBy=session.employee;v.updatedAt=new Date().toISOString();delete v.editing;delete v._editOriginal;delete v.snap;delete v.dirty;delete v.sessionNew;}
  if(v===null)this.sql.exec('DELETE FROM records WHERE id=?',c.id);else this.put(c.id,v);applied[c.id]=v;}
  this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)',session.employee,JSON.stringify(changes),new Date().toISOString());
  });

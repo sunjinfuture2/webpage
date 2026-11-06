@@ -1,6 +1,9 @@
 let sharedUser='',sharedBase={},sharedBusy=false,sharedReady=false,sharedSocket,sharedBlocked=false;
 let sharedName='',sharedUsers={},sharedLocks={},sharedPendingRedraw=false,sharedToken='',sharedRestoreRoute=true;
 const ownedLocks=new Set();
+// Client-only fields of an item: never sent to the server, never compared for changes.
+const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew'];
+const stripTransient=v=>{for(const k of TRANSIENT)delete v[k];return v;};
 // Keep the notice at the document top, inside the scrolling content area.
 $('#content').prepend($('#notice'));
 $('#notice').style.top='8.3px';
@@ -12,7 +15,7 @@ const userName=id=>sharedUsers[id]||PEOPLE[id]||id||'';
 const copy=v=>JSON.parse(JSON.stringify(v));
 function sharedRecords(){
  const out={};
- ITEMS.forEach(v=>{const id='item:'+v.id;if(v.editing||v.status==='new'||v.status==='draft'){if(sharedBase[id])out[id]=copy(sharedBase[id]);return;}const r=copy(v);delete r.editing;delete r._editOriginal;out[id]=r;});
+ ITEMS.forEach(v=>{const id='item:'+v.id;if(v.editing||v.status==='new'||v.status==='draft'){if(sharedBase[id])out[id]=copy(sharedBase[id]);return;}const r=stripTransient(copy(v));out[id]=r;});
  Object.entries(PROJECTS).forEach(([k,v])=>out['project:'+k]=copy(v));
  PARTNERS.forEach(v=>out['partner:'+v.id]=copy(v));
  Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':copy(PHEAD),'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS)});
@@ -58,13 +61,10 @@ async function sharedFlush(wait=false){if(wait===true&&sharedBusy){while(sharedB
  }catch(e){if(!sharedBlocked)sharedStatus('저장하지 못했습니다 · 연결 확인 후 다시 저장해주세요');return false;}finally{sharedBusy=false;sharedRedraw();}
 }
 async function sharedSaveProject(button){
- const id=S.proj,root=$('#proj-pw'),title=$('.phead h1',root)?.innerText.trim();if(!title){toast('프로젝트명을 입력해주세요.');return;}
- const details=copy(PHEAD[id]);for(const node of $$('[data-project-field]',root)){const key=node.dataset.projectField;if(key)details[key]=node.innerText.replace(/\r\n/g,'\n').trim();}
- details.scale=details.scale.map((row,i)=>[row[0],$$('.col2 .ml [contenteditable="true"]',root)[i]?.innerText.trim()??row[1]]);
- details.partners=$$('.partners a',root).map(n=>n.innerText.trim()).filter(Boolean);
- if(PROJECTS[id].full!==title){PROJECTS[id].full=title;PROJECTS[id].tag=title;}if(PHEAD[id].owner!==details.owner)PROJECTS[id].owner=details.owner;if(PHEAD[id].loc!==details.loc)PROJECTS[id].site=details.loc;PHEAD[id]=details;
+ const id=S.proj,root=$('#proj-pw'),title=$('[data-k="__full"]',root)?.textContent.trim();if(!title){toast('프로젝트명을 입력해주세요.');return;}
+ saveProjectHead();
  button.disabled=true;button.textContent='저장 중…';
- try{const ok=await sharedFlush(true);if(!ok){toast('저장에 실패했습니다. 입력 내용은 유지됩니다.');return;}S.editProj=false;await sharedRelease('project:'+id);render();toast('저장했습니다.');}
+ try{const ok=await sharedFlush(true);if(!ok){toast('저장에 실패했습니다. 입력 내용은 유지됩니다.');return;}S.editProj=false;await sharedRelease('project:'+id);render(true);toast('저장했습니다.');}
  finally{if(button.isConnected){button.disabled=false;button.textContent='저장';}}
 }
 function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebSocket(location.origin.replace('http','ws')+'/api/live?token='+encodeURIComponent(sharedToken));
@@ -73,7 +73,9 @@ function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebS
  sharedSocket.onclose=()=>{if(sharedReady){sharedStatus('연결 재시도 중…');sharedConnect.timer=setTimeout(sharedConnect,3000);}};
 }
 async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=JSON.stringify(delta)!==JSON.stringify(sharedBase);sharedApply(delta);if(changed)sharedRedraw();}catch{}}
-async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');if(!r.ok){sessionStorage.removeItem('aidc-tab-token');sharedToken='';return false;}const data=await r.json();sharedUser=data.employee;sharedName=data.name;sharedMeta(data);sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);
+async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');if(!r.ok){sessionStorage.removeItem('aidc-tab-token');sharedToken='';return false;}const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);
+ // Agent pages (일일동향·시뮬레이터·용어사전) ship with the design; create them once in the shared database.
+ for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedBlocked=false;
  const recovery=JSON.parse(localStorage.getItem('aidc-recovery:'+sharedUser)||'null');
  if(recovery){const recovered=new Map((recovery.items||[]).map(x=>[x.id,x]));for(const c of recovery.changes||[]){if(!c.id.startsWith('item:')||!c.after)continue;const id=c.id.slice(5);let v=recovered.get(id)||copy(item(id)||{});if(c.field)v[c.field]=c.after;else v=copy(c.after);recovered.set(id,v);}
@@ -83,7 +85,7 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
 }
 async function login(){const employee=$('#lg-id').value.trim();if(!employee){$('#lg-err').textContent='사번을 입력하세요.';$('#lg-err').style.display='block';return;}$('#lg-btn').disabled=true;
  try{const r=await apiFetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({employee,name:$('#lg-name').value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error);sharedToken=d.token;sessionStorage.setItem('aidc-tab-token',sharedToken);localStorage.setItem('aidc-known-name:'+d.employee,d.name);await sharedStart();}catch(e){$('#lg-err').textContent=e.message;$('#lg-err').style.display='block';}finally{$('#lg-btn').disabled=false;}}
-async function logout(){await sharedFlush();preserveLocal();await apiFetch('/api/logout',{method:'POST'});sharedEnd();location.hash='';}
+async function logout(){if(typeof closeModal==='function')closeModal();if(typeof closePanel==='function')closePanel(true);await sharedFlush();preserveLocal();await apiFetch('/api/logout',{method:'POST'});sharedEnd();location.hash='';}
 function sharedEnd(){preserveLocal();sharedReady=false;sharedSocket?.close();sharedToken='';sessionStorage.removeItem('aidc-tab-token');$('#app').hidden=true;$('#login').style.display='';sharedStatus('로그인이 필요합니다.');}
 $('#login').style.display='';$('#app').hidden=true;$('#lg-err').style.display='none';
 $('#lg-btn').addEventListener('click',login);['#lg-id','#lg-pw'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
@@ -94,7 +96,7 @@ setInterval(async()=>{if(!sharedReady)return;try{const r=await apiFetch('/api/he
 setInterval(()=>{if(sharedPendingRedraw)sharedRedraw();saveRoute();},600);
 function sharedMeta(data){const changed=data.locks&&JSON.stringify(data.locks)!==JSON.stringify(sharedLocks);if(data.users){sharedUsers=data.users;Object.assign(PEOPLE,sharedUsers);}if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(sharedLocks[id]?.employee!==sharedUser){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;if(it?.editing){sharedKeepDraft(it);preserveLocal();Object.assign(it,it._editOriginal||{});delete it._editOriginal;it.editing=false;sharedStatus('편집 잠금이 해제되어 작성 내용을 초안으로 보관했습니다.');rerenderItem();}if(id.startsWith('project:'))S.editProj=false;}}sharedUi();if(changed&&sharedReady)sharedRedraw();}
 function otherLock(id){const l=sharedLocks[id];return l&&l.expires>Date.now()&&l.employee!==sharedUser?l:null;}
-function sharedKeepDraft(it){const v=copy(it);delete v.editing;delete v._editOriginal;const original=copy(it._editOriginal||{});delete original.editing;delete original._editOriginal;if(JSON.stringify(v)===JSON.stringify(original))return;const signature=JSON.stringify(v);if(ITEMS.some(x=>x._recoverySignature===signature))return;ITEMS.push({...v,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(v.title||'제목 없음'),status:'draft',authorId:sharedUser,editing:false,table:false,card:false,_recoverySignature:signature});}
+function sharedKeepDraft(it){const v=stripTransient(copy(it));const original=stripTransient(copy(it._editOriginal||{}));if(JSON.stringify(v)===JSON.stringify(original))return;const signature=JSON.stringify(v);if(ITEMS.some(x=>x._recoverySignature===signature))return;ITEMS.push({...v,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(v.title||'제목 없음'),status:'draft',authorId:sharedUser,editing:false,table:false,card:false,_recoverySignature:signature});}
 async function sharedBeginEdit(id){if(!sharedReady)return false;if(!sharedBase[id])return true;
  try{const r=await apiFetch('/api/lock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action:'acquire'})});const d=await r.json();sharedMeta(d);if(!r.ok){toast(d.error);return false;}ownedLocks.add(id);if(d.record){sharedApply({[id]:d.record});}return true;}catch{toast('연결을 확인한 후 수정해주세요.');return false;}}
 async function sharedRelease(id){if(!ownedLocks.has(id))return;try{const r=await apiFetch('/api/lock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action:'release'})});if(r.ok){ownedLocks.delete(id);sharedMeta(await r.json());}}catch{}}
@@ -117,5 +119,6 @@ function restoreRoute(){let r={};try{if(navigationType==='reload')r=JSON.parse(s
  Object.assign(S,r);S.editProj=false;sharedRestoreRoute=false;setTimeout(()=>{$('#content').scrollTop=r.scroll||0;$('#panel').scrollTop=r.panelScroll||0;saveRoute();},0);}
 for(const name of ['render','rerenderItem','openPanel','renderPane']){const original=eval(name);const decorated=function(...args){const result=original(...args);sharedUi();saveRoute();return result;};if(name==='render')render=decorated;else if(name==='rerenderItem')rerenderItem=decorated;else if(name==='openPanel')openPanel=decorated;else renderPane=decorated;}
 setInterval(()=>{if(!sharedReady||sharedBusy)return;const diff=sharedDiff(sharedBase,sharedRecords());for(const id of [...ownedLocks]){const it=id.startsWith('item:')?item(id.slice(5)):null;if(it?.editing&&it.id!==S.panel&&it.id!==S.full){sharedKeepDraft(it);preserveLocal();const backup=it._editOriginal;Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,backup||sharedBase[id]);it.editing=false;}if(!it?.editing&&!(id==='project:'+S.proj&&S.editProj)&&!diff.some(c=>c.id===id))sharedRelease(id);}},3000);
+renderPane('inbox');
 sharedStart().catch(()=>sharedStatus('서버 연결을 확인해주세요.'));
 
