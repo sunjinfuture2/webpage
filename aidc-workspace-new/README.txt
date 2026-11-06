@@ -31,3 +31,5 @@ Claude에게 전달할 요청
 원래 PC의 전용 경로를 사용하던 deploy-shared.mjs는 전달본에서 제외했습니다.
 전달본은 프로젝트 내부에 설치한 Wrangler를 이용하는 표준 npm run deploy 방식으로 구성했습니다.
 Cloudflare 실제 재배포는 수행하지 않았습니다.
+
+Cloudflare 자동 배포 연결
