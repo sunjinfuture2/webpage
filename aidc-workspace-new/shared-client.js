@@ -1,6 +1,7 @@
 let sharedUser='',sharedBase={},sharedBusy=false,sharedReady=false,sharedSocket,sharedBlocked=false;
 let sharedName='',sharedUsers={},sharedLocks={},sharedPendingRedraw=false,sharedToken='',sharedRestoreRoute=true;
 const ownedLocks=new Set();
+let META_FLAGS={}; // one-time migrations already applied to this shared database
 // Client-only fields of an item: never sent to the server, never compared for changes.
 const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew'];
 const stripTransient=v=>{for(const k of TRANSIENT)delete v[k];return v;};
@@ -18,7 +19,7 @@ function sharedRecords(){
  ITEMS.forEach(v=>{const id='item:'+v.id;if(v.editing||v.status==='new'||v.status==='draft'){if(sharedBase[id])out[id]=copy(sharedBase[id]);return;}const r=stripTransient(copy(v));out[id]=r;});
  Object.entries(PROJECTS).forEach(([k,v])=>out['project:'+k]=copy(v));
  PARTNERS.forEach(v=>out['partner:'+v.id]=copy(v));
- Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':copy(PHEAD),'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS)});
+ Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':copy(PHEAD),'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS),'meta:flags':copy(META_FLAGS)});
  return out;
 }
 function sharedDiff(a,b){const changes=[];for(const id of new Set([...Object.keys(a),...Object.keys(b)])){
@@ -41,6 +42,7 @@ function sharedApply(records){
  else if(key==='meta:archive')ARCH_SECTIONS=copy(v);
  else if(key==='meta:tabs')ARCH_TABS=copy(v);
  else if(key==='meta:rows')Object.assign(ARCH_ROWS,v);
+ else if(key==='meta:flags')META_FLAGS=copy(v||{});
  }
 }
 function sharedRedraw(){if(!sharedReady)return;sharedUi();const active=document.activeElement;
@@ -85,6 +87,8 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
  // The archive gained a 기타 tab in the design; add it once to shared databases created before it existed.
  if(!ARCH_TABS.includes("기타")){ARCH_TABS.push("기타");if(!ARCH_ROWS["기타"])ARCH_ROWS["기타"]=[];}
+ // Project status became a fixed badge set; apply the requested statuses once (판교 진행중, 청라 완료, 햇빛소득마을 초기기획사업).
+ if(!META_FLAGS.projectStatusV2){const want={pangyo:'진행중',incheon:'완료',sunlight:'초기기획사업'};Object.keys(PROJECTS).forEach(id=>applyProjectStatus(id,want[id]||PROJECTS[id].status));META_FLAGS.projectStatusV2=1;}
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedBlocked=false;
  const recovery=JSON.parse(localStorage.getItem('aidc-recovery:'+sharedUser)||'null');
  if(recovery){const recovered=new Map((recovery.items||[]).map(x=>[x.id,x]));for(const c of recovery.changes||[]){if(!c.id.startsWith('item:')||!c.after)continue;const id=c.id.slice(5);let v=recovered.get(id)||copy(item(id)||{});if(c.field)v[c.field]=c.after;else v=copy(c.after);recovered.set(id,v);}
