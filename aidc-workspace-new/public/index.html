@@ -177,6 +177,12 @@ svg{display:block}
 .chip{display:inline-flex;align-items:center;height:17.4px;border-radius:3px;padding:0 9px 0 9.4px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--cbg);color:var(--cc)}
 .chip .sq{width:12.5px;height:12.5px;border-radius:1.5px;background:var(--csq);margin-right:2.5px;flex:none}
 .chip .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .x{margin:0 -4px 0 5px;width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;color:#8e8e8e;font-size:12px;line-height:1;flex:none}
+.chip .x:hover{background:rgba(0,0,0,.09);color:#333}
+.chip.add{background:#fff;border:1px dashed #cfcfcf;color:#8e8e8e}
+.chip.add:hover{border-color:#9a9a9a;color:#4f4f4f}
+.pop.link{max-width:480px;max-height:440px;overflow-y:auto;scrollbar-width:thin}
+.pop.link .it{max-width:470px}
 .chip.rs{background:#fff;border:0.5px solid #e6e6e6;color:#444}
 .chip.rs .sq{background:#bbbbbb}
 .pill{display:inline-flex;align-items:center;height:19.6px;border-radius:9.8px;padding:0 10px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--cbg);color:var(--cc);cursor:pointer}
@@ -1277,8 +1283,9 @@ const avstack=(ppl,n)=>`<span class="avstack">${(ppl||[]).slice(0,n||9).map(()=>
 const svg=(id,w,h,style='')=>`<svg width="${w}" height="${h}" style="${style}"><use href="#${id}"/></svg>`;
 const plusBtn=(cls='',title='추가')=>`<button class="sh-btn plus-btn ${cls}" title="${title}">${svg('i-plus',11.8,11.8)}</button>`;
 const pill=(p,extra='')=>`<span class="pill ${p.cls} ${extra}"><i class="sq"></i>${esc(p.tag)}</span>`;
-const chipOf=(it,extra='',full=false)=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" data-open="${it.id}"><i class="sq"></i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span></span>`; };
-const chipFull=it=>chipOf(it,'',true);
+const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}><i class="sq"></i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
+const chipFull=(it,edit=false,field='')=>chipOf(it,'',true,edit,field);
+const linkChips=(it,field,E)=>{const ids=(it[field]||[]).filter(id=>item(id)); const h=ids.map(a=>chipFull(item(a),E,field)).join(''); return E?h+`<span class="chip add" title="연결할 항목 선택">+ 연결 추가</span>`:(h||'<span class="plain">없음</span>');};
 const fmtDateK=d=>{const [y,m,dd]=d.split('-').map(Number);return `${y}년 ${m}월 ${dd}일`;};
 const fmtDateDot=d=>{const [y,m,dd]=d.split('-').map(Number);return `${y}. ${m}. ${dd}`;};
 const priTxt={high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};
@@ -1499,7 +1506,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const who=(ppl)=>ppl.length?ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join(''):'<span class="plain">비어 있음</span>';
   if(it.type==='meeting'){
     const L=`${V('사업명',pill(p).replace('class="pill',pk('proj')+' class="pill'))}${V('날짜',`<span class="plain" ${pk('date')}>${fmtDateK(it.date)}</span>`,'txt')}${V('협력업체',`<span class="lk" ${pk('partner')}><i></i><a>${esc(it.partner)}</a></span>`)}${V('참석자 (선진)',`<span class="people" ${pk('people')}>${who(it.people)}</span>`)}${V('참석자 (협력업체)',`<span class="plain" ${pk('extAtt')}>${esc(it.extAtt)}</span>`,'txt')}`;
-    const R=`<div class="pr"></div>${V('액션아이템',`<span class="chips" ${pk('actions')}>${it.actions.map(a=>chipFull(item(a))).join('')}</span>`)}${V('리서치',`<span class="chips" ${pk('research')}>${it.research.map(a=>chipFull(item(a))).join('')}</span>`)}${V('드롭박스 URL',urlField(it,E,'margin-left:0'))}${V('최종수정일자',`<span class="plain">${esc(it.mod||'7월 22 오전 9:50')}</span>`)}`;
+    const R=`<div class="pr"></div>${V('액션아이템',`<span class="chips" ${pk('actions')}>${linkChips(it,'actions',E)}</span>`)}${V('리서치',`<span class="chips" ${pk('research')}>${linkChips(it,'research',E)}</span>`)}${V('드롭박스 URL',urlField(it,E,'margin-left:0'))}${V('최종수정일자',`<span class="plain">${esc(it.mod||'7월 22 오전 9:50')}</span>`)}`;
     props=`<div class="props"><div>${L}</div><div class="rcol">${R}</div></div>`;
   } else {
     const rows=(it.type==='action'?[V('사업명',pill(p).replace('class="pill',pk('proj')+' class="pill'))]:[]).concat([
@@ -1590,6 +1597,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-pimg]')){const id=el.dataset.pimg;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
   if(el=q('[data-copy]')){const v=el.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('주소를 복사했습니다.',1200),()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('주소를 복사했습니다.',1200);}catch{toast('복사하지 못했습니다.');}ta.remove();});return;}
   if(S.panel&&!T.closest('#panel,.topbar,.pop,.dlg,#ovl,#sb,.sb-resize,.panel-resize,.tb-logo,.sb-open,#toast,[data-open],[data-go],[data-lib],.slash-menu,.ed-toolbar,.mention-pop')){closePanel();return;}
+  if(el=q('[data-unlink]')){const [f,id]=el.dataset.unlink.split(':');const it=itemFromEvent();if(it&&canEditItem(it)&&(f==='actions'||f==='research')){it[f]=(it[f]||[]).filter(x=>x!==id);it.dirty=true;rerenderItem();}return;}
   if(el=q('[data-unfav]')){toggleFav(el.dataset.unfav);toast('즐겨찾기에서 제거했습니다.',1100);return;}
   if(el=q('[data-go]')){const w=el.dataset.go; if(w){go(w);} return;}
   if(el=q('[data-ext]')){ e.preventDefault(); const k=el.dataset.ext; if(k==='sim'){window.open(location.protocol==='file:'?'AIDC_Revenue-Structure_Simulator_3y_rev14.6.html':'https://raw.githack.com/sunjinfuture2/simulator/main/AIDC_Revenue-Structure_Simulator_3y_rev14.6.html','_blank');} else notConnected(el,el.querySelector('.tx')?el.querySelector('.tx').textContent:'외부 링크'); return;}
@@ -1653,6 +1661,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-agent]')){const k=el.dataset.agent; if(k==='sim'){window.open(location.protocol==='file:'?'AIDC_Revenue-Structure_Simulator_3y_rev14.6.html':'https://raw.githack.com/sunjinfuture2/simulator/main/AIDC_Revenue-Structure_Simulator_3y_rev14.6.html','_blank');} else notConnected(el,k==='daily'?'기관 및 업체별 일일동향 (에이전트)':'인터렉션 용어사전 (에이전트)'); return;}
   if(el=q('[data-attach]')){attachFile(itemFromEvent()); return;}
   if(el=q('[data-pick]')){const k=el.dataset.pick;const it=itemFromEvent();if(!it||!canEditItem(it))return;e.stopPropagation();it.dirty=true;
+    if(k==='actions'||k==='research'){const type=k==='actions'?'action':'research';const cur=(it[k]||[]).slice();const list=ITEMS.filter(i=>i.type===type&&i.status!=='trash'&&i.status!=='new'&&i.id!==it.id&&!i.agent).sort((a,b)=>(cur.includes(b.id)-cur.includes(a.id))||String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));const short=t=>{t=(t||'제목 없음').split('\n').map(x=>x.trim()).filter(Boolean).join(' ');return t.length>34?t.slice(0,34)+'…':t;};menuPop(el,[{hd:(k==='actions'?'액션아이템':'리서치')+' 연결 · 눌러서 추가 / 해제'}].concat(list.slice(0,60).map(i=>({t:short(i.title),k:i.id,sel:cur.includes(i.id),fn:()=>{it[k]=cur.includes(i.id)?cur.filter(x=>x!==i.id):cur.concat(i.id);it.dirty=true;rerenderItem();}}))),{multi:true,cls:'multi link'});return;}
     if(k==='proj'){menuPop(el,PROJ_ORDER.map(id=>({t:PROJECTS[id].tag,k:id,sel:it.proj===id,fn:()=>{it.proj=id;rerenderItem();}})));return;}
     if(k==='date'){datePick(el,it.date,d=>{it.date=d;it.dateTxt=fmtDateDot(d);rerenderItem();});return;}
     if(k==='st'){menuPop(el,[{t:'진행중',k:'prog',sel:it.st==='prog',fn:()=>{it.st='prog';rerenderItem();}},{t:'완료',k:'done',sel:it.st==='done',fn:()=>{it.st='done';rerenderItem();}}]);return;}
