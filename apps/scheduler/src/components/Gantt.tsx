@@ -7,6 +7,7 @@ import { DependencyEditor, type DependencyChange } from './DependencyEditor';
 import { connectorPath, dependencyEndpoints, scopedDependencies, type RelationScope } from './ganttGeometry';
 import './connections.css';
 import './master-gantt.css';
+import { relationshipNames } from '../core/dependency-labels';
 
 export type { DependencyChange } from './DependencyEditor';
 
@@ -20,6 +21,8 @@ interface Props {
   onDependencyChange?: (intent: DependencyChange) => boolean;
   onRevealTask?: (id: string) => void;
 }
+type LinkPort = { taskId: string; end: 'start' | 'finish' };
+type LinkDrag = { from: LinkPort; startX: number; startY: number; originX: number; originY: number; pointerId: number; x: number; y: number; moved: boolean; target: LinkPort | null };
 type PhaseRow = { kind: 'phase'; code: string; label: string; tasks: Task[] };
 type TaskRow = { kind: 'task'; task: Task };
 export function Gantt({ plan, result, tasks, preferences: pref, selectedId, checked, forceExpand, onSelect, onCheck, onPreferences, onPropose, onDependencyChange, onRevealTask }: Props) {
@@ -36,6 +39,8 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
   const [editing, setEditing] = useState<{ dependency: Dependency; creating: boolean } | null>(null);
   const [relationList, setRelationList] = useState(false), [listQuery, setListQuery] = useState(''), [listPage, setListPage] = useState(0);
   const [connectionNotice, setConnectionNotice] = useState('');
+  const [linkDrag, setLinkDrag] = useState<LinkDrag | null>(null);
+  const linkDragRef = useRef<LinkDrag | null>(null), suppressPortClick = useRef(false);
   const markerId = 'gantt-arrow-' + useId().replaceAll(':', '');
   const byId = useMemo(() => new Map(plan.tasks.map(t => [t.id, t])), [plan.tasks]);
   const criticalIds = useMemo(() => new Set(plan.tasks.filter(t => result.tasks[t.id]?.criticality === 'critical').map(t => t.id)), [plan.tasks, result]);
@@ -46,6 +51,42 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
   useEffect(() => { if (!selectedId && (linkScope === 'upstream' || linkScope === 'downstream')) setLinkScope('all'); }, [selectedId, linkScope]);
   useEffect(() => { setPort(null); setEditing(null); setLinking(false); }, [plan.id]);
   useEffect(() => { const cancel = (e: KeyboardEvent) => { if (e.key === 'Escape') { setPort(null); setLinking(false); setConnectionNotice(''); } }; window.addEventListener('keydown', cancel); return () => window.removeEventListener('keydown', cancel); }, []);
+  useEffect(() => {
+    linkDragRef.current = null; setLinkDrag(null);
+  }, [plan.id, plan.updatedAt]);
+  useEffect(() => {
+    if (!linkDragRef.current) return;
+    const update = (event: PointerEvent) => {
+      const state = linkDragRef.current; if (!state || event.pointerId !== state.pointerId) return;
+      const hit = document.elementsFromPoint(event.clientX, event.clientY).map(e => e.closest<HTMLElement>('[data-link-task]')).find(e => e && viewport.current?.contains(e));
+      const target: LinkPort | null = hit?.dataset.linkTask ? { taskId: hit.dataset.linkTask, end: hit.dataset.linkEnd === 'finish' ? 'finish' : 'start' } : null;
+      const next = { ...state, x: event.clientX, y: event.clientY, target, moved: state.moved || Math.hypot(event.clientX - state.originX, event.clientY - state.originY) > 5 };
+      if (next.moved && !state.moved) setPort(null);
+      linkDragRef.current = next; setLinkDrag(next);
+    };
+    const stop = (event: PointerEvent) => {
+      if (linkDragRef.current && event.pointerId !== linkDragRef.current.pointerId) return;
+      const state = linkDragRef.current; linkDragRef.current = null; setLinkDrag(null);
+      if (!state?.moved) return;
+      suppressPortClick.current = true;
+      if (!state.target) { setConnectionNotice('다른 업무의 막대나 시작·완료점에 놓아주세요. 일정은 바뀌지 않았습니다.'); return; }
+      if (state.target.taskId === state.from.taskId) { setConnectionNotice('같은 업무끼리는 연결할 수 없습니다. 다른 업무를 선택해주세요.'); return; }
+      const type = (state.from.end === 'finish' ? 'F' : 'S') + (state.target.end === 'finish' ? 'F' : 'S');
+      setEditing({ creating: true, dependency: { id: crypto.randomUUID(), sourceId: '사용자 연결', from: state.from.taskId, to: state.target.taskId, type: type as Dependency['type'], lag: 0, active: true, condition: '' } });
+      setPort(null); setLinking(false); setConnectionNotice(''); onPreferences({ showLinks: true });
+    };
+    const cancel = () => { suppressPortClick.current = true; linkDragRef.current = null; setLinkDrag(null); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') cancel(); };
+    window.addEventListener('pointermove', update); window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', cancel); window.addEventListener('keydown', key); window.addEventListener('blur', cancel);
+    return () => { window.removeEventListener('pointermove', update); window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', cancel); window.removeEventListener('keydown', key); window.removeEventListener('blur', cancel); };
+  }, [!!linkDrag, plan.updatedAt, onPreferences]);
+  const beginLinkDrag = (event: React.PointerEvent<HTMLButtonElement>, taskId: string, end: LinkPort['end']) => {
+    event.stopPropagation(); if (event.button !== 0 || event.isPrimary === false) return;
+    event.preventDefault(); suppressPortClick.current = false; setConnectionNotice('');
+    const box = event.currentTarget.getBoundingClientRect();
+    const next: LinkDrag = { from: { taskId, end }, startX: box.x + box.width / 2, startY: box.y + box.height / 2, originX: event.clientX, originY: event.clientY, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false, target: null };
+    linkDragRef.current = next; setLinkDrag(next); event.currentTarget.setPointerCapture(event.pointerId);
+  };
   useEffect(() => { setGridWidth(pref.gridWidth); }, [pref.gridWidth]);
   useEffect(() => {
     const element = viewport.current; if (!element) return;
@@ -149,16 +190,16 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', done);
   };
   if (!tasks.length) return <Empty title="조건에 맞는 업무가 없습니다">검색어나 필터를 바꿔보세요.</Empty>;
-  return <div className={'gantt-shell ' + (mobile ? 'gantt-mobile' : '')}>
+  return <div className={'gantt-shell ' + (mobile ? 'gantt-mobile ' : '') + (linking ? 'is-connecting ' : '') + (linkDrag ? 'is-link-dragging' : '')}>
     <div className="connection-toolbar" aria-label="선후행 관계 도구">
       <div className="connection-toolbar-title"><Link2 size={14} /><span>연결 일정</span><b>{plan.dependencies.filter(e => e.active).length}</b></div>
       <label className="connection-visibility"><input type="checkbox" checked={pref.showLinks} onChange={e => onPreferences({ showLinks: e.target.checked })} /><span>연결선</span></label>
       <select aria-label="연결선 범위" value={linkScope} onChange={e => { setLinkScope(e.target.value as RelationScope); onPreferences({ showLinks: true }); }}><option value="all">전체 관계</option><option value="upstream" disabled={!selectedId}>선택 업무의 선행 경로</option><option value="downstream" disabled={!selectedId}>선택 업무의 후행 경로</option><option value="critical">크리티컬 경로</option></select>
-      <span className="connection-toolbar-spacer" />
+      <span className="connection-toolbar-spacer" />{onDependencyChange && !mobile && <span className="connection-quick-help">끝점을 끌어 연결 · 선을 눌러 수정</span>}
       {onDependencyChange && !mobile && <button className={'connection-action ' + (linking ? 'active' : '')} aria-pressed={linking} onClick={() => { setLinking(!linking); setPort(null); setConnectionNotice(''); if (!linking) onPreferences({ showLinks: true }); }}><Plus size={13} />관계 연결</button>}
       <button className="connection-action" onClick={() => { setRelationList(true); setListQuery(''); }}><ListTree size={14} />관계 목록<span>{plan.dependencies.length}</span></button>
     </div>
-    {linking && <div className="connection-instruction" role="status"><Link2 size={13} /><span>{port ? `${byId.get(port.taskId)?.wbs} ${port.end === 'start' ? '시작' : '완료'}점 선택됨 · 연결할 다른 업무의 S/F를 선택하세요.` : '선행 업무의 S(시작) 또는 F(완료)를 누른 뒤, 후행 업무의 연결점을 선택하세요.'}{connectionNotice && <b>{connectionNotice}</b>}</span><button aria-label="관계 연결 취소" onClick={() => { setLinking(false); setPort(null); }}><X size={14} /></button></div>}
+    {(linking || connectionNotice) && <div className="connection-instruction" role="status"><Link2 size={13} /><span>{connectionNotice || (port ? `${byId.get(port.taskId)?.wbs} ${port.end === 'start' ? '시작' : '완료'} 선택됨 · 다음 업무의 시작·완료점을 누르거나 끌어서 연결하세요.` : '앞 업무의 시작·완료점에서 다음 업무로 끌어놓으세요. 끝점을 차례로 눌러 연결할 수도 있습니다.')}</span><button aria-label="관계 연결 취소" onClick={() => { setLinking(false); setPort(null); setConnectionNotice(''); }}><X size={14} /></button></div>}
     <div className="gantt-range"><span>표시 기준 <b>{shortDate(focusDate)}</b></span><div className="row gap-16"><label className="check-label"><input type="checkbox" checked={fullHorizon} onChange={e => setFullHorizon(e.target.checked)} />6년 지원기간 포함</label><span className="timeline-legend"><i />상태일 <span className="legend-baseline" />원본 참조 <span className="legend-cp" />CP</span></div></div>
     <div className="gantt-scroll" ref={viewport} data-testid="gantt-scroll" onScroll={e => { const el = e.currentTarget; setScroll(s => ({ ...s, x: el.scrollLeft, y: el.scrollTop })); setFocusDate(fromDay(origin + Math.floor(el.scrollLeft / px))); }}>
       <div style={{ width: mobile ? width : width + timelineWidth, minHeight: '100%' }}>
@@ -190,20 +231,20 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
             const isDragging = drag?.id === t.id;
             const transform = isDragging && drag.mode === 'move' ? 'translateX(' + drag.delta * px + 'px)' : undefined;
             const draggedWidth = isDragging && drag.mode === 'resize' ? Math.max(5, barWidth + drag.delta * px) : barWidth;
-            return <div key={t.id} className={'gantt-row ' + (selected ? 'is-selected ' : '') + (checked.has(t.id) ? 'is-checked ' : '') + (selectedId && linkScope !== 'all' && tracedIds.has(t.id) ? 'is-traced ' : '') + (port?.taskId === t.id ? 'is-link-source' : '')} style={{ top: y, height: ROW }} data-wbs={t.wbs}>
+            return <div key={t.id} className={'gantt-row ' + (selected ? 'is-selected ' : '') + (checked.has(t.id) ? 'is-checked ' : '') + (selectedId && linkScope !== 'all' && tracedIds.has(t.id) ? 'is-traced ' : '') + (port?.taskId === t.id || linkDrag?.from.taskId === t.id ? 'is-link-source ' : '') + (linkDrag?.target?.taskId === t.id && linkDrag.from.taskId !== t.id ? 'is-link-target' : '')} style={{ top: y, height: ROW }} data-wbs={t.wbs}>
               <div className="row-grid" style={{ width, minWidth: width }}><span className="row-check"><input aria-label={t.wbs + ' 선택'} type="checkbox" checked={checked.has(t.id)} onChange={() => onCheck(t.id)} /></span><button className="wbs-cell" onClick={() => onSelect(t.id)}>{t.wbs}</button>
                 <button className="name-cell" title={t.name} onClick={e => onSelect(t.id, e.ctrlKey || e.metaKey || e.shiftKey)} onKeyDown={e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = tasks.findIndex(x => x.id === t.id) + (e.key === 'ArrowDown' ? 1 : -1); if (tasks[n]) onSelect(tasks[n].id); } }}>{t.kind === 'milestone' && <Flag size={11} className="milestone-icon" />}<span>{t.name}</span>{r.criticality === 'critical' && <Badge kind="critical">CP</Badge>}{r.criticality === 'near' && <i className="near-dot" />}</button>
                 <button className="date-col table-date" onClick={() => onSelect(t.id)}>{shortDate(r.start).slice(2)}</button><button className="date-col table-date" onClick={() => onSelect(t.id)}>{shortDate(r.finish).slice(2)}</button><span className={'progress-col small ' + (t.progress === null ? 'muted' : 'green')}>{t.progress === null ? '—' : Math.round(t.progress * 100) + '%'}</span>
               </div>
               {!mobile && <div className="timeline-track" style={{ width: timelineWidth }}>
                 {pref.showReference && <div className="reference-bar" title={'원본 ' + t.referenceStart + ' — ' + t.referenceFinish} style={{ left: (dayNumber(t.referenceStart) - origin) * px, width: Math.max(4, (Math.min(end, dayNumber(t.referenceFinish)) - dayNumber(t.referenceStart) + 1) * px) }} />}
-                {left <= timelineWidth && <button aria-label={t.wbs + ' 간트 막대'} className={'gantt-bar bar-' + r.criticality + (t.kind === 'milestone' ? ' milestone' : '') + (/조건부/.test(t.status) ? ' is-conditional' : '') + (isDragging ? ' dragging' : '')} style={{ left, width: draggedWidth, transform }} title={t.wbs + ' · ' + t.name + '\n' + r.start + ' → ' + r.finish + '\n운영 여유 ' + (r.slack ?? '대상 외') + '\n드래그하면 관리 일정을 이동합니다.'}
+                {left <= timelineWidth && <button data-link-task={t.id} data-link-end="start" aria-label={t.wbs + ' 간트 막대'} className={'gantt-bar bar-' + r.criticality + (t.kind === 'milestone' ? ' milestone' : '') + (/조건부/.test(t.status) ? ' is-conditional' : '') + (isDragging ? ' dragging' : '')} style={{ left, width: draggedWidth, transform }} title={t.wbs + ' · ' + t.name + '\n' + r.start + ' → ' + r.finish + '\n운영 여유 ' + (r.slack ?? '대상 외') + '\n드래그하면 관리 일정을 이동합니다.'}
                   onClick={() => { if (!dragged.current) onSelect(t.id); }} onPointerDown={e => { if (t.actualStart || t.finishRule || e.button !== 0) return; e.preventDefault(); setDrag({ id: t.id, x: e.clientX, delta: 0, mode: 'move' }); }}>
                   {t.progress !== null && t.kind !== 'milestone' && <span className="bar-progress" style={{ width: t.progress * 100 + '%' }} />}
                   {t.kind !== 'milestone' && draggedWidth >= 64 && <span className="bar-caption"><i aria-hidden="true" /><span>{t.name}</span></span>}
                   {t.kind !== 'milestone' && !t.actualStart && !t.finishRule && <span className="bar-resize" aria-label={t.wbs + ' 기간 조정'} onPointerDown={e => { e.stopPropagation(); e.preventDefault(); setDrag({ id: t.id, x: e.clientX, delta: 0, mode: 'resize' }); }} />}
                 </button>}
-                {linking && onDependencyChange && left <= timelineWidth && dayNumber(r.finish) <= end && <><button type="button" className={'dependency-port port-start ' + (port?.taskId === t.id && port.end === 'start' ? 'is-chosen' : '')} style={{ left: Math.max(0, left - 15) }} aria-label={t.wbs + ' 시작점 연결'} title="S · 시작점" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); choosePort(t.id, 'start'); }}>S</button><button type="button" className={'dependency-port port-finish ' + (port?.taskId === t.id && port.end === 'finish' ? 'is-chosen' : '')} style={{ left: left + (t.kind === 'milestone' ? 8 : barWidth) + 2 }} aria-label={t.wbs + ' 완료점 연결'} title="F · 완료점" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); choosePort(t.id, 'finish'); }}>F</button></>}
+                {onDependencyChange && left <= timelineWidth && dayNumber(r.finish) <= end && <>{(['start', 'finish'] as const).map(endpoint => <button type="button" key={endpoint} data-link-task={t.id} data-link-end={endpoint} className={'dependency-port port-' + endpoint + (port?.taskId === t.id && port.end === endpoint ? ' is-chosen' : '')} style={{ left: endpoint === 'start' ? Math.max(0, left - 17) : left + (t.kind === 'milestone' ? 8 : barWidth) + 2 }} aria-label={t.wbs + (endpoint === 'start' ? ' 시작점 연결' : ' 완료점 연결')} title={(endpoint === 'start' ? '시작' : '완료') + ' · 다른 업무로 끌어서 연결'} onPointerDown={e => beginLinkDrag(e, t.id, endpoint)} onClick={e => { e.stopPropagation(); if (suppressPortClick.current && e.detail !== 0) return; setLinking(true); choosePort(t.id, endpoint); }}><span className="dependency-port-label">{endpoint === 'start' ? '시작' : '완료'}</span></button>)}</>}
                 {selected && left + barWidth < timelineWidth && <span className="bar-label" style={{ left: left + barWidth + 8 }}>{r.duration}일 · {r.slack === null ? '대상 외' : '여유 ' + r.slack + '일'}</span>}
               </div>}
             </div>;
@@ -218,7 +259,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
             };
             const x1 = endpoint(e.from, ends.from), x2 = endpoint(e.to, ends.to);
             const y1 = rowIndex.get(e.from)! * ROW + 17, y2 = rowIndex.get(e.to)! * ROW + 17;
-            const label = `${fromTask.wbs} → ${toTask.wbs} · ${e.type} ${e.lag > 0 ? '+' : ''}${e.lag}일`, path = connectorPath(x1, y1, x2, y2, e.type);
+            const label = `${fromTask.wbs} → ${toTask.wbs} · ${relationshipNames[e.type]} · ${e.type} ${e.lag > 0 ? '+' : ''}${e.lag}일`, path = connectorPath(x1, y1, x2, y2, e.type);
             const focused = e.from === selectedId || e.to === selectedId || !!selectedId && linkScope !== 'all';
             const critical = a.criticality === 'critical' && b.criticality === 'critical';
             return <g key={e.id} className={'connection-edge ' + (focused ? 'is-focused ' : '') + (critical ? 'is-critical' : '')}>
@@ -230,6 +271,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
       </div>
     </div>
     <div className="gantt-footer"><span><span className="green-dot" />{tasks.length}개 업무 표시 <span className="divider">/</span> 전체 {plan.tasks.length}개</span><span>{pref.showLinks ? `화면 연결선 ${connectors.length}/${scopeEdges.length}개 · ` : ''}<button className="connection-hidden-count" onClick={() => { setRelationList(true); setListQuery(''); }}>{pref.showLinks && scopeEdges.length > connectors.length ? `화면 밖·접힌 업무 등 ${scopeEdges.length - connectors.length}개 관계 보기` : `전체 관계 ${plan.dependencies.length}개`}</button><span className="divider">·</span> 달력일 기준{!fullHorizon && ' · 운영·안정화 기간'}</span></div>
+    {linkDrag?.moved && <><svg className="dependency-drag-preview" aria-hidden="true"><defs><marker id={markerId + '-drag'} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="#f47920" strokeWidth="1.5" /></marker></defs><circle cx={linkDrag.startX} cy={linkDrag.startY} r="3" fill="#f47920" /><path d={connectorPath(linkDrag.startX, linkDrag.startY, linkDrag.x, linkDrag.y, ((linkDrag.from.end === 'finish' ? 'F' : 'S') + (linkDrag.target?.end === 'finish' ? 'F' : 'S')) as Dependency['type'])} markerEnd={'url(#' + markerId + '-drag)'} /></svg><div className="connection-drag-tooltip" role="status" style={{ left: Math.max(8, Math.min(linkDrag.x + 14, window.innerWidth - 265)), top: Math.min(linkDrag.y + 17, window.innerHeight - 65) }}>{linkDrag.target && linkDrag.target.taskId !== linkDrag.from.taskId ? <>{byId.get(linkDrag.from.taskId)?.wbs} {linkDrag.from.end === 'finish' ? '완료' : '시작'} → {byId.get(linkDrag.target.taskId)?.wbs} {linkDrag.target.end === 'finish' ? '완료' : '시작'}<small>놓으면 관계를 확인합니다 · Esc 취소</small></> : <>다른 업무의 막대나 끝점에 놓으세요<small>Esc로 취소</small></>}</div></>}
     {editing && onDependencyChange && <DependencyEditor key={editing.dependency.id} plan={plan} dependency={editing.dependency} creating={editing.creating} onChange={onDependencyChange} onClose={() => setEditing(null)} />}
     {relationList && <Modal title="선후행 관계 목록" onClose={() => setRelationList(false)} wide><div className="modal-body dependency-browser"><div className="dependency-browser-heading"><div><strong>관계 {plan.dependencies.length}개</strong><span>활성 {plan.dependencies.filter(e => e.active).length} · 조건부 제외 {plan.dependencies.filter(e => !e.active).length}</span></div>{onDependencyChange && <button className="button primary" disabled={plan.tasks.length < 2} onClick={newRelation}><Plus size={14} />새 관계</button>}</div><input className="dependency-browser-search" aria-label="관계 검색" placeholder="업무명, WBS, 유형 또는 조건 검색" value={listQuery} onChange={e => setListQuery(e.target.value)} /><div className="dependency-browser-list">{listEdges.slice(listPage * 50, (listPage + 1) * 50).map(e => { const from = byId.get(e.from)!, to = byId.get(e.to)!; return <div key={e.id} className={'dependency-browser-row ' + (!e.active ? 'inactive' : '')}><div className="dependency-browser-tasks"><button data-relation-end="선행" onClick={() => revealTask(e.from)} title="선행 업무로 이동"><b>{from.wbs}</b><span>{from.name}</span></button><ArrowRight size={14} /><button data-relation-end="후행" onClick={() => revealTask(e.to)} title="후행 업무로 이동"><b>{to.wbs}</b><span>{to.name}</span></button></div><div className="dependency-browser-meta"><Badge kind={e.active ? 'normal' : 'muted'}>{e.type} {e.lag > 0 ? '+' : ''}{e.lag}일</Badge>{!e.active && <span>조건부 제외</span>}{e.condition && <small title={e.condition}>{e.condition}</small>}{onDependencyChange && <button className="icon-button" aria-label={from.wbs + ' → ' + to.wbs + ' 관계 편집'} onClick={() => { setRelationList(false); setEditing({ dependency: e, creating: false }); }}><Pencil size={14} /></button>}</div></div>; })}{!listEdges.length && <div className="dependency-browser-empty">검색한 관계가 없습니다.</div>}</div><div className="dependency-browser-pagination"><span>검색 {listEdges.length}개 · 화면 밖 업무도 모두 포함합니다.</span><button className="button compact" disabled={listPage === 0} onClick={() => setListPage(p => p - 1)}>이전</button><span>{listPage + 1} / {Math.max(1, Math.ceil(listEdges.length / 50))}</span><button className="button compact" disabled={(listPage + 1) * 50 >= listEdges.length} onClick={() => setListPage(p => p + 1)}>다음</button></div></div></Modal>}
   </div>;

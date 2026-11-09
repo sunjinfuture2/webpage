@@ -1,7 +1,8 @@
 import { useId, useState } from 'react';
-import { ArrowRight, GitBranch, Trash2 } from 'lucide-react';
+import { ArrowRight, ArrowLeftRight, GitBranch, Trash2 } from 'lucide-react';
 import type { Dependency, Plan } from '../core/types';
 import { Modal, ErrorText } from './UI';
+import { relationshipNames, relationshipSentence, relationshipGap } from '../core/dependency-labels';
 
 export type DependencyChange = { kind: 'create' | 'update'; dependency: Dependency } | { kind: 'delete'; id: string };
 export function DependencyEditor({ plan, dependency, creating, onChange, onClose }: { plan: Plan; dependency: Dependency; creating: boolean; onChange: (intent: DependencyChange) => boolean; onClose: () => void }) {
@@ -19,10 +20,12 @@ export function DependencyEditor({ plan, dependency, creating, onChange, onClose
       <div className="modal-body dependency-editor">
         <div className="dependency-editor-heading"><GitBranch size={17} /><p>관계를 바꾸면 연결된 업무의 예상 일정을 다시 계산합니다.</p></div>
         <label className="field"><span>선행 업무</span><select aria-label="관계 선행 업무" value={draft.from} onChange={e => patch({ from: e.target.value })}>{plan.tasks.map(t => <option key={t.id} value={t.id}>{t.wbs} · {t.name}</option>)}</select></label>
-        <div className="dependency-editor-arrow"><ArrowRight size={16} /></div>
+        <div className="dependency-editor-arrow"><ArrowRight size={16} /><button type="button" className="dependency-swap" onClick={() => patch({ from: draft.to, to: draft.from })}><ArrowLeftRight size={12} />순서 바꾸기</button></div>
         <label className="field"><span>후행 업무</span><select aria-label="관계 후행 업무" value={draft.to} onChange={e => patch({ to: e.target.value })}>{plan.tasks.map(t => <option key={t.id} value={t.id}>{t.wbs} · {t.name}</option>)}</select></label>
-        <div className="dependency-editor-fields"><label className="field"><span>관계 유형</span><select aria-label="관계 유형" value={draft.type} onChange={e => patch({ type: e.target.value as Dependency['type'] })}><option value="FS">FS · 완료 → 시작</option><option value="SS">SS · 시작 → 시작</option><option value="FF">FF · 완료 → 완료</option><option value="SF">SF · 시작 → 완료</option></select></label><label className="field"><span>간격 · 달력일</span><input aria-label="관계 간격" required type="number" step="1" min="-36500" max="36500" value={Number.isFinite(draft.lag) ? draft.lag : ''} onChange={e => patch({ lag: e.target.value === '' ? NaN : Number(e.target.value) })} /></label></div>
-        <p className="hint">양수는 대기, 음수는 겹쳐 진행하는 간격입니다. 원본의 달력일 계산 기준을 사용합니다.</p>
+        <div className="dependency-editor-fields"><label className="field"><span>어떻게 연결할까요?</span><select aria-label="관계 유형" value={draft.type} onChange={e => patch({ type: e.target.value as Dependency['type'] })}>{(Object.keys(relationshipNames) as Dependency['type'][]).map(type => <option key={type} value={type}>{relationshipNames[type]} ({type})</option>)}</select></label><label className="field"><span>추가 간격 · 달력일</span><input aria-label="관계 간격" required type="number" step="1" min="-36500" max="36500" value={Number.isFinite(draft.lag) ? draft.lag : ''} onChange={e => patch({ lag: e.target.value === '' ? NaN : Number(e.target.value) })} /></label></div>
+        <div className="dependency-gap-presets" aria-label="추가 간격 빠른 선택">{[[0, '추가 대기 없음'], [1, '하루 더 대기'], [2, '이틀 더 대기'], [-2, '이틀 앞당김']].map(([days, text]) => <button type="button" key={days} className={draft.lag === days ? 'active' : ''} onClick={() => patch({ lag: Number(days) })}>{text}</button>)}</div>
+        <div className="dependency-meaning" role="status"><strong>{relationshipSentence(draft.type, plan.tasks.find(t => t.id === draft.from)?.name || '앞 업무', plan.tasks.find(t => t.id === draft.to)?.name || '다음 업무')}</strong><span>{relationshipGap(draft.lag)}</span></div>
+        <p className="hint">일정의 시작·완료 시점은 다른 선행 조건도 함께 반영합니다. 기존 달력일 계산 기준을 유지합니다.</p>
         <label className="dependency-active" htmlFor={id}><input id={id} type="checkbox" checked={draft.active} onChange={e => patch({ active: e.target.checked })} /><span>이 관계를 일정 계산에 적용</span></label>
         <label className="field"><span>적용 조건·메모</span><textarea aria-label="관계 적용 조건" rows={2} value={draft.condition} onChange={e => patch({ condition: e.target.value })} /></label>
         {error && <ErrorText>{error}</ErrorText>}

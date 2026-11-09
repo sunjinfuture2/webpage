@@ -1,3 +1,4 @@
+import { relationshipNames } from '../core/dependency-labels';
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Check, ChevronRight, Link2, LockKeyhole, Plus, Save, Trash2, X } from 'lucide-react';
 import type { Controller } from '../useWorkspace';
@@ -108,7 +109,7 @@ function Relations({ task, controller: c }: { task: Task; controller: Controller
       if (c.commit(d => d.dependencies.push(edge), task.wbs + ' 관계 추가')) { setAdding(false); setFrom(''); }
     }}><label className="field"><span>방향</span><select aria-label="방향" value={direction} onChange={e => setDirection(e.target.value)}><option value="before">선행 업무 추가</option><option value="after">후행 업무 추가</option></select></label>
       <label className="field"><span>연결할 업무</span><select aria-label="연결할 업무" value={from} onChange={e => setFrom(e.target.value)} required><option value="">업무 선택</option>{sorted.map(t => <option key={t.id} value={t.id}>{t.wbs} · {t.name}</option>)}</select></label>
-      <div className="form-grid"><label className="field"><span>관계 유형</span><select aria-label="관계 유형" value={type} onChange={e => setType(e.target.value as Dependency['type'])}>{['FS', 'SS', 'FF', 'SF'].map(t => <option key={t}>{t}</option>)}</select></label><label className="field"><span>추가간격</span><input type="number" step="1" value={lag} onChange={e => setLag(Number(e.target.value))} /></label></div>
+      <div className="form-grid"><label className="field"><span>관계 유형</span><select aria-label="관계 유형" value={type} onChange={e => setType(e.target.value as Dependency['type'])}>{(['FS', 'SS', 'FF', 'SF'] as const).map(t => <option key={t} value={t}>{relationshipNames[t]} ({t})</option>)}</select></label><label className="field"><span>추가간격</span><input type="number" step="1" value={lag} onChange={e => setLag(Number(e.target.value))} /></label></div>
       <button className="button primary"><Link2 size={14} />관계 추가</button>
     </form>}
     {links.map(e => <RelationRow key={e.id} edge={e} task={task} plan={p} commit={c.commit} onSelect={c.setSelectedId} />)}
@@ -129,7 +130,7 @@ function RelationRow({ edge: e, task, plan, commit, onSelect }: { edge: Dependen
   return <div className={'relation-card ' + (!e.active ? 'inactive' : '')}>
     <span className="relation-direction">{e.to === task.id ? '선행' : '후행'} · {e.sourceId}</span>
     <button className="relation-title" onClick={() => onSelect(other.id)}><span>{other.wbs}</span>{other.name}<ArrowUpRight size={13} /></button>
-    <div className="relation-controls"><select aria-label={e.sourceId + ' 관계유형'} value={type} onChange={ev => setType(ev.target.value as Dependency['type'])}>{['FS', 'SS', 'FF', 'SF'].map(t => <option key={t}>{t}</option>)}</select><label>간격 <input aria-label={e.sourceId + ' 추가간격'} type="number" step="1" value={lag} onChange={ev => setLag(Number(ev.target.value))} />일</label><label className="check-label"><input type="checkbox" checked={active} onChange={ev => setActive(ev.target.checked)} />적용</label><button className="icon-button" aria-label={e.sourceId + ' 관계 저장'} disabled={!changed} onClick={() => commit(p => Object.assign(p.dependencies.find(x => x.id === e.id)!, { type, lag, active }), task.wbs + ' 관계 수정')}><Check size={15} /></button><button className="icon-button danger" aria-label={e.sourceId + ' 관계 삭제'} onClick={() => commit(p => { p.dependencies = p.dependencies.filter(x => x.id !== e.id); }, task.wbs + ' 관계 삭제')}><Trash2 size={14} /></button></div>
+    <div className="relation-controls"><select aria-label={e.sourceId + ' 관계유형'} value={type} onChange={ev => setType(ev.target.value as Dependency['type'])}>{(['FS', 'SS', 'FF', 'SF'] as const).map(t => <option key={t} value={t}>{relationshipNames[t]} ({t})</option>)}</select><label>간격 <input aria-label={e.sourceId + ' 추가간격'} type="number" step="1" value={lag} onChange={ev => setLag(Number(ev.target.value))} />일</label><label className="check-label"><input type="checkbox" checked={active} onChange={ev => setActive(ev.target.checked)} />적용</label><button className="icon-button" aria-label={e.sourceId + ' 관계 저장'} disabled={!changed} onClick={() => commit(p => Object.assign(p.dependencies.find(x => x.id === e.id)!, { type, lag, active }), task.wbs + ' 관계 수정')}><Check size={15} /></button><button className="icon-button danger" aria-label={e.sourceId + ' 관계 삭제'} onClick={() => commit(p => { p.dependencies = p.dependencies.filter(x => x.id !== e.id); }, task.wbs + ' 관계 삭제')}><Trash2 size={14} /></button></div>
     {e.condition && <p className="hint">{e.condition}</p>}
   </div>;
 }
