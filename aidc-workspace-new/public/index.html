@@ -176,6 +176,7 @@ svg{display:block}
 .avstack .avatar:first-child{margin-left:0}
 .chip{display:inline-flex;align-items:center;height:17.4px;border-radius:3px;padding:0 9px 0 9.4px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;background:var(--cbg);color:var(--cc)}
 .chip .sq{width:12.5px;height:12.5px;border-radius:1.5px;background:var(--csq);margin-right:2.5px;flex:none}
+.chip .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip.rs{background:#fff;border:0.5px solid #e6e6e6;color:#444}
 .chip.rs .sq{background:#bbbbbb}
 .pill{display:inline-flex;align-items:center;height:19.6px;border-radius:9.8px;padding:0 10px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--cbg);color:var(--cc);cursor:pointer}
@@ -648,12 +649,11 @@ svg{display:block}
 .props .pr{display:flex;align-items:flex-start;min-height:42px;padding-bottom:22px;font-size:15px;color:var(--t2)}
 .props .pr .k{width:138.3px;font-weight:600;flex:none}
 .ipage .props .pr .k{width:163.6px}
-.props .pr .v{display:flex;align-items:flex-start;gap:3.3px;min-height:20px;cursor:pointer;position:relative}
+.props .pr .v{display:flex;align-items:flex-start;gap:3.3px;min-height:20px;min-width:0;cursor:pointer;position:relative}
 .props .pr .v.txt:hover{background:#f7f7f7;border-radius:3px;margin:-2px -6px;padding:2px 6px}
 .props .pr .v .pill{margin:-0.8px 0 0 -1.4px;height:19.6px}
-.props .pr .v .chips{display:flex;flex-wrap:wrap;gap:6px 4px;max-width:100%}
-.props .pr .v .chip{margin:1.8px 0 0;height:auto;min-height:17.4px;width:auto;max-width:100%;box-sizing:border-box;padding:1px 9px 1px 9.4px;white-space:normal;line-height:15px;text-align:left;word-break:keep-all;align-items:flex-start}
-.props .pr .v .chip .sq{margin-top:1.3px}
+.props .pr .v .chips{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%;min-width:0}
+.props .pr .v .chip{margin:1.8px 0 0;height:17.4px;width:auto;max-width:100%;box-sizing:border-box;padding:0 9px 0 9.4px;white-space:nowrap;overflow:hidden}
 .props .pr .v .people{display:flex;flex-wrap:wrap;gap:7px 6px;max-width:100%}
 .props .pr .v .chip .sq{margin-right:2.6px}
 #panel-expand{position:relative;left:-2px}
@@ -1277,7 +1277,7 @@ const avstack=(ppl,n)=>`<span class="avstack">${(ppl||[]).slice(0,n||9).map(()=>
 const svg=(id,w,h,style='')=>`<svg width="${w}" height="${h}" style="${style}"><use href="#${id}"/></svg>`;
 const plusBtn=(cls='',title='추가')=>`<button class="sh-btn plus-btn ${cls}" title="${title}">${svg('i-plus',11.8,11.8)}</button>`;
 const pill=(p,extra='')=>`<span class="pill ${p.cls} ${extra}"><i class="sq"></i>${esc(p.tag)}</span>`;
-const chipOf=(it,extra='',full=false)=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" data-open="${it.id}"><i class="sq"></i>${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>`; };
+const chipOf=(it,extra='',full=false)=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" data-open="${it.id}"><i class="sq"></i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span></span>`; };
 const chipFull=it=>chipOf(it,'',true);
 const fmtDateK=d=>{const [y,m,dd]=d.split('-').map(Number);return `${y}년 ${m}월 ${dd}일`;};
 const fmtDateDot=d=>{const [y,m,dd]=d.split('-').map(Number);return `${y}. ${m}. ${dd}`;};
