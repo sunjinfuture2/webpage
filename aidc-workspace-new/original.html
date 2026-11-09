@@ -1653,10 +1653,10 @@ document.addEventListener('click',e=>{
     if(k==='edit'&&it){if(it.status==='locked'){toast('다른 사용자가 수정 중입니다.');return;} it.editing=true; it.snap=JSON.stringify({title:it.title,body:it.body,people:it.people,date:it.date,st:it.st,pri:it.pri,proj:it.proj,partner:it.partner,extAtt:it.extAtt,actions:it.actions,research:it.research}); rerenderItem(); return;}
     if(k==='save'&&it){saveItem(it); rerenderItem(); render(true); toast('저장했습니다.'); return;}
     if(k==='cancel'&&it){revertItem(it); rerenderItem(); return;}
-    if(k==='trash'&&it){it.status='trash';it.table=false;it.card=false;delete it.cal;toast('휴지통으로 이동했습니다.');if(S.full){S.full=null;render();}else{closePanel(true);render(true);}return;}
+    if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
     if(k==='editpartner'||k==='editcard'){const id=S.panel; editSimple(k,id); return;}
-    if(k==='trashpartner'){const id=S.panel;const i=PARTNERS.findIndex(x=>x.id===id);if(i>=0)PARTNERS.splice(i,1);closePanel(true);render(true);toast('휴지통으로 이동했습니다.');return;}
-    if(k==='trashcard'){const [si,cid]=S.panel.split(':');ARCH_SECTIONS[si].cards=ARCH_SECTIONS[si].cards.filter(x=>x.id!==cid);closePanel(true);render(true);toast('휴지통으로 이동했습니다.');return;}
+    if(k==='trashpartner'){const id=S.panel;const pt=PARTNERS.find(x=>x.id===id);confirmTrash(pt?pt.name:'이 협력업체',()=>{const i=PARTNERS.findIndex(x=>x.id===id);if(i>=0)PARTNERS.splice(i,1);closePanel(true);render(true);toast('휴지통으로 이동했습니다.');});return;}
+    if(k==='trashcard'){const [si,cid]=S.panel.split(':');const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid);confirmTrash(c?c.name:'이 자료',()=>{ARCH_SECTIONS[si].cards=ARCH_SECTIONS[si].cards.filter(x=>x.id!==cid);closePanel(true);render(true);toast('휴지통으로 이동했습니다.');});return;}
   }
   if(el=q('[data-agent]')){const k=el.dataset.agent; if(k==='sim'){window.open(location.protocol==='file:'?'AIDC_Revenue-Structure_Simulator_3y_rev14.6.html':'https://raw.githack.com/sunjinfuture2/simulator/main/AIDC_Revenue-Structure_Simulator_3y_rev14.6.html','_blank');} else notConnected(el,k==='daily'?'기관 및 업체별 일일동향 (에이전트)':'인터렉션 용어사전 (에이전트)'); return;}
   if(el=q('[data-attach]')){attachFile(itemFromEvent()); return;}
@@ -1784,6 +1784,8 @@ renderPane('inbox'); // init badges
 <script>
 /* ===================== EDIT MODEL HELPERS ===================== */
 const nowTxt=()=>{const d=new Date();return `${d.getMonth()+1}월 ${d.getDate()} ${d.getHours()<12?'오전':'오후'} ${((d.getHours()+11)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;};
+function confirmTrash(name,fn){confirmDlg(`“${name}”을(를) 휴지통으로 보낼까요?`,[{t:'휴지통으로 보내기',pri:true,fn},{t:'취소',fn:()=>{}}]);}
+async function trashItem(it){it.status='trash';it.table=false;it.card=false;delete it.cal;toast('휴지통으로 이동했습니다.');if(S.full){S.full=null;render();}else{closePanel(true);render(true);}}
 function saveItem(it){const t=$('.ititle[data-f="title"]'); if(t&&t.textContent.trim()&&t.textContent.trim()!==t.dataset.ph)it.title=t.textContent.trim(); readUrl(it); readBody(); it.editing=false; it.dirty=false; it.mod=nowTxt(); if(it.status==='published'){it.updated=TODAY;} delete it.snap;}
 function revertItem(it){if(it.snap){Object.assign(it,JSON.parse(it.snap));delete it.snap;} it.editing=false; it.dirty=false;}
 function itemDirty(it){ if(!it)return false; if(it.status==='locked')return false; const b=$('.ibody[data-f="body"]'); const t=$('.ititle[data-f="title"]'); const bodyNow=b?serializeBody(b):(it.body||''); const titleNow=t&&!t.classList.contains('empty')?t.textContent.trim():(it.title||''); if(it.editing){const s=it.snap?JSON.parse(it.snap):{}; return it.dirty||bodyNow!==(s.body||'')||titleNow!==(s.title||'');} if(it.status==='new'){return !!(titleNow||bodyNow);} return false;}
