@@ -35,7 +35,7 @@ rep('value="최원 기사"','value="${esc(sharedName)}"');
 rep("who(it.people.slice(0,1))","who(it.people)");
 rep("who(it.people.slice(0,2))","who(it.people)");
 rep("const who=(ppl)=>ppl.map(k=>`<span class=\"who\">${av()}${esc(PEOPLE[k])}</span>`).join('')+(it.type==='action'?'<span class=\"ghost\"></span>':'');","const who=(ppl)=>ppl.length?ppl.map(k=>`<span class=\"who\">${av()}${esc(userName(k))}</span>`).join(''):'<span class=\"plain\">비어 있음</span>';");
-rep("if(k==='people'){menuPop(el,[{hd:'담당자 선택'}]","if(k==='people'){menuPop(el,[{hd:'담당자 선택 · 여러 명 선택 가능'}]");
+rep("if(k==='people'){menuPop(el,[{hd:'담당자 선택'}]","if(k==='people'){menuPop(el,[]");
 rep("if(!it.people.length)it.people=[id];","");
 
 /* ---- edit locks: "locked" comes from the server lock table, not from a status value ---- */

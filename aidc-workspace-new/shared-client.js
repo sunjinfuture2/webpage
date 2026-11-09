@@ -83,6 +83,8 @@ async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=aw
 async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');if(!r.ok){sessionStorage.removeItem('aidc-tab-token');sharedToken='';return false;}const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);
  // Agent pages (일일동향·시뮬레이터·용어사전) ship with the design; create them once in the shared database.
  for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
+ // The archive gained a 기타 tab in the design; add it once to shared databases created before it existed.
+ if(!ARCH_TABS.includes("기타")){ARCH_TABS.push("기타");if(!ARCH_ROWS["기타"])ARCH_ROWS["기타"]=[];}
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedBlocked=false;
  const recovery=JSON.parse(localStorage.getItem('aidc-recovery:'+sharedUser)||'null');
  if(recovery){const recovered=new Map((recovery.items||[]).map(x=>[x.id,x]));for(const c of recovery.changes||[]){if(!c.id.startsWith('item:')||!c.after)continue;const id=c.id.slice(5);let v=recovered.get(id)||copy(item(id)||{});if(c.field)v[c.field]=c.after;else v=copy(c.after);recovered.set(id,v);}
