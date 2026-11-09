@@ -51,7 +51,14 @@ function sharedRedraw(){if(!sharedReady)return;sharedUi();const active=document.
  const scroll=$('#content').scrollTop,panelScroll=$('#panel').scrollTop;render();if(S.panel)rerenderItem();$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;
  const pane=$('#mnav .item.on')?.dataset.pane;if($('#ovl').classList.contains('on')&&pane)renderPane(pane);
 }
-function sharedStatus(text){let el=$('#shared-status');if(!el){el=document.createElement('div');el.id='shared-status';el.style.cssText='position:fixed;bottom:12px;right:16px;background:#fff;padding:8px 12px;border:1px solid #ddd;border-radius:6px;z-index:9999;font-size:12px';document.body.append(el);}el.textContent=text;}
+// Routine connection/save states stay silent; only problems surface, as a toast, at most once per 10 seconds per message.
+let lastStatus='',lastStatusAt=0;
+function sharedStatus(text){if(!/못했|확인|필요|보관|겹칩|재시도|실패/.test(text||''))return;const now=Date.now();if(text===lastStatus&&now-lastStatusAt<10000)return;lastStatus=text;lastStatusAt=now;toast(text,2600);}
+// Attachments are stored by the Worker (/api/file); the page embeds only the file id, so records stay small.
+async function sharedUploadFile(file,itemId){if(!sharedReady)throw Error('서버에 연결된 후 첨부할 수 있습니다.');if(file.size>1887436)throw Error('파일은 1.8MB까지 첨부할 수 있습니다. ('+file.name+')');
+ const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(Error('파일을 읽지 못했습니다.'));r.readAsDataURL(file);});
+ const r=await apiFetch('/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,type:file.type,size:file.size,item:itemId||'',data})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'파일을 올리지 못했습니다.');return d;}
+async function sharedListFiles(){const r=await apiFetch('/api/files');if(!r.ok)throw Error('첨부 파일 목록을 가져오지 못했습니다.');return (await r.json()).files||[];}
 function preserveLocal(){if(!sharedUser)return;localStorage.setItem('aidc-recovery:'+sharedUser,JSON.stringify({at:Date.now(),items:ITEMS.filter(x=>(x.editing||x.status==='new'||x.status==='draft')&&(!x.authorId||x.authorId===sharedUser||x.editing)),changes:sharedDiff(sharedBase,sharedRecords())}));}
 async function sharedFlush(wait=false){if(wait===true&&sharedBusy){while(sharedBusy)await new Promise(r=>setTimeout(r,50));}if(!sharedReady||sharedBusy||sharedBlocked)return false;preserveLocal();const sent=sharedRecords(),changes=sharedDiff(sharedBase,sent);if(!changes.length)return true;sharedBusy=true;sharedStatus('저장 중…');
  try{const r=await apiFetch('/api/change',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({changes})});const data=await r.json();if(!r.ok){if(r.status===409||r.status===423){sharedBlocked=true;sharedStatus(data.error+' · 작성 내용 보관됨');}throw Error(data.error);}
@@ -106,7 +113,6 @@ function sharedUi(){if(!sharedReady)return;
  const p=otherLock('project:'+S.proj);for(const b of $$('[data-editproj]')){b.disabled=!!p;b.textContent=p?userName(p.employee)+'님이 수정 중입니다':S.editProj?'저장':'수정';}
  for(const el of $$('.ititle[data-f="title"],.ibody[data-f="body"]'))el.contentEditable=it&&!l&&(it.editing||['new','draft'].includes(it.status))?'true':'false';
  for(const b of $$('[data-pick], [data-ed="trash"]')){b.style.opacity=l?'.5':'';b.title=l?userName(l.employee)+'님이 수정 중입니다':'';}
- if(it?.authorId){for(const h of $$('.ihead')){let a=$('[data-author-name]',h);if(!a){a=document.createElement('span');a.dataset.authorName='1';a.style.cssText='font-size:12px;color:#888;margin-left:12px';h.append(a);}a.textContent='작성자 '+(sharedUsers[it.authorId]||it.authorName||userName(it.authorId));}}
  $('#tb-user .nm').textContent=sharedName;const n=$('#mnav .me .nm');if(n)n.textContent=sharedName;
 }
 let renewTimer=0;

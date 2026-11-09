@@ -34,7 +34,7 @@ rep('value="최원 기사"','value="${esc(sharedName)}"');
 /* ---- assignees: any number of people, shown as "first +N" ---- */
 rep("who(it.people.slice(0,1))","who(it.people)");
 rep("who(it.people.slice(0,2))","who(it.people)");
-rep("const who=(ppl)=>ppl.map(k=>`<span class=\"who\">${av()}${esc(PEOPLE[k])}</span>`).join('')+(it.type==='action'?'<span class=\"ghost\"></span>':'');","const who=(ppl)=>ppl.length?`<span class=\"who\">${av()}${esc(userName(ppl[0]))}${ppl.length>1?' 외 '+(ppl.length-1)+'명':''}</span>`:'<span class=\"plain\">비어 있음</span>';");
+rep("const who=(ppl)=>ppl.map(k=>`<span class=\"who\">${av()}${esc(PEOPLE[k])}</span>`).join('')+(it.type==='action'?'<span class=\"ghost\"></span>':'');","const who=(ppl)=>ppl.length?ppl.map(k=>`<span class=\"who\">${av()}${esc(userName(k))}</span>`).join(''):'<span class=\"plain\">비어 있음</span>';");
 rep("if(k==='people'){menuPop(el,[{hd:'담당자 선택'}]","if(k==='people'){menuPop(el,[{hd:'담당자 선택 · 여러 명 선택 가능'}]");
 rep("if(!it.people.length)it.people=[id];","");
 
@@ -56,10 +56,6 @@ rep("function revertItem(it){if(it.snap){Object.assign(it,JSON.parse(it.snap));d
 /* ---- project overview edit: lock the project, save through the server ---- */
 rep("if(el=q('[data-editproj]')){if(S.editProj){saveProjectHead();S.editProj=false;render(true);toast('저장했습니다.');}else{S.editProj=true;S.collapsed=false;render(true);}return;}","if(el=q('[data-editproj]')){if(S.editProj){await sharedSaveProject(el);}else{if(!await sharedBeginEdit('project:'+S.proj))return;S.editProj=true;S.collapsed=false;render(true);}return;}");
 rep("if(el=q('[data-canceledit]')){S.editProj=false;","if(el=q('[data-canceledit]')){S.editProj=false;await sharedRelease('project:'+S.proj);");
-
-/* ---- status messages come from the server save ---- */
-rep("toast('게시했습니다.')","sharedStatus('서버에 저장 중…')",{all:true});
-rep("toast('저장했습니다.')","sharedStatus('서버에 저장 중…')",{all:true});
 
 /* ---- editor fields: read from the view that is actually open (panel or full page) ---- */
 rep("$('.ititle[data-f=\"title\"]')","$('.ititle[data-f=\"title\"]',S.full?$('#item-pin'):$('#panel-pin'))",{all:true});
