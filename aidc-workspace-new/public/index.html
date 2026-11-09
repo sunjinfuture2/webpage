@@ -612,14 +612,14 @@ svg{display:block}
 .tbl.archive .rw .src a{border-bottom:1px solid #9f9f9f;line-height:17px}
 
 /* ===== SIDE PANEL & FULL PAGE ITEM ===== */
-.panel{position:absolute;right:0;top:45px;bottom:0;width:var(--panelw);background:#fff;z-index:16;overflow-y:auto;overflow-x:hidden;border-left:1px solid rgba(196,196,196,.6);box-shadow:-4px 0 12px rgba(0,0,0,.045);transform:translateX(104%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s linear .28s}
+.panel{position:absolute;right:0;top:45px;bottom:0;width:var(--panelw);background:#fff;z-index:16;overflow-y:auto;overflow-x:hidden;transform:translateX(104%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s linear .28s}
 .panel-resize{position:absolute;right:calc(var(--panelw) - 3px);top:45px;bottom:0;width:6px;cursor:col-resize;z-index:18;display:none}
 #app.panel-open .panel-resize{display:block}
 .panel-resize::after{content:"";position:absolute;left:2px;top:0;bottom:0;width:2px;background:transparent;transition:background .12s}
 .panel-resize:hover::after,#app.resizing .panel-resize::after{background:#dcdcdc}
-#app.resizing .panel{transition:none}
-#app::after{content:"";display:none;position:absolute;right:var(--panelw);top:0;bottom:0;width:0;border-left:1px solid rgba(196,196,196,.6);box-shadow:-4px 0 12px rgba(0,0,0,.045);z-index:17;pointer-events:none;opacity:0;transition:opacity .28s}
-#app.panel-open::after{opacity:1}
+#app.resizing .panel,#app.resizing::after{transition:none}
+#app::after{content:"";position:absolute;right:var(--panelw);top:0;bottom:0;width:0;border-left:1px solid rgba(196,196,196,.6);box-shadow:-4px 0 12px rgba(0,0,0,.045);z-index:17;pointer-events:none;transform:translateX(calc(var(--panelw)*1.04 + 24px));transition:transform .28s cubic-bezier(.2,.7,.2,1)}
+#app.panel-open::after{transform:none}
 .panel.on{transform:translateX(0);visibility:visible;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .panel .pin{position:relative;width:auto;min-height:100%}
 .ipage{position:relative;min-height:1035px}
@@ -628,6 +628,7 @@ svg{display:block}
 .ihead .pub{height:24.8px;width:54.7px;font-size:16px;font-weight:500;color:#8e8e8e;border-radius:8px}
 .ihead .pub.ready{color:#3f3f3f}
 .ihead .pub.edit{color:#3f3f3f}
+.ihead .pub[data-ed="edit"]{color:#8e8e8e} /* same gray as the project title's 수정 button */
 .ihead .last{margin:1.9px 0 0 8.4px;font-size:15px;color:#c4c4c4;white-space:nowrap;display:inline-flex;align-items:center}
 .ihead .last .by{display:inline-flex;align-items:center;gap:5px;margin-left:9px;color:#c4c4c4}
 .ihead .last .by .avatar{width:16px;height:16px;opacity:.5}
@@ -644,16 +645,16 @@ svg{display:block}
 .panel .props{grid-template-columns:449px 323px}
 .panel .rcol .pr .k{width:112.5px}
 .ipage .rcol .pr .k{width:162.1px}
-.props .pr{display:flex;align-items:flex-start;min-height:42px;font-size:15px;color:var(--t2)}
+.props .pr{display:flex;align-items:flex-start;min-height:42px;padding-bottom:22px;font-size:15px;color:var(--t2)}
 .props .pr .k{width:138.3px;font-weight:600;flex:none}
 .ipage .props .pr .k{width:163.6px}
 .props .pr .v{display:flex;align-items:flex-start;gap:3.3px;min-height:20px;cursor:pointer;position:relative}
 .props .pr .v.txt:hover{background:#f7f7f7;border-radius:3px;margin:-2px -6px;padding:2px 6px}
 .props .pr .v .pill{margin:-0.8px 0 0 -1.4px;height:19.6px}
-.props .pr .v .chips{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}
+.props .pr .v .chips{display:flex;flex-wrap:wrap;gap:6px 4px;max-width:100%}
 .props .pr .v .chip{margin:1.8px 0 0;height:auto;min-height:17.4px;width:auto;max-width:100%;box-sizing:border-box;padding:1px 9px 1px 9.4px;white-space:normal;line-height:15px;text-align:left;word-break:keep-all;align-items:flex-start}
 .props .pr .v .chip .sq{margin-top:1.3px}
-.props .pr .v .people{display:flex;flex-wrap:wrap;gap:4px 6px;max-width:100%}
+.props .pr .v .people{display:flex;flex-wrap:wrap;gap:7px 6px;max-width:100%}
 .props .pr .v .chip .sq{margin-right:2.6px}
 #panel-expand{position:relative;left:-2px}
 .props .pr .v .lk{display:flex;align-items:flex-start;gap:3.1px;margin-left:2.5px}
