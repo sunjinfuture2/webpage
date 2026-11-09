@@ -1,7 +1,8 @@
 import { openDB } from 'idb';
-import type { Workspace } from './types';
+import type { PortfolioBundle, Workspace } from './types';
 import { calculate } from './engine';
 import { isDay } from './dates';
+import { calculatePortfolio } from './portfolio';
 
 export interface SavedWorkspace { revision: number; workspace: Workspace }
 const database = () => openDB('sunjin-schedule-v1', 1, {
@@ -38,6 +39,21 @@ export async function writeWorkspace(workspace: Workspace, expectedRevision: num
   await tx.done;
   return revision;
 }
+/** Reidentify an imported root without changing the identities of its owned project snapshots. */
+export function remapWorkspaceProject(workspace: Workspace, projectId: string): Workspace {
+  assertWorkspace(workspace);
+  const originalBundles = [workspace.portfolio, ...Object.values(workspace.scenarioPortfolios || {})];
+  if (!projectId.trim() || originalBundles.some(bundle => bundle?.projects.some(p => p.id === projectId))) throw new Error('가져온 연결 프로젝트와 현재 프로젝트 ID가 겹칩니다. 새 작업공간으로 열어주세요.');
+  const next = structuredClone(workspace), previousId = next.projectId;
+  next.projectId = projectId;
+  const bundles = [next.portfolio, ...Object.values(next.scenarioPortfolios || {})];
+  for (const bundle of bundles) for (const edge of bundle?.links || []) {
+    if (edge.from.projectId === previousId) edge.from.projectId = projectId;
+    if (edge.to.projectId === previousId) edge.to.projectId = projectId;
+  }
+  assertWorkspace(next);
+  return next;
+}
 export function assertWorkspace(value: unknown): asserts value is Workspace {
   const w = value as Workspace;
   if (!w || w.schemaVersion !== 1 || typeof w.projectId !== 'string' || !Array.isArray(w.scenarios) || !w.scenarios.length || w.scenarios.length > 50) throw new Error('지원하는 SUNJIN 일정 백업(v1)이 아닙니다.');
@@ -53,6 +69,27 @@ export function assertWorkspace(value: unknown): asserts value is Workspace {
     for (const t of p.tasks) if (!t.roles || !Number.isFinite(t.order) || typeof t.criteria !== 'string' || typeof t.evidence !== 'string' || typeof t.conditions !== 'string') throw new Error('업무 속성 형식을 확인해주세요.');
   }
   if (!ids.has(w.activeId) || !w.preferences || !Array.isArray(w.preferences.collapsed) || !Array.isArray(w.audit)) throw new Error('작업공간 상태를 확인해주세요.');
-  if (!['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence'].includes(w.preferences.view) || !['week', 'month', 'quarter', 'year'].includes(w.preferences.scale) || !Number.isFinite(w.preferences.gridWidth) || w.preferences.gridWidth < 300 || w.preferences.gridWidth > 1200) throw new Error('보기 설정을 확인해주세요.');
+  if (!['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'].includes(w.preferences.view) || !['week', 'month', 'quarter', 'year'].includes(w.preferences.scale) || !Number.isFinite(w.preferences.gridWidth) || w.preferences.gridWidth < 300 || w.preferences.gridWidth > 1200) throw new Error('보기 설정을 확인해주세요.');
   if (!isDay(w.preferences.date) || w.preferences.collapsed.some(x => typeof x !== 'string') || (w.preferences.calendarMode !== undefined && !['month', 'week'].includes(w.preferences.calendarMode))) throw new Error('보기 날짜와 달력 설정을 확인해주세요.');
+  const validateBundle = (portfolio: PortfolioBundle, scenarioId: string) => {
+    if (!portfolio || portfolio.schemaVersion !== 1 || !Array.isArray(portfolio.projects) || portfolio.projects.length > 20 || !Array.isArray(portfolio.links) || portfolio.links.length > 50000) throw new Error('연결 프로젝트의 백업 형식을 확인해주세요.');
+    const projectIds = new Set([w.projectId]);
+    for (const entry of portfolio.projects) {
+      if (!entry || typeof entry.id !== 'string' || !entry.id.trim() || projectIds.has(entry.id) || typeof entry.name !== 'string' || !entry.name.trim() || !entry.workspace || entry.workspace.portfolio !== undefined || entry.workspace.scenarioPortfolios !== undefined) throw new Error('연결 프로젝트 ID·이름을 확인해주세요. 중첩된 프로젝트 묶음은 가져올 수 없습니다.');
+      projectIds.add(entry.id);
+      assertWorkspace(entry.workspace);
+    }
+    calculatePortfolio([
+      { id: w.projectId, name: '현재 프로젝트', plan: w.scenarios.find(p => p.id === scenarioId)! },
+      ...portfolio.projects.map(entry => ({ id: entry.id, name: entry.name, plan: entry.workspace.scenarios.find(p => p.id === entry.workspace.activeId)! })),
+    ], portfolio.links);
+  };
+  if (w.portfolio !== undefined) validateBundle(w.portfolio, w.activeId);
+  if (w.scenarioPortfolios !== undefined) {
+    if (!w.scenarioPortfolios || Array.isArray(w.scenarioPortfolios) || typeof w.scenarioPortfolios !== 'object') throw new Error('시나리오별 연결 프로젝트 형식을 확인해주세요.');
+    for (const [id, bundle] of Object.entries(w.scenarioPortfolios)) {
+      if (!ids.has(id) || id === w.activeId) throw new Error('시나리오별 연결 프로젝트의 계획 ID를 확인해주세요.');
+      if (bundle !== null) validateBundle(bundle, id);
+    }
+  }
 }

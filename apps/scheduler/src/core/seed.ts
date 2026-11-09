@@ -40,7 +40,7 @@ export function planFromSource(source: SeedArchive): Plan {
 export function workspaceFromSource(source: SeedArchive): Workspace {
   return {
     schemaVersion: 1, projectId: 'pangyo-aidc', source, scenarios: [planFromSource(source)], activeId: 'base',
-    preferences: { view: 'gantt', date: source.statusDate, scale: 'month', collapsed: [], showReference: true, showLinks: false, gridWidth: 640 },
+    preferences: { view: 'gantt', date: source.statusDate, scale: 'month', collapsed: [], showReference: true, showLinks: true, gridWidth: 640 },
     audit: [],
   };
 }

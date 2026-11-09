@@ -4,7 +4,8 @@ import type { Controller } from '../useWorkspace';
 import type { Plan, Procurement, SourceRecord, Task } from '../core/types';
 import { calculate } from '../core/engine';
 import { planFromSource } from '../core/seed';
-import { drivingPath } from '../core/explain';
+import { connectedDrivingPath, drivingPath } from '../core/explain';
+import { calculateWorkspaceScenarios } from '../core/scenario-results';
 import { shortDate } from '../core/dates';
 import { Badge, Empty, ErrorText, Modal } from './UI';
 
@@ -78,26 +79,33 @@ export function ScenariosView({ controller: c }: { controller: Controller }) {
   const w = c.workspace!, p = c.plan!;
   const [name, setName] = useState(''), [creating, setCreating] = useState(false), [deleting, setDeleting] = useState<string | null>(null), [compareId, setCompareId] = useState('reference');
   const reference = useMemo(() => planFromSource(w.source), [w.source]);
-  const results = useMemo(() => new Map(w.scenarios.map(s => [s.id, calculate(s)])), [w.scenarios]);
-  const compared = compareId === 'reference' ? reference : w.scenarios.find(s => s.id === compareId) || reference;
-  const compareResult = useMemo(() => calculate(compared), [compared]);
-  const current = results.get(p.id)!;
-  const path = useMemo(() => drivingPath(p, current), [p, current]);
+  const results = useMemo(() => calculateWorkspaceScenarios(w), [w.scenarios, w.activeId, w.portfolio, w.scenarioPortfolios, w.projectId, w.source.sourceFile]);
+  const referenceResult = useMemo(() => calculate(reference), [reference]);
+  const compareReference = compareId === 'reference' || !w.scenarios.some(s => s.id === compareId);
+  const compared = compareReference ? reference : w.scenarios.find(s => s.id === compareId)!;
+  const compareEntry = results.get(compared.id);
+  const compareResult = compareReference ? referenceResult : compareEntry?.result;
+  const current = c.result!;
+  const connected = results.get(p.id)?.portfolio;
+  const path = useMemo(() => connected ? connectedDrivingPath(w, connected) : drivingPath(p, current).map(step => ({ ...step, projectId: w.projectId, projectName: '' })), [w, p, current, connected]);
   const diffs = p.tasks.filter(t => {
+    if (!compareResult) return false;
     const other = compared.tasks.find(x => x.id === t.id), a = current.tasks[t.id], b = other && compareResult.tasks[other.id];
     return !other || !b || a.start !== b.start || a.finish !== b.finish || t.primary !== other.primary || t.progress !== other.progress || t.status !== other.status;
   });
   return <div className="scenarios-view scroll-area"><div className="section-heading"><div><h2>계획은 보존하고, 가능성을 비교하세요</h2><p className="muted">독립 시나리오에서 지연과 조건을 검토합니다. 원본 참조계획은 바뀌지 않습니다.</p></div><button className="button primary" onClick={() => setCreating(true)}><Plus size={15} />시나리오 복제</button></div>
     <div className="scenario-grid">{w.scenarios.map(s => {
-      const r = results.get(s.id)!;
-      return <article key={s.id} className={'scenario-card ' + (p.id === s.id ? 'active' : '')}><div className="row between"><Badge kind={p.id === s.id ? 'green' : 'muted'}>{p.id === s.id ? '현재 작업 중' : '저장된 시나리오'}</Badge>{s.id !== 'base' && <button className="icon-button danger" aria-label={s.name + ' 삭제'} onClick={() => setDeleting(s.id)}><Trash2 size={15} /></button>}</div><h3>{s.name}</h3><span className="muted small">{r.operationValid ? '조건부 운영개시 예상' : '축소안 재승인 전·참고일'}</span><strong>{shortDate(r.operationDate)}</strong><div className="scenario-metrics"><span>목표 대비 <b className={r.operationDelay > 0 ? 'red' : 'green'}>{r.operationDelay > 0 ? '+' : ''}{r.operationDelay}일</b></span><span>CP <b>{r.criticalCount}</b></span><span>변동 업무 <b>{r.changedCount}</b></span></div><button className={'button full ' + (s.id === p.id ? 'subtle' : '')} disabled={s.id === p.id} onClick={() => c.switchScenario(s.id)}>{s.id === p.id ? '사용 중' : '이 계획 열기'}<ArrowRight size={14} /></button></article>;
+      const entry = results.get(s.id)!, r = s.id === p.id ? current : entry.result;
+      return <article key={s.id} className={'scenario-card ' + (p.id === s.id ? 'active' : '')}><div className="row between"><Badge kind={p.id === s.id ? 'green' : 'muted'}>{p.id === s.id ? '현재 작업 중' : '저장된 시나리오'}</Badge>{s.id !== 'base' && <button className="icon-button danger" aria-label={s.name + ' 삭제'} onClick={() => setDeleting(s.id)}><Trash2 size={15} /></button>}</div><h3>{s.name}</h3>{r ? <><span className="muted small">{r.operationValid ? '조건부 운영개시 예상' : '예측 적용조건 확인 필요·참고일'}</span><strong>{shortDate(r.operationDate)}</strong><div className="scenario-metrics"><span>목표 대비 <b className={r.operationDelay > 0 ? 'red' : 'green'}>{r.operationDelay > 0 ? '+' : ''}{r.operationDelay}일</b></span><span>CP <b>{r.criticalCount}</b></span><span>변동 업무 <b>{r.changedCount}</b></span></div></> : <ErrorText>{entry.error}</ErrorText>}<button className={'button full ' + (s.id === p.id ? 'subtle' : '')} disabled={s.id === p.id || !r} onClick={() => c.switchScenario(s.id)}>{s.id === p.id ? '사용 중' : !r ? '연결 조건 확인 필요' : '이 계획 열기'}<ArrowRight size={14} /></button></article>;
     })}<button className="scenario-new" onClick={() => setCreating(true)}><Copy size={23} /><strong>새 가능성 검토</strong><span>현재 입력을 복제해 시작합니다</span></button></div>
-    <details className="impact-path"><summary>운영개시를 결정한 대표 경로 <span>{path.length}개 업무</span></summary><p className="hint">현재 입력의 대표 결정 경로입니다. 동시에 영향을 주는 다른 관계는 업무 상세에서 확인할 수 있습니다.</p><div>{path.map((step, index) => <div className="path-step" key={step.taskId}><button onClick={() => c.setSelectedId(step.taskId)}><span className="mono">{step.wbs}</span><strong>{step.name}</strong><small>{shortDate(step.finish)} · {step.cause}</small></button>{index !== path.length - 1 && <ArrowRight size={13} />}</div>)}</div></details>
-    <div className="compare-header"><h3>업무별 차이 <span>{diffs.length}</span></h3><label>비교 기준<select aria-label="비교 기준" value={compareId} onChange={e => setCompareId(e.target.value)}><option value="reference">원본 참조계획</option>{w.scenarios.filter(s => s.id !== p.id).map(s => <option value={s.id} key={s.id}>{s.name}</option>)}</select></label></div>
+    <details className="impact-path"><summary>운영개시를 결정한 대표 경로 <span>{path.length}개 업무</span></summary><p className="hint">선택한 시나리오와 연결 프로젝트를 함께 계산한 대표 경로입니다. 외부 업무를 누르면 프로젝트 연결 화면을 엽니다.</p><div>{path.map((step, index) => <div className="path-step" key={step.projectId + ':' + step.taskId}><button onClick={() => { if (step.projectId === w.projectId) c.setSelectedId(step.taskId); else { c.setSelectedId(null); c.preferences({ view: 'portfolio' }); } }}><span className="mono">{step.projectId !== w.projectId ? step.projectName + ' / ' : ''}{step.wbs}</span><strong>{step.name}</strong><small>{shortDate(step.finish)} · {step.cause}</small></button>{index !== path.length - 1 && <ArrowRight size={13} />}</div>)}</div></details>
+    <div className="compare-header"><h3>업무별 차이 <span>{diffs.length}</span></h3><label>비교 기준<select aria-label="비교 기준" value={compareReference ? 'reference' : compareId} onChange={e => setCompareId(e.target.value)}><option value="reference">원본 참조계획</option>{w.scenarios.filter(s => s.id !== p.id).map(s => <option value={s.id} key={s.id}>{s.name}</option>)}</select></label></div>
+    {compareReference && <p className="hint">원본 참조계획은 가져온 원본 입력의 계산입니다. 이후 추가한 프로젝트 연결은 포함하지 않습니다.</p>}
+    {!compareResult && <ErrorText>{compareEntry?.error || '비교할 시나리오의 연결 조건을 확인해주세요.'}</ErrorText>}
     {diffs.length ? <table className="data-table"><thead><tr><th>WBS</th><th>업무</th><th>비교 기준 완료</th><th>현재 예상 완료</th><th>완료 차이</th><th>담당 · 진척</th></tr></thead><tbody>{diffs.map(t => {
-      const a = current.tasks[t.id], b = compareResult.tasks[t.id];
+      const a = current.tasks[t.id], b = compareResult!.tasks[t.id];
       return <tr key={t.id}><td className="mono">{t.wbs}</td><td><button className="table-name-button" onClick={() => c.setSelectedId(t.id)}>{t.name}</button></td><td className="mono">{shortDate(b?.finish)}</td><td className="mono">{shortDate(a.finish)}</td><td><Badge kind={b && a.finish > b.finish ? 'warning' : 'muted'}>{b ? Math.round((Date.parse(a.finish) - Date.parse(b.finish)) / 86400000) + '일' : '신규'}</Badge></td><td>{t.primary || '미지정'} · {t.progress === null ? '미입력' : Math.round(t.progress * 100) + '%'}</td></tr>;
-    })}</tbody></table> : <Empty title="비교 기준과 일정 차이가 없습니다">지연이나 조건을 변경하면 영향 업무를 이곳에서 확인할 수 있습니다.</Empty>}
+    })}</tbody></table> : compareResult ? <Empty title="비교 기준과 일정 차이가 없습니다">지연이나 조건을 변경하면 영향 업무를 이곳에서 확인할 수 있습니다.</Empty> : null}
     {creating && <Modal title="시나리오 복제" onClose={() => setCreating(false)}><form onSubmit={e => { e.preventDefault(); c.cloneScenario(name); setCreating(false); setName(''); }}><div className="modal-body"><p className="muted">현재 계획의 업무·관계·조달 입력을 별도로 복제합니다.</p><label className="field"><span>시나리오 이름</span><input required value={name} onChange={e => setName(e.target.value)} placeholder="예: NVIS 착수 7일 지연 검토" /></label></div><div className="modal-footer"><button className="button" type="button" onClick={() => setCreating(false)}>취소</button><button className="button primary"><Copy size={15} />복제하기</button></div></form></Modal>}
     {deleting && <Modal title="시나리오를 삭제할까요?" onClose={() => setDeleting(null)}><div className="modal-body"><p>이 시나리오의 입력을 삭제합니다. 필요한 경우 먼저 JSON 백업을 내보내세요.</p></div><div className="modal-footer"><button className="button" onClick={() => setDeleting(null)}>취소</button><button className="button primary" onClick={() => { c.deleteScenario(deleting); setDeleting(null); }}>삭제</button></div></Modal>}
   </div>;

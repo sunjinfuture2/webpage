@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Plan, Preferences, ScheduleResult, Workspace } from './core/types';
-import { readWorkspace, readWorkspaceById, writeWorkspace, assertWorkspace } from './core/storage';
+import { readWorkspace, readWorkspaceById, writeWorkspace, assertWorkspace, remapWorkspaceProject } from './core/storage';
 import { validatedPlan } from './core/commands';
 import { isDay } from './core/dates';
+import { restoreWorkspaceCommand } from './core/workspace-history';
+import type { WorkspaceCommand } from './core/workspace-history';
+import { switchWorkspaceScenario } from './core/workspace-scenarios';
 
-const views = ['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence'];
+const views = ['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'];
 export function requestedProjectId(hash: string): string | null {
   try { const match = hash.match(/^#\/projects\/([^/]+)\/schedule(?:\?|$)/); return match ? decodeURIComponent(match[1]) : null; }
   catch { return null; }
@@ -21,11 +24,17 @@ export function routeState(workspace: Workspace) {
   let warning = '';
   if (v && !views.includes(v)) warning = '지원하지 않는 보기입니다. 기본 보기를 열었습니다.';
   if (date && !isDay(date)) warning = 'URL의 날짜를 확인해주세요. 저장된 날짜로 복구했습니다.';
-  const activeId = scenarioId && workspace.scenarios.some(p => p.id === scenarioId) ? scenarioId : workspace.activeId;
+  const requestedScenario = scenarioId && workspace.scenarios.some(p => p.id === scenarioId) ? scenarioId : workspace.activeId;
+  let routed = workspace;
+  if (requestedScenario !== workspace.activeId) {
+    try { routed = switchWorkspaceScenario(workspace, requestedScenario); assertWorkspace(routed); }
+    catch { routed = workspace; warning = '이 시나리오는 연결 프로젝트의 업무 참조와 호환되지 않습니다. 저장된 계획을 열었습니다.'; }
+  }
+  const activeId = routed.activeId;
   const selectedValid = selectedId && workspace.scenarios.find(p => p.id === activeId)?.tasks.some(t => t.id === selectedId);
   if (selectedId && !selectedValid) warning = '선택한 업무를 찾을 수 없습니다. 일정 화면에서 다시 선택해주세요.';
   return {
-    workspace: { ...workspace, activeId, preferences: { ...workspace.preferences, ...(v && views.includes(v) ? { view: v as Preferences['view'] } : {}), ...(date && isDay(date) ? { date } : {}) } },
+    workspace: { ...routed, preferences: { ...routed.preferences, ...(v && views.includes(v) ? { view: v as Preferences['view'] } : {}), ...(date && isDay(date) ? { date } : {}) } },
     selectedId: selectedValid ? selectedId : null, warning,
   };
 }
@@ -50,7 +59,7 @@ export function useWorkspace() {
   const revision = useRef(0), computeRevision = useRef(0), saveSerial = useRef(0);
   const saveQueue = useRef(Promise.resolve());
   const blocked = useRef(false);
-  const undoStack = useRef(new Map<string, Plan[]>()), redoStack = useRef(new Map<string, Plan[]>());
+  const undoStack = useRef(new Map<string, WorkspaceCommand[]>()), redoStack = useRef(new Map<string, WorkspaceCommand[]>());
   const worker = useRef<Worker | null>(null);
   const notify = useCallback((text: string, error = false) => setToast({ text, error }), []);
   const setRoot = useCallback((next: Workspace) => { current.current = next; setWorkspace(next); setSaveState('pending'); }, []);
@@ -142,48 +151,88 @@ export function useWorkspace() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, [setRoot, notify, enqueueSave]);
-  const commit = useCallback((mutate: (draft: Plan) => void, label: string) => {
+  const commitWorkspace = useCallback((mutate: (draft: Workspace) => void, label: string) => {
     const w = current.current; if (!w) return false;
-    const p = w.scenarios.find(p => p.id === w.activeId)!;
     try {
-      const next = validatedPlan(p, mutate);
-      undoStack.current.set(p.id, [...(undoStack.current.get(p.id) || []).slice(-39), p]);
-      redoStack.current.set(p.id, []);
-      setRoot({ ...w, scenarios: w.scenarios.map(s => s.id === p.id ? next : s), audit: [...w.audit.slice(-199), { at: new Date().toISOString(), scenarioId: p.id, label }] });
+      const next = structuredClone(w);
+      mutate(next);
+      if (next.projectId !== w.projectId) throw new Error('작업공간의 프로젝트 ID는 편집할 수 없습니다.');
+      const stamp = new Date().toISOString();
+      const touchPlans = (after: Workspace, before?: Workspace) => {
+        for (const p of after.scenarios) {
+          const prior = before?.scenarios.find(s => s.id === p.id);
+          if (prior && JSON.stringify(prior) !== JSON.stringify(p)) p.updatedAt = stamp;
+        }
+      };
+      touchPlans(next, w);
+      for (const entry of next.portfolio?.projects || []) touchPlans(entry.workspace, w.portfolio?.projects.find(p => p.id === entry.id)?.workspace);
+      assertWorkspace(next);
+      undoStack.current.set(w.activeId, [...(undoStack.current.get(w.activeId) || []).slice(-39), { before: w, after: next }]);
+      redoStack.current.set(w.activeId, []);
+      setRoot({ ...next, audit: [...w.audit.slice(-199), { at: stamp, scenarioId: next.activeId, label }] });
       setHistoryTick(x => x + 1); notify(label + ' · 반영했습니다');
       return true;
     } catch (e) { notify(e instanceof Error ? e.message : '변경을 적용하지 못했습니다.', true); return false; }
   }, [setRoot, notify]);
+  const commit = useCallback((mutate: (draft: Plan) => void, label: string) => commitWorkspace(d => {
+    const p = d.scenarios.find(p => p.id === d.activeId)!;
+    const next = validatedPlan(p, mutate);
+    d.scenarios = d.scenarios.map(s => s.id === p.id ? next : s);
+  }, label), [commitWorkspace]);
   const travelHistory = useCallback((kind: 'undo' | 'redo') => {
     const w = current.current; if (!w) return;
     const p = w.scenarios.find(p => p.id === w.activeId)!;
     const from = kind === 'undo' ? undoStack : redoStack, to = kind === 'undo' ? redoStack : undoStack;
-    const stack = from.current.get(p.id) || [], next = stack.pop(); if (!next) return;
-    from.current.set(p.id, stack); to.current.set(p.id, [...(to.current.get(p.id) || []), p]);
-    setRoot({ ...w, scenarios: w.scenarios.map(s => s.id === p.id ? next : s), audit: [...w.audit.slice(-199), { at: new Date().toISOString(), scenarioId: p.id, label: kind === 'undo' ? '실행취소' : '다시실행' }] });
+    const stack = from.current.get(p.id) || [], command = stack.at(-1); if (!command) return;
+    let restored: Workspace;
+    try {
+      restored = restoreWorkspaceCommand(w, command, kind);
+      restored = { ...restored, audit: [...w.audit.slice(-199), { at: new Date().toISOString(), scenarioId: p.id, label: kind === 'undo' ? '실행취소' : '다시실행' }] };
+      assertWorkspace(restored);
+    }
+    catch (e) { notify(e instanceof Error ? e.message : '변경 이력을 복원하지 못했습니다.', true); return; }
+    from.current.set(p.id, stack.slice(0, -1)); to.current.set(p.id, [...(to.current.get(p.id) || []).slice(-39), command]);
+    setRoot(restored);
     setHistoryTick(x => x + 1);
-  }, [setRoot]);
+  }, [setRoot, notify]);
   const preferences = useCallback((patch: Partial<Preferences>) => {
     if (current.current) setRoot({ ...current.current, preferences: { ...current.current.preferences, ...patch } });
   }, [setRoot]);
   const switchScenario = useCallback((id: string) => {
-    if (current.current?.scenarios.some(p => p.id === id)) { setRoot({ ...current.current, activeId: id }); setSelectedId(null); }
-  }, [setRoot]);
+    if (current.current?.scenarios.some(p => p.id === id)) {
+      const next = switchWorkspaceScenario(current.current, id);
+      try { assertWorkspace(next); setRoot(next); setSelectedId(null); }
+      catch (e) { notify(e instanceof Error ? e.message : '연결 프로젝트와 호환되지 않는 시나리오입니다.', true); }
+    }
+  }, [setRoot, notify]);
   const cloneScenario = useCallback((name: string) => {
     const w = current.current; if (!w) return;
-    const p = structuredClone(w.scenarios.find(p => p.id === w.activeId)!);
-    p.id = crypto.randomUUID(); p.name = name.trim() || '새 시나리오'; p.createdAt = new Date().toISOString(); p.updatedAt = p.createdAt;
-    setRoot({ ...w, activeId: p.id, scenarios: [...w.scenarios, p] }); notify('독립 시나리오를 만들었습니다.');
+    try {
+      const p = structuredClone(w.scenarios.find(p => p.id === w.activeId)!);
+      p.id = crypto.randomUUID(); p.name = name.trim() || '새 시나리오'; p.createdAt = new Date().toISOString(); p.updatedAt = p.createdAt;
+      const next = switchWorkspaceScenario({ ...w, scenarios: [...w.scenarios, p] }, p.id);
+      assertWorkspace(next); setRoot(next); notify('연결 프로젝트까지 복제한 독립 시나리오를 만들었습니다.');
+    } catch (e) { notify(e instanceof Error ? e.message : '시나리오를 복제하지 못했습니다.', true); }
   }, [setRoot, notify]);
   const deleteScenario = useCallback((id: string) => {
     const w = current.current; if (!w || w.scenarios.length === 1 || id === 'base') return;
     const remaining = w.scenarios.filter(p => p.id !== id);
-    setRoot({ ...w, scenarios: remaining, activeId: w.activeId === id ? remaining[0].id : w.activeId }); setSelectedId(null);
-  }, [setRoot]);
+    const next = w.activeId === id ? switchWorkspaceScenario(w, remaining[0].id) : { ...w };
+    next.scenarios = remaining;
+    if (next.scenarioPortfolios) {
+      next.scenarioPortfolios = { ...next.scenarioPortfolios };
+      delete next.scenarioPortfolios[id];
+    }
+    try { assertWorkspace(next); setRoot(next); setSelectedId(null); }
+    catch (e) { notify(e instanceof Error ? e.message : '연결 프로젝트와 호환되지 않는 시나리오입니다.', true); }
+  }, [setRoot, notify]);
   const importWorkspace = useCallback(async (next: Workspace, mode: 'new' | 'replace') => {
     assertWorkspace(next); await saveQueue.current;
-    const w = structuredClone(next);
-    w.projectId = mode === 'new' ? 'import-' + crypto.randomUUID() : current.current!.projectId;
+    if (mode === 'replace' && !current.current) throw new Error('교체할 작업공간을 먼저 열어주세요.');
+    const foreignIds = new Set([next.portfolio, ...Object.values(next.scenarioPortfolios || {})].flatMap(bundle => bundle?.projects.map(p => p.id) || []));
+    let nextId = mode === 'new' ? 'import-' + crypto.randomUUID() : current.current!.projectId;
+    while (mode === 'new' && foreignIds.has(nextId)) nextId = 'import-' + crypto.randomUUID();
+    const w = remapWorkspaceProject(next, nextId);
     if (mode === 'new') revision.current = 0;
     blocked.current = false; setSaveError(''); undoStack.current.clear(); redoStack.current.clear();
     setSelectedId(null); setResult(null); setRoot(w); setNeedsImport(false); notify('파일을 검증하고 작업공간을 열었습니다.');
@@ -205,6 +254,6 @@ export function useWorkspace() {
     canUndo: !!(plan && undoStack.current.get(plan.id)?.length),
     canRedo: !!(plan && redoStack.current.get(plan.id)?.length),
   }), [historyTick, plan?.id]);
-  return { workspace, plan, result, selectedId, setSelectedId, computing, computeError, loadError, needsImport, saveError, saveState, toast, notify, commit, preferences, switchScenario, cloneScenario, deleteScenario, importWorkspace, openWorkspace, saveNow, undo: () => travelHistory('undo'), redo: () => travelHistory('redo'), ...historyState };
+  return { workspace, plan, result, selectedId, setSelectedId, computing, computeError, loadError, needsImport, saveError, saveState, toast, notify, commit, commitWorkspace, preferences, switchScenario, cloneScenario, deleteScenario, importWorkspace, openWorkspace, saveNow, undo: () => travelHistory('undo'), redo: () => travelHistory('redo'), ...historyState };
 }
 export type Controller = ReturnType<typeof useWorkspace>;

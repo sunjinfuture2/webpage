@@ -4,6 +4,8 @@ import type { Controller } from '../useWorkspace';
 import type { Dependency, Plan, Task } from '../core/types';
 import { newDependency, removeTasks } from '../core/commands';
 import { numberOrNull, shortDate } from '../core/dates';
+import { externalRelationsFor, resolveExternalDriver } from '../core/explain';
+import { portfolioProjects } from '../core/portfolio-workspace';
 import { Badge, ErrorText, Modal } from './UI';
 
 const kinds = { critical: 'CP', near: '근접', normal: '여유', outside: '대상 외' };
@@ -36,7 +38,7 @@ export function TaskDrawer({ controller: c, onClose }: { controller: Controller;
       <div className="drawer-top"><span className="eyebrow">TASK DETAILS</span><button className="icon-button" aria-label="업무 상세 닫기" onClick={close}><X size={19} /></button></div>
       <div className="drawer-heading"><div className="task-kicker"><span>{task.wbs}</span><ChevronRight size={12} /><span>{task.phaseLabel}</span></div><h2>{task.name}</h2><div className="row gap-8"><Badge kind={r?.criticality}>{r ? kinds[r.criticality] : '계산 중'}</Badge><Badge>{task.kind === 'milestone' ? '마일스톤' : '일반 작업'}</Badge>{dirty && <span className="muted small">적용 전 변경</span>}</div></div>
       <div className="drawer-tabs" role="tablist" aria-label="업무 상세 탭">
-        {[['details', '업무 정보'], ['links', '선후행'], ['source', '근거·출처'], ['history', '이력']].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>{label}{id === 'links' && <span>{c.plan!.dependencies.filter(e => e.from === task.id || e.to === task.id).length}</span>}</button>)}
+        {[['details', '업무 정보'], ['links', '선후행'], ['source', '근거·출처'], ['history', '이력']].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>{label}{id === 'links' && <span>{c.plan!.dependencies.filter(e => e.from === task.id || e.to === task.id).length + externalRelationsFor(c.workspace!, task.id).length}</span>}</button>)}
       </div>
       <div className="drawer-body">
         {tab === 'details' && <>
@@ -44,7 +46,9 @@ export function TaskDrawer({ controller: c, onClose }: { controller: Controller;
           {r && <details className="driver-details"><summary>현재 일정을 결정한 조건</summary>{task.actualStart && <p className="hint">입력한 실제일을 고정하고 관계 충돌을 별도로 표시합니다.</p>}{r.drivers.map((id, index) => {
             const edge = c.plan!.dependencies.find(e => e.id === id);
             const from = edge && c.plan!.tasks.find(t => t.id === edge.from);
-            return edge && from ? <button key={id} className="driver-link" onClick={() => c.setSelectedId(from.id)}><Link2 size={12} /><span>{from.wbs} · {from.name}</span><Badge>{edge.type} {edge.lag ? '+' + edge.lag + '일' : ''}</Badge></button> : <p className="hint" key={index}>{id}</p>;
+            const external = resolveExternalDriver(c.workspace!, id);
+            if (external) return <div key={id} className="driver-link"><Link2 size={12} /><span><small>{external.projectName}</small><br />{external.wbs} · {external.name}</span><Badge>{external.type}{external.lag ? ' ' + (external.lag > 0 ? '+' : '') + external.lag + '일' : ''}</Badge></div>;
+            return edge && from ? <button key={id} className="driver-link" onClick={() => c.setSelectedId(from.id)}><Link2 size={12} /><span>{from.wbs} · {from.name}</span><Badge>{edge.type} {edge.lag ? (edge.lag > 0 ? '+' : '') + edge.lag + '일' : ''}</Badge></button> : <p className="hint" key={index}>{id.startsWith('external:') ? '연결 프로젝트의 선행 조건 · 프로젝트 연결 화면에서 확인해주세요.' : id}</p>;
           })}</details>}
           <form id="task-form" onSubmit={e => { e.preventDefault(); submit(); }}>
             <label className="field"><span>업무명</span><textarea aria-label="업무명" rows={2} value={draft.name} onChange={e => patch({ name: e.target.value })} required /></label>
@@ -90,11 +94,12 @@ export function TaskDrawer({ controller: c, onClose }: { controller: Controller;
 function Relations({ task, controller: c }: { task: Task; controller: Controller }) {
   const p = c.plan!;
   const links = p.dependencies.filter(e => e.from === task.id || e.to === task.id);
+  const external = externalRelationsFor(c.workspace!, task.id), projects = portfolioProjects(c.workspace!);
   const [adding, setAdding] = useState(false), [from, setFrom] = useState(''), [direction, setDirection] = useState('before');
   const [type, setType] = useState<Dependency['type']>('FS'), [lag, setLag] = useState(0);
   const sorted = [...p.tasks].filter(t => t.id !== task.id).sort((a, b) => a.wbs.localeCompare(b.wbs, undefined, { numeric: true }));
   return <>
-    <div className="section-heading"><h3>연결된 업무 <span>{links.length}</span></h3><button className="text-button" onClick={() => setAdding(!adding)}><Plus size={14} />관계 추가</button></div>
+    <div className="section-heading"><h3>연결된 업무 <span>{links.length + external.length}</span></h3><button className="text-button" onClick={() => setAdding(!adding)}><Plus size={14} />관계 추가</button></div>
     <p className="hint">FS 완료→시작 · SS 시작→시작 · FF 완료→완료 · SF 시작→완료. 간격은 달력일이며 FS에는 다음날 1일이 포함됩니다.</p>
     {adding && <form className="relation-add" onSubmit={e => {
       e.preventDefault();
@@ -107,7 +112,13 @@ function Relations({ task, controller: c }: { task: Task; controller: Controller
       <button className="button primary"><Link2 size={14} />관계 추가</button>
     </form>}
     {links.map(e => <RelationRow key={e.id} edge={e} task={task} plan={p} commit={c.commit} onSelect={c.setSelectedId} />)}
-    {!links.length && <p className="hint">연결된 선후행 업무가 없습니다.</p>}
+    {external.map(edge => {
+      const incoming = edge.to.projectId === c.workspace!.projectId && edge.to.taskId === task.id;
+      const other = incoming ? edge.from : edge.to, project = projects.find(project => project.id === other.projectId);
+      const target = project?.plan.tasks.find(task => task.id === other.taskId);
+      return <div className={'relation-card ' + (!edge.active ? 'inactive' : '')} key={'external:' + edge.id}><span className="relation-direction">외부 프로젝트 · {incoming ? '선행' : '후행'}</span><strong>{project?.name || '연결 프로젝트'}</strong><p>{target?.wbs} · {target?.name || '연결 업무 확인 필요'}</p><Badge kind={edge.active ? 'green' : 'muted'}>{edge.type} {edge.lag > 0 ? '+' : ''}{edge.lag}일 · {edge.active ? '적용' : '제외'}</Badge><p className="hint">프로젝트 연결 화면에서 이 관계를 편집할 수 있습니다.</p></div>;
+    })}
+    {!links.length && !external.length && <p className="hint">연결된 선후행 업무가 없습니다.</p>}
   </>;
 }
 function RelationRow({ edge: e, task, plan, commit, onSelect }: { edge: Dependency; task: Task; plan: Plan; commit: Controller['commit']; onSelect: (id: string) => void }) {

@@ -1,6 +1,8 @@
+import type { PortfolioLink } from './portfolio';
+
 export type Day = string;
 export type LinkType = 'FS' | 'SS' | 'FF' | 'SF';
-export type View = 'gantt' | 'calendar' | 'tasks' | 'procurement' | 'gates' | 'scenarios' | 'evidence';
+export type View = 'gantt' | 'calendar' | 'tasks' | 'procurement' | 'gates' | 'scenarios' | 'evidence' | 'network' | 'portfolio';
 export type SourceRecord = {
   provenance: { fileSha256: string; sheet: string; row: number };
   fields: Record<string, string | number | null>;
@@ -67,10 +69,19 @@ export interface Preferences {
   collapsed: string[]; showReference: boolean; showLinks: boolean; gridWidth: number;
   calendarMode?: 'month' | 'week';
 }
+export interface PortfolioBundle {
+  schemaVersion: 1;
+  projects: Array<{ id: string; name: string; workspace: Workspace }>;
+  links: PortfolioLink[];
+}
 export interface Workspace {
   schemaVersion: 1; projectId: string; source: SeedArchive;
   scenarios: Plan[]; activeId: string; preferences: Preferences;
   audit: Array<{ at: string; scenarioId: string; label: string }>;
+  /** Optional extension: old v1 backups remain valid; imported projects are owned snapshots. */
+  portfolio?: PortfolioBundle;
+  /** Inactive scenario snapshots. The active scenario always uses portfolio above. */
+  scenarioPortfolios?: Record<string, PortfolioBundle | null>;
 }
 export interface Issue { severity: 'error' | 'warning'; code: string; message: string; taskId?: string; linkId?: string }
 export interface TaskResult {

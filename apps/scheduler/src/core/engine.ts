@@ -78,7 +78,8 @@ function offset(t: Task, status: number) {
   if (t.remaining !== null) return (t.actualStart ? Math.max(0, status - dayNumber(t.actualStart)) : 0) + Math.max(0, t.remaining - 1);
   return t.kind === 'milestone' ? 0 : dayNumber(t.plannedFinish) - dayNumber(t.plannedStart);
 }
-export function calculate(p: Plan): ScheduleResult {
+export interface CalculateContext { statusDates?: Record<string, string> }
+export function calculate(p: Plan, context: CalculateContext = {}): ScheduleResult {
   const begin = performance.now();
   const issues = validatePlan(p);
   const invalid = issues.find(i => i.severity === 'error');
@@ -86,10 +87,11 @@ export function calculate(p: Plan): ScheduleResult {
   const { order, incoming, outgoing } = topology(p);
   const byId = new Map(p.tasks.map(t => [t.id, t]));
   const start: Record<string, number> = {}, finish: Record<string, number> = {}, spans: Record<string, number> = {}, drivers: Record<string, string[]> = {};
-  const status = dayNumber(p.statusDate), deliveries: Record<string, string | null> = {};
+  const deliveries: Record<string, string | null> = {};
   const poDelays = new Map(p.procurement.map(x => [x.poTaskId, x.delay]));
   const packageByDelivery = new Map(p.procurement.map(x => [x.deliveryTaskId, x]));
   for (const id of order) {
+    const status = dayNumber(context.statusDates?.[id] ?? p.statusDate);
     const t = byId.get(id)!, span = offset(t, status); spans[id] = span;
     const floors: Array<{ value: number; cause: string }> = [
       { value: dayNumber(t.plannedStart) + t.delay + (poDelays.get(id) || 0), cause: t.delay || poDelays.get(id) ? '추가지연·PO' : '관리 시작일' },
@@ -119,7 +121,7 @@ export function calculate(p: Plan): ScheduleResult {
   const target = dayNumber(anchor.referenceFinish), operationDelay = finish[anchor.id] - target;
   const ancestors = new Set([anchor.id]), stack = [anchor.id];
   while (stack.length) for (const e of incoming.get(stack.pop()!)!) if (!ancestors.has(e.from)) { ancestors.add(e.from); stack.push(e.from); }
-  const latest: Record<string, number> = { [anchor.id]: Math.max(target, finish[anchor.id]) };
+  const latest: Record<string, number> = { [anchor.id]: Math.max(target, finish[anchor.id]) - spans[anchor.id] };
   for (const id of [...order].reverse()) {
     if (!ancestors.has(id) || id === anchor.id) continue;
     const bounds = outgoing.get(id)!.filter(e => latest[e.to] !== undefined).map(e => {
