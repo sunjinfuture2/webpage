@@ -8,13 +8,14 @@ import type { WorkspaceCommand } from './core/workspace-history';
 import { switchWorkspaceScenario } from './core/workspace-scenarios';
 
 const views = ['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'];
+function entryView(): Preferences['view'] | null { const value = new URLSearchParams(window.location.search).get('view'); return value && views.includes(value) ? value as Preferences['view'] : null; }
 export function requestedProjectId(hash: string): string | null {
   try { const match = hash.match(/^#\/projects\/([^/]+)\/schedule(?:\?|$)/); return match ? decodeURIComponent(match[1]) : null; }
   catch { return null; }
 }
 export function routeState(workspace: Workspace) {
   const hash = window.location.hash;
-  if (!hash || hash === '#/') return { workspace, selectedId: null as string | null, warning: '' };
+  if (!hash || hash === '#/') { const view = entryView(); return { workspace: view ? { ...workspace, preferences: { ...workspace.preferences, view } } : workspace, selectedId: null as string | null, warning: '' }; }
   const match = hash.match(/^#\/projects\/([^/]+)\/schedule(?:\?(.*))?$/);
   let projectId = '';
   try { projectId = match ? decodeURIComponent(match[1]) : ''; } catch { /* malformed URL -> safe saved workspace */ }
@@ -41,7 +42,8 @@ export function routeState(workspace: Workspace) {
 export function syncRoute(w: Workspace, taskId?: string | null) {
   const q = new URLSearchParams({ view: w.preferences.view, date: w.preferences.date, scenarioId: w.activeId });
   if (taskId) q.set('taskId', taskId);
-  history.replaceState(null, '', '#/projects/' + encodeURIComponent(w.projectId) + '/schedule?' + q);
+  const url = new URL(window.location.href); url.searchParams.delete('view'); url.hash = '/projects/' + encodeURIComponent(w.projectId) + '/schedule?' + q;
+  history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
 export function useWorkspace() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -233,6 +235,7 @@ export function useWorkspace() {
     let nextId = mode === 'new' ? 'import-' + crypto.randomUUID() : current.current!.projectId;
     while (mode === 'new' && foreignIds.has(nextId)) nextId = 'import-' + crypto.randomUUID();
     const w = remapWorkspaceProject(next, nextId);
+    if (!window.location.hash || window.location.hash === '#/') { const view = entryView(); if (view) w.preferences.view = view; }
     if (mode === 'new') revision.current = 0;
     blocked.current = false; setSaveError(''); undoStack.current.clear(); redoStack.current.clear();
     setSelectedId(null); setResult(null); setRoot(w); setNeedsImport(false); notify('파일을 검증하고 작업공간을 열었습니다.');

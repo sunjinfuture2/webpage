@@ -6,6 +6,7 @@ import { Badge, Empty, Modal } from './UI';
 import { DependencyEditor, type DependencyChange } from './DependencyEditor';
 import { connectorPath, dependencyEndpoints, scopedDependencies, type RelationScope } from './ganttGeometry';
 import './connections.css';
+import './master-gantt.css';
 
 export type { DependencyChange } from './DependencyEditor';
 
@@ -196,9 +197,10 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
               </div>
               {!mobile && <div className="timeline-track" style={{ width: timelineWidth }}>
                 {pref.showReference && <div className="reference-bar" title={'원본 ' + t.referenceStart + ' — ' + t.referenceFinish} style={{ left: (dayNumber(t.referenceStart) - origin) * px, width: Math.max(4, (Math.min(end, dayNumber(t.referenceFinish)) - dayNumber(t.referenceStart) + 1) * px) }} />}
-                {left <= timelineWidth && <button aria-label={t.wbs + ' 간트 막대'} className={'gantt-bar bar-' + r.criticality + (t.kind === 'milestone' ? ' milestone' : '') + (isDragging ? ' dragging' : '')} style={{ left, width: draggedWidth, transform }} title={t.wbs + ' · ' + t.name + '\n' + r.start + ' → ' + r.finish + '\n운영 여유 ' + (r.slack ?? '대상 외') + '\n드래그하면 관리 일정을 이동합니다.'}
+                {left <= timelineWidth && <button aria-label={t.wbs + ' 간트 막대'} className={'gantt-bar bar-' + r.criticality + (t.kind === 'milestone' ? ' milestone' : '') + (/조건부/.test(t.status) ? ' is-conditional' : '') + (isDragging ? ' dragging' : '')} style={{ left, width: draggedWidth, transform }} title={t.wbs + ' · ' + t.name + '\n' + r.start + ' → ' + r.finish + '\n운영 여유 ' + (r.slack ?? '대상 외') + '\n드래그하면 관리 일정을 이동합니다.'}
                   onClick={() => { if (!dragged.current) onSelect(t.id); }} onPointerDown={e => { if (t.actualStart || t.finishRule || e.button !== 0) return; e.preventDefault(); setDrag({ id: t.id, x: e.clientX, delta: 0, mode: 'move' }); }}>
                   {t.progress !== null && t.kind !== 'milestone' && <span className="bar-progress" style={{ width: t.progress * 100 + '%' }} />}
+                  {t.kind !== 'milestone' && draggedWidth >= 64 && <span className="bar-caption"><i aria-hidden="true" /><span>{t.name}</span></span>}
                   {t.kind !== 'milestone' && !t.actualStart && !t.finishRule && <span className="bar-resize" aria-label={t.wbs + ' 기간 조정'} onPointerDown={e => { e.stopPropagation(); e.preventDefault(); setDrag({ id: t.id, x: e.clientX, delta: 0, mode: 'resize' }); }} />}
                 </button>}
                 {linking && onDependencyChange && left <= timelineWidth && dayNumber(r.finish) <= end && <><button type="button" className={'dependency-port port-start ' + (port?.taskId === t.id && port.end === 'start' ? 'is-chosen' : '')} style={{ left: Math.max(0, left - 15) }} aria-label={t.wbs + ' 시작점 연결'} title="S · 시작점" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); choosePort(t.id, 'start'); }}>S</button><button type="button" className={'dependency-port port-finish ' + (port?.taskId === t.id && port.end === 'finish' ? 'is-chosen' : '')} style={{ left: left + (t.kind === 'milestone' ? 8 : barWidth) + 2 }} aria-label={t.wbs + ' 완료점 연결'} title="F · 완료점" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); choosePort(t.id, 'finish'); }}>F</button></>}

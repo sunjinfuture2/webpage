@@ -1,0 +1,50 @@
+/* Master schedule follows the supplied WorkSpace calendar: white space, quiet rules,
+   black type, pastel identities. Scheduling geometry belongs to each view. */
+.master-schedule .main-shell{background:#fff}
+.master-schedule .page-heading{padding:25px 34px 17px;gap:20px}
+.master-schedule .page-heading .eyebrow{font-size:8px;letter-spacing:.15em;color:#a4a4a4}
+.master-schedule .page-heading h1{font-size:26px;line-height:1.3;color:#080808;font-weight:600;letter-spacing:-.045em;margin:7px 0 5px}
+.master-schedule .page-heading p{font-size:11px;color:#939393}
+.master-schedule .title-project{font-size:15px;color:#a5a5a5;font-weight:400}
+.master-schedule .title-slash{font-size:16px;color:#d8d8d8;margin:0 10px}
+.master-schedule .heading-actions .button{border-radius:3px;box-shadow:none;font-size:11px;height:30px;min-height:30px}
+.master-schedule .heading-actions .button.primary{background:#fff;border-color:#dedede;color:#555}
+.master-schedule .heading-actions .button.primary:hover{background:#fafafa;color:#111;border-color:#c6c6c6}
+.master-schedule .project-summary{margin:0 34px 12px;padding:12px 0;min-height:47px;border:0;border-radius:0;background:#fff;box-shadow:none;gap:23px;border-bottom:1px solid #f1f1f1}
+.master-schedule .summary-icon{display:none}
+.master-schedule .operation-summary{gap:12px}
+.master-schedule .operation-summary>div:nth-child(2){display:flex;align-items:center;gap:10px}
+.master-schedule .operation-summary>div:nth-child(2)>span{font-size:10px;margin:0;color:#999}
+.master-schedule .operation-summary strong{font-size:15px;font-weight:550;color:#222;letter-spacing:-.015em}
+.master-schedule .operation-summary>.badge{font-size:9px;padding:2px 6px}
+.master-schedule .summary-divider{height:17px;margin:0;background:#eee}
+.master-schedule .summary-metric{font-size:10px;color:#999;gap:5px}
+.master-schedule .summary-metric b{font-size:12px;font-weight:500;color:#666}
+.master-schedule .status-date-button{font-size:9px;color:#aaa}
+.master-schedule .status-date-button b{color:#999}
+.master-schedule .work-area{margin:0 34px;border:0;border-radius:0;background:#fff}
+.master-schedule .view-toolbar{padding:0;min-height:43px;gap:16px;border-bottom:1px solid #eee}
+.master-schedule .view-tabs{gap:24px}
+.master-schedule .view-tabs button{font-size:11px;color:#999;gap:6px}
+.master-schedule .view-tabs button.active{color:#222;font-weight:500}
+.master-schedule .view-tabs button.active svg{color:#777}
+.master-schedule .view-tabs button.active:after{height:1px;background:#282828}
+.master-schedule .view-tabs button svg{width:13px;height:13px;color:#aaa}
+.master-schedule .search-box{height:27px;background:#fff;border:0;border-radius:0;width:175px;min-width:130px;gap:7px;padding:0;color:#aaa}
+.master-schedule .search-box input{font-size:10px}
+.master-schedule .filter-toolbar{padding:8px 0;min-height:38px;border-bottom:1px solid #f3f3f3;gap:8px}
+.master-schedule .filter-toolbar select{font-size:10px;color:#888;border-color:#ededed;border-radius:3px;height:24px;background:#fff;max-width:155px}
+.master-schedule .filter-toolbar .text-button{color:#999;font-size:10px}
+.master-schedule .check-label{color:#999}
+.master-schedule .app-footer{padding-left:34px;padding-right:34px;border-top-color:#f2f2f2;color:#b0b0b0}
+.master-schedule .app-footer button{color:#a5a5a5}
+.master-schedule .external-schedule-note{background:#fff;border-top:0;border-bottom:1px solid #f1f1f1;color:#999;font-size:10px;padding:8px 34px}
+.master-schedule .invalid-prediction{background:#fffaf2;border-bottom:1px solid #f2e5d0}
+.master-schedule .condition-banner{margin-left:34px;margin-right:34px;font-size:11px}
+.calendar-project-detail h3{font-size:18px;line-height:1.6;color:#222;margin:12px 0}.calendar-project-detail .definition-list{margin-top:20px}.calendar-project-detail .hint{margin-top:18px}
+@media(min-width:1600px){.master-schedule .page-heading{padding-left:46px;padding-right:46px}.master-schedule .project-summary,.master-schedule .work-area{margin-left:46px;margin-right:46px}.master-schedule .app-footer{padding-left:46px;padding-right:46px}}
+@media(max-width:1150px){.master-schedule .project-summary{gap:13px}.master-schedule .summary-metric.unassigned{display:none}.master-schedule .view-tabs{gap:16px}.master-schedule .page-heading{padding-left:25px;padding-right:25px}.master-schedule .project-summary,.master-schedule .work-area{margin-left:25px;margin-right:25px}.master-schedule .operation-summary>.badge{display:none}}
+@media(max-width:700px){.master-schedule .page-heading{padding:18px 17px 12px;align-items:center}.master-schedule .page-heading h1{font-size:22px}.master-schedule .page-heading .eyebrow,.master-schedule .page-heading p{display:none}.master-schedule .title-project{font-size:13px}.master-schedule .heading-actions .button{font-size:10px;padding:0 9px;min-height:28px;height:28px}.master-schedule .project-summary{margin:0 17px 7px;min-height:42px;padding:8px 0;gap:12px;flex-wrap:wrap;row-gap:7px}.master-schedule .operation-summary strong{font-size:15px}.master-schedule .operation-summary>div:nth-child(2)>span{font-size:9px}.master-schedule .summary-divider,.master-schedule .summary-metric{display:none}.master-schedule .summary-spacer{display:none}.master-schedule .status-date-button{margin-left:auto}.master-schedule .work-area{margin:0 17px}.master-schedule .view-toolbar{padding:0;flex-wrap:wrap;gap:0}.master-schedule .view-tabs{min-height:38px;gap:18px;width:100%;flex:0 0 100%;overflow-x:auto;scrollbar-width:none}.master-schedule .view-tabs button{font-size:10px;min-height:38px;white-space:nowrap;flex:none}.master-schedule .view-tabs button svg{display:none}.master-schedule .view-toolbar .search-box{height:27px;width:100%;margin:5px 0;flex:none}.master-schedule .view-toolbar .toolbar-spacer{display:none}.master-schedule .filter-toolbar{padding:6px 0;gap:6px;flex-wrap:wrap}.master-schedule .filter-toolbar .row{gap:8px}.master-schedule .filter-toolbar select{max-width:132px;font-size:9px}.master-schedule .app-footer{padding-left:17px;padding-right:17px;font-size:8px}.master-schedule .external-schedule-note{padding:7px 17px;font-size:9px}.master-schedule .condition-banner{margin:0 17px 10px}}
+@media(max-width:380px){.master-schedule .page-heading{gap:10px}.master-schedule .heading-actions .button:first-child{display:none}.master-schedule .title-project,.master-schedule .title-slash{display:none}.master-schedule .status-date-button svg{display:none}.master-schedule .operation-summary>div:nth-child(2){gap:6px}}
+
+.master-filter-toggle{display:flex;align-items:center;gap:5px;font-size:10px;color:#999;white-space:nowrap;padding:5px 0}.master-schedule.view-is-calendar .filter-toolbar .filter-right{display:none}@media(max-width:700px){.master-schedule .master-filter-toggle{position:absolute;right:17px;bottom:6px;z-index:1}.master-schedule.view-is-calendar .view-toolbar{position:relative}.master-schedule.view-is-calendar .search-box{padding-right:75px}}

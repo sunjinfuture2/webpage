@@ -1,0 +1,198 @@
+/* Reference: white calendar surface, fine rules, pastel event strips.
+   ROW=38, HEAD=52 and the shared connector centre y=17 are preserved. */
+.gantt-shell {
+  color: #4f4f4f;
+  background: #fff;
+}
+.gantt-shell .connection-toolbar {
+  min-height: 35px;
+  padding: 4px 12px;
+  gap: 13px;
+  color: #757575;
+  border-color: #eeeeee;
+  background: #fff;
+  font-size: 10px;
+}
+.gantt-shell .connection-toolbar-title { color: #555; font-weight: 400; }
+.gantt-shell .connection-toolbar-title>svg { color: #8e8e8e; }
+.gantt-shell .connection-toolbar-title>b,
+.gantt-shell .connection-action>span {
+  border-radius: 2px;
+  background: #f3f3f3;
+  color: #939393;
+  font-weight: 400;
+}
+.gantt-shell .connection-toolbar select {
+  height: 25px;
+  border-color: #e9e9e9;
+  border-radius: 3px;
+  color: #777;
+  background: #fff;
+}
+.gantt-shell .connection-action {
+  padding: 4px 6px;
+  border-radius: 3px;
+  color: #737373;
+  font-weight: 400;
+}
+.gantt-shell .connection-action:hover { background: #f7f7f7; }
+.gantt-shell .connection-action.active {
+  color: #c76c29;
+  border-color: #f1d7c3;
+  background: #fff7ef;
+}
+.gantt-shell .connection-visibility input { accent-color: #9ca393; }
+.gantt-shell .gantt-range {
+  height: 25px;
+  min-height: 25px;
+  padding: 0 12px;
+  background: #fff;
+  border-color: #efefef;
+  font-size: 9px;
+  color: #999;
+}
+.gantt-shell .gantt-range b,
+.gantt-shell .gantt-range .check-label,
+.gantt-shell .gantt-range .timeline-legend { color: #999; font-size: 9px; }
+.gantt-shell .gantt-range input { accent-color: #9ca393; }
+.gantt-shell .schedule-header { background: #fff; border-color: #eaeaea; }
+.gantt-shell .grid-header {
+  background: #fff;
+  color: #8e8e8e;
+  font-size: 10px;
+  font-weight: 400;
+}
+.gantt-shell .row-grid {
+  background: #fff;
+  border-right-color: #e9e9e9;
+  box-shadow: 1px 0 0 #f7f7f7;
+}
+.gantt-shell .gantt-row { border-bottom-color: #f0f0f0; }
+.gantt-shell .gantt-row:hover .row-grid { background: #fbfbfb; }
+.gantt-shell .wbs-cell { font-size: 10px; color: #9a9a9a; }
+.gantt-shell .name-cell { color: #555; font-size: 11px; }
+.gantt-shell .table-date { color: #8e8e8e; font-size: 10px; }
+.gantt-shell .row-check input { accent-color: #a2b396; }
+.gantt-shell .phase-row { background: #fff; }
+.gantt-shell .phase-grid { background: #fff; border-color: #e9e9e9; }
+.gantt-shell .phase-toggle { color: #333; }
+.gantt-shell .phase-toggle strong { font-size: 11px; font-weight: 550; }
+.gantt-shell .phase-toggle svg { color: #aaa; }
+.gantt-shell .phase-toggle>span,
+.gantt-shell .phase-code { color: #aaa; font-size: 9px; }
+.gantt-shell .timeline-header { background: #fff; }
+.gantt-shell .month-axis>div {
+  color: #777;
+  border-color: #eee;
+  font-size: 10px;
+  font-weight: 400;
+}
+.gantt-shell .month-axis .new-year { color: #333; }
+.gantt-shell .day-axis span { color: #999; border-color: #f4f4f4; }
+.gantt-shell .day-axis span.sunday { color: #e56161; }
+.gantt-shell .timeline-background { background: #fff; }
+.gantt-shell .timeline-background>i { border-color: #f5f5f5; }
+.gantt-shell .status-date-line { border-color: #c4c4c4; }
+
+/* Light event strips centred at y=17, matching the original SVG paths. */
+.gantt-shell .gantt-bar {
+  top: 8px;
+  height: 18px;
+  border: 0;
+  border-radius: 2px;
+  background: #e9f4e6;
+  color: #1f8e00;
+  box-shadow: none;
+  overflow: hidden;
+}
+.gantt-shell .gantt-bar:hover {
+  filter: none;
+  outline: 1px solid #b1d8a6;
+  outline-offset: 1px;
+}
+.gantt-shell .gantt-bar.bar-normal,
+.gantt-shell .gantt-bar.bar-critical { background: #e9f4e6; color: #1f8e00; }
+.gantt-shell .gantt-bar.bar-critical { box-shadow: inset 2px 0 0 #cf8e85; }
+.gantt-shell .gantt-bar.bar-near { background: #faf1df; color: #967647; }
+.gantt-shell .gantt-bar.bar-outside { background: #ededed; color: #777; }
+.gantt-shell .gantt-bar.is-conditional { background: #f4e6ed; color: #8c0043; }
+.gantt-shell .bar-progress { background: #b1d8a6; opacity: .6; }
+.gantt-shell .bar-caption {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 7px 0 5px;
+  pointer-events: none;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: -.025em;
+}
+.gantt-shell .bar-caption>i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 1px;
+  background: #b1d8a6;
+}
+.gantt-shell .bar-caption>span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gantt-shell .bar-critical .bar-caption>i { background: #b1d8a6; box-shadow: inset 2px 0 #cf8e85; }
+.gantt-shell .bar-near .bar-caption>i { background: #ddc598; }
+.gantt-shell .bar-outside .bar-caption>i { background: #bdbdbd; }
+.gantt-shell .is-conditional .bar-caption>i { background: #d4a0b9; }
+.gantt-shell .bar-resize { z-index: 2; }
+.gantt-shell .gantt-bar.milestone {
+  top: 13px;
+  height: 8px!important;
+  width: 8px!important;
+  background: #d5e8cc;
+  border: 1px solid #a9cc9e;
+  border-radius: 1px;
+  overflow: visible;
+}
+.gantt-shell .gantt-bar.milestone.bar-critical { background: #f4e6ed; border-color: #c98a86; box-shadow: none; }
+.gantt-shell .summary-bar {
+  top: 15px;
+  height: 3px;
+  background: #b7c9ad;
+  opacity: .8;
+  border-radius: 1px;
+}
+.gantt-shell .summary-bar:before,
+.gantt-shell .summary-bar:after { height: 5px; }
+.gantt-shell .reference-bar {
+  top: 29px;
+  height: 2px;
+  border: 0;
+  background: #dedede;
+  border-radius: 0;
+}
+.gantt-shell .bar-label { top: 11px; font-size: 9px; color: #888; }
+.gantt-shell .is-selected .row-grid,
+.gantt-shell .gantt-row.is-selected:hover .row-grid { background: #fffaf5; }
+.gantt-shell .is-selected .gantt-bar { outline: 1px solid #e7a675; outline-offset: 1px; }
+.gantt-shell .is-checked .row-grid { background: #f8faf6; }
+.gantt-shell .gantt-row.is-traced .row-grid { background: #fcfbf8; }
+.gantt-shell .dependency-layer.connection-layer .connection-visible { stroke: #c8ccc5; stroke-width: 1; opacity: .75; }
+.gantt-shell .dependency-layer.connection-layer .connection-edge.is-critical .connection-visible { stroke: #d09b95; opacity: .85; }
+.gantt-shell .dependency-layer.connection-layer .connection-edge.is-focused .connection-visible { stroke: #dfa575; stroke-width: 1.3; opacity: 1; }
+.gantt-shell .dependency-layer.connection-layer .connection-edge:hover .connection-visible { stroke: #f47920; stroke-width: 1.7; }
+.gantt-shell .dependency-layer.connection-layer marker path { stroke: #b3b9af; }
+.gantt-shell .gantt-footer { background: #fff; border-color: #eee; color: #999; font-size: 9px; }
+.gantt-shell .gantt-footer .green-dot { background: #b1d8a6; }
+.gantt-shell .timeline-legend .legend-baseline { border-color: #ccc; }
+.gantt-shell .timeline-legend .legend-cp { background: #cf8e85; }
+
+@media(max-width:700px) {
+  .gantt-shell .connection-toolbar { padding: 5px 8px; gap: 8px; min-height: 34px; }
+  .gantt-shell .connection-toolbar-title,
+  .gantt-shell .connection-action { font-size: 9px; }
+  .gantt-shell .gantt-range { padding: 0 9px; }
+  .gantt-shell .gantt-range .check-label,
+  .gantt-shell .gantt-range .timeline-legend { font-size: 8px; }
+  .gantt-shell .gantt-footer { font-size: 8px; }
+}
