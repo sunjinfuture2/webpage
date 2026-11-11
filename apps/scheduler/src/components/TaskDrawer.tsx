@@ -10,11 +10,13 @@ import { portfolioProjects } from '../core/portfolio-workspace';
 import { Badge, ErrorText, Modal } from './UI';
 
 const kinds = { critical: 'CP', near: '근접', normal: '여유', outside: '대상 외' };
-export function TaskDrawer({ controller: c, onClose }: { controller: Controller; onClose: () => void }) {
+export function TaskDrawer({ controller: c, onClose, onDirtyChange }: { controller: Controller; onClose: () => void; onDirtyChange?: (dirty: boolean) => void }) {
   const task = c.plan?.tasks.find(t => t.id === c.selectedId);
   const [draft, setDraft] = useState<Task | null>(task ? structuredClone(task) : null);
   const [tab, setTab] = useState('details');
   const [dirty, setDirty] = useState(false);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const [confirm, setConfirm] = useState<'close' | 'delete' | null>(null);
   useEffect(() => { setDraft(task ? structuredClone(task) : null); setDirty(false); }, [task]);
   useEffect(() => {

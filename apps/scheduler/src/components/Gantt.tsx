@@ -20,13 +20,24 @@ interface Props {
   onPropose: (taskId: string, delta: number, mode: 'move' | 'resize') => void;
   onDependencyChange?: (intent: DependencyChange) => boolean;
   onRevealTask?: (id: string) => void;
+  onFocusTask?: (id: string) => void;
 }
 type LinkPort = { taskId: string; end: 'start' | 'finish' };
 type LinkDrag = { from: LinkPort; startX: number; startY: number; originX: number; originY: number; pointerId: number; x: number; y: number; moved: boolean; target: LinkPort | null };
 type PhaseRow = { kind: 'phase'; code: string; label: string; tasks: Task[] };
 type TaskRow = { kind: 'task'; task: Task };
-export function Gantt({ plan, result, tasks, preferences: pref, selectedId, checked, forceExpand, onSelect, onCheck, onPreferences, onPropose, onDependencyChange, onRevealTask }: Props) {
+export function Gantt({ plan, result, tasks, preferences: pref, selectedId, checked, forceExpand, onSelect, onCheck, onPreferences, onPropose, onDependencyChange, onRevealTask, onFocusTask }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
+  const previousResult = useRef(result);
+  const [updatedIds, setUpdatedIds] = useState(new Set<string>());
+  useEffect(() => {
+    const previous = previousResult.current; previousResult.current = result;
+    const ids = Object.keys(result.tasks).filter(id => previous.tasks[id] && (previous.tasks[id].start !== result.tasks[id].start || previous.tasks[id].finish !== result.tasks[id].finish));
+    setUpdatedIds(new Set(ids));
+    if (!ids.length) return;
+    const timer = setTimeout(() => setUpdatedIds(new Set()), 900);
+    return () => clearTimeout(timer);
+  }, [result]);
   const [scroll, setScroll] = useState({ x: 0, y: 0, height: 600, width: 1000 });
   const [gridWidth, setGridWidth] = useState(pref.gridWidth);
   const [fullHorizon, setFullHorizon] = useState(false);
@@ -94,7 +105,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
     observer.observe(element); return () => observer.disconnect();
   }, []);
   const mobile = scroll.width < 650;
-  const width = mobile ? scroll.width : gridWidth;
+  const width = mobile ? scroll.width : Math.min(gridWidth, Math.max(420, scroll.width - 240));
   const px = ({ week: 18, month: 4, quarter: 1.7, year: 0.65 })[pref.scale];
   const origin = useMemo(() => Math.min(...plan.tasks.map(t => Math.min(dayNumber(t.referenceStart), dayNumber(result.tasks[t.id]?.start || t.plannedStart)))) - 7, [plan.tasks, result]);
   const operationEnd = dayNumber(addMonths(result.operationDate, 7));
@@ -124,7 +135,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
       if (top < el.scrollTop || top > el.scrollTop + el.clientHeight - HEAD - ROW) el.scrollTop = Math.max(0, top - ROW * 2);
     }
   }, [selectedId, forceExpand, rowIndex]);
-  useEffect(() => { if (viewport.current) viewport.current.scrollTop = 0; }, [tasks.length, forceExpand]);
+  useEffect(() => { if (!selectedId && viewport.current) viewport.current.scrollTop = 0; }, [tasks.length, forceExpand]);
   dragRef.current = drag;
   useEffect(() => {
     if (!drag) return;
@@ -231,9 +242,9 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
             const isDragging = drag?.id === t.id;
             const transform = isDragging && drag.mode === 'move' ? 'translateX(' + drag.delta * px + 'px)' : undefined;
             const draggedWidth = isDragging && drag.mode === 'resize' ? Math.max(5, barWidth + drag.delta * px) : barWidth;
-            return <div key={t.id} className={'gantt-row ' + (selected ? 'is-selected ' : '') + (checked.has(t.id) ? 'is-checked ' : '') + (selectedId && linkScope !== 'all' && tracedIds.has(t.id) ? 'is-traced ' : '') + (port?.taskId === t.id || linkDrag?.from.taskId === t.id ? 'is-link-source ' : '') + (linkDrag?.target?.taskId === t.id && linkDrag.from.taskId !== t.id ? 'is-link-target' : '')} style={{ top: y, height: ROW }} data-wbs={t.wbs}>
+            return <div key={t.id} className={'gantt-row ' + (updatedIds.has(t.id) ? 'is-updated ' : '') + (selected ? 'is-selected ' : '') + (checked.has(t.id) ? 'is-checked ' : '') + (selectedId && linkScope !== 'all' && tracedIds.has(t.id) ? 'is-traced ' : '') + (port?.taskId === t.id || linkDrag?.from.taskId === t.id ? 'is-link-source ' : '') + (linkDrag?.target?.taskId === t.id && linkDrag.from.taskId !== t.id ? 'is-link-target' : '')} style={{ top: y, height: ROW }} data-wbs={t.wbs}>
               <div className="row-grid" style={{ width, minWidth: width }}><span className="row-check"><input aria-label={t.wbs + ' 선택'} type="checkbox" checked={checked.has(t.id)} onChange={() => onCheck(t.id)} /></span><button className="wbs-cell" onClick={() => onSelect(t.id)}>{t.wbs}</button>
-                <button className="name-cell" title={t.name} onClick={e => onSelect(t.id, e.ctrlKey || e.metaKey || e.shiftKey)} onKeyDown={e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = tasks.findIndex(x => x.id === t.id) + (e.key === 'ArrowDown' ? 1 : -1); if (tasks[n]) onSelect(tasks[n].id); } }}>{t.kind === 'milestone' && <Flag size={11} className="milestone-icon" />}<span>{t.name}</span>{r.criticality === 'critical' && <Badge kind="critical">CP</Badge>}{r.criticality === 'near' && <i className="near-dot" />}</button>
+                <div className="task-name-group"><button className="name-cell" title={t.name} onClick={e => onSelect(t.id, e.ctrlKey || e.metaKey || e.shiftKey)} onKeyDown={e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = tasks.findIndex(x => x.id === t.id) + (e.key === 'ArrowDown' ? 1 : -1); if (tasks[n]) onSelect(tasks[n].id); } }}>{t.kind === 'milestone' && <Flag size={11} className="milestone-icon" />}<span>{t.name}</span>{r.criticality === 'critical' && <Badge kind="critical">CP</Badge>}{r.criticality === 'near' && <i className="near-dot" />}</button>{onFocusTask && <button className="focus-task-button" aria-label={t.wbs + ' 연결 살펴보기'} title="앞·뒤 연결 업무 살펴보기" onClick={() => onFocusTask(t.id)}><Link2 size={13} /></button>}</div>
                 <button className="date-col table-date" onClick={() => onSelect(t.id)}>{shortDate(r.start).slice(2)}</button><button className="date-col table-date" onClick={() => onSelect(t.id)}>{shortDate(r.finish).slice(2)}</button><span className={'progress-col small ' + (t.progress === null ? 'muted' : 'green')}>{t.progress === null ? '—' : Math.round(t.progress * 100) + '%'}</span>
               </div>
               {!mobile && <div className="timeline-track" style={{ width: timelineWidth }}>

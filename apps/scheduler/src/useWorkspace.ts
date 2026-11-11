@@ -7,7 +7,7 @@ import { restoreWorkspaceCommand } from './core/workspace-history';
 import type { WorkspaceCommand } from './core/workspace-history';
 import { switchWorkspaceScenario } from './core/workspace-scenarios';
 
-const views = ['gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'];
+const views = ['overview', 'gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'];
 function entryView(): Preferences['view'] | null { const value = new URLSearchParams(window.location.search).get('view'); return value && views.includes(value) ? value as Preferences['view'] : null; }
 export function requestedProjectId(hash: string): string | null {
   try { const match = hash.match(/^#\/projects\/([^/]+)\/schedule(?:\?|$)/); return match ? decodeURIComponent(match[1]) : null; }

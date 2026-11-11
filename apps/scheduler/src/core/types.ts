@@ -2,7 +2,7 @@ import type { PortfolioLink } from './portfolio';
 
 export type Day = string;
 export type LinkType = 'FS' | 'SS' | 'FF' | 'SF';
-export type View = 'gantt' | 'calendar' | 'tasks' | 'procurement' | 'gates' | 'scenarios' | 'evidence' | 'network' | 'portfolio';
+export type View = 'overview' | 'gantt' | 'calendar' | 'tasks' | 'procurement' | 'gates' | 'scenarios' | 'evidence' | 'network' | 'portfolio';
 export type SourceRecord = {
   provenance: { fileSha256: string; sheet: string; row: number };
   fields: Record<string, string | number | null>;

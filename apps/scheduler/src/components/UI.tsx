@@ -11,7 +11,8 @@ export function Modal({ title, children, onClose, wide = false }: { title: strin
     const listener = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.stopImmediatePropagation(); closeRef.current(); }
       if (event.key === 'Tab') {
-        const items = Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select, textarea, a[href], [tabindex="0"]') || []);
+        const items = Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || [])
+          .filter(element => element.tabIndex >= 0 && element.getClientRects().length > 0);
         if (!items.length) return;
         if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1)?.focus(); }
         if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
