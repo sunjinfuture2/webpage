@@ -48,6 +48,10 @@ describe('network projection keeps schedule data intact', () => {
     const graph = buildNetworkLayout(p, calculate(p), { focusId: 'T180', direction: 'both', depth: 2, all: true, includeInactive: false, limit: 20 });
     expect(graph.nodes).toHaveLength(20); expect(graph.relevantTotal).toBe(200); expect(graph.omittedNodes).toBe(180);
     expect(graph.nodes.some(n => n.task.id === 'T180')).toBe(true);
+    expect(graph.nodes.some(n => n.task.id === 'T179')).toBe(true);
+    expect(graph.nodes.some(n => n.task.id === 'T181')).toBe(true);
+    expect(graph.nodes.every(n => Math.abs(n.task.order - 180) <= 10)).toBe(true);
+    expect(graph.edges).toHaveLength(19);
     expect(p.tasks).toHaveLength(200); expect(p.dependencies).toHaveLength(199);
   });
 });

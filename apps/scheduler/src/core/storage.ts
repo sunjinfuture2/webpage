@@ -71,6 +71,7 @@ export function assertWorkspace(value: unknown): asserts value is Workspace {
   if (!ids.has(w.activeId) || !w.preferences || !Array.isArray(w.preferences.collapsed) || !Array.isArray(w.audit)) throw new Error('작업공간 상태를 확인해주세요.');
   if (!['overview', 'gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'].includes(w.preferences.view) || !['week', 'month', 'quarter', 'year'].includes(w.preferences.scale) || !Number.isFinite(w.preferences.gridWidth) || w.preferences.gridWidth < 300 || w.preferences.gridWidth > 1200) throw new Error('보기 설정을 확인해주세요.');
   if (!isDay(w.preferences.date) || w.preferences.collapsed.some(x => typeof x !== 'string') || (w.preferences.calendarMode !== undefined && !['month', 'week'].includes(w.preferences.calendarMode))) throw new Error('보기 날짜와 달력 설정을 확인해주세요.');
+  for (const key of ['masterTree', 'fitTimeline'] as const) if (w.preferences[key] !== undefined && typeof w.preferences[key] !== 'boolean') throw new Error('마스터 일정 보기 설정을 확인해주세요.');
   const validateBundle = (portfolio: PortfolioBundle, scenarioId: string) => {
     if (!portfolio || portfolio.schemaVersion !== 1 || !Array.isArray(portfolio.projects) || portfolio.projects.length > 20 || !Array.isArray(portfolio.links) || portfolio.links.length > 50000) throw new Error('연결 프로젝트의 백업 형식을 확인해주세요.');
     const projectIds = new Set([w.projectId]);

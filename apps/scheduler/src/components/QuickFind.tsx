@@ -4,7 +4,7 @@ import type { Task, View } from '../core/types';
 import { searchTasks } from '../core/schedule-navigation';
 import { Modal } from './UI';
 
-const views: Array<[View, string]> = [['overview', '전체 개요'], ['gantt', '간트 차트'], ['tasks', '업무 목록'], ['calendar', '캘린더'], ['network', '업무 관계도'], ['portfolio', '프로젝트 연결'], ['scenarios', '지연·시나리오']];
+const views: Array<[View, string]> = [['gantt', '마스터 일정'], ['tasks', '업무 목록'], ['calendar', '캘린더'], ['network', '업무 관계도'], ['portfolio', '프로젝트 연결'], ['scenarios', '지연·시나리오']];
 export function QuickFind({ tasks, onClose, onTask, onView, onAdd }: { tasks: Task[]; onClose: () => void; onTask: (id: string) => void; onView: (view: View) => void; onAdd: () => void }) {
   const [query, setQuery] = useState(''), [index, setIndex] = useState(0);
   const input = useRef<HTMLInputElement>(null), list = useRef<HTMLDivElement>(null);

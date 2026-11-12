@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Flag, GripVertical, Link2, ListTree, Plus, X, ArrowRight, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Layers3, Flag, GripVertical, Link2, ListTree, Plus, X, ArrowRight, Pencil } from 'lucide-react';
 import type { Dependency, Plan, Preferences, ScheduleResult, Task } from '../core/types';
 import { addDays, addMonths, dayNumber, diffDays, fromDay, monthStart, shortDate } from '../core/dates';
 import { Badge, Empty, Modal } from './UI';
@@ -7,11 +7,14 @@ import { DependencyEditor, type DependencyChange } from './DependencyEditor';
 import { connectorPath, dependencyEndpoints, scopedDependencies, type RelationScope } from './ganttGeometry';
 import './connections.css';
 import './master-gantt.css';
+import { phaseSummaries } from '../core/schedule-navigation';
+import { outlineOffsets, outlineIndexAt } from '../core/gantt-outline';
+import './master-outline.css';
 import { relationshipNames } from '../core/dependency-labels';
 
 export type { DependencyChange } from './DependencyEditor';
 
-const ROW = 38, HEAD = 52;
+const ROW = 38, PHASE_ROW = 64, HEAD = 52;
 interface Props {
   plan: Plan; result: ScheduleResult; tasks: Task[]; preferences: Preferences;
   selectedId: string | null; checked: Set<string>; forceExpand: boolean;
@@ -21,12 +24,13 @@ interface Props {
   onDependencyChange?: (intent: DependencyChange) => boolean;
   onRevealTask?: (id: string) => void;
   onFocusTask?: (id: string) => void;
+  gateTaskIds?: string[];
 }
 type LinkPort = { taskId: string; end: 'start' | 'finish' };
 type LinkDrag = { from: LinkPort; startX: number; startY: number; originX: number; originY: number; pointerId: number; x: number; y: number; moved: boolean; target: LinkPort | null };
 type PhaseRow = { kind: 'phase'; code: string; label: string; tasks: Task[] };
 type TaskRow = { kind: 'task'; task: Task };
-export function Gantt({ plan, result, tasks, preferences: pref, selectedId, checked, forceExpand, onSelect, onCheck, onPreferences, onPropose, onDependencyChange, onRevealTask, onFocusTask }: Props) {
+export function Gantt({ plan, result, tasks, preferences: pref, selectedId, checked, forceExpand, onSelect, onCheck, onPreferences, onPropose, onDependencyChange, onRevealTask, onFocusTask, gateTaskIds = [] }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const previousResult = useRef(result);
   const [updatedIds, setUpdatedIds] = useState(new Set<string>());
@@ -106,12 +110,17 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
   }, []);
   const mobile = scroll.width < 650;
   const width = mobile ? scroll.width : Math.min(gridWidth, Math.max(420, scroll.width - 240));
-  const px = ({ week: 18, month: 4, quarter: 1.7, year: 0.65 })[pref.scale];
+
   const origin = useMemo(() => Math.min(...plan.tasks.map(t => Math.min(dayNumber(t.referenceStart), dayNumber(result.tasks[t.id]?.start || t.plannedStart)))) - 7, [plan.tasks, result]);
   const operationEnd = dayNumber(addMonths(result.operationDate, 7));
   const maxDate = useMemo(() => Math.max(...plan.tasks.map(t => dayNumber(result.tasks[t.id]?.finish || t.plannedFinish))), [plan.tasks, result]);
   const end = (fullHorizon ? maxDate + 30 : Math.min(maxDate, operationEnd) + 14);
-  const timelineWidth = Math.max(800, (end - origin + 1) * px);
+  const fitting = !!pref.fitTimeline && !mobile;
+  const px = fitting ? Math.max(.02, (scroll.width - width - 2) / (end - origin + 1)) : ({ week: 18, month: 4, quarter: 1.7, year: .65 })[pref.scale];
+  const timelineWidth = fitting ? (end - origin + 1) * px : Math.max(800, (end - origin + 1) * px);
+  const summaryById = useMemo(() => new Map(phaseSummaries(tasks, result).map(g => [g.id, g])), [tasks, result]);
+  const phaseCodes = [...summaryById.keys()];
+  const togglePhase = (code: string) => onPreferences({ collapsed: pref.collapsed.includes(code) ? pref.collapsed.filter(x => x !== code) : [...pref.collapsed, code] });
   const rows = useMemo(() => {
     const groups = new Map<string, Task[]>();
     [...tasks].sort((a, b) => a.phase.localeCompare(b.phase, undefined, { numeric: true }) || a.order - b.order).forEach(t => { if (!groups.has(t.phase)) groups.set(t.phase, []); groups.get(t.phase)!.push(t); });
@@ -122,16 +131,21 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
     });
     return result;
   }, [tasks, pref.collapsed, forceExpand]);
+  const offsets = useMemo(() => outlineOffsets(rows.map(r => r.kind)), [rows]);
+  const rowsHeight = offsets.at(-1)!;
+  const lastRevealed = useRef<string | null>(null);
   const rowIndex = useMemo(() => new Map(rows.flatMap((r, i) => r.kind === 'task' ? [[r.task.id, i] as const] : [])), [rows]);
   useEffect(() => {
     const el = viewport.current; if (!el) return;
-    el.scrollLeft = Math.max(0, (dayNumber(pref.date) - origin) * px - 36);
+    el.scrollLeft = fitting ? 0 : Math.max(0, (dayNumber(pref.date) - origin) * px - 36);
     setFocusDate(pref.date);
-  }, [pref.date, pref.scale, origin]);
+  }, [pref.date, pref.scale, origin, fitting]);
   useEffect(() => {
     const el = viewport.current, index = selectedId ? rowIndex.get(selectedId) : undefined;
-    if (el && index !== undefined) {
-      const top = index * ROW;
+    if (!selectedId) lastRevealed.current = null;
+    if (el && index !== undefined && lastRevealed.current !== selectedId) {
+      lastRevealed.current = selectedId;
+      const top = offsets[index];
       if (top < el.scrollTop || top > el.scrollTop + el.clientHeight - HEAD - ROW) el.scrollTop = Math.max(0, top - ROW * 2);
     }
   }, [selectedId, forceExpand, rowIndex]);
@@ -162,9 +176,9 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
     }
     return ticks;
   }, [origin, end, px]);
-  const startIndex = Math.max(0, Math.floor(scroll.y / ROW) - 8);
-  const tickStep = pref.scale === 'week' ? 1 : pref.scale === 'month' ? 7 : pref.scale === 'quarter' ? 14 : 30;
-  const endIndex = Math.min(rows.length, startIndex + Math.ceil(scroll.height / ROW) + 18);
+  const startIndex = Math.max(0, outlineIndexAt(offsets, scroll.y) - 8);
+  const tickStep = px >= 10 ? 1 : px >= 3 ? 7 : px >= 1.2 ? 14 : 30;
+  const endIndex = Math.min(rows.length, outlineIndexAt(offsets, scroll.y + scroll.height) + 10);
   const visible = rows.slice(startIndex, endIndex);
   const drawable = pref.showLinks ? scopeEdges.filter(e => {
     const from = rowIndex.get(e.from), to = rowIndex.get(e.to);
@@ -202,6 +216,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
   };
   if (!tasks.length) return <Empty title="조건에 맞는 업무가 없습니다">검색어나 필터를 바꿔보세요.</Empty>;
   return <div className={'gantt-shell ' + (mobile ? 'gantt-mobile ' : '') + (linking ? 'is-connecting ' : '') + (linkDrag ? 'is-link-dragging' : '')}>
+    <div className="outline-toolbar"><span><Layers3 size={14} />{forceExpand ? '검색·필터·집중 보기의 업무를 펼쳐 표시합니다' : '단계를 누르면 세부 업무가 펼쳐집니다'}</span><div><button onClick={() => onPreferences({ collapsed: [] })} disabled={forceExpand}>모두 펼치기</button><button onClick={() => onPreferences({ collapsed: phaseCodes })} disabled={forceExpand}>모두 접기</button><button onClick={() => onPreferences({ fitTimeline: true })} aria-pressed={!!pref.fitTimeline}>전체 기간 맞춤</button></div></div>
     <div className="connection-toolbar" aria-label="선후행 관계 도구">
       <div className="connection-toolbar-title"><Link2 size={14} /><span>연결 일정</span><b>{plan.dependencies.filter(e => e.active).length}</b></div>
       <label className="connection-visibility"><input type="checkbox" checked={pref.showLinks} onChange={e => onPreferences({ showLinks: e.target.checked })} /><span>연결선</span></label>
@@ -216,23 +231,33 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
       <div style={{ width: mobile ? width : width + timelineWidth, minHeight: '100%' }}>
         <div className="schedule-header">
           <div className="row-grid grid-header" style={{ width, minWidth: width }}><span /><span>WBS</span><span>업무명</span><span className="date-col">예상 시작</span><span className="date-col">예상 완료</span><span className="progress-col">진척률</span><div className="grid-resizer" role="separator" aria-label="그리드 너비 조정" onPointerDown={resizeGrid}><GripVertical size={10} /></div></div>
-          {!mobile && <div className="timeline-header" style={{ width: timelineWidth }}><div className="month-axis">{monthTicks.filter(t => pref.scale !== 'year' || (Number(t.date.slice(5, 7)) - 1) % 3 === 0).map(t => <div key={t.date} style={{ left: t.left, width: pref.scale === 'year' ? diffDays(addMonths(t.date, 3), t.date) * px : t.span }} className={t.date.slice(5, 7) === '01' ? 'new-year' : ''}>{pref.scale === 'year' ? t.date.slice(0, 4) + ' Q' + Math.ceil(Number(t.date.slice(5, 7)) / 3) : px >= 2 || t.date.slice(5, 7) === '01' ? t.date.slice(0, 4) + '. ' + Number(t.date.slice(5, 7)) : Number(t.date.slice(5, 7)) + '월'}</div>)}</div><div className="day-axis">{Array.from({ length: Math.ceil((end - origin) / tickStep) }, (_, i) => {
+          {!mobile && <div className="timeline-header" style={{ width: timelineWidth }}><div className="month-axis">{monthTicks.filter(t => px >= 1.2 || (Number(t.date.slice(5, 7)) - 1) % (px < .22 ? 12 : 3) === 0).map(t => <div key={t.date} style={{ left: t.left, width: px < 1.2 ? diffDays(addMonths(t.date, px < .22 ? 12 : 3), t.date) * px : t.span }} className={t.date.slice(5, 7) === '01' ? 'new-year' : ''}>{px < .22 ? t.date.slice(0, 4) : px < 1.2 ? t.date.slice(0, 4) + ' Q' + Math.ceil(Number(t.date.slice(5, 7)) / 3) : px >= 2 || t.date.slice(5, 7) === '01' ? t.date.slice(0, 4) + '. ' + Number(t.date.slice(5, 7)) : Number(t.date.slice(5, 7)) + '월'}</div>)}</div><div className="day-axis">{Array.from({ length: Math.ceil((end - origin) / tickStep) }, (_, i) => {
             const d = origin + i * tickStep, text = fromDay(d);
+            if (tickStep * px < 28) return null;
             if ((d - origin) * px < scroll.x - 60 || (d - origin) * px > scroll.x + scroll.width + 100) return null;
-            return <span key={d} style={{ left: (d - origin) * px, width: tickStep * px }} className={new Date(text + 'T00:00:00Z').getUTCDay() === 0 ? 'sunday' : ''}>{pref.scale === 'year' ? Number(text.slice(5, 7)) + '월' : Number(text.slice(8, 10))}</span>;
+            return <span key={d} style={{ left: (d - origin) * px, width: tickStep * px }} className={new Date(text + 'T00:00:00Z').getUTCDay() === 0 ? 'sunday' : ''}>{px < 1.2 ? Number(text.slice(5, 7)) + '월' : Number(text.slice(8, 10))}</span>;
           })}</div></div>}
         </div>
-        <div className="virtual-rows" style={{ height: rows.length * ROW }}>
+        <div className="virtual-rows" style={{ height: rowsHeight }}>
           {!mobile && <div className="timeline-background" style={{ left: width, width: timelineWidth, height: '100%' }}>{monthTicks.map(t => <i key={t.date} style={{ left: t.left }} />)}<div className="status-date-line" style={{ left: (dayNumber(plan.statusDate) - origin) * px }} /></div>}
           {visible.map((row, index) => {
-            const y = (startIndex + index) * ROW;
+            const y = offsets[startIndex + index];
             if (row.kind === 'phase') {
-              const starts = row.tasks.map(t => dayNumber(result.tasks[t.id]?.start || t.plannedStart));
-              const finishes = row.tasks.map(t => dayNumber(result.tasks[t.id]?.finish || t.plannedFinish));
-              const left = (Math.min(...starts) - origin) * px, barWidth = Math.max(8, (Math.min(end, Math.max(...finishes)) - Math.min(...starts) + 1) * px);
-              return <div key={row.code} className="gantt-row phase-row" style={{ top: y, height: ROW }}>
-                <div className="phase-grid" style={{ width, minWidth: width }}><button className="phase-toggle" aria-expanded={forceExpand || !pref.collapsed.includes(row.code)} onClick={() => onPreferences({ collapsed: pref.collapsed.includes(row.code) ? pref.collapsed.filter(x => x !== row.code) : [...pref.collapsed, row.code] })}>{forceExpand || !pref.collapsed.includes(row.code) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}<strong>{row.label}</strong><span>{row.tasks.length}</span></button><span className="phase-code">{row.code}</span></div>
-                {!mobile && <div className="timeline-track" style={{ width: timelineWidth }}><div className="summary-bar" style={{ left, width: barWidth }} /></div>}
+              const group = summaryById.get(row.code)!;
+              const left = (dayNumber(group.start) - origin) * px;
+              const barWidth = Math.max(6, (Math.min(end, dayNumber(group.finish)) - dayNumber(group.start) + 1) * px);
+              const opened = forceExpand || !pref.collapsed.includes(row.code);
+              const risk = group.critical ? 'critical' : group.near ? 'near' : 'normal';
+              const slack = group.slack === null ? '운영 여유 대상 외' : '최소 여유 ' + group.slack + '일';
+              return <div key={row.code} className={'gantt-row phase-row outline-phase ' + (opened ? 'is-open' : '')} data-phase={row.code} style={{ top: y, height: PHASE_ROW }}>
+                <div className="row-grid phase-grid" style={{ width, minWidth: width }}><button className="phase-toggle" aria-label={row.code + ' 단계 ' + (opened ? '접기' : '펼치기')} aria-expanded={opened} disabled={forceExpand} onClick={() => togglePhase(row.code)}>{opened ? <ChevronDown size={15} /> : <ChevronRight size={15} />}<span className={'phase-token tone-' + phaseCodes.indexOf(row.code) % 4}>{row.code}</span><span className="outline-phase-label"><strong>{row.label.replace(/^\d+\s*/, '')}</strong><small>{group.tasks.length}개 업무 · {slack}{group.conditional ? ' · 조건부 ' + group.conditional + '개' : ''}</small></span></button><span className="date-col table-date">{shortDate(group.start).slice(2)}</span><span className="date-col table-date">{shortDate(group.finish).slice(2)}</span><span className="progress-col outline-completed">{group.completed}/{group.tasks.length}</span></div>
+                {!mobile && <div className="timeline-track" style={{ width: timelineWidth }}>{left < timelineWidth && <button className={'outline-range risk-' + risk} style={{ left, width: barWidth }} aria-label={row.code + ' 일정 ' + (opened ? '접기' : '펼치기')} disabled={forceExpand} title={group.start + ' ~ ' + group.finish + ' · ' + slack} onClick={() => togglePhase(row.code)}><span>{shortDate(group.start).slice(2)} — {shortDate(group.finish).slice(2)}</span>{dayNumber(group.finish) > end && <ArrowRight size={12} />}</button>}
+                  {!opened && row.tasks.filter(t => t.kind === 'milestone' || gateTaskIds.includes(t.id)).map(t => {
+                    const date = gateTaskIds.includes(t.id) ? result.tasks[t.id].finish : result.tasks[t.id].start;
+                    const x = (dayNumber(date) - origin) * px; if (x > timelineWidth) return null;
+                    return <button key={t.id} className={'outline-milestone ' + (gateTaskIds.includes(t.id) ? 'is-gate' : '')} style={{ left: x }} title={t.wbs + ' · ' + t.name + ' · ' + date} aria-label={t.wbs + ' 주요 일정 열기'} onClick={() => { onPreferences({ collapsed: pref.collapsed.filter(x => x !== row.code) }); onSelect(t.id); }}>◆</button>;
+                  })}
+                </div>}
               </div>;
             }
             const t = row.task, r = result.tasks[t.id]; if (!r) return null;
@@ -260,7 +285,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
               </div>}
             </div>;
           })}
-          {!mobile && connectors.length > 0 && <svg className="dependency-layer connection-layer" style={{ left: width }} width={timelineWidth} height={rows.length * ROW} aria-label="선후행 관계 연결선"><defs><marker id={markerId} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M1 1 L6 3.5 L1 6" fill="none" stroke="#9ba59c" /></marker></defs>{connectors.map(e => {
+          {!mobile && connectors.length > 0 && <svg className="dependency-layer connection-layer" style={{ left: width }} width={timelineWidth} height={rowsHeight} aria-label="선후행 관계 연결선"><defs><marker id={markerId} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M1 1 L6 3.5 L1 6" fill="none" stroke="#9ba59c" /></marker></defs>{connectors.map(e => {
             const a = result.tasks[e.from], b = result.tasks[e.to];
             const ends = dependencyEndpoints(e.type), fromTask = byId.get(e.from)!, toTask = byId.get(e.to)!;
             const endpoint = (id: string, end: 'start' | 'finish') => {
@@ -269,7 +294,7 @@ export function Gantt({ plan, result, tasks, preferences: pref, selectedId, chec
               return t.kind === 'milestone' ? left + 4 : end === 'start' ? left : left + Math.max(5, (dayNumber(r.finish) - dayNumber(r.start) + 1) * px);
             };
             const x1 = endpoint(e.from, ends.from), x2 = endpoint(e.to, ends.to);
-            const y1 = rowIndex.get(e.from)! * ROW + 17, y2 = rowIndex.get(e.to)! * ROW + 17;
+            const y1 = offsets[rowIndex.get(e.from)!] + 17, y2 = offsets[rowIndex.get(e.to)!] + 17;
             const label = `${fromTask.wbs} → ${toTask.wbs} · ${relationshipNames[e.type]} · ${e.type} ${e.lag > 0 ? '+' : ''}${e.lag}일`, path = connectorPath(x1, y1, x2, y2, e.type);
             const focused = e.from === selectedId || e.to === selectedId || !!selectedId && linkScope !== 'all';
             const critical = a.criticality === 'critical' && b.criticality === 'critical';

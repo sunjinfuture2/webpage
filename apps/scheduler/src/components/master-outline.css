@@ -1,0 +1,20 @@
+.outline-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #eee;flex:none;background:#fff}
+.outline-toolbar>span{display:flex;align-items:center;gap:7px;font-size:10px;color:#8b8d87}.outline-toolbar>div{display:flex;gap:13px}.outline-toolbar button{font-size:10px;color:#64695e;padding:3px 0}.outline-toolbar button:hover{color:#ed7b2c}.outline-toolbar button[aria-pressed=true]{color:#567948}.outline-toolbar button:disabled{opacity:.4}
+.gantt-shell .outline-phase{background:#fff;border-bottom:1px solid #e9ece6}
+.gantt-shell .outline-phase .phase-grid{display:grid;height:64px;padding:0;box-shadow:none;border-right:1px solid #ebede8}
+.gantt-shell .outline-phase .phase-toggle{grid-column:1/4;display:flex;gap:9px;align-items:center;height:64px;padding:8px 12px;text-align:left;min-width:0;overflow:hidden}
+.gantt-shell .outline-phase .phase-toggle:disabled{cursor:default;opacity:1}
+.gantt-shell .outline-phase .phase-toggle:hover{background:#fafbf9}
+.gantt-shell .outline-phase .phase-token{font-size:10px;flex:none;line-height:1.4}
+.gantt-shell .outline-phase-label{display:grid;gap:5px;min-width:0;flex:1}
+.gantt-shell .outline-phase-label strong{font-size:12px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#343a31}
+.gantt-shell .outline-phase-label small{font-size:9px;font-weight:400;color:#96998f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gantt-shell .outline-completed{font-size:10px;color:#93998b}
+.gantt-shell .outline-phase .timeline-track{height:64px;background:#fdfefb80}
+.outline-range{position:absolute;top:15px;height:22px;display:flex;align-items:center;justify-content:space-between;border-radius:3px;padding:0 8px;overflow:hidden;min-width:5px;text-align:left}
+.outline-range span{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.outline-range:hover{filter:brightness(.97)}.outline-range:disabled{cursor:default;opacity:1}
+.outline-milestone{position:absolute;top:40px;font-size:12px;transform:translateX(-50%);color:#a5c29b;line-height:20px;min-width:16px;height:20px}
+.outline-milestone.is-gate{color:#866a92}.outline-milestone:hover{color:#f47920}
+.gantt-shell .outline-phase.is-open .timeline-track{background:#f9fbf580}
+.gantt-shell .outline-phase.is-open .phase-grid{background:#fafcf8}
+@media(max-width:650px){.outline-toolbar{padding:8px;flex-wrap:wrap;gap:6px}.outline-toolbar>span{font-size:9px}.outline-toolbar>div{margin-left:auto}.outline-toolbar button{font-size:9px}.gantt-shell .outline-phase .phase-toggle{gap:6px;padding:8px}.gantt-shell .outline-phase-label strong{font-size:11px}.gantt-shell .outline-phase-label small{font-size:8px}.gantt-shell .outline-phase .phase-token{font-size:9px;padding:4px 5px}}

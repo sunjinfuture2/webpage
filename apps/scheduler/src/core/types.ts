@@ -68,6 +68,9 @@ export interface Preferences {
   view: View; date: Day; scale: 'week' | 'month' | 'quarter' | 'year';
   collapsed: string[]; showReference: boolean; showLinks: boolean; gridWidth: number;
   calendarMode?: 'month' | 'week';
+  /** Existing overview URLs remain valid; both open the same collapsible schedule. */
+  masterTree?: boolean;
+  fitTimeline?: boolean;
 }
 export interface PortfolioBundle {
   schemaVersion: 1;

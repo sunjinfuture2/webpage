@@ -37,10 +37,12 @@ export function planFromSource(source: SeedArchive): Plan {
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   };
 }
+function tasksPhases(source: SeedArchive) { return source.tasks.map(t => t.phaseCode); }
+
 export function workspaceFromSource(source: SeedArchive): Workspace {
   return {
     schemaVersion: 1, projectId: 'pangyo-aidc', source, scenarios: [planFromSource(source)], activeId: 'base',
-    preferences: { view: 'gantt', date: source.statusDate, scale: 'month', collapsed: [], showReference: true, showLinks: true, gridWidth: 640 },
+    preferences: { view: 'gantt', date: source.statusDate, scale: 'month', collapsed: [...new Set(tasksPhases(source))], masterTree: true, fitTimeline: true, showReference: true, showLinks: true, gridWidth: 640 },
     audit: [],
   };
 }
