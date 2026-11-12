@@ -12,10 +12,10 @@ AIDC 워크스페이스 프로젝트 전달본 (2026-11-06)
 주소: https://sunjin-aidc-workspace-demo.sunjinfuture2.workers.dev/
 
 파일 안내
-- original.html: 기본 화면 및 화면 동작 원본
-- shared-client.js: 사용자 로그인, 실시간 공유, 편집 잠금, 화면 갱신
-- shared-worker.mjs: 서버 API와 Durable Object 데이터 저장
-- build-shared.mjs: 원본을 조합하여 public/index.html 및 seed.json 생성
+- original.html: 화면과 화면 동작 전체 (앱 원본; 디자인 시안 파일로 덮어쓰지 마세요)
+- shared-client.js: 사용자 로그인, 실시간 공유, 편집 잠금, 주소(뒤로가기·공유 링크) 처리
+- shared-worker.mjs: 서버 API와 Durable Object 데이터 저장 (첨부 파일, 활동 기록, 쓰레기통 30일 정리 포함)
+- build-shared.mjs: original.html에 shared-client.js를 넣어 public/index.html을 만들고 seed.json을 생성
 - public/index.html: 배포용 생성 결과 (이 파일만 수정하면 다시 생성할 때 덮어써집니다)
 - seed.json: 최초 빈 저장소에 넣는 예시 데이터; 실제 운영 DB 백업이 아닙니다
 - wrangler.jsonc: 기존 Worker와 데이터 저장소 연결 설정
