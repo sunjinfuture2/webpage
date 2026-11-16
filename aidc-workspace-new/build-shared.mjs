@@ -13,6 +13,9 @@ const marker=/\/\* ===================== LOGIN ===================== \*\/[\s\S]*
 if((html.match(marker)||[]).length!==1)throw new Error('build-shared: LOGIN marker not found exactly once in original.html');
 const sharedClient=await fs.readFile(new URL('shared-client.js',root),'utf8');
 html=html.replace(marker,()=>sharedClient);
+// Isolated, removable toolbar experiment for the single Test research record.
+const trial=await fs.readFile(new URL('research-editor-trial.js',root),'utf8');
+html=html.replace('</body>',()=>'<script>'+trial+'</script></body>');
 for(const [i,s] of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].entries())new vm.Script(s[1],{filename:'script-'+i});
 await fs.writeFile(new URL('public/index.html',root),html);
 console.log(`Built and syntax checked. Seed records: ${Object.keys(JSON.parse(seed)).length}`);
