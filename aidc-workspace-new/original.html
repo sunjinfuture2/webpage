@@ -1117,6 +1117,26 @@ html{overflow:hidden}
 .acard p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .tbl.archive .rw .ttl a.tx{min-width:0}
 .props.simple .pr .v .plain{line-height:21px}
+
+/* ===== 자료실 tabs + table: same left / right edge as the page, one centre line per row ===== */
+.arch .tabs ul{width:100%;margin-left:0}
+.arch .tabs li{width:calc(100%/var(--tabn,4))}
+.arch .tabs .bar i{width:calc(100%/var(--tabn,4))}
+.arch .tabs .addtab{left:calc(100%/var(--tabn,4)*var(--tabidx,0) + 100%/var(--tabn,4)/2 - 10.7px)}
+.arch .tabs .tabmenu{right:0;top:-27.9px}
+.tbl.archive{margin-left:0;width:100%}
+.tbl.archive .hd,.tbl.archive .rw{grid-template-columns:calc(668.2px + var(--d)) 166.7px 155.6px 154.4px 161.1px}
+.tbl.archive .hd span em{left:0}
+.tbl.archive .rw > div{align-items:center;padding-top:0;margin-left:0!important;min-width:0}
+.tbl.archive .rw .ttl .tx{padding-left:0}
+.tbl.archive .rw .ttl .gd{left:-11.5px;top:50%;margin-top:-3.5px}
+.tbl.archive .rw .who{overflow:hidden}
+.tbl.archive .rw .who .nil{color:#c4c4c4;font-size:15px;font-weight:400}
+.tbl.archive .rw .src{overflow:hidden}
+.tbl.archive .rw .src a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.arch .pager.pg-arch{left:0}
+/* card text never leaves its card on a narrow window */
+.arch .acard p{width:auto;max-width:270px;margin-right:14px}
 </style>
 </head>
 <body>
@@ -1663,9 +1683,9 @@ function renderArchive(){
       h+=`</div>`;}}
     h+=`</div></div>`;});
   h+=`<button class="sh-btn newsec" data-newsec>구분 새로 만들기</button>
-   <div class="tabs" style="margin-top:197.3px;--tabn:${ARCH_TABS.length};--tabidx:${Math.max(0,ARCH_TABS.indexOf(S.archTab))}">${plusBtn('addtab','이 구분에 자료 추가').replace('class="sh-btn','data-addrow class="sh-btn')}<button class="tabmenu" data-tabmenu title="탭 추가 · 이름 변경 · 삭제">${svg('i-more2',2.5,13.7)}</button><ul style="height:53.5px">${ARCH_TABS.map(t=>`<li class="${t===S.archTab?'on':''}" data-tab="${esc(t)}">${esc(t)}</li>`).join('')}</ul><div class="bar"><i style="left:calc((1348.4px + var(--d))/${ARCH_TABS.length}*${Math.max(0,ARCH_TABS.indexOf(S.archTab))} - 5px)"></i></div></div>
-   <div class="tbl archive" style="margin-top:109.5px"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>최종수정일자</em></span><span><em>출처</em></span></div>
-   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${u&&!/^dropbox\.com\.{3,}$/.test((r.url||'').trim())?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc((r.title||'').split('\n').join(' '))}</a>`:`<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')}</div><div class="d" style="margin-left:-1.3px">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
+   <div class="tabs" style="margin-top:197.3px;--tabn:${ARCH_TABS.length};--tabidx:${Math.max(0,ARCH_TABS.indexOf(S.archTab))}">${plusBtn('addtab','이 구분에 자료 추가').replace('class="sh-btn','data-addrow class="sh-btn')}<button class="tabmenu" data-tabmenu title="탭 추가 · 이름 변경 · 삭제">${svg('i-more2',2.5,13.7)}</button><ul style="height:53.5px">${ARCH_TABS.map(t=>`<li class="${t===S.archTab?'on':''}" data-tab="${esc(t)}">${esc(t)}</li>`).join('')}</ul><div class="bar"><i style="left:calc(100%/${ARCH_TABS.length}*${Math.max(0,ARCH_TABS.indexOf(S.archTab))})"></i></div></div>
+   <div class="tbl archive" style="margin-top:56px"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>최종수정일자</em></span><span><em>출처</em></span></div>
+   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${u&&!/^dropbox\.com\.{3,}$/.test((r.url||'').trim())?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc((r.title||'').split('\n').join(' '))}</a>`:`<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')||'<span class="nil">-</span>'}</div><div class="d" style="margin-left:-1.3px">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
    ${page.length?'':'<div class="none">등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.</div>'}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:69.7px" class="pager')}${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}</div>`;
   $('#arch-pw').innerHTML=h;
 }
