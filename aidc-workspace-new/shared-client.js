@@ -76,11 +76,12 @@ const fieldLevel=key=>key.startsWith('item:')||key.startsWith('project:')||FIELD
 const targetOf=key=>key.startsWith('item:')?ITEMS.find(x=>x.id===key.slice(5)):key.startsWith('project:')?PROJECTS[key.slice(8)]:metaTarget(key);
 // Takes a server record over field by field. A field I have changed since `mine` (my last known copy) keeps my value; everything else follows the server.
 function mergeRecord(key,v,mine){const cur=targetOf(key);
-  for(const f of new Set([...Object.keys(v),...Object.keys(mine),...Object.keys(cur)])){if(TRANSIENT.includes(f)||!same(cur[f],mine[f]))continue;if(v[f]===undefined)delete cur[f];else cur[f]=copy(v[f]);}
+  for(const f of new Set([...Object.keys(v),...Object.keys(mine),...Object.keys(cur)])){if(TRANSIENT.includes(f)||!same(cur[f],mine[f])||same(cur[f],v[f]))continue;if(v[f]===undefined)delete cur[f];else cur[f]=copy(v[f]);}
   sharedBase[key]=copy(v);}
 function sharedApply(records){
   const local=sharedRecords();
   for(const [key,v] of Object.entries(records)){
+    if(same(v,sharedBase[key]))continue; // nothing new from the server: leave the live objects untouched
     const it=key.startsWith('item:')?ITEMS.find(x=>x.id===key.slice(5)):null;
     if(it&&it.editing){ // my unsaved edit stands until I save; comments other people add meanwhile still come through
       const base=sharedBase[key];if(v&&base&&same(it.comments??[],base.comments??[])){const c=v.comments||[];it.comments=copy(c);base.comments=copy(c);if(it._editOriginal)it._editOriginal.comments=copy(c);}
@@ -199,6 +200,41 @@ function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebS
 }
 async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);
  const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=!same(delta,sharedBase);sharedApply(delta);if(changed)sharedRedraw();}catch{}}
+// One-time addition (2026-11-16, owner request): the public reference links of the 판교 master schedule workbook go into 자료실.
+// Ids are fixed, so a second browser running this at the same moment cannot create duplicates. Deleting an entry later is final.
+function addReferenceLinksV1(){
+ const TABS={
+  '법규':[['전기안전 검사 신청 규정 (국가법령정보센터)','https://law.go.kr/LSW/lsLinkCommonInfo.do?lspttninfSeq=167269','검사일 7일 전까지 검사를 신청하도록 한 규정입니다 (2026-09-18 시행 규칙 제6조제5항). 실행 전에 현행 규정을 다시 확인합니다.'],
+   ['전기안전관리자 선임 규정 (국가법령정보센터)','https://law.go.kr/LSW/lsLinkCommonInfo.do?lspttninfSeq=167321','적용 대상의 선임 시점을 확인하는 규정입니다 (제25조제2항).'],
+   ['관세청 수입통관 안내','https://www2.customs.go.kr/kcs/cm/cntnts/cntntsView.do?cntntsId=817&mi=2819','품목분류, 요건확인, 신고·검사, 수리, 반출 절차 안내입니다.'],
+   ['관세청 가격신고 안내','https://customs.go.kr/kcs/cm/cntnts/cntntsView.do?cntntsId=821&mi=2823','과세가격 산출과 관련 거래·가격 자료 안내입니다. 실제 세율·세액은 관세사 확인이 필요합니다.'],
+   ['국립전파연구원 적합성평가 안내','https://www.rra.go.kr/ko/license/A_a_about.do','장비 모델별 적합인증, 등록, 자기적합확인, 잠정인증과 해당 여부 확인 안내입니다.'],
+   ['ICC Incoterms 2020: EXW와 DDP','https://academy.iccwbo.org/incoterms/article/incoterms-2020-exw-or-ddp/','DDP 조건에서 수입통관, 관세·세금, 지정 목적지 인도 책임을 설명합니다.'],
+   ['미국 연방조달규정 FAR 5.2 (공고·제안기간)','https://www.acquisition.gov/far/subpart-5.2','미국 연방조달의 공고와 제안기간 기준입니다. 참고 사례이며 국내 민간 발주에 법적으로 적용되지 않습니다.']],
+  '설계':[['Schneider/APC WP140: 데이터센터 구축 표준 절차','https://www.facilitiesnet.com/whitepapers/pdfs/APC_083011.pdf','Prepare, Design, Acquire, Implement 4단계와 업무별 입력·산출물·책임·승인 구조를 설명합니다 (pp.4~10, 16).'],
+   ['US DOE/LANL 커미셔닝 가이드','https://www.energy.gov/sites/prod/files/2013/12/f5/sustainable_guide_ch9.pdf','개념설계부터 시험, 교육, 운영까지 커미셔닝(Cx)이 참여하는 방법을 설명합니다 (pp.2~3).'],
+   ['GAO 일정평가 가이드 (Schedule Assessment Guide)','https://www.gao.gov/assets/gao-16-89g.pdf','공정표의 선후행 연결과 일정 검증 기준입니다 (pp.33~34).'],
+   ['Microsoft Project: 작업 의존관계 (FS/SS/FF)','https://support.microsoft.com/en-US/project/link-tasks-in-a-project','작업 사이의 FS, SS, FF 연결 방식 설명입니다.'],
+   ['Microsoft Project: 크리티컬 패스','https://support.microsoft.com/en-us/project/manage-your-project-s-critical-path','총여유가 없는 업무를 크리티컬로 구분하는 방법 설명입니다.']],
+  '기술':[['NVIDIA Infrastructure Services (NVIS)','https://www.nvidia.com/en-us/support/enterprise/infrastructure-services/','계획·설계, 사전준비, 현장구축, 시험검증, 교육, 최종이관으로 이어지는 NVIS 수행 범위 안내입니다.'],
+   ['NVIS 공식 데이터시트 (PDF)','https://cdn.pathfactory.com/assets/10412/contents/867639/163243c3-8c8f-4b02-85fc-17d95d392d72.pdf','2024년 8월 자료입니다. 초기 참여, 프로젝트별 SOW·일정, 검증·인계 업무를 설명합니다.'],
+   ['Vertiv: CDU(냉각수 분배 장치) 이해','https://www.vertiv.com/en-asia/insights/articles/educational-articles/understanding-coolant-distribution-units-cdus-for-liquid-cooling/','시설 냉각수(FWS)와 장비 냉각수(TCS)의 분리, CDU 접속 경계를 설명합니다.'],
+   ['Vertiv: 액체냉각 서비스','https://www.vertiv.com/en-asia/campaigns/liquid-cooling-services/','유체 관리, 오염 제거, 에어퍼지, 수질, 설치·시운전 검토 항목 참고 자료입니다.'],
+   ['Rystad Energy: 전력기기 시장 전망','https://www.rystadenergy.com/insights/grid-equipment-market-outlook','변압기 등 전력기기의 조달기간이 길어지는 시장 상황 참고 자료입니다. 실제 납기는 업체 견적이 우선입니다.']],
+  '기타':[['Texas A&M–WWT 계약·SOW (미국 실제 계약)','https://assets.system.tamus.edu/files/budgets-acct/pdf/SB20_Contracts/AB0990978.pdf','발주자·OEM 일정 통합과 변경관리 참고 사례입니다 (pp.18~19, 21~22, 50~53).'],
+   ['Texas A&M AI CoE RFP (미국 실제 발주)','https://assets.system.tamus.edu/files/budgets-acct/pdf/HUB_Solicitations/CIO-25-229.pdf','설계·구축·현장 준비·통합·교육 책임과 제안평가, 질의응답 일정 구조 참고 사례입니다 (Section 3, pp.9~11).']]};
+ const CARDS=[['Elice','https://www.dell.com/en-us/learn/customer-stories/lp/customer-stories-elice','GPUaaS와 자체 AI 인프라를 운영하는 국내 업체입니다.\n(Dell 고객 사례)'],
+  ['FPT Smart Cloud · NAVER Cloud','https://navercorp.com/en/media/pressReleasesDetail?seq=10034762','2026년 10월 AI Factory·GPUaaS APAC 협력을 발표했습니다.\n(네이버 보도자료)'],
+  ['NHN Cloud GPU Instance','https://www.gov-nhncloud.com/kr/service/compute/gpu-instance','NHN Cloud의 GPU 인스턴스 서비스 안내입니다.'],
+  ['Runpod','https://www.runpod.io/legal/compliance','데이터센터·인프라 파트너와 지역별로 협업하는 GPU 클라우드입니다.\n(컴플라이언스 안내)'],
+  ['FriendliAI','https://friendli.ai/pricing?product=serverless-endpoints','고객 GPU에서 추론 스택을 운영하는 방식(BYOG)을 제공합니다.\n(요금 안내)']];
+ const now=Date.now(); let n=0;
+ for(const [want,rows] of Object.entries(TABS)){const tab=ARCH_TABS.includes(want)?want:(ARCH_TABS.includes('기타')?'기타':ARCH_TABS[0]); if(!tab)continue;
+  rows.forEach((r,i)=>{const id='lnk1_'+(n++); if(item(id))return;
+   ITEMS.push({id,type:'research',arch:tab,title:r[0],url:r[1],src:hostOf(r[1]),body:'<p>'+esc(r[2])+'</p>',proj:PROJECTS.pangyo?'pangyo':(orderedProjects()[0]||''),date:TODAY,created:TODAY,createdAt:new Date(now-n).toISOString(),status:'published',st:'prog',pri:'mid',people:[],comments:[]});});}
+ let sec=ARCH_SECTIONS.find(s=>s.name==='웹사이트')||ARCH_SECTIONS[0]; if(!sec){sec={name:'웹사이트',cards:[]};ARCH_SECTIONS.push(sec);}
+ CARDS.forEach((c,i)=>{const id='lk1_'+i; if(!sec.cards.some(x=>x.id===id))sec.cards.push({id,name:c[0],url:c[1],desc:c[2]});});
+}
 async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');
  if(!r.ok){localStorage.removeItem(TOKEN_KEY);sharedToken='';return false;}
  const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);
@@ -213,6 +249,7 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
   const short={'판교 AI 데이터센터':'판교 AIDC','부산 AI 데이터센터':'부산 AIDC','인천 청라 AI 데이터센터':'인천 청라 AIDC','인천 청라 AI 데이터센':'인천 청라 AIDC'};
   Object.values(PROJECTS).forEach(p=>{if(short[p.tag])p.tag=short[p.tag];});META_FLAGS.projectTagV1=1;}
  if(!META_FLAGS.trashStampV1){const at=new Date().toISOString();ITEMS.forEach(i=>{if(i.status==='trash'&&!i.trashedAt)i.trashedAt=at;});META_FLAGS.trashStampV1=1;} // older trash had no date: its 30 days start now
+ if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;}
  purgeOldTrash();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;
  restoreLocal();
