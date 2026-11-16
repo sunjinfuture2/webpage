@@ -1109,6 +1109,14 @@ html{overflow:hidden}
 .props.simple .editable[contenteditable="true"]:focus{box-shadow:none;opacity:1;text-decoration-color:#8e8e8e}
 .props.simple .editable.multi{display:block;white-space:pre-wrap;line-height:21px;width:300px}
 .ititle.ed:empty::before,.ititle.ed.empty{color:#d6d6d6}
+
+/* ===== 자료실: title = link to the site, rest = open the content ===== */
+.ttl-link{color:inherit;text-decoration:none;cursor:pointer}
+.ttl-link:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.acard h4{overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 46px);padding-bottom:2px}
+.acard p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.tbl.archive .rw .ttl a.tx{min-width:0}
+.props.simple .pr .v .plain{line-height:21px}
 </style>
 </head>
 <body>
@@ -1651,13 +1659,13 @@ function renderArchive(){
       if(!cell){h+=`<div class="cell" style="border-left:0"></div>`;continue;}
       h+=`<div class="cell ${k===3&&full?'last-line':''} ${k===0?'first':''}">`;
       if(cell.add) h+=plusBtn('add','자료 추가').replace('class="sh-btn','data-addcard="'+si+'" class="sh-btn');
-      else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic">${logoImg(cell.c.url)}</div><h4>${esc(cell.c.name)}</h4><p>${esc(cell.c.desc)}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
+      else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic">${logoImg(cell.c.url)}</div><h4 title="${esc(cell.c.name)}">${urlHref(cell.c.url==='#'?'':cell.c.url)?`<a class="ttl-link" href="${esc(urlHref(cell.c.url))}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc(cell.c.name)}</a>`:esc(cell.c.name)}</h4><p>${esc(cell.c.desc)}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
       h+=`</div>`;}}
     h+=`</div></div>`;});
   h+=`<button class="sh-btn newsec" data-newsec>구분 새로 만들기</button>
    <div class="tabs" style="margin-top:197.3px;--tabn:${ARCH_TABS.length};--tabidx:${Math.max(0,ARCH_TABS.indexOf(S.archTab))}">${plusBtn('addtab','이 구분에 자료 추가').replace('class="sh-btn','data-addrow class="sh-btn')}<button class="tabmenu" data-tabmenu title="탭 추가 · 이름 변경 · 삭제">${svg('i-more2',2.5,13.7)}</button><ul style="height:53.5px">${ARCH_TABS.map(t=>`<li class="${t===S.archTab?'on':''}" data-tab="${esc(t)}">${esc(t)}</li>`).join('')}</ul><div class="bar"><i style="left:calc((1348.4px + var(--d))/${ARCH_TABS.length}*${Math.max(0,ARCH_TABS.indexOf(S.archTab))} - 5px)"></i></div></div>
    <div class="tbl archive" style="margin-top:109.5px"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>최종수정일자</em></span><span><em>출처</em></span></div>
-   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span><span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')}</div><div class="d" style="margin-left:-1.3px">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
+   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${u&&!/^dropbox\.com\.{3,}$/.test((r.url||'').trim())?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc((r.title||'').split('\n').join(' '))}</a>`:`<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')}</div><div class="d" style="margin-left:-1.3px">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
    ${page.length?'':'<div class="none">등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.</div>'}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:69.7px" class="pager')}${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}</div>`;
   $('#arch-pw').innerHTML=h;
 }
@@ -1755,15 +1763,16 @@ function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlH
   return `<div class="itype">${logoImg(url)||'<i></i>'}자료실 · ${esc(ARCH_SECTIONS[si].name)}</div><div class="ihead">${shead(E,'card')}</div>${stitle(E,c.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">구분</span><span class="v"><span class="plain">${esc(ARCH_SECTIONS[si].name)}</span></span></div>
   <div class="pr"><span class="k">URL</span><span class="v">${E?sfield('url','https://',url):(u?`<a class="url" style="margin-left:0" href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(url)}</a><button class="copy-url" data-copy="${esc(u)}" title="주소 복사">${svg('i-copy',13,13)}</button>`:none)}</span></div>
-  <div class="pr" style="height:auto;min-height:42px"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',c.desc,true):(c.desc?`<span class="plain" style="white-space:pre-line">${esc(c.desc)}</span>`:none)}</span></div></div></div>`;}
+  <div class="pr" style="height:auto;min-height:42px"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',c.desc,true):(c.desc?`<span class="plain" style="white-space:pre-line">${esc(c.desc)}</span>`:none)}</span></div>
+  ${E||c.note?`<div class="pr" style="height:auto;min-height:42px"><span class="k">활용 시 주의</span><span class="v">${E?sfield('note','확인하거나 활용할 때 주의할 점',c.note,true):`<span class="plain" style="white-space:pre-line">${esc(c.note)}</span>`}</span></div>`:''}</div></div>`;}
 function simpleTarget(){const e=S.editSimple; if(!e)return null; if(e.kind==='partner')return PARTNERS.find(x=>x.id===e.id&&!x.trash)||null; const [si,cid]=e.id.split(':'); return (ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash)||null;}
-function simpleValues(){const out={}; $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=k==='desc'?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
+function simpleValues(){const out={}; $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=(k==='desc'||k==='note')?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
 const simpleStored=(o,k)=>{const v=String(o[k]==null?'':o[k]).trim(); return (k==='url'&&v==='#')||(k==='site'&&v==='-')?'':v;};
 function simpleDirty(){const o=simpleTarget(); if(!o||S.panel!==S.editSimple.id)return false; const v=simpleValues(); return Object.keys(v).some(k=>v[k]!==simpleStored(o,k));}
 function saveSimple(){const e=S.editSimple, o=simpleTarget(); if(!e||!o){S.editSimple=null;return true;} const v=simpleValues(); if(!v.name){toast('이름을 입력해 주세요.');const t=$('#panel-pin [data-sk="name"]');t&&t.focus();return false;}
   const old=o.name; Object.keys(v).forEach(k=>{if(v[k]!==simpleStored(o,k))o[k]=v[k];}); if(e.kind==='partner'&&old!==o.name)ITEMS.forEach(x=>{if(x.type==='meeting'&&x.partner===old)x.partner=o.name;}); // meetings keep pointing at the renamed partner
   S.editSimple=null; return true;}
-document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&t.dataset.sk!=='desc'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
+document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&!/^(desc|note)$/.test(t.dataset.sk)&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
 document.addEventListener('paste',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-sk]'); if(!t)return; e.preventDefault(); document.execCommand('insertText',false,(e.clipboardData&&e.clipboardData.getData('text/plain'))||'');});
 
 /* ===================== NAV / ROUTING ===================== */

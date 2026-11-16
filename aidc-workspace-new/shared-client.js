@@ -243,6 +243,58 @@ function restyleReferenceLinksV2(){
  for(const rows of Object.values(L.tabs))rows.forEach(r=>{const id='lnk1_'+(n++); const it=ITEMS.find(x=>x.id===id); if(it&&!it.editing&&it.body==='<p>'+esc(r[3])+'</p>')it.body='<p>'+esc(r[2])+'</p>';});
  L.cards.forEach((c,i)=>{for(const sec of ARCH_SECTIONS){const x=sec.cards.find(k=>k.id==='lk1_'+i); if(x&&x.desc===c[3])x.desc=c[2];}});
 }
+// One-time reorganisation (2026-11-16, owner request): 자료실 link cards are grouped by what they are used for instead of by medium,
+// the 19 links of "AIDC 아카이브 추가 링크 정리" are added, and repeated copies of the same card are dropped.
+// Only exact copies (same address, name and description) are removed; a card somebody changed, and any section or card this does not know, is left alone.
+// Card rows: [id, name, url, description, caution]. Texts are short notes, not polite sentences (owner's style rule).
+function reorganizeArchiveV3(){
+ const key=u=>{const h=urlHref(u==='#'?'':u);return h?h.toLowerCase().replace(/\/+$/,''):'';};
+ const PLAN=[
+  ['입지·전력 확보',[
+   ['lk3_kepco','한전ON 여유용량','https://online.kepco.co.kr/EWM104D04','지역·변전소별 전력공급 여유정보를 표와 지도로 확인하는 한전 공식 서비스. AIDC 후보지의 초기 전력 검토에 활용.','여유용량 조회는 공급 확약이 아님. 실제 수전 가능 여부는 세부 검토와 한전 협의 필요.'],
+   ['lk3_dcmap','Data Center Map (한국)','https://www.datacentermap.com/south-korea/','국내 데이터센터를 지역별로 찾아보는 전문 디렉터리. 후보지 주변 데이터센터 분포와 운영사·경쟁시설 조사에 활용.','최신 시설 수는 미확정. 개별 시설 정보는 운영사 원문과 대조.']]],
+  ['설계·냉각 레퍼런스',[
+   ['lk3_se','Schneider Reference Designs','https://www.se.com/ww/en/work/solutions/ai-factory/reference-designs/','전력·냉각·IT 공간을 통합한 AI 데이터센터 표준 설계안 공식 라이브러리. GB200·GB300 등 플랫폼별 설계 요약과 도면·장비목록 패키지의 출발점.','여러 설계안을 계속 찾아보는 포털. 일부 엔지니어링 패키지는 별도 요청 필요.'],
+   ['lk3_dsx','NVIDIA DSX 기술문서','https://docs.nvidia.com/dsx','AI Factory의 설계·시뮬레이션·전력 최적화·GPU 운영 기술자료를 연결하는 공식 문서 허브. 시설과 IT 인프라를 함께 검토할 때의 기준 자료.','일부 레퍼런스 설계는 NVOnline 접근 권한 필요.'],
+   ['lk3_tetra','Tetra Tech 액체냉각 가이드','https://www.tetratech.com/insights/optimizing-data-center-direct-to-chip-liquid-cooling-with-pg-25/','Direct-to-Chip 액체냉각의 냉각유체·재료 선정·부식 방지·유지관리 설계 가이드. DLC 설계 검토와 공급사 질의사항 작성에 활용.','개별 설계 조건과 냉각유체 사양에 맞춰 적용. 모든 서버·설비의 공통 기준으로 쓰지 않음.']]],
+  ['GPU 요금·사업성 조사',[
+   ['lk3_cw','CoreWeave Pricing','https://www.coreweave.com/pricing','온디맨드·스팟 요금과 예약 사용 조건을 확인하는 GPU 인스턴스 공식 요금 페이지. 스토리지·네트워크 비용까지 함께 비교 가능.','인스턴스당 가격과 GPU 1장당 가격 구분. GPU 구성·리전·약정기간을 맞춰 비교.'],
+   ['lk3_crusoe','Crusoe Cloud Pricing','https://www.crusoe.ai/cloud/pricing','GPU·CPU·스토리지부터 관리형 Kubernetes, 추론 서비스까지의 공식 요금 체계. 시간당 임대와 모델·토큰 기반 서비스의 상품 구조 비교용.','현재 요금과 시행 예정 요금이 함께 표시될 수 있어 적용일 확인 필요.'],
+   ['lk3_metro','Metronome Pricing Index','https://metronome.com/pricing-index/crusoe-cloud','클라우드 서비스의 가격 스냅샷·과금 방식·변경 이력을 정리한 보조 조사자료. 요금 구조와 과거 변화의 맥락 파악용.','제3자 자료. 최신 가격은 업체 공식 요금표와 대조.'],
+   ['lk3_wayback','Wayback Machine','https://web.archive.org/','과거 웹페이지 보관본을 날짜별로 확인하는 도구. GPU 공식 요금표의 과거 가격과 상품 구성 변경 추적에 활용.','보관되지 않은 날짜가 있고 동적 가격표는 누락 가능. 관측한 가격과 실제 변경일 구분.']]],
+  ['GPU 클라우드 사업자',[]],
+  ['GPU 운영·서비스 상품화',[
+   ['lk3_backend','Backend.AI GPU 가상화','https://www.backend.ai/platform/gpu-virtualization','GPU 분할·공유와 다중 사용자 자원 배분 기능을 설명하는 래블업 공식 제품 페이지. GPUaaS 운영 방식과 부서·고객별 자원 할당 정책 검토용.','기능·효과는 공급사 설명. 실제 성능과 도입 적합성은 대상 장비·워크로드 기준으로 검증 필요.'],
+   ['lk3_ixcsp','INFINITIX ixCSP','https://www.infinitix.ai/en/products/ixcsp/','GPU·모델·토큰 서비스 상품화를 위한 사용량 계량·과금·테넌트 관리 플랫폼. 고객 포털과 종량제 상품 구성 검토용.','공급사 제품 설명 기준. 실제 과금 연동·운영 성능과 도입 조건은 별도 확인 필요.']]],
+  ['분산전원·에너지 대안',[
+   ['lk3_clearbrook','Clearbrook Energy','https://clearbrookenergysolutions.com/','배터리 시스템과 AI 기반 에너지 관리 기술을 결합한 에너지 솔루션 기업. BESS와 에너지 운영을 결합한 사업모델·협력사 사례 조사용.','기업 소개 기준의 사례 조사용 링크. 성능·경제성·국내 적용 가능성은 미검증.'],
+   ['lk3_skeco','SK에코플랜트 뉴스룸','https://news.skecoplant.com/board/18768','데이터센터의 SOFC 적용과 연료전지 폐열 활용 사례를 설명하는 기업 공식 콘텐츠. 국내 프로젝트와 전력·냉각 연계 방식 확인용.','사업자 발표와 홍보성 해설 구분. 개별 프로젝트의 최신 진행 상태는 별도 확인.'],
+   ['lk3_h2news','월간수소경제','https://www.h2news.kr/news/articleView.html?idxno=13968','수소·연료전지·온사이트 발전의 기술과 사업 동향을 다루는 전문 매체. 계통접속 지연 대응과 분산전원 도입 사례 조사용.','동향 파악용 보조자료. 기술기준·인허가·경제성은 공식 자료와 실견적으로 확인. 링크는 관련 기사.'],
+   ['lk3_gasnews','가스신문','https://www.gasnews.com/news/articleView.html?idxno=123524','가스·연료전지 분야 산업 동향과 데이터센터 현장발전 사례를 다루는 전문 매체. SOFC 적용 조건과 전력·열 활용 이슈 조사용.','전문 매체 해설을 공식 설계·안전 기준으로 쓰지 않음. 링크는 관련 기사.']]],
+  ['산업동향·기업 검증',[
+   ['lk3_dcd','Data Center Dynamics','https://www.datacenterdynamics.com/en/','글로벌 데이터센터의 개발·투자·전력·냉각·운영 동향을 다루는 전문 매체. 뉴스 외에 백서·보고서·웨비나 제공.','기사는 원 사업자 발표와 교차 확인. 콘텐츠별 공개·등록 조건 확인.'],
+   ['lk3_lkg','이강기 블로그 (데이터센터)','https://blog.naver.com/lkg5626/224315008583','데이터센터 구축·설비·입지·인허가를 한국어로 풀어 설명하는 전문가 블로그. 기초 이해와 검토 질문 정리용 보조자료.','법령·기간·비용은 공식 원문과 대조. 링크는 대표 글.'],
+   ['lk3_dart','금융감독원 DART','https://dart.fss.or.kr/','국내 기업의 사업보고서·재무제표·투자설명서를 조회하는 공식 공시시스템. GPU 운영사와 장비·전력·냉각 업체의 사업구조·재무현황 검증용.','정정 여부·공시일·대상 기간, 별도·연결 기준 확인.'],
+   ['lk3_edgar','SEC EDGAR 공시검색','https://www.sec.gov/edgar/search/','미국 증권당국의 공식 공시검색 서비스. NVIDIA 등 미국 공시기업의 연차·분기보고서에서 투자지출·계약·사업위험 확인용.','보고서 종류·공시일·회계기간과 정정 여부 구분.']]]];
+ // where the cards that are already there belong
+ const HOME={'https://getdeploying.com':'GPU 요금·사업성 조사','https://research.aimultiple.com':'GPU 요금·사업성 조사','https://gpus.io':'GPU 요금·사업성 조사'};
+ const homeOf=c=>String(c.id).startsWith('lk1_')?'GPU 클라우드 사업자':HOME[key(c.url)];
+ // 1. the same card registered several times: keep the first one, drop the exact copies
+ const first=new Map(); ARCH_SECTIONS.forEach(sec=>sec.cards.forEach(c=>{const k=key(c.url); if(k&&!c.trash&&!first.has(k))first.set(k,c);}));
+ ARCH_SECTIONS.forEach(sec=>{sec.cards=sec.cards.filter(c=>{const f=first.get(key(c.url)); return !f||f===c||!(f.name===c.name&&(f.desc||'')===(c.desc||''));});});
+ // 2. topic sections first, in this order; whatever else exists stays behind them
+ const topic=PLAN.map(([name])=>ARCH_SECTIONS.find(x=>x.name===name)||{name,cards:[]});
+ const rest=ARCH_SECTIONS.filter(x=>!topic.includes(x));
+ // 3. known cards move to their topic
+ rest.forEach(sec=>{sec.cards=sec.cards.filter(c=>{const t=topic.find(x=>x.name===homeOf(c)); if(!t)return true; t.cards.push(c); return false;});});
+ // 4. the new links (skipped when the id or the address is already there)
+ const have=new Set(), ids=new Set(); topic.concat(rest).forEach(sec=>sec.cards.forEach(c=>{ids.add(c.id); if(key(c.url))have.add(key(c.url));}));
+ PLAN.forEach(([name,rows],i)=>rows.forEach(r=>{if(ids.has(r[0])||have.has(key(r[2])))return; topic[i].cards.push({id:r[0],name:r[1],url:r[2],desc:r[3],note:r[4]});}));
+ // 5. the one demo description that was a polite sentence
+ const gp=first.get('https://gpus.io'); if(gp&&gp.desc==='32개 이상의 클라우드 및 GPU 마켓플레이스 제공업체의\n실시간 가격을 단일 테이블로 정규화하여 가장 저렴한\nGPU를 찾아줍니다.')gp.desc='32개 이상의 클라우드·GPU 마켓플레이스 가격을 단일 테이블로 정규화해 최저가 GPU를 찾는 비교 사이트.';
+ // 6. the old medium sections disappear once they are empty
+ ARCH_SECTIONS=topic.filter(x=>x.cards.length).concat(rest.filter(x=>x.cards.length||!['웹사이트','유튜브','블로그'].includes(x.name)));
+}
 async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');
  if(!r.ok){localStorage.removeItem(TOKEN_KEY);sharedToken='';return false;}
  const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);
@@ -259,6 +311,7 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!META_FLAGS.trashStampV1){const at=new Date().toISOString();ITEMS.forEach(i=>{if(i.status==='trash'&&!i.trashedAt)i.trashedAt=at;});META_FLAGS.trashStampV1=1;} // older trash had no date: its 30 days start now
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
+ if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
  purgeOldTrash();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;
  restoreLocal();
