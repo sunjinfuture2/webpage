@@ -27,9 +27,10 @@
 | `editor/history.js` | 버전 기록 창 (목록 · 읽기 전용 미리보기 · 되돌리기) |
 | `editor/collab.js` | 함께 수정: Yjs 공유 문서 세션, 상대 커서, 전송은 앱의 소켓에 맡김 |
 | `editor/hist.js` | “이 변경은 실행 취소 한 단계” 표시(혼자: prosemirror-history, 함께: Yjs undo) |
+| `editor/suggest.js` | 변경 제안(제안 모드): 삽입 · 삭제 표시, 수락 / 거절 |
 | `editor/touch.js` | 터치 화면용 하단 툴바 |
 | `editor/docmenu.js` | 글 머리의 ⋯ 메뉴(찾기 · 내보내기 · 가져오기 + 앱이 넣는 항목) |
-| `tests/editor-*.cjs`, `tests/leave-1.cjs` | Playwright 검사 292건 (로컬 `wrangler dev` 대상) |
+| `tests/editor-*.cjs`, `tests/leave-1.cjs` | Playwright 검사 315건 (로컬 `wrangler dev` 대상) |
 
 앱 쪽 연결(original.html의 `nbUse` · `nbMount` · `nbBody` · `nbConfigure`): 수정 중인 글마다 편집기 하나를 `NB[글 id]`에 둔다. 화면이 다시 그려져도 편집기를 새 자리에 옮겨 붙이므로 커서 · 되돌리기 기록 · 패널 ↔ 전체 페이지 전환이 유지된다. 편집 중이 아닌 글의 편집기는 닫는다.
 
@@ -39,7 +40,7 @@
 - 블록마다 `data-id`(영구 ID). 이동 · 전환은 ID를 유지하고 복제 · 붙여넣기 · 나누기는 새 ID를 받는다.
 - 블록 표기: `p` `h1`–`h3` `ul` `ol` `li` · `ul[data-type=taskList] > li[data-type=taskItem][data-checked]` · `details.nb-toggle[open][data-level] > summary + div[data-type=detailsContent]` · `blockquote` · `div[data-type=callout][data-icon][data-color]` · `hr` · `pre > code` · `div.tableWrapper > table`(셀 `data-bg`, `colwidth`) · `figure.img[data-align][data-width]` · `a.file[data-name][data-fid]` · `a.bookmark[data-type=bookmark]` · `iframe.embed` / `video` / `audio` · `div[data-type=columns] > div[data-type=column][data-w]` · `nav[data-type=toc]` · `div[data-type=raw][data-html]`
 - 인라인: `strong` `em` `u` `s` `code` `a[href]` · `span[data-color]`(글자색) · `mark[data-bg]`(배경) · `span.mention[data-id]` · `a[data-type=pageLink][data-item]` · `span.datechip[data-date][data-end]`. 색은 이름(gray · brown · orange · yellow · green · blue · purple · pink · red)으로만 저장한다.
-- 2 · 3차에 더한 표기: `pre > code.language-<언어>` · `span[data-type=math][data-tex]` · `div[data-type=mathBlock][data-tex]` · `div[data-type=button][data-label][data-action][data-tpl|data-href]` · `div[data-type=synced][data-item][data-block]`(참조만) · `div[data-type=itemList][data-kind][data-proj][data-state][data-mine][data-limit]`(조건만) · 날짜의 `data-remind`(0 · 1 · 2 · 7일 전) `data-by`(설정한 사번).
+- 2 · 3차에 더한 표기: `pre > code.language-<언어>` · `span[data-type=math][data-tex]` · `div[data-type=mathBlock][data-tex]` · `div[data-type=button][data-label][data-action][data-tpl|data-href]` · `div[data-type=synced][data-item][data-block]`(참조만) · `div[data-type=itemList][data-kind][data-proj][data-state][data-mine][data-limit]`(조건만) · 날짜의 `data-remind`(0 · 1 · 2 · 7일 전) `data-by`(설정한 사번) · 변경 제안 `ins.nb-ins[data-by][data-at]` / `del.nb-del[data-by][data-at]`.
 - 블록 댓글은 본문이 아니라 글의 `comments`에 `block`(블록 ID) · `quote`(그때의 앞 80자) · `resolved`를 더해 저장한다. 템플릿은 `meta:settings.templates`.
 - 모르는 블록(`data-type`이 스키마에 없는 것, 더 새 버전이 쓴 것)은 지우지 않고 `raw` 블록으로 감싸 그대로 보관하며 화면에는 편집할 수 없는 상자로 보인다.
 
@@ -71,7 +72,7 @@ npm run dev -- --compatibility-date 2026-10-13 --port 8787 --ip 127.0.0.1
 LC_ALL=C.UTF-8 node tests/editor-1.cjs
 ```
 
-`editor-1`(입력 · 서식 · 구조 76건), `editor-2`(저장 · 복구 · v1 본문 · 파일 · 두 멤버 49건), `editor-3`(드래그 · 한글 조합 · 키보드 · 축소 화면 · 큰 본문 26건), `editor-4`(코드 · 수식 · 찾기 · 내보내기 / 가져오기 · 템플릿 · 버튼 · 터치 툴바 52건), `editor-5`(버전 기록 · 블록 댓글 · 동기화 블록 · 항목 목록 · 알림 · 백링크 43건), `editor-6`(함께 수정 27건), `leave-1`(나갈 때 저장 19건). 깨끗한 로컬 DB에서 차례로 돌린다. Playwright가 설치된 환경이 필요하다(프로젝트 의존성에는 넣지 않았다).
+`editor-1`(입력 · 서식 · 구조 76건), `editor-2`(저장 · 복구 · v1 본문 · 파일 · 두 멤버 49건), `editor-3`(드래그 · 한글 조합 · 키보드 · 축소 화면 · 큰 본문 26건), `editor-4`(코드 · 수식 · 찾기 · 내보내기 / 가져오기 · 템플릿 · 버튼 · 터치 툴바 52건), `editor-5`(버전 기록 · 블록 댓글 · 동기화 블록 · 항목 목록 · 알림 · 백링크 43건), `editor-6`(함께 수정 27건), `editor-7`(변경 제안 23건), `leave-1`(나갈 때 저장 19건). 깨끗한 로컬 DB에서 차례로 돌린다. Playwright가 설치된 환경이 필요하다(프로젝트 의존성에는 넣지 않았다).
 
 측정값(헤드리스 Chromium, 개발 서버, 2026-11-18): 최상위 1,175블록 · 115,764자 본문을 편집 가능 상태로 여는 데 510 ms, 그 본문에서 글자 입력 p50 2.9 ms / p95 4.9 ms(레이아웃 포함), 본문 전체 직렬화 32 ms(저장 · 초안 때만), 슬래시 검색 24 ms.
 
@@ -134,7 +135,7 @@ LC_ALL=C.UTF-8 node tests/editor-1.cjs
 | SAVE-08, COL-01 – 11 | 부분 | 실시간 공동 편집: ‘함께 수정’으로 참여하면 본문이 Yjs 공유 문서가 된다(동시 입력 병합, 상대 커서와 이름, 자기 변경만 실행 취소, 연결이 끊겼다 돌아오면 다시 맞춤). 세션은 수정하는 동안만 있고 저장은 기존 방식. 없는 것: 혼자 쓸 때의 상시 CRDT · 자동 저장, 오프라인 장기 편집 병합, 문서별 영속 update log, 세 번째 이후 멤버 · 실제 네트워크 지연에서의 검수 |
 | COMM-01 – 03 | 부분 | 글 전체 댓글 + 블록 댓글(블록 옆 표시와 개수, 스레드 창, 답글, 내 댓글 삭제, 해결 / 다시 열기, 댓글 목록에서 블록으로 이동, 멘션 알림). 글자 범위 단위 댓글은 없음 |
 | HIST-01 – 04 | 부분 | 버전 기록: 저장할 때마다 서버가 보관(위 “저장 모델”), ⋯ 메뉴에서 목록 · 읽기 전용 미리보기 · 되돌리기(되돌리기 전 내용도 남음). 버전끼리 차이 표시, 이름 붙이기는 없음 |
-| SUG-01 – 03 | 미구현 | 변경 제안(제안 모드). 삽입 · 삭제를 표시로 남기고 수락 / 거절하는 편집 모드가 필요하며 이번에 만들지 않음 |
+| SUG-01 – 03 | 부분 | 제안 모드(⋯ 메뉴에서 켬): 입력 · 붙여넣기는 삽입 제안, 삭제 · 잘라내기 · 덮어쓰기는 취소선으로 남고, 제안을 눌러 수락 / 거절하거나 한꺼번에 처리한다. 저장하면 읽는 화면과 다른 멤버에게도 보인다. 글자 단위만 추적한다 — 블록 추가 · 삭제 · 이동 · 유형 전환, 표 구조 변경, 서식 변경은 제안으로 남지 않고 바로 적용된다. 제안에 대한 댓글 · 알림은 없음 |
 | DB-01 – 11 | 부분 | 항목 목록 블록: 종류 · 프로젝트 · 상태 · 내 담당 · 개수로 고른 워크스페이스 항목을 표로 보여 주고 행을 누르면 그 글이 열린다(조건만 저장). 본문 안에서 새 DB 만들기, 보드 · 캘린더 보기, 속성 편집 · 정렬은 없음 |
 | AUTO-01 – 05 | 부분 | 템플릿: 기본 5종(회의록 · 주간 보고 · 리서치 메모 · 의사결정 기록 · 점검표) + 선택한 블록을 워크스페이스 템플릿으로 저장 / 삭제. 버튼 블록: 누르면 블록 추가 또는 링크 열기, 읽기 화면에서도 동작. 반복 생성 · 조건부 자동화는 없음 |
 | AI-01 – 05 | 차단 | 모델 API 키 · 비용 승인 필요. 관련 메뉴는 노출하지 않음 |

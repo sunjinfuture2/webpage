@@ -14,6 +14,7 @@ import { MathInline, MathBlock } from './math.js';
 import { Button } from './templates.js';
 import { Synced, ItemList } from './blocks2.js';
 import { isChangeOrigin } from './collab.js';
+import { Ins, Del } from './suggest.js';
 
 export const ID_TYPES = ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem', 'blockquote', 'codeBlock', 'horizontalRule',
   'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button', 'synced', 'itemList'];
@@ -196,7 +197,7 @@ export function buildExtensions(opts = {}) {
     Toggle.configure({ persist: true, HTMLAttributes: { class: 'nb-toggle' }, renderToggleButton: ({ element, isOpen }) => { element.setAttribute('aria-label', isOpen ? '접기' : '펼치기'); element.setAttribute('aria-expanded', String(!!isOpen)); element.className = 'nb-toggle-btn'; } }),
     DetailsSummary, DetailsContent,
     Code.configure(codeOptions), MathInline, MathBlock, V(Button, nv.button), V(Synced, nv.synced), V(ItemList, nv.itemList),
-    Callout, V(Image, nv.image), FileCard, Bookmark, Embed, Columns, Column, V(Toc, nv.toc), V(Raw, nv.raw), DateChip, Mention, PageLink, TextColor, BgColor, Extras,
+    Callout, V(Image, nv.image), FileCard, Bookmark, Embed, Columns, Column, V(Toc, nv.toc), V(Raw, nv.raw), DateChip, Mention, PageLink, TextColor, BgColor, Ins, Del, Extras,
     // while editing together, an id is given by the member whose change made the block, never a second time by those who receive it
     UniqueID.configure({ attributeName: 'id', types: ID_TYPES, generateID: () => newId(), ...(opts.collab ? { filterTransaction: tr => !isChangeOrigin(tr) } : {}) }),
     Placeholder.configure({ showOnlyCurrent: true, includeChildren: true, placeholder: ({ node }) => node.type.name === 'heading' ? '제목 ' + node.attrs.level : node.type.name === 'detailsSummary' ? '토글' : node.type.name === 'codeBlock' ? '' : "글을 입력하거나 '/'로 블록을 추가하세요" }),

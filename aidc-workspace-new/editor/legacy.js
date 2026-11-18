@@ -7,6 +7,7 @@ import { renderMathIn } from './math.js';
 import { hydrateButtons } from './templates.js';
 import { hydrateLive } from './blocks2.js';
 import { hydrateComments } from './comments.js';
+import { hydrateSuggestions } from './suggest.js';
 
 const KNOWN = new Set(KNOWN_TYPES);
 const INLINE_HOSTS = 'p,h1,h2,h3,li,td,th,blockquote,summary';
@@ -83,7 +84,7 @@ export function hydrate(root, opt) {
   root.querySelectorAll('pre').forEach(p => { if (p.querySelector('.nb-copy')) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'nb-copy'; b.textContent = '복사'; b.setAttribute('aria-label', '코드 복사'); p.append(b); });
   const depth = (opt && opt.depth) || 0; hydrateLive(root, depth);
   try { highlightIn(root); } catch { /* plain code stays */ }
-  renderMathIn(root); hydrateButtons(root, itemId); if (!depth) hydrateComments(root, itemId);
+  renderMathIn(root); hydrateButtons(root, itemId); hydrateSuggestions(root); if (!depth) hydrateComments(root, itemId);
   root.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-toc],a[data-type="pageLink"],.nb-copy'); if (!t || !root.contains(t)) return;
     if (t.matches('.nb-copy')) { e.preventDefault(); e.stopPropagation(); const code = t.parentElement.querySelector('code') || t.parentElement; const txt = code.tagName === 'CODE' ? code.textContent : [...code.childNodes].filter(n => n !== t && !(n.classList && n.classList.contains('nb-code-langlabel'))).map(n => n.textContent).join(''); navigator.clipboard && navigator.clipboard.writeText(txt).then(() => ctx.toast('코드를 복사했습니다.'), () => ctx.toast('복사하지 못했습니다.')); return; }
     e.preventDefault(); e.stopPropagation();

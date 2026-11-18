@@ -17,7 +17,7 @@ AIDC 워크스페이스 프로젝트 전달본 (2026-11-06)
 - shared-worker.mjs: 서버 API와 Durable Object 데이터 저장 (첨부 파일, 활동 기록, 쓰레기통 30일 정리 포함)
 - build-shared.mjs: original.html에 shared-client.js를 넣어 public/index.html을 만들고 seed.json을 생성하며, editor/를 묶어 public/editor.js를 만듦
 - editor/: 본문 편집기 소스 (Tiptap 3 기반 블록 편집기). 구조·저장 형식·항목별 구현 상태는 EDITOR.md
-- tests/: 본문 편집기 검사 (Playwright, 로컬 개발 서버 대상). editor-1..6, leave-1
+- tests/: 본문 편집기 검사 (Playwright, 로컬 개발 서버 대상). editor-1..7, leave-1
 - public/katex/: 수식 표시용 KaTeX (빌드가 node_modules에서 복사, 수식이 있는 화면에서만 불러옴)
 - public/index.html, public/editor.js, public/editor.licenses.txt: 배포용 생성 결과 (직접 수정하면 다시 생성할 때 덮어써집니다)
 - seed.json: 최초 빈 저장소에 넣는 예시 데이터; 실제 운영 DB 백업이 아닙니다

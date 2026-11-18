@@ -342,3 +342,11 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
 .nb-co{display:inline-flex;align-items:center;gap:5px;margin:2px 0 0 10px;font-size:13px;color:#6b6b6b;white-space:nowrap}
 .nb-co i{width:8px;height:8px;border-radius:50%;display:inline-block}
 .ihead .nb-join{margin-left:8px;width:auto;padding:0 10px;color:#2383e2}
+
+/* ====================================================================== suggested changes */
+.nb-doc ins.nb-ins{background:#e3f6df;color:#17690a;text-decoration:underline;text-decoration-color:#1f8e00;text-underline-offset:3px;border-radius:2px}
+.nb-doc del.nb-del{background:#fdebec;color:#c62828;text-decoration:line-through;border-radius:2px}
+.nb-doc.ProseMirror ins.nb-ins,.nb-doc.ProseMirror del.nb-del{cursor:pointer}
+.nb-sg-bar{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:6px 10px;border-radius:6px;background:#e3f6df;color:#17690a;font-size:12.5px;line-height:18px}
+.nb-sg-bar[hidden]{display:none}.nb-sg-bar span{flex:1}.nb-sg-bar .nb-btn{padding:2px 8px}
+.nb-pop.nb-sgmenu{width:230px}

@@ -20,6 +20,7 @@ import { buttonView, buttonItems, saveAsTemplate } from './templates.js';
 import { touchBar } from './touch.js';
 import { commentPlugin, commentOn, refreshComments } from './comments.js';
 import { syncedView, itemListView, itemListItems, copySynced, refreshLive } from './blocks2.js';
+import { suggestExtension, suggestBar, suggestItems, setSuggesting, isSuggesting } from './suggest.js';
 
 const rangeKey = new PluginKey('nbRange'), uploadKey = new PluginKey('nbUpload');
 const MAX_FILE = 1.8 * 1024 * 1024;
@@ -37,7 +38,7 @@ export function create(host, opts = {}) {
   const co = opts.collab || null;
   const editor = new Editor({
     element: wrap, injectCSS: false, ...(co ? { editable: !!co.synced } : { content: opts.json || upgrade(opts.html || '') }),
-    extensions: buildExtensions({ extra: [behaviors(inst), ...(co ? co.extensions() : [])], collab: !!co, nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView(), button: buttonView(inst), synced: syncedView(), itemList: itemListView() } }),
+    extensions: buildExtensions({ extra: [behaviors(inst), suggestExtension(inst), ...(co ? co.extensions() : [])], collab: !!co, nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView(), button: buttonView(inst), synced: syncedView(), itemList: itemListView() } }),
     editorProps: { attributes: { class: 'nb-doc', role: 'textbox', 'aria-multiline': 'true', 'aria-label': opts.label || '본문', spellcheck: 'false', translate: 'no' } },
     onUpdate: () => { refreshTocs(inst); opts.onChange && opts.onChange(); },
   });
@@ -66,10 +67,11 @@ export function create(host, opts = {}) {
     askUrl: kind => askUrl(inst, kind),
     jump: id => jumpToBlock(inst, id),
     refreshLive: () => { if (inst.destroyed) return; refreshComments(inst); refreshLive(wrap); },
+    suggestItems: () => suggestItems(inst), setSuggesting: on => setSuggesting(inst, on), suggesting: () => isSuggesting(editor.state),
     find: withReplace => openFind(inst, withReplace), importFile: () => importFile(inst), insertHtml: (h, atEnd) => insertHtml(inst, h, atEnd),
     destroy: () => { if (inst.destroyed) return; inst.destroyed = true; live.delete(inst); inst.cleanup.forEach(f => { try { f(); } catch {} }); editor.destroy(); wrap.remove(); if (co) { try { co.close(); } catch {} } opts.onDestroy && opts.onDestroy(); },
   });
-  inst.cleanup = []; chrome(inst); touchBar(inst); live.add(inst); refreshTocs(inst);
+  inst.cleanup = []; chrome(inst); touchBar(inst); suggestBar(inst); live.add(inst); refreshTocs(inst);
   return inst;
 }
 export function closeFloating() { closeAllMenus(); live.forEach(i => i.hideChrome && i.hideChrome()); }

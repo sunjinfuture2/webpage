@@ -13,6 +13,7 @@ export function docMenu(o) {
     inst ? { label: '찾기 · 바꾸기', icon: '⌕', kbd: 'Ctrl+F', run: () => openFind(inst, false) } : { label: '찾기', icon: '⌕', hint: '읽는 중에는 브라우저의 Ctrl+F', disabled: true },
     { label: '내보내기', icon: '⇩', children: [{ label: 'Markdown (.md)', icon: 'M↓', run: exp('md') }, { label: 'HTML 파일 (.html)', icon: '&lt;&gt;', run: exp('html') }, { label: '인쇄 · PDF로 저장', icon: '⎙', run: exp('print') }] },
     inst ? { label: '가져오기', icon: '⇧', hint: 'Markdown · 텍스트 · HTML · CSV 파일', run: () => importFile(inst) } : { label: '가져오기', icon: '⇧', hint: '수정을 누른 뒤 사용', disabled: true },
+    ...(inst ? inst.suggestItems() : [{ label: '제안 모드', icon: '✎', hint: '수정을 누른 뒤 사용', disabled: true }]),
     ...(o.extra || []),
     { sep: true }, { custom: el('div', { class: 'nb-note', text: `글자 수 ${text.length.toLocaleString()} · 공백 제외 ${text.replace(/\s/g, '').length.toLocaleString()}` }) }];
   return openMenu(items, { rect: o.rect, cls: 'nb-docmenu', takeFocus: true, onClose: () => { if (inst && !inst.destroyed && o.refocus !== false) inst.editor.view.focus(); } });
