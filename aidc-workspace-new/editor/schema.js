@@ -12,9 +12,10 @@ import { ctx, newId, safeHref, safeSrc, COLORS, colorToken, fmtDate, KNOWN_TYPES
 import { Code, codeOptions } from './code.js';
 import { MathInline, MathBlock } from './math.js';
 import { Button } from './templates.js';
+import { Synced, ItemList } from './blocks2.js';
 
 export const ID_TYPES = ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem', 'blockquote', 'codeBlock', 'horizontalRule',
-  'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button'];
+  'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button', 'synced', 'itemList'];
 export { KNOWN_TYPES };
 const BLOCK_COLOR_TYPES = ['paragraph', 'heading', 'blockquote', 'listItem', 'taskItem', 'details', 'callout'];
 const okBlockColor = v => !!v && (COLORS.includes(v) || (v.endsWith('_bg') && COLORS.includes(v.slice(0, -3))));
@@ -131,11 +132,13 @@ const dateText = a => fmtDate(a.date) + (a.end && a.end !== a.date ? ' → ' + f
 const okDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '');
 const DateChip = Node.create({
   name: 'date', group: 'inline', inline: true, atom: true, selectable: true,
-  addAttributes() { return { date: { default: '' }, end: { default: null } }; },
+  // remind: days before the date on which the inbox shows a reminder ('0' = that day); by: who asked for it
+  addAttributes() { return { date: { default: '' }, end: { default: null }, remind: { default: null }, by: { default: null } }; },
   parseHTML() { return [
-    { tag: 'span[data-type="date"]', priority: 80, getAttrs: el => okDate(el.getAttribute('data-date')) ? { date: el.getAttribute('data-date'), end: okDate(el.getAttribute('data-end')) ? el.getAttribute('data-end') : null } : false },
+    { tag: 'span[data-type="date"]', priority: 80, getAttrs: el => okDate(el.getAttribute('data-date')) ? { date: el.getAttribute('data-date'), end: okDate(el.getAttribute('data-end')) ? el.getAttribute('data-end') : null,
+      remind: /^(0|1|2|7)$/.test(el.getAttribute('data-remind') || '') ? el.getAttribute('data-remind') : null, by: /^[\w.-]{1,40}$/.test(el.getAttribute('data-by') || '') ? el.getAttribute('data-by') : null } : false },
     { tag: 'span.datechip', priority: 70, getAttrs: el => { const m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(el.textContent || ''); return m ? { date: `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` } : false; } }]; },
-  renderHTML({ node }) { const a = node.attrs; return ['span', { class: 'datechip', 'data-type': 'date', 'data-date': a.date, ...(a.end ? { 'data-end': a.end } : {}) }, dateText(a)]; },
+  renderHTML({ node }) { const a = node.attrs; return ['span', { class: 'datechip', 'data-type': 'date', 'data-date': a.date, ...(a.end ? { 'data-end': a.end } : {}), ...(a.remind != null && a.remind !== '' ? { 'data-remind': String(a.remind), ...(a.by ? { 'data-by': a.by } : {}) } : {}) }, dateText(a)]; },
   renderText({ node }) { return dateText(node.attrs); },
 });
 const Mention = Node.create({
@@ -190,7 +193,7 @@ export function buildExtensions(opts = {}) {
     TableKit.configure({ table: { resizable: true, renderWrapper: true, cellMinWidth: 60, lastColumnResizable: true, allowTableNodeSelection: true } }),
     Toggle.configure({ persist: true, HTMLAttributes: { class: 'nb-toggle' }, renderToggleButton: ({ element, isOpen }) => { element.setAttribute('aria-label', isOpen ? '접기' : '펼치기'); element.setAttribute('aria-expanded', String(!!isOpen)); element.className = 'nb-toggle-btn'; } }),
     DetailsSummary, DetailsContent,
-    Code.configure(codeOptions), MathInline, MathBlock, V(Button, nv.button),
+    Code.configure(codeOptions), MathInline, MathBlock, V(Button, nv.button), V(Synced, nv.synced), V(ItemList, nv.itemList),
     Callout, V(Image, nv.image), FileCard, Bookmark, Embed, Columns, Column, V(Toc, nv.toc), V(Raw, nv.raw), DateChip, Mention, PageLink, TextColor, BgColor, Extras,
     UniqueID.configure({ attributeName: 'id', types: ID_TYPES, generateID: () => newId() }),
     Placeholder.configure({ showOnlyCurrent: true, includeChildren: true, placeholder: ({ node }) => node.type.name === 'heading' ? '제목 ' + node.attrs.level : node.type.name === 'detailsSummary' ? '토글' : node.type.name === 'codeBlock' ? '' : "글을 입력하거나 '/'로 블록을 추가하세요" }),

@@ -4,6 +4,8 @@ const seed = JSON.parse(seedText);
 const MIN_CLIENT = 3;            // pages built before this version are asked to reload
 const META_TITLES = { 'meta:notices': '공지사항', 'meta:settings': '워크스페이스 설정', 'meta:members': '멤버 역할·정보', 'meta:archive': '자료실 카드', 'meta:rows': '자료실 목록', 'meta:tabs': '자료실 탭', 'meta:roadmap': '업무 로드맵' };
 const SESSION_MS = 14 * 864e5;   // default: a login stays valid for 14 days after its last request (설정 > 보안 can change it)
+const VERSION_MERGE_MS = 60000;   // saves by the same member within a minute share one version (ticking boxes one after another)
+const VERSION_KEEP = 100;         // versions kept per item
 const PRESENCE_MS = 120000;      // a session counts as "online" (may hold edit locks) for 2 minutes after its last request
 const LOCK_MS = 1800000;         // an edit lock lasts 30 minutes unless renewed
 const MAX_FILE = 1887436;        // 1.8 MB per attachment (SQLite row limit)
@@ -76,10 +78,28 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS edit_locks (id TEXT PRIMARY KEY, token TEXT, employee TEXT, expires INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, employee TEXT, changed TEXT, at TEXT)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, size INTEGER, item TEXT, employee TEXT, at TEXT, data BLOB)');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS versions (id INTEGER PRIMARY KEY AUTOINCREMENT, item TEXT, at TEXT, employee TEXT, title TEXT, body TEXT, ed INTEGER, kind TEXT)');
+    this.sql.exec('CREATE INDEX IF NOT EXISTS versions_item ON versions (item, id)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
   }
 
   put(id, v) { this.sql.exec('INSERT OR REPLACE INTO records VALUES (?,?)', id, JSON.stringify(v)); }
+  // Version history of an item's title and body (published items only: a draft is its writer's own business).
+  // The first change also keeps what was there before; quick saves in a row by one member are one version.
+  version(id, old, v, me) {
+    if (!v || v.status === 'draft' || v.status === 'new' || v.status === 'trash') return;
+    const body = typeof v.body === 'string' ? v.body : '', title = typeof v.title === 'string' ? v.title : '', ed = v.ed === 2 ? 2 : 0;
+    const last = this.sql.exec('SELECT id,employee,at,title,body,kind FROM versions WHERE item=? ORDER BY id DESC LIMIT 1', id).toArray()[0];
+    if (last && last.title === title && last.body === body) return;
+    const now = new Date();
+    if (!last && old && old.status !== 'draft' && old.status !== 'new' && (old.body || old.title) && (String(old.body || '') !== body || String(old.title || '') !== title))
+      this.sql.exec('INSERT INTO versions(item,at,employee,title,body,ed,kind) VALUES (?,?,?,?,?,?,?)', id, old.updatedAt || now.toISOString(), old.updatedBy || old.authorId || '', String(old.title || ''), String(old.body || ''), old.ed === 2 ? 2 : 0, 'base');
+    if (last && last.kind === 'save' && last.employee === me && now - new Date(last.at) < VERSION_MERGE_MS) { this.sql.exec('UPDATE versions SET at=?,title=?,body=?,ed=? WHERE id=?', now.toISOString(), title, body, ed, last.id); return; }
+    this.sql.exec('INSERT INTO versions(item,at,employee,title,body,ed,kind) VALUES (?,?,?,?,?,?,?)', id, now.toISOString(), me, title, body, ed, 'save');
+    this.sql.exec('DELETE FROM versions WHERE item=? AND id NOT IN (SELECT id FROM versions WHERE item=? ORDER BY id DESC LIMIT ?)', id, id, VERSION_KEEP);
+  }
+  // may this member read the item (and so its versions)? A draft is only its writer's.
+  readable(id, me) { const v = this.get('item:' + id); return !!v && !(v.status === 'draft' && v.authorId && v.authorId !== me); }
   get(id) { const r = this.sql.exec('SELECT data FROM records WHERE id=?', id).toArray()[0]; return r ? JSON.parse(r.data) : null; }
   users() { return Object.fromEntries(this.sql.exec('SELECT * FROM users').toArray().map(u => [u.employee, u.name])); }
   locks() {
@@ -108,7 +128,7 @@ export class Workspace {
     const limit = new Date(Date.now() - TRASH_DAYS * 864e5).toISOString(); const gone = {};
     for (const r of this.sql.exec(`SELECT id,data FROM records WHERE id LIKE 'item:%' AND data LIKE '%"status":"trash"%'`).toArray()) {
       let v; try { v = JSON.parse(r.data); } catch { continue; }
-      if (v.status === 'trash' && v.trashedAt && v.trashedAt < limit) { this.sql.exec('DELETE FROM records WHERE id=?', r.id); this.sql.exec('DELETE FROM files WHERE item=?', r.id.slice(5)); gone[r.id] = null; }
+      if (v.status === 'trash' && v.trashedAt && v.trashedAt < limit) { this.sql.exec('DELETE FROM records WHERE id=?', r.id); this.sql.exec('DELETE FROM files WHERE item=?', r.id.slice(5)); this.sql.exec('DELETE FROM versions WHERE item=?', r.id.slice(5)); gone[r.id] = null; }
     }
     if (Object.keys(gone).length) this.broadcast({ records: gone });
   }
@@ -206,6 +226,15 @@ export class Workspace {
         this.sql.exec('INSERT INTO users VALUES (?,?)', id, name); this.broadcast({ users: this.users() });
         return json({ employee: id, name, users: this.users() });
       }
+      if (path === '/api/versions' && req.method === 'GET') { // the list (no bodies), newest first
+        const id = url.searchParams.get('item') || ''; if (!this.readable(id, me)) return json({ error: '항목을 찾을 수 없습니다.' }, 404);
+        return json({ versions: this.sql.exec('SELECT id,at,employee,title,length(body) AS size,ed,kind FROM versions WHERE item=? ORDER BY id DESC', id).toArray() });
+      }
+      if (path === '/api/version' && req.method === 'GET') {
+        const row = this.sql.exec('SELECT id,item,at,employee,title,body,ed,kind FROM versions WHERE id=?', +url.searchParams.get('id') || 0).toArray()[0];
+        if (!row || !this.readable(row.item, me)) return json({ error: '버전을 찾을 수 없습니다.' }, 404);
+        return json({ version: row });
+      }
       if (path === '/api/history') {
         const limit = Math.min(300, Math.max(1, +url.searchParams.get('limit') || 100));
         return json(this.feed(limit, +url.searchParams.get('before') || 0));
@@ -221,7 +250,7 @@ export class Workspace {
       }
       if (path === '/api/change' && req.method === 'POST') {
         const { changes } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
-        const applied = {}; let conflict = null; const summary = [];
+        const applied = {}; let conflict = null; const summary = []; const versioned = new Set(), seenFirst = new Map();
         this.cleanup();
         for (const c of changes) {
           if (c.field === 'comments' && String(c.id).startsWith('item:')) continue; // commenting is allowed while someone else edits the item
@@ -238,6 +267,8 @@ export class Workspace {
           if (conflict) return;
           for (const c of changes) {
             const old = this.get(c.id); let v = old;
+            // "old" is changed in place below: what the item was before this request is noted first (for its version history)
+            if (old && c.id.startsWith('item:') && !seenFirst.has(c.id)) seenFirst.set(c.id, { title: old.title, body: old.body, status: old.status, ed: old.ed, updatedAt: old.updatedAt, updatedBy: old.updatedBy, authorId: old.authorId });
             if (c.field) { v = v || {}; if (c.after == null) delete v[c.field]; else v[c.field] = c.field === 'body' ? cleanHtml(c.after) : c.after; }
             else { v = c.after ?? null; if (v && typeof v.body === 'string') v.body = cleanHtml(v.body); }
             const isItem = c.id.startsWith('item:');
@@ -246,8 +277,8 @@ export class Workspace {
               if (c.field !== 'comments' || !old) { v.updatedBy = me; v.updatedAt = new Date().toISOString(); } // a comment is not an edit of the item
               for (const k of ['editing', '_editOriginal', 'snap', 'dirty', 'sessionNew', '_recoverySignature']) delete v[k];
             }
-            if (v === null) { this.sql.exec('DELETE FROM records WHERE id=?', c.id); if (isItem) this.sql.exec('DELETE FROM files WHERE item=?', c.id.slice(5)); }
-            else this.put(c.id, v);
+            if (v === null) { this.sql.exec('DELETE FROM records WHERE id=?', c.id); if (isItem) { this.sql.exec('DELETE FROM files WHERE item=?', c.id.slice(5)); this.sql.exec('DELETE FROM versions WHERE item=?', c.id.slice(5)); } }
+            else { this.put(c.id, v); if (isItem && (!c.field || c.field === 'body' || c.field === 'title' || c.field === 'status' || c.field === 'ed')) versioned.add(c.id); }
             applied[c.id] = v;
             // compact audit entry (no bodies)
             const op = c.field === 'comments' ? 'comment' : !c.field && old == null ? 'create' : !c.field && c.after == null ? 'delete'
@@ -259,6 +290,8 @@ export class Workspace {
             else if (META_TITLES[c.id]) entry.t = META_TITLES[c.id];
             summary.push(entry);
           }
+          // one version per item and request, taken once every field of the request is in (title, body and "ed" arrive as separate fields)
+          for (const id of versioned) this.version(id.slice(5), seenFirst.get(id) || null, this.get(id), me);
           this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify(summary), new Date().toISOString());
         });
         if (conflict) return json({ error: '다른 사용자의 변경과 겹칩니다.', conflict }, 409);

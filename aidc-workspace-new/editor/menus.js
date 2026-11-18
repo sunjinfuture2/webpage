@@ -7,6 +7,7 @@ import { swatch } from './ui.js';
 import { turnInto, insertBlock, blockOfSelection, duplicateBlocks, deleteBlocks } from './commands.js';
 import { editMath } from './math.js';
 import { openTemplateMenu } from './templates.js';
+import { syncedClip } from './blocks2.js';
 
 export const TURN = [
   { k: 'paragraph', label: '텍스트', icon: 'T' }, { k: 'h1', label: '제목 1', icon: 'H1' }, { k: 'h2', label: '제목 2', icon: 'H2' }, { k: 'h3', label: '제목 3', icon: 'H3' },
@@ -60,6 +61,8 @@ export function slashItems(inst) {
     { k: 'math', label: '수식 블록', hint: 'LaTeX로 쓰는 수식', icon: '∑', al: 'math equation latex katex formula 수식 방정식 라텍스 수학', run: () => { const at = insertBlock(ed, { type: 'mathBlock' }, { select: 'after' }); if (at !== false) editMath(ed, at, true); } },
     { k: 'imath', label: '인라인 수식', hint: '글 안의 수식 · $$x^2$$', icon: '𝑥', al: 'inline math equation 인라인 수식 수학', run: () => { const pos = ed.state.selection.from; if (ed.chain().focus().insertContent({ type: 'math', attrs: { tex: '' } }).run()) editMath(ed, pos, true); } },
     { k: 'template', label: '템플릿', hint: '회의록 · 주간 보고 · 저장한 템플릿', icon: '▤', al: 'template 템플릿 양식 서식 회의록 보고 점검표', run: () => { const c = ed.view.coordsAtPos(ed.state.selection.from); openTemplateMenu(inst, { left: c.left, right: c.left, top: c.top, bottom: c.bottom, width: 0, height: c.bottom - c.top }); } },
+    { k: 'synced', label: '동기화 블록', hint: '복사해 둔 블록을 원본 그대로 보여 주기', icon: '⟳', al: 'synced sync block mirror 동기화 블록 싱크 연동', run: () => { const c = syncedClip(); if (!c) { ctx.toast('먼저 원본 블록의 메뉴(⋮⋮)에서 “동기화 블록으로 복사”를 선택하세요.', 3600); return; } insertBlock(ed, { type: 'synced', attrs: { item: c.item, block: c.block } }, { select: 'after' }); } },
+    { k: 'itemlist', label: '항목 목록', hint: '조건에 맞는 액션아이템 · 리서치 · 미팅', icon: '☰', al: 'database db list view linked 데이터베이스 목록 보기 항목 액션아이템 리서치 미팅 디비', run: () => insertBlock(ed, { type: 'itemList' }, { select: 'after' }) },
     { k: 'button', label: '버튼', hint: '누르면 블록 추가 또는 링크 열기', icon: '⏺', al: 'button 버튼 단추 템플릿', run: () => insertBlock(ed, { type: 'button' }, { select: 'after' }) },
     { header: '동작' },
     { k: 'duplicate', label: '복제', hint: '현재 블록을 아래에 복제', icon: '⧉', al: 'duplicate copy 복제 복사', run: () => { const b = blockOfSelection(ed.state); b && duplicateBlocks(ed, { from: b.pos, to: b.pos + b.node.nodeSize }); } },

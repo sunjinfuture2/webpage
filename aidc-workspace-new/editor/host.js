@@ -17,7 +17,7 @@ export function configure(o) { Object.assign(ctx, o || {}); }
 
 export const SCHEMA_VERSION = 2;
 // data-type values the schema reads; anything else found in a stored body is kept as a raw block
-export const KNOWN_TYPES = ['callout', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'date', 'mention', 'pageLink', 'taskList', 'taskItem', 'detailsContent', 'details', 'math', 'mathBlock', 'button'];
+export const KNOWN_TYPES = ['callout', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'date', 'mention', 'pageLink', 'taskList', 'taskItem', 'detailsContent', 'details', 'math', 'mathBlock', 'button', 'synced', 'itemList'];
 export const newId = () => 'b' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 export const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

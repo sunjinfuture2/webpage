@@ -107,6 +107,9 @@ function sharedStatus(text){if(!/못했|확인|필요|보관|겹|재시도|실�
 
 /* ---------- attachments, history, members ---------- */
 // Attachments are stored by the Worker (/api/file); the page embeds only the file id, so records stay small.
+// version history of one item (kept by the server at every save of its title or body)
+async function sharedVersions(id){const r=await apiFetch('/api/versions?item='+encodeURIComponent(id));if(!r.ok)throw new Error('versions');return (await r.json()).versions||[];}
+async function sharedVersion(n){const r=await apiFetch('/api/version?id='+encodeURIComponent(n));if(!r.ok)throw new Error('version');return (await r.json()).version;}
 async function sharedUnfurl(u){if(!sharedReady)return null;const r=await apiFetch('/api/unfurl?url='+encodeURIComponent(u));if(!r.ok)return null;const d=await r.json();return d&&d.ok?d:null;}
 async function sharedUploadFile(file,itemId){if(!sharedReady)throw Error('서버에 연결된 후 첨부할 수 있습니다.');if(file.size>1887436)throw Error('파일은 1.8MB까지 첨부할 수 있습니다. ('+file.name+')');
  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(Error('파일을 읽지 못했습니다.'));r.readAsDataURL(file);});
