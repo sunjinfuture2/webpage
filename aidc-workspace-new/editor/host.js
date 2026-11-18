@@ -16,6 +16,8 @@ export const ctx = {
 export function configure(o) { Object.assign(ctx, o || {}); }
 
 export const SCHEMA_VERSION = 2;
+// data-type values the schema reads; anything else found in a stored body is kept as a raw block
+export const KNOWN_TYPES = ['callout', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'date', 'mention', 'pageLink', 'taskList', 'taskItem', 'detailsContent', 'details', 'math', 'mathBlock', 'button'];
 export const newId = () => 'b' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 export const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -51,6 +53,9 @@ export function embedUrl(u) {
   if (/(^|\.)google\.[a-z.]+$/.test(h) && x.pathname.startsWith('/maps/embed')) return { src: u, kind: 'iframe', label: 'Google 지도' };
   if (h === 'figma.com' && /^\/(file|design|proto|board)\//.test(x.pathname)) return { src: 'https://www.figma.com/embed?embed_host=aidc&url=' + encodeURIComponent(u), kind: 'iframe', label: 'Figma' };
   if (h === 'docs.google.com' && /\/(pub|preview|embed)\b/.test(x.pathname)) return { src: u, kind: 'iframe', label: 'Google 문서' };
+  // files shared from Google Drive ("링크가 있는 모든 사용자" or the viewer's own Google login): the preview page may be framed
+  if (h === 'drive.google.com' && (m = /^\/file\/d\/([\w-]+)/.exec(x.pathname))) return { src: 'https://drive.google.com/file/d/' + m[1] + '/preview', kind: 'iframe', label: 'Google Drive' };
+  if (h === 'docs.google.com' && (m = /^\/(document|spreadsheets|presentation)\/d\/([\w-]+)/.exec(x.pathname)) && m[2] !== 'e') return { src: `https://docs.google.com/${m[1]}/d/${m[2]}/preview`, kind: 'iframe', label: 'Google 문서' };
   if (/\.(mp4|webm|mov)(\?|$)/i.test(x.pathname)) return { src: u, kind: 'video', label: '동영상' };
   if (/\.(mp3|wav|m4a|ogg)(\?|$)/i.test(x.pathname)) return { src: u, kind: 'audio', label: '오디오' };
   return null;

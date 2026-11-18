@@ -11,6 +11,12 @@ import { ctx, newId, safeHref, safeSrc, embedUrl, COLORS, COLOR_NAMES, fmtSize, 
 import { el, place, openMenu, askLine, closeAllMenus, anyMenuOpen, swatch } from './ui.js';
 import { blockAt, blockOfSelection, blocksIn, findById, selFor, canTurn, kindAt, turnInto, duplicateBlocks, deleteBlocks, moveBlocks, colorBlocks, moveRangeTo, moveIntoColumn, unwrapColumns, insertBlock } from './commands.js';
 import { TURN, slashItems, filterSlash, colorItems, tableItems, inTable, appendRowOrCol, tableJson } from './menus.js';
+import { openFind, findPlugin } from './find.js';
+import { importFile, insertHtml, mdToHtml, looksLikeMarkdown } from './io.js';
+import { editMath } from './math.js';
+import { languageItems } from './code.js';
+import { buttonView, buttonItems, saveAsTemplate } from './templates.js';
+import { touchBar } from './touch.js';
 
 const rangeKey = new PluginKey('nbRange'), uploadKey = new PluginKey('nbUpload');
 const MAX_FILE = 1.8 * 1024 * 1024;
@@ -25,7 +31,7 @@ export function create(host, opts = {}) {
   const wrap = el('div', { class: 'nb-editor' }); host.append(wrap); inst.wrap = wrap;
   const editor = new Editor({
     element: wrap, injectCSS: false, content: upgrade(opts.html || ''),
-    extensions: buildExtensions({ extra: [behaviors(inst)], nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView() } }),
+    extensions: buildExtensions({ extra: [behaviors(inst)], nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView(), button: buttonView(inst) } }),
     editorProps: { attributes: { class: 'nb-doc', role: 'textbox', 'aria-multiline': 'true', 'aria-label': opts.label || '본문', spellcheck: 'false', translate: 'no' } },
     onUpdate: () => { refreshTocs(inst); opts.onChange && opts.onChange(); },
   });
@@ -48,9 +54,10 @@ export function create(host, opts = {}) {
     pickFiles: (accept, as) => { const inp = el('input', { type: 'file', multiple: true, accept: accept || null }); inp.onchange = () => { const fs = [...inp.files]; if (fs.length) insertFiles(inst, fs, null, as); }; inp.click(); },
     askUrl: kind => askUrl(inst, kind),
     jump: id => jumpToBlock(inst, id),
+    find: withReplace => openFind(inst, withReplace), importFile: () => importFile(inst), insertHtml: (h, atEnd) => insertHtml(inst, h, atEnd),
     destroy: () => { if (inst.destroyed) return; inst.destroyed = true; live.delete(inst); inst.cleanup.forEach(f => { try { f(); } catch {} }); editor.destroy(); wrap.remove(); },
   });
-  inst.cleanup = []; chrome(inst); live.add(inst); refreshTocs(inst);
+  inst.cleanup = []; chrome(inst); touchBar(inst); live.add(inst); refreshTocs(inst);
   return inst;
 }
 export function closeFloating() { closeAllMenus(); live.forEach(i => i.hideChrome && i.hideChrome()); }
@@ -62,6 +69,7 @@ function behaviors(inst) {
     addKeyboardShortcuts() { const ed = () => this.editor; const cur = () => rangeKey.getState(ed().state) || (b => b && { from: b.pos, to: b.pos + b.node.nodeSize })(blockOfSelection(ed().state));
       return {
         'Mod-k': () => { linkAsk(inst); return true; },
+        'Mod-f': () => { openFind(inst, false); return true; },
         // the block menu without a mouse (the handle only shows on hover)
         'Mod-/': () => { const r = cur(); if (!r) return false; const b = blocksIn(ed().state.doc, r.from, r.to)[0]; if (!b) return false; const dom = ed().view.nodeDOM(b.pos); if (!dom || dom.nodeType !== 1) return false;
           if (!rangeKey.getState(ed().state)) setRange(inst, r); const br = dom.getBoundingClientRect(); blockMenu(inst, b, r, { left: br.left, right: br.left, top: br.top, bottom: Math.min(br.bottom, br.top + 28), width: 0, height: Math.min(br.height, 28) }); return true; },
@@ -105,7 +113,7 @@ function behaviors(inst) {
         Suggestion({ editor, pluginKey: pageKey, char: '[[', allowSpaces: true, allowedPrefixes: null, allow: notInCode,
           items: ({ query }) => { const b = pages((query || '').toLowerCase(), 10); return b.length ? [{ header: '페이지 링크' }, ...b] : []; },
           command: insertInline, render: listRender(pageKey, 'nb-at', '일치하는 페이지가 없습니다.') }),
-        rangePlugin(inst), uploadPlugin(inst), inputPlugin(inst),
+        rangePlugin(inst), uploadPlugin(inst), inputPlugin(inst), findPlugin(),
       ]; },
   });
 }
@@ -182,6 +190,8 @@ function inputPlugin(inst) { let shiftPaste = false; const ed = () => inst.edito
         if (rows.length > 300 || cols > 40) { ctx.toast('표가 너무 커서 일반 텍스트로 붙여 넣었습니다 (최대 300행 × 40열).', 3200); return false; }
         const escH = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])).replace(/\n/g, '<br>');
         view.pasteHTML('<table><tbody>' + rows.map(r => '<tr>' + Array.from({ length: cols }, (_x, i) => `<td>${escH(r[i] || '')}</td>`).join('') + '</tr>').join('') + '</tbody></table>'); return true; }
+      // text copied from a Markdown source (headings, lists, fences, tables) comes in as blocks; Ctrl+Shift+V keeps it as typed
+      if (looksLikeMarkdown(text)) { let h = ''; try { h = ctx.clean(mdToHtml(text)); } catch { h = ''; } if (h) { view.pasteHTML(h); return true; } }
       return false; },
     handleDrop(view, e, _slice, moved) { const drag = inst.drag;
       if (drag) { e.preventDefault(); inst.drag = null; const edge = inst.edge; inst.edge = null; inst.hideEdge && inst.hideEdge(); const copy = e.altKey;
@@ -390,7 +400,7 @@ function blockMenu(inst, b, range, rect) { const ed = inst.editor; const node = 
     if (name === 'image') items.push({ label: '정렬', icon: '▣', children: [['left', '왼쪽'], ['center', '가운데'], ['right', '오른쪽']].map(([k, l]) => ({ label: l, checked: (node.attrs.align || 'center') === k, run: () => set({ align: k }) })) },
       { label: '캡션', icon: '✎', run: () => askLine({ rect, label: '캡션', value: node.attrs.caption || '', onOk: v => set({ caption: v }) }) }, { label: '대체 텍스트', icon: 'Aa', run: () => askLine({ rect, label: '대체 텍스트 (화면 낭독기용 설명)', value: node.attrs.alt || '', onOk: v => set({ alt: v }) }) },
       { label: '원본 보기', icon: '↗', run: () => { const s = safeSrc(node.attrs.src, true); s && window.open(s, '_blank', 'noopener'); } }, { label: '다른 이미지로 교체', icon: '⟳', run: () => { const inp = el('input', { type: 'file', accept: 'image/*' }); inp.onchange = () => { const f = inp.files[0]; if (!f) return; ctx.toast('이미지를 올리는 중입니다…', 1500); Promise.resolve().then(() => ctx.upload(f, inst.itemId)).then(up => { if (up && (up.src || up.id)) set({ src: up.src || `/api/file/${up.id}?inline=1` }); }).catch(er => ctx.toast((er && er.message) || '업로드하지 못했습니다.', 2800)); }; inp.click(); } });
-    if (name === 'file') { const pdfish = /\.(pdf|mp4|webm|mov|mp3|wav|m4a|ogg)$/i.exec(node.attrs.name || ''); items.push({ label: '다운로드', icon: '↓', disabled: !node.attrs.fid, run: () => { const a = el('a', { href: '/api/file/' + node.attrs.fid, download: node.attrs.name }); document.body.append(a); a.click(); a.remove(); } });
+    if (name === 'file') { const pdfish = /\.(pdf|mp4|webm|mov|mp3|wav|m4a|ogg)$/i.exec(node.attrs.name || ''); items.push({ label: '다운로드', icon: '↓', disabled: !node.attrs.fid, run: () => { const a = el('a', { href: '/api/file/' + node.attrs.fid, download: node.attrs.name, onclick: e => e.stopPropagation() }); document.body.append(a); a.click(); a.remove(); } });
       if (pdfish && node.attrs.fid) items.push({ label: '본문에서 바로 보기', icon: '⧉', run: () => { const ext = pdfish[1].toLowerCase(); const k = ext === 'pdf' ? 'iframe' : /mp4|webm|mov/.test(ext) ? 'video' : 'audio'; fire(ed.state.tr.replaceWith(b.pos, b.pos + node.nodeSize, ed.schema.nodes.embed.create({ id: node.attrs.id, kind: k, src: `/api/file/${node.attrs.fid}?inline=1`, title: node.attrs.name }))); } }); }
     if (name === 'embed') { const own = /^\/api\/file\/([\w-]+)/.exec(node.attrs.src || ''); items.push({ label: '새 창에서 열기', icon: '↗', run: () => { const s = safeSrc(node.attrs.src); s && window.open(s, '_blank', 'noopener'); } });
       if (own) items.push({ label: '파일 카드로 표시', icon: '▭', run: () => fire(ed.state.tr.replaceWith(b.pos, b.pos + node.nodeSize, ed.schema.nodes.file.create({ id: node.attrs.id, name: node.attrs.title || '파일', fid: own[1] }))) }); }
@@ -398,11 +408,13 @@ function blockMenu(inst, b, range, rect) { const ed = inst.editor; const node = 
       { label: '주소 수정', icon: '🔗', run: () => askLine({ rect, label: '주소', value: node.attrs.href || '', onOk: v => { const h = safeHref(v); if (h && /^https?:/i.test(h)) set({ href: h, desc: node.attrs.desc === node.attrs.href ? h : node.attrs.desc }); else ctx.toast('http(s) 주소를 넣어 주세요.'); } }) }, { label: '일반 링크로 바꾸기', icon: 'T', run: () => fire(ed.state.tr.replaceWith(b.pos, b.pos + node.nodeSize, ed.schema.nodes.paragraph.create({ id: node.attrs.id }, ed.schema.text(node.attrs.title || node.attrs.href, [ed.schema.marks.link.create({ href: node.attrs.href })])))) });
     if (name === 'columns') items.push({ label: '단 해제', icon: '▤', run: () => unwrapColumns(ed, b.pos) }, { label: '열 너비 같게', icon: '↔', run: () => { const tr = ed.state.tr; let p = b.pos + 1; node.forEach(c => { tr.setNodeAttribute(p, 'w', 1); p += c.nodeSize; }); fire(tr); } });
     if (name === 'table') items.push({ label: '표 편집', icon: '▦', children: () => { ed.chain().setTextSelection(Math.min(b.pos + 4, ed.state.doc.content.size)).run(); return tableItems(ed); } });
-    if (name === 'codeBlock') items.push({ label: '코드 복사', icon: '⧉', run: () => copyText(node.textContent, '코드를 복사했습니다.') });
+    if (name === 'codeBlock') items.push({ label: '언어', icon: '{}', children: languageItems(node.attrs.language, v => set({ language: v })) }, { label: '코드 복사', icon: '⧉', run: () => copyText(node.textContent, '코드를 복사했습니다.') });
+    if (name === 'mathBlock') items.push({ label: '수식 편집', icon: '∑', run: () => editMath(ed, b.pos) });
+    if (name === 'button') items.push(...buttonItems(inst, b.pos, rect));
     if (name === 'listItem' || name === 'taskItem') items.push({ label: '들여쓰기', icon: '→', kbd: 'Tab', run: () => { ed.chain().focus().setTextSelection(b.pos + 2).sinkListItem(name).run(); } }, { label: '내어쓰기', icon: '←', kbd: 'Shift+Tab', run: () => { ed.chain().focus().setTextSelection(b.pos + 2).liftListItem(name).run(); } });
   }
   if (items.length) items.push({ sep: true });
-  items.push({ label: '복제', icon: '⧉', kbd: 'Ctrl+D', run: () => duplicateBlocks(ed, range) }, { label: '위로 이동', icon: '↑', kbd: 'Ctrl+Shift+↑', run: () => moveBlocks(ed, range, -1) }, { label: '아래로 이동', icon: '↓', kbd: 'Ctrl+Shift+↓', run: () => moveBlocks(ed, range, 1) });
+  items.push({ label: '템플릿으로 저장', icon: '▤', run: () => saveAsTemplate(inst, range, rect) }, { label: '복제', icon: '⧉', kbd: 'Ctrl+D', run: () => duplicateBlocks(ed, range) }, { label: '위로 이동', icon: '↑', kbd: 'Ctrl+Shift+↑', run: () => moveBlocks(ed, range, -1) }, { label: '아래로 이동', icon: '↓', kbd: 'Ctrl+Shift+↓', run: () => moveBlocks(ed, range, 1) });
   if (!multi && node.attrs.id && ctx.blockLink) items.push({ label: '블록 링크 복사', icon: '🔗', run: () => copyText(ctx.blockLink(inst.itemId, node.attrs.id), '블록 링크를 복사했습니다.') });
   items.push({ label: '삭제', icon: '✕', kbd: 'Del', danger: true, run: () => deleteBlocks(ed, range) }, { sep: true }, { custom: el('div', { class: 'nb-note', text: `글자 수 ${text.replace(/\s/g, '').length.toLocaleString()} · 블록 ${blocksIn(ed.state.doc, range.from, range.to).length}개` }) });
   openMenu(items, { rect, cls: 'nb-blockmenu', takeFocus: true, onClose: () => { if (!inst.destroyed) inst.editor.view.focus(); } }); }

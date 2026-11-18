@@ -25,7 +25,14 @@ const bundle=await build({entryPoints:[path.join(here,'editor/index.js')],absWor
 const editorJs=bundle.outputFiles[0].text;
 const pkgs=new Map();
 for(const f of Object.keys(bundle.metafile.inputs)){const m=/^(.*node_modules\/(?:@[^/]+\/)?[^/]+)\//.exec(f);if(m&&!pkgs.has(m[1]))pkgs.set(m[1],null);}
-let licences='Third-party software bundled in editor.js\n';
+// Equations: KaTeX is not part of the bundle. It is copied as it is and loaded only by a page that shows an equation.
+const katexDir=path.join(here,'node_modules/katex');
+await fs.mkdir(new URL('public/katex/fonts/',root),{recursive:true});
+await fs.copyFile(path.join(katexDir,'dist/katex.min.js'),new URL('public/katex/katex.min.js',root));
+await fs.writeFile(new URL('public/katex/katex.min.css',root),(await fs.readFile(path.join(katexDir,'dist/katex.min.css'),'utf8')).replace(/,url\(fonts\/[^)]+\.(?:woff|ttf)\) format\("(?:woff|truetype)"\)/g,''));
+for(const f of await fs.readdir(path.join(katexDir,'dist/fonts')))if(f.endsWith('.woff2'))await fs.copyFile(path.join(katexDir,'dist/fonts',f),new URL('public/katex/fonts/'+f,root));
+pkgs.set('node_modules/katex',null);
+let licences='Third-party software bundled in editor.js (and KaTeX, served from /katex/)\n';
 for(const dir of [...pkgs.keys()].sort()){const abs=path.join(here,dir);const meta=JSON.parse(await fs.readFile(path.join(abs,'package.json'),'utf8'));
   const file=(await fs.readdir(abs)).find(n=>/^licen[sc]e(\.(md|txt))?$/i.test(n));
   licences+=`\n${'='.repeat(78)}\n${meta.name} ${meta.version} (${typeof meta.license==='string'?meta.license:'see below'})\n${'='.repeat(78)}\n${file?(await fs.readFile(path.join(abs,file),'utf8')).trim():'Licence: '+meta.license+' (no licence file in the package)'}\n`;}

@@ -8,7 +8,7 @@ function check(name, ok, detail) {
   else { failed++; console.log('  FAIL ' + name + (detail !== undefined ? '  -> ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : '')); }
 }
 async function newUser(browser, id, name, opt = {}) {
-  const ctx = await browser.newContext({ viewport: opt.viewport || { width: 1920, height: 1080 }, acceptDownloads: true });
+  const ctx = await browser.newContext({ viewport: opt.viewport || { width: 1920, height: 1080 }, acceptDownloads: true, hasTouch: !!opt.hasTouch, isMobile: !!opt.isMobile });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => { });
   const page = await ctx.newPage(); const errs = [];
   page.on('pageerror', e => errs.push(String(e).slice(0, 300)));

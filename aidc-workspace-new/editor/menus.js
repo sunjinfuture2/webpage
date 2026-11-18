@@ -5,6 +5,8 @@ import { closeHistory } from '@tiptap/pm/history';
 import { ctx, COLORS, COLOR_NAMES, embedUrl, safeHref } from './host.js';
 import { swatch } from './ui.js';
 import { turnInto, insertBlock, blockOfSelection, duplicateBlocks, deleteBlocks } from './commands.js';
+import { editMath } from './math.js';
+import { openTemplateMenu } from './templates.js';
 
 export const TURN = [
   { k: 'paragraph', label: '텍스트', icon: 'T' }, { k: 'h1', label: '제목 1', icon: 'H1' }, { k: 'h2', label: '제목 2', icon: 'H2' }, { k: 'h3', label: '제목 3', icon: 'H3' },
@@ -55,6 +57,10 @@ export function slashItems(inst) {
     { k: 'col2', label: '2단', hint: '블록을 좌우 두 열로', icon: '▥', al: 'columns column 2 two 다단 2단 열 나란히', run: () => insertBlock(ed, columnsJson(2)) },
     { k: 'col3', label: '3단', hint: '블록을 세 열로', icon: '▥', al: 'columns column 3 three 다단 3단 열', run: () => insertBlock(ed, columnsJson(3)) },
     { k: 'toc', label: '목차', hint: '제목으로 만든 차례', icon: '☰', al: 'toc table of contents outline 목차 차례', run: () => insertBlock(ed, { type: 'toc' }, { select: 'after' }) },
+    { k: 'math', label: '수식 블록', hint: 'LaTeX로 쓰는 수식', icon: '∑', al: 'math equation latex katex formula 수식 방정식 라텍스 수학', run: () => { const at = insertBlock(ed, { type: 'mathBlock' }, { select: 'after' }); if (at !== false) editMath(ed, at, true); } },
+    { k: 'imath', label: '인라인 수식', hint: '글 안의 수식 · $$x^2$$', icon: '𝑥', al: 'inline math equation 인라인 수식 수학', run: () => { const pos = ed.state.selection.from; if (ed.chain().focus().insertContent({ type: 'math', attrs: { tex: '' } }).run()) editMath(ed, pos, true); } },
+    { k: 'template', label: '템플릿', hint: '회의록 · 주간 보고 · 저장한 템플릿', icon: '▤', al: 'template 템플릿 양식 서식 회의록 보고 점검표', run: () => { const c = ed.view.coordsAtPos(ed.state.selection.from); openTemplateMenu(inst, { left: c.left, right: c.left, top: c.top, bottom: c.bottom, width: 0, height: c.bottom - c.top }); } },
+    { k: 'button', label: '버튼', hint: '누르면 블록 추가 또는 링크 열기', icon: '⏺', al: 'button 버튼 단추 템플릿', run: () => insertBlock(ed, { type: 'button' }, { select: 'after' }) },
     { header: '동작' },
     { k: 'duplicate', label: '복제', hint: '현재 블록을 아래에 복제', icon: '⧉', al: 'duplicate copy 복제 복사', run: () => { const b = blockOfSelection(ed.state); b && duplicateBlocks(ed, { from: b.pos, to: b.pos + b.node.nodeSize }); } },
     { k: 'delete', label: '삭제', hint: '현재 블록 삭제', icon: '✕', al: 'delete remove 삭제 지우기', danger: true, run: () => { const b = blockOfSelection(ed.state); b && deleteBlocks(ed, { from: b.pos, to: b.pos + b.node.nodeSize }); } },

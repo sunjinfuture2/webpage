@@ -8,11 +8,14 @@ import { TableKit } from '@tiptap/extension-table';
 import { Details, DetailsSummary, DetailsContent } from '@tiptap/extension-details';
 import { UniqueID } from '@tiptap/extension-unique-id';
 import { Placeholder } from '@tiptap/extensions';
-import { ctx, newId, safeHref, safeSrc, COLORS, colorToken, fmtDate } from './host.js';
+import { ctx, newId, safeHref, safeSrc, COLORS, colorToken, fmtDate, KNOWN_TYPES } from './host.js';
+import { Code, codeOptions } from './code.js';
+import { MathInline, MathBlock } from './math.js';
+import { Button } from './templates.js';
 
 export const ID_TYPES = ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem', 'blockquote', 'codeBlock', 'horizontalRule',
-  'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw'];
-export const KNOWN_TYPES = ['callout', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'date', 'mention', 'pageLink', 'taskList', 'taskItem', 'detailsContent', 'details'];
+  'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button'];
+export { KNOWN_TYPES };
 const BLOCK_COLOR_TYPES = ['paragraph', 'heading', 'blockquote', 'listItem', 'taskItem', 'details', 'callout'];
 const okBlockColor = v => !!v && (COLORS.includes(v) || (v.endsWith('_bg') && COLORS.includes(v.slice(0, -3))));
 
@@ -178,7 +181,7 @@ export function buildExtensions(opts = {}) {
   return [
     StarterKit.configure({
       blockquote: false, heading: { levels: [1, 2, 3] },
-      codeBlock: { enableTabIndentation: true, tabSize: 2, HTMLAttributes: { spellcheck: 'false' } },
+      codeBlock: false,
       dropcursor: { color: '#2383e2', width: 3 },
       link: { openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: 'https', protocols: ['http', 'https', 'mailto', 'tel'], HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
         isAllowedUri: (url, c) => !!safeHref(url) && c.defaultValidate(url) },
@@ -187,6 +190,7 @@ export function buildExtensions(opts = {}) {
     TableKit.configure({ table: { resizable: true, renderWrapper: true, cellMinWidth: 60, lastColumnResizable: true, allowTableNodeSelection: true } }),
     Toggle.configure({ persist: true, HTMLAttributes: { class: 'nb-toggle' }, renderToggleButton: ({ element, isOpen }) => { element.setAttribute('aria-label', isOpen ? '접기' : '펼치기'); element.setAttribute('aria-expanded', String(!!isOpen)); element.className = 'nb-toggle-btn'; } }),
     DetailsSummary, DetailsContent,
+    Code.configure(codeOptions), MathInline, MathBlock, V(Button, nv.button),
     Callout, V(Image, nv.image), FileCard, Bookmark, Embed, Columns, Column, V(Toc, nv.toc), V(Raw, nv.raw), DateChip, Mention, PageLink, TextColor, BgColor, Extras,
     UniqueID.configure({ attributeName: 'id', types: ID_TYPES, generateID: () => newId() }),
     Placeholder.configure({ showOnlyCurrent: true, includeChildren: true, placeholder: ({ node }) => node.type.name === 'heading' ? '제목 ' + node.attrs.level : node.type.name === 'detailsSummary' ? '토글' : node.type.name === 'codeBlock' ? '' : "글을 입력하거나 '/'로 블록을 추가하세요" }),

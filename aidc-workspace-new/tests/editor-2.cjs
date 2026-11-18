@@ -34,7 +34,7 @@ const LEGACY = '<h2>회의 안건</h2><p>첫 줄\n둘째 줄</p><div class="todo
   const b1 = await evB(id => { const it = ITEMS.find(x => x.id === id); return it ? { body: it.body, ed: it.ed } : null; }, id1);
   check('T37 the other member receives exactly the same body', b1 && b1.body === s1.body && b1.ed === 2, b1 && b1.body.slice(0, 120));
   await evB(id => openPanel(id), id1); await sleep(500);
-  check('read mode: to-do boxes are shown but cannot be changed; toggles open and close', await evB(() => { const d = document.querySelector('#panel-pin .ibody[data-nb="read"] .nb-doc'); const i = d && d.querySelector('ul[data-type="taskList"] input'); const det = d && d.querySelector('details'); return !!(i && i.disabled && det && det.open); }));
+  check('read mode: to-do boxes are shown and can be ticked (a small save of its own); toggles open and close', await evB(() => { const d = document.querySelector('#panel-pin .ibody[data-nb="read"] .nb-doc'); const i = d && d.querySelector('ul[data-type="taskList"] input'); const det = d && d.querySelector('details'); return !!(i && !i.disabled && det && det.open); }));
   await p.reload(); await sleep(2800);
   check('T37 after a reload the stored body is unchanged', await ev(a => { const it = ITEMS.find(x => x.id === a.id); return it && it.body === a.body; }, { id: id1, body: s1.body }));
 

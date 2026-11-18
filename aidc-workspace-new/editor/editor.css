@@ -216,3 +216,65 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
 .nb-savenote{font-size:12px;color:var(--nb-mut);margin-left:10px;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.nb-doc *,.nb-pop *,.nb-float *{animation:none!important;transition:none!important}}
 @media print{.nb-float,.nb-pop{display:none!important}.nb-doc details.nb-toggle > [data-type="detailsContent"]{display:block!important}}
+
+/* ====================================================================== code: language bar and colours */
+.nb-doc pre.nb-code{padding-top:30px}
+.nb-code-bar{position:absolute;left:8px;right:8px;top:5px;display:flex;justify-content:space-between;align-items:center;font-family:Pretendard,system-ui,sans-serif;user-select:none}
+.nb-code-lang,.nb-code-copy{border:0;background:none;border-radius:4px;font-size:11px;line-height:16px;padding:2px 6px;color:#8e8e8e;cursor:pointer;font-family:inherit}
+.nb-code-lang:hover,.nb-code-copy:hover{background:#ebebea;color:#37352f}
+.nb-code-copy{margin-left:auto;opacity:0}.nb-doc pre.nb-code:hover .nb-code-copy,.nb-code-copy:focus-visible{opacity:1}
+.nb-doc pre .nb-code-langlabel{position:absolute;left:12px;top:5px;font:11px/16px Pretendard,system-ui,sans-serif;color:#a0a0a0;user-select:none;pointer-events:none}
+.nb-doc pre:has(> .nb-code-langlabel){padding-top:28px}
+.nb-doc pre .hljs-comment,.nb-doc pre .hljs-quote{color:#8a8f98;font-style:italic}
+.nb-doc pre .hljs-keyword,.nb-doc pre .hljs-selector-tag,.nb-doc pre .hljs-literal,.nb-doc pre .hljs-doctag,.nb-doc pre .hljs-meta .hljs-keyword{color:#b4307a}
+.nb-doc pre .hljs-string,.nb-doc pre .hljs-regexp,.nb-doc pre .hljs-addition,.nb-doc pre .hljs-attribute,.nb-doc pre .hljs-meta .hljs-string{color:#1a7f37}
+.nb-doc pre .hljs-number,.nb-doc pre .hljs-symbol,.nb-doc pre .hljs-bullet,.nb-doc pre .hljs-link,.nb-doc pre .hljs-variable,.nb-doc pre .hljs-template-variable{color:#b35900}
+.nb-doc pre .hljs-title,.nb-doc pre .hljs-section,.nb-doc pre .hljs-selector-id,.nb-doc pre .hljs-title.function_{color:#6639ba}
+.nb-doc pre .hljs-type,.nb-doc pre .hljs-built_in,.nb-doc pre .hljs-class .hljs-title,.nb-doc pre .hljs-title.class_,.nb-doc pre .hljs-selector-class{color:#0b6bcb}
+.nb-doc pre .hljs-attr,.nb-doc pre .hljs-name,.nb-doc pre .hljs-tag,.nb-doc pre .hljs-property{color:#0550ae}
+.nb-doc pre .hljs-meta,.nb-doc pre .hljs-params{color:#57606a}.nb-doc pre .hljs-deletion{color:#c62828}
+.nb-doc pre .hljs-emphasis{font-style:italic}.nb-doc pre .hljs-strong{font-weight:700}
+.nb-pop.nb-langmenu{width:200px}
+
+/* ====================================================================== equations */
+.nb-doc .nb-math{display:inline-block;padding:0 2px;border-radius:3px;cursor:default;white-space:nowrap;max-width:100%;vertical-align:baseline}
+.nb-doc .nb-mathblock{display:block;margin:6px 0;padding:10px 12px;border-radius:4px;text-align:center;overflow-x:auto;overflow-y:hidden;min-height:24px}
+.nb-doc.ProseMirror .nb-math,.nb-doc.ProseMirror .nb-mathblock{cursor:pointer}
+.nb-doc.ProseMirror .nb-math:hover,.nb-doc.ProseMirror .nb-mathblock:hover{background:#f1f1f0}
+.nb-doc .nb-math.empty,.nb-doc .nb-mathblock.empty{color:#a0a0a0;background:#f7f7f7;font-size:13px}
+.nb-doc .nb-math.ProseMirror-selectednode,.nb-doc .nb-mathblock.ProseMirror-selectednode{outline:2px solid var(--nb-blue);outline-offset:1px}
+.nb-doc .nb-math .katex{font-size:1.08em}.nb-doc .nb-mathblock .katex-display{margin:0}
+.nb-pop.nb-mathmenu{width:420px;padding:8px;max-width:calc(100vw - 16px)}
+.nb-mathbox{display:flex;flex-direction:column;gap:6px}
+.nb-math-src{width:100%;resize:vertical;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;line-height:19px;min-height:36px}
+.nb-math-prev{min-height:30px;padding:8px;border-radius:5px;background:#fafafa;text-align:center;overflow-x:auto;font-size:15px}
+.nb-math-prev.empty{color:#a0a0a0;font-size:12px}
+.nb-mathbox .nb-ask-x{align-items:center;justify-content:space-between;margin-top:0}.nb-mathbox .nb-note{padding:0}
+
+/* ====================================================================== find and replace */
+.nb-doc .nb-find{background:#fde9a6;border-radius:2px}.nb-doc .nb-find.cur{background:#f8a23c;color:#000}
+.nb-pop.nb-findbar{z-index:175;padding:6px;min-width:0;max-width:calc(100vw - 16px);overflow:visible;width:440px}
+.nb-find-row{display:flex;align-items:center;gap:4px}.nb-find-row + .nb-find-row{margin-top:5px}
+.nb-find-row[hidden]{display:none}
+.nb-find-n{flex:none;min-width:52px;text-align:center;font-size:12px;color:var(--nb-mut);white-space:nowrap}.nb-find-n.none{color:#d30000}
+.nb-findbar .nb-btn{padding:5px 8px}.nb-findbar .nb-btn.on{background:#e8f1fb;border-color:#b7d3f2;color:var(--nb-blue)}
+
+/* ====================================================================== button block, templates, document menu */
+.nb-doc .nb-button{display:flex;align-items:center;gap:6px;margin:5px 0}
+.nb-doc .nb-button-el{border:1px solid #d9d9d7;background:#fff;border-radius:6px;padding:5px 12px;font:inherit;font-size:14px;line-height:20px;color:#37352f;cursor:pointer;box-shadow:0 1px 1px rgba(0,0,0,.04);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nb-doc .nb-button-el:hover{background:#f6f6f5}.nb-doc .nb-button-el:active{background:#eeeeec}
+.nb-doc .nb-button-cfg{border:0;background:none;border-radius:4px;width:24px;height:24px;font-size:13px;color:#a0a0a0;cursor:pointer;opacity:0}
+.nb-doc .nb-button:hover .nb-button-cfg,.nb-doc .nb-button-cfg:focus-visible,.nb-doc .nb-button.ProseMirror-selectednode .nb-button-cfg{opacity:1}
+.nb-doc .nb-button-cfg:hover{background:#f1f1f0;color:#37352f}
+.nb-doc .nb-button.ProseMirror-selectednode .nb-button-el{outline:2px solid var(--nb-blue);outline-offset:1px}
+.nb-pop.nb-tplmenu{width:290px}.nb-pop.nb-docmenu{width:250px}.nb-pop.nb-btnmenu{width:230px}
+.nb-pop.nb-box{padding:8px}
+.nb-more{border:0;background:none;border-radius:5px;width:28px;height:28px;font-size:18px;line-height:1;color:#6b6b6b;cursor:pointer;margin-left:6px;vertical-align:middle;letter-spacing:1px}
+.nb-more:hover{background:#f1f1f0;color:#0f0f0f}
+
+/* ====================================================================== touch toolbar */
+.nb-touchbar{position:fixed;left:0;right:0;bottom:0;z-index:180;display:flex;align-items:center;gap:2px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #e3e3e3;box-shadow:0 -2px 10px rgba(0,0,0,.06);overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.nb-touchbar[hidden]{display:none}
+.nb-tk{flex:none;border:0;background:none;min-width:40px;height:40px;padding:0 8px;border-radius:8px;font-size:16px;line-height:1;color:#37352f;font-family:inherit}
+.nb-tk.wide{font-size:14px}.nb-tk.on{color:var(--nb-blue);background:#e8f1fb}.nb-tk:active{background:#f1f1f0}
+@media (pointer:coarse){.nb-float.nb-handle{display:none!important}}

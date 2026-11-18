@@ -86,4 +86,15 @@ export function askLine(opt) {
   return { close: () => done(null), el: box };
 }
 
-export const swatch = (kind, name) => `<span class="nb-sw ${kind}" data-c="${esc(name || 'default')}">${kind === 'tx' ? 'A' : ''}</span>`;
+/* a small floating box with any content (equation editor, version list …). onClose gets 'esc', 'outside' or what close() was given */
+export function openBox(content, opt = {}) {
+  const box = el('div', { class: 'nb-pop nb-box ' + (opt.cls || ''), role: 'dialog', 'aria-label': opt.label || '' }, content); let closed = false;
+  const api = { el: box, close(why) { if (closed) return; closed = true; open.delete(api); box.remove(); document.removeEventListener('mousedown', outside, true); opt.onClose && opt.onClose(why === true ? 'esc' : why); } };
+  const outside = e => { if (!box.contains(e.target) && !(opt.keep && opt.keep(e.target))) api.close('outside'); };
+  ['mousedown', 'click', 'mouseup', 'keyup'].forEach(t => box.addEventListener(t, e => e.stopPropagation()));
+  box.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); api.close('esc'); } });
+  document.body.append(box); if (opt.rect) place(box, opt.rect, opt); open.add(api); setTimeout(() => { if (!closed) document.addEventListener('mousedown', outside, true); }, 0);
+  return api;
+}
+
+export const swatch =(kind, name) => `<span class="nb-sw ${kind}" data-c="${esc(name || 'default')}">${kind === 'tx' ? 'A' : ''}</span>`;
