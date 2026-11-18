@@ -169,7 +169,7 @@ export default function App() {
     } catch (e) { notify(e instanceof Error ? e.message : '내보내기에 실패했습니다.', true); }
     finally { setBusy(''); }
   };
-  if (c.loadError) return <div className="startup-error"><AlertCircle size={30} /><h1>작업공간을 열지 못했습니다</h1><p>{c.loadError}</p><p className="muted">브라우저의 로컬 저장소 사용 권한을 확인해주세요. 기존 저장 데이터는 삭제하지 않았습니다.</p><button className="button primary" onClick={() => location.reload()}>다시 열기</button></div>;
+  if (c.loadError) return <div className="startup-error"><AlertCircle size={30} /><h1>작업공간을 열지 못했습니다</h1><p>{c.loadError}</p><p className="muted">연결 상태와 브라우저의 로컬 저장소 사용 권한을 확인해주세요. 기존 저장 데이터는 삭제하지 않았습니다.</p><button className="button primary" onClick={() => location.reload()}>다시 열기</button></div>;
   if (c.needsImport) return <Welcome onOpen={next => c.importWorkspace(next, 'new')} />;
   if (!w || !p || !r) return <Loading text={c.computeError || '일정 작업공간을 준비하고 있습니다'} />;
   const phases = [...new Map(p.tasks.map(t => [t.phase, t.phaseLabel])).entries()].sort(([a], [b]) => a.localeCompare(b));
@@ -195,7 +195,7 @@ export default function App() {
       <nav aria-label="일정관리 메뉴">{navigation.map(({ view: id, icon: Icon, title, count }, i) => <div key={id}>{i === 5 && <div className="nav-label second">프로젝트 관리</div>}<button className={'nav-item ' + (view === id ? 'active' : '')} aria-current={view === id ? 'page' : undefined} onClick={() => changeView(id)}><Icon size={17} strokeWidth={1.65} /><span>{title}</span>{count !== null && <small>{count}</small>}{view === id && <span className="nav-active-dot" />}</button></div>)}</nav>
       <div className="sidebar-bottom">
         <div className="scenario-selector"><label htmlFor="active-scenario"><GitBranch size={13} />작업 시나리오</label><div className="select-wrap"><select id="active-scenario" aria-label="작업 시나리오" value={p.id} onChange={e => c.switchScenario(e.target.value)}>{w.scenarios.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select><ChevronDown size={13} /></div></div>
-        <div className="sidebar-tools"><button onClick={() => inputFile.current?.click()}><Upload size={15} />가져오기</button><button onClick={() => setModal('export')}><Download size={15} />내보내기</button></div>
+        <div className="sidebar-tools"><button onClick={() => inputFile.current?.click()}><Upload size={15} />엑셀 가져오기</button><button onClick={() => setModal('export')}><Download size={15} />내보내기</button></div>
         <div className="local-caption"><HardDrive size={13} /><span>독립 작업공간 · 로컬 저장</span><button aria-label="앱 도움말" onClick={() => setModal('help')}><CircleHelp size={14} /></button></div>
       </div>
     </aside>

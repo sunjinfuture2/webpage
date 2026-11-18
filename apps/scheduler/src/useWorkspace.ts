@@ -6,6 +6,7 @@ import { isDay } from './core/dates';
 import { restoreWorkspaceCommand } from './core/workspace-history';
 import type { WorkspaceCommand } from './core/workspace-history';
 import { switchWorkspaceScenario } from './core/workspace-scenarios';
+import { startingWorkspace, loadInitialSource } from './core/initial-workspace';
 
 const views = ['overview', 'gantt', 'calendar', 'tasks', 'procurement', 'gates', 'scenarios', 'evidence', 'network', 'portfolio'];
 function entryView(): Preferences['view'] | null { const value = new URLSearchParams(window.location.search).get('view'); return value && views.includes(value) ? value as Preferences['view'] : null; }
@@ -70,8 +71,7 @@ export function useWorkspace() {
     let cancelled = false;
     (async () => {
       try {
-        const saved = await readWorkspace(requestedProjectId(window.location.hash));
-        if (!saved) { if (!cancelled) setNeedsImport(true); return; }
+        const saved = await startingWorkspace(await readWorkspace(requestedProjectId(window.location.hash)), loadInitialSource);
         const w = saved.workspace;
         assertWorkspace(w);
         if (cancelled) return;
