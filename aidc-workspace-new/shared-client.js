@@ -413,3 +413,11 @@ function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).g
 window.addEventListener('popstate',()=>{if(!sharedReady)return;const q=new URLSearchParams(location.hash.slice(1));const r={};for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;const b=q.get('block');applyRoute(cleanRoute(r));if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);});
 
 sharedStart().catch(()=>sharedStatus('서버 연결을 확인해주세요.'));
+
+/* Sidebar service links: only title text and arrow navigate externally. */
+(()=>{
+ const links={ag_daily:'https://sunjinfuture2.github.io/sunjin-aidcnews/',ag_sim:'https://sunjinfuture2.github.io/simulator/AIDC_Revenue-Structure_Simulator_3y_rev14.6.html',ag_glossary:'https://sunjinfuture2.github.io/AIDC_Infrastructure_Glossary/3d/'};
+ const style=document.createElement('style');style.textContent='#sb .agent a[data-service-link]{color:inherit;text-decoration:none;cursor:pointer}#sb .agent a[data-service-link]:hover{text-decoration:underline}#sb .agent a[data-service-link]:focus-visible{outline:2px solid #ff7900;outline-offset:3px}#sb .agent a.service-arrow{display:inline-flex;align-items:center;flex:none}';document.head.append(style);
+ function setup(){for(const [id,url] of Object.entries(links)){const row=document.querySelector('#sb .agent [data-open="'+id+'"]');if(!row)continue;const label=row.querySelector('.tx');if(label&&!label.querySelector('[data-service-link]')){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.dataset.stop='';a.dataset.serviceLink=id;a.title=label.textContent+' (새 탭)';a.append(...label.childNodes);label.append(a);}const arrow=row.querySelector('svg.ext');if(arrow&&!arrow.closest('[data-service-link]')){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.dataset.stop='';a.dataset.serviceLink=id;a.className='service-arrow';a.setAttribute('aria-label',(label?.textContent||'서비스')+' 새 탭에서 열기');arrow.before(a);a.append(arrow);}}}
+ setup();const sb=document.querySelector('#sb');if(sb)new MutationObserver(setup).observe(sb,{childList:true,subtree:true});
+})();
