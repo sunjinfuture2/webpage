@@ -46,12 +46,11 @@ const LEGACY = '<h2>회의 안건</h2><p>첫 줄\n둘째 줄</p><div class="todo
   await p.click('#panel-close'); await sleep(300);
   check('closing without changes asks nothing', await ev(() => !document.querySelector('#dlg') && !S.panel));
   await ev(id => openPanel(id), id1); await sleep(500);
-  check('reopening shows the edit that was left open (still editing, same text)', await ev(id => ITEMS.find(x => x.id === id).editing && !!NB[id] && !!document.querySelector('#panel-pin [data-ed="save"]'), id1));
+  check('an edit that was left without a change is closed at once (the lock goes back)', await ev(id => !ITEMS.find(x => x.id === id).editing && !NB[id] && !!document.querySelector('#panel-pin [data-ed="edit"]'), id1));
+  await p.click('#panel-pin [data-ed="edit"]'); await sleep(450);
   await ev(() => NB[S.panel].inst.focus('end')); await kb.type('취소될 글'); await sleep(200);
   check('typing makes it unsaved', await ev(id => itemDirty(ITEMS.find(x => x.id === id)) === true, id1));
-  await p.click('#panel-close'); await sleep(300);
-  check('SAVE-04 closing with changes asks to save first', await ev(() => !!document.querySelector('#dlg') && /저장/.test(document.querySelector('#dlg').textContent)));
-  await p.click('#dlg button:has-text("취소")'); await sleep(200);
+  // SAVE-04 (leaving with changes saves without asking) is checked in leave-1.cjs
   await p.click('#panel-pin [data-ed="cancel"]'); await sleep(700);
   check('T39 취소 throws the edit away and shows the last saved body', await ev(a => { const it = ITEMS.find(x => x.id === a.id); return it.body === a.body && !it.editing && !document.querySelector('#panel-pin .nb-doc').textContent.includes('취소될 글') && Object.keys(NB).length === 0; }, { id: id1, body: s1.body }));
   const id2 = await ev(t => { const it = newItem('action'); openPanel(it.id); return it.id; }, ''); await sleep(350);

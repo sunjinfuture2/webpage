@@ -381,9 +381,9 @@ function restoreRoute(){let r={};try{if(navigationType==='reload')r=JSON.parse(s
  if(r.q)r.q=Object.assign({action:'',research:'',partner:''},r.q);if(r.filters)r.filters=Object.assign({},S.filters,r.filters);
  for(const k of Object.keys(r))if(r[k]===undefined)delete r[k];
  Object.assign(S,r);S.editProj=false;sharedRestoreRoute=false;sharedJumpBlock();setTimeout(()=>{$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;saveRoute();},0);}
-// Back / forward: show whatever the address now says. Unsaved edits get the usual "저장할까요?" question first.
+// Back / forward: show whatever the address now says. What was being edited is saved first (guardLeave); nothing is asked.
 function applyRoute(r,force){
- if(!force&&guardLeave(()=>applyRoute(r,true))){history.pushState({aidc:1},'',location.pathname+location.search+(lastHash||''));return;}
+ if(!force){let done=false;if(guardLeave(()=>{done=true;applyRoute(r,true);},'all')){if(!done)history.pushState({aidc:1},'',location.pathname+location.search+(lastHash||''));return;}}
  routeApplying=true;try{closePop();closeModal();const d=$('#dlg');if(d)d.remove();
   if(S.editProj){restoreProjectSnap();sharedRelease('project:'+S.proj);S.editProj=false;}
   S.page=r.page;S.proj=r.proj;S.full=r.full;S.panel=null;$('#panel').classList.remove('on');$('#app').classList.remove('panel-open');

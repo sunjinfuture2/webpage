@@ -223,6 +223,7 @@ svg{display:block}
 .status-ic{display:inline-flex;align-items:center;gap:5px}
 .toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,8px);background:#1c1c1c;color:#fff;font-size:13px;padding:9px 16px;border-radius:6px;z-index:200;opacity:0;transition:opacity .16s ease,transform .16s ease;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.toast button{pointer-events:auto;margin-left:14px;padding:0;background:none;border:0;color:#9cc2ff;font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .pop{position:fixed;background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.14),0 0 0 0.5px rgba(0,0,0,.08);z-index:150;padding:6px;min-width:150px;font-size:13px}
 .pop .it{padding:7px 10px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--ink)}
 .pop .it:hover{background:#f3f3f3}
@@ -1441,7 +1442,7 @@ const archTabOf=it=>it.arch||(ITEMS.includes(it)?null:(archRowOf(it.id)||{}).tab
 const typeName=it=>{if(!it)return '';const t=archTabOf(it);return t?'자료실 · '+t:(it.agent?'에이전트':(TYPE_NAME[it.type]||''));};
 const priTxt={high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};
 const stIcon=st=>st==='done'?`<span class="status-ic st-done">${svg('i-check',9.3,7.1)}완료</span>`:`<span class="status-ic st-prog">${svg('i-prog',10.5,10.5,'margin:-1px -1px 0 -1px')}진행중</span>`;
-let toastT; const toast=(m,ms=1800)=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);};
+let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m;if(act){const b=document.createElement('button');b.type='button';b.textContent=act.t;b.onclick=()=>{clearTimeout(toastT);t.classList.remove('on');act.fn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);};
 const pager=(cur,total,cls='')=>{let h=`<div class="pager ${cls}"><button class="arr" data-pg="prev" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;for(let i=1;i<=total;i++)h+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;h+=`<button class="arr" data-pg="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;return h;};
 function downloadText(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 /* popovers */
@@ -2238,24 +2239,33 @@ function revertItem(it){const original=it._editOriginal;if(original){Object.keys
 function itemDirty(it){ if(!it||!ITEMS.includes(it)||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
   const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.editing){const s=it.snap?JSON.parse(it.snap):{}; return !!it.dirty||bodyNow!==(s.body||'')||titleNow!==(s.title||'');} return !!(titleNow||bodyNow||it.dirty);}
-/* leave guard: returns true if a dialog was shown (caller must stop) */
+/* leave guard. Nothing is asked: what was being edited is saved on the way out (owner, 2026-11-18).
+   Returns true when the caller must stop: the move goes on by itself after the save, or it cannot be made yet (a toast says why). */
 // which: 'panel' (the side panel is closing or changing), 'full' (the full page is being replaced) or 'all' (leaving the page)
 function guardLeave(proceed,which){
   if(which!=='full'&&S.editSimple&&S.panel===S.editSimple.id){ // a partner / link card being edited in the panel
-    if(simpleDirty()){confirmDlg('수정 중인 내용이 있습니다. 저장할까요?',[{t:'저장',pri:true,fn:()=>{if(saveSimple()){proceed();render(true);}}},{t:'저장 안 함',fn:()=>{S.editSimple=null;proceed();}},{t:'취소',fn:()=>{}}]);return true;}
+    if(simpleDirty()){ if(!saveSimple())return true; toast('저장했습니다.'); proceed(); render(true); return true; }
     S.editSimple=null;}
-  if(which==='all'&&projDirty()){confirmDlg('프로젝트 개요를 수정하고 있습니다. 저장할까요?',[
-    {t:'저장',pri:true,fn:async()=>{await sharedSaveProject($('[data-editproj]')); if(!S.editProj)proceed();}},
-    {t:'저장 안 함',fn:()=>{const id=S.proj; restoreProjectSnap(); S.editProj=false; sharedRelease('project:'+id); proceed();}},
-    {t:'취소',fn:()=>{}}]); return true;}
-  const ids=which==='panel'?[S.panel]:which==='full'?[S.full]:[S.panel,S.full]; const it=ids.map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&itemDirty(x)); if(!it)return false;
-  const name=(normT(it.title).split('\n')[0]||'새 글').slice(0,30);
-  confirmDlg(`“${name}”에 저장하지 않은 내용이 있습니다. 저장할까요?`,[
-    {t:'저장',pri:true,fn:()=>{ if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;} const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title); if(!tv){toast('제목을 입력해야 저장할 수 있습니다.');t&&t.focus();return;}
-      if(it.status==='new'){it.title=tv; readUrl(it); readBody(it); it.status='draft'; it.mod=nowTxt(); it.dirty=false; toast('초안으로 저장했습니다. 설정 > 작성 중인 초안에서 이어서 쓸 수 있습니다.',2800);} else {saveItem(it); toast('저장했습니다.');} proceed(); render(true);}},
-    {t:'저장 안 함',fn:()=>{ if(it.status==='new'){const i=ITEMS.indexOf(it); if(i>=0)ITEMS.splice(i,1);} else revertItem(it); proceed(); render(true);}},
-    {t:'취소',fn:()=>{}}]);
-  return true;}
+  if(which==='all'&&projDirty()){ sharedSaveProject().then(()=>{ if(!S.editProj)proceed(); }); return true; }
+  const ids=which==='panel'?[S.panel]:which==='full'?[S.full]:[S.panel,S.full]; const it=ids.map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&itemDirty(x));
+  if(!it){ ids.forEach(id=>{const x=id&&ITEMS.find(y=>y.id===id); if(x&&x.editing&&!otherLock('item:'+x.id))revertItem(x);}); return false; } // opened for editing, nothing changed: the lock goes back at once
+  if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 다시 시도하세요.',2600);return true;}
+  autoSaveItem(it); proceed(); render(true); return true;}
+// Saves the item that is being left. A new one becomes a draft (only its writer sees drafts); an existing one is saved as with 저장.
+function autoSaveItem(it){ const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
+  if(it.status==='new'){ it.title=tv||'제목 없음'; readUrl(it); readBody(it); it.status='draft'; it.mod=nowTxt(); it.dirty=false; toast('초안으로 저장했습니다. 설정 > 작성 중인 초안에서 이어서 쓸 수 있습니다.',2800); return; }
+  const before=it._editOriginal?copy(it._editOriginal):null, id=it.id; saveItem(it);
+  toast('저장했습니다.',5000,before?{t:'되돌리기',fn:()=>undoAutoSave(id,before)}:null); }
+function undoAutoSave(id,before){ const it=item(id); if(!it||it.editing)return; if(otherLock('item:'+id)){toast('다른 사용자가 수정 중이라 되돌리지 못했습니다.',2600);return;}
+  const comments=it.comments; Object.keys(it).forEach(k=>delete it[k]); Object.assign(it,copy(before)); if(comments)it.comments=comments; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal;
+  if(S.panel===id||S.full===id)rerenderItem(id); render(true); toast('수정하기 전 내용으로 되돌렸습니다.',2400); }
+// Ctrl+S / Cmd+S: save what is being edited instead of the browser's "save page"
+document.addEventListener('keydown',e=>{ if(!(e.ctrlKey||e.metaKey)||e.shiftKey||e.altKey||(e.key||'').toLowerCase()!=='s'||e.isComposing)return; e.preventDefault();
+  if(S.editSimple){const b=$('[data-ed="savesimple"]');b&&b.click();return;} if(S.editProj){const b=$('[data-editproj]');b&&sharedSaveProject(b);return;}
+  const it=[S.panel,S.full].map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&(x.editing||x.status==='new')&&!otherLock('item:'+x.id)); if(!it)return;
+  if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
+  if(it.status==='new'){ if(!itemDirty(it))return; autoSaveItem(it); rerenderItem(it.id); render(true); return; }
+  const b=$('[data-ed="save"]',pinOf(it)); b&&b.click(); });
 function confirmDlg(msg,btns){closePop(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg'; d.innerHTML=`<div class="box"><div class="m">${esc(msg)}</div><div class="bt">${btns.map((b,i)=>`<button data-i="${i}" class="${b.pri?'pri':''}">${esc(b.t)}</button>`).join('')}</div></div>`; document.body.appendChild(d);
   d.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b){if(e.target===d){d.remove();} return;} d.remove(); const f=btns[+b.dataset.i]; f&&f.fn&&f.fn();}); const first=d.querySelector('button.pri')||d.querySelector('button'); first&&first.focus();}
 /* partner / archive card: simple in-place edit forms */
