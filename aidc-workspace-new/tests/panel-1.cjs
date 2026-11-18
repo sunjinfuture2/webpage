@@ -16,11 +16,18 @@ const sfx = Date.now().toString(36).slice(-5);
   await p.click('#panel-expand'); await sleep(110);
   const mid = await state();
   check('EXPAND pressing “전체 페이지로 열기” grows the panel (still the panel, wider, mid-way)', mid.panel === id && !mid.full && mid.anim && mid.w > w0 + 20 && mid.w < mainW, { mid, w0, mainW });
+  const ic = await ev(() => { const b = document.querySelector('#panel-expand').getBoundingClientRect(), pl = document.querySelector('#panel').getBoundingClientRect().left, g = document.querySelector('#panel-ic'); return { dx: Math.round(b.left - pl), top: Math.round(b.top), op: getComputedStyle(g).opacity, shown: getComputedStyle(g).display !== 'none' }; });
+  check('EXPAND the panel\'s icons travel with its edge and come down from the top bar row (not hidden, not left behind)', ic.shown && ic.op === '1' && ic.dx >= 50 && ic.dx <= 95 && ic.top > 22 && ic.top <= 61, ic);
   const widths = []; for (let i = 0; i < 4; i++) { widths.push(await panelW()); await sleep(35); }
   check('EXPAND the width keeps increasing while it runs', widths.every((w, i) => !i || w >= widths[i - 1]), widths);
   await sleep(450); const end = await state();
   check('EXPAND it ends as the full page; the panel is put away at its usual width', end.full === id && !end.panel && !end.anim && !end.on && await ev(() => document.querySelector('#page-item').classList.contains('on') && getComputedStyle(document.querySelector('#app')).getPropertyValue('--panelw').trim() === '1031.9px' && !document.querySelector('#panel-pin').style.marginLeft));
-  check('SHRINK the full page shows a “패널로 좁히기” button with an icon', await ev(() => { const b = document.querySelector('#full-shrink'); const r = b.getBoundingClientRect(); return getComputedStyle(b).display !== 'none' && r.width > 90 && r.height >= 28 && /패널로 좁히기/.test(b.textContent) && !!b.querySelector('svg'); }));
+  const sh = await ev(() => { const b = document.querySelector('#full-shrink'), r = b.getBoundingClientRect(), m = document.querySelector('#main').getBoundingClientRect(); const vis = e => getComputedStyle(e).display !== 'none'; return { vis: vis(b), text: b.textContent.trim(), svg: !!b.querySelector('svg'), title: b.title, x: Math.round(r.left - m.left), y: Math.round(r.top - m.top), w: Math.round(r.width), close: vis(document.querySelector('#panel-close')), expand: vis(document.querySelector('#panel-expand')), top: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === b || b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) }; });
+  check('SHRINK the way back is a pictogram only, at the top left of the full page (where the expand icon arrives)', sh.vis && sh.text === '' && sh.svg && sh.title === '패널로 좁히기' && Math.abs(sh.x - 72) <= 2 && Math.abs(sh.y - 61) <= 2 && sh.w <= 18 && !sh.close && !sh.expand && sh.top, sh);
+  await ev(() => { document.querySelector('#app').classList.add('sb-off'); render(true); }); await sleep(450);
+  const two = await ev(() => { const a = document.querySelector('#sb-open').getBoundingClientRect(), b = document.querySelector('#full-shrink').getBoundingClientRect(); const bgA = getComputedStyle(document.querySelector('#sb-open')).backgroundColor, bgB = getComputedStyle(document.querySelector('#full-shrink')).backgroundColor; return { shown: getComputedStyle(document.querySelector('#sb-open')).display !== 'none', gap: Math.round(b.left - a.right), bgA, bgB }; });
+  check('SHRINK with the sidebar folded it stands clear of the “사이드바 펼치기” square and does not look like it', two.shown && two.gap >= 24 && two.bgA !== two.bgB, two);
+  await ev(() => { document.querySelector('#app').classList.remove('sb-off'); render(true); }); await sleep(450);
 
   console.log('— shrinking back');
   await p.click('#full-shrink'); await sleep(110);

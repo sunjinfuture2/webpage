@@ -141,7 +141,13 @@ svg{display:block}
 .tb-share{right:51.4px}
 .tb-star{right:16.4px;top:18.8px;width:20.8px;height:19.7px;background:none}
 .tb-star:hover{background:none}
-.tb-panel-ic{position:absolute;top:21px;right:calc(var(--panelw) - 76px);display:none;gap:20px}
+.tb-panel-ic{position:absolute;top:calc(21px + 40px*var(--panel-ky,0));right:calc(var(--panelw) - 76px - 14px*var(--panel-k,0));display:none;gap:20px;z-index:19}
+#panel-close{opacity:calc(1 - var(--panel-k,0))}
+#full-shrink{display:none;position:relative}
+#full-shrink::before{content:"";position:absolute;inset:-8px}
+#app.full-open:not(.panel-open) .tb-panel-ic{display:flex;right:auto;left:72px;top:61px}
+#app.full-open:not(.panel-open) .tb-panel-ic #panel-close,#app.full-open:not(.panel-open) .tb-panel-ic #panel-expand{display:none}
+#app.full-open:not(.panel-open) .tb-panel-ic #full-shrink{display:flex}
 .panel-open .tb-panel-ic{display:flex}
 .tb-panel-ic button{width:16px;height:16.1px;display:flex;align-items:center;justify-content:center;border-radius:3px}
 .tb-panel-ic button:hover{background:#f0f0f0}
@@ -632,7 +638,8 @@ svg{display:block}
 /* panel <-> full page: the panel's width is animated (panelGrow); while it runs nothing in it reacts, and a swap between the two happens without the slide */
 #app.panel-swap .panel,#app.panel-swap::after{transition:none!important}
 #app.panel-anim .panel{pointer-events:none}
-#app.panel-anim .tb-panel-ic,#app.panel-anim .panel-resize{opacity:0;pointer-events:none}
+#app.panel-anim .panel-resize{opacity:0;pointer-events:none}
+#app.panel-anim .tb-panel-ic{pointer-events:none}
 #app.panel-anim .crumbs{max-width:none}
 .panel .pin{position:relative;width:auto;min-height:100%}
 .ipage{position:relative;min-height:1035px}
@@ -1089,9 +1096,6 @@ html{overflow:hidden}
 .notice .list .ndel:hover{background:#e4e4e4;color:#d30000}
 .notice .list .nadd input{flex:1;border:0;border-bottom:1px solid #dcdcdc;background:transparent;font-size:12px;outline:none;padding:2px 0;margin-top:4px;color:var(--ink)}
 .notice .list .nadd input:focus{border-bottom-color:#8e8e8e}
-#full-shrink{position:absolute;right:250px;top:12px;height:30px;padding:0 12px 0 10px;font-size:13.5px;font-weight:500;color:#3f3f3f;border-radius:8px;display:none;align-items:center;gap:8px}
-#full-shrink svg{flex:none}
-#app.full-open:not(.panel-open) #full-shrink{display:inline-flex}
 .inb-none{padding:40px 0 0 35px;font-size:14px;color:#939393;line-height:23px}
 .inb .cm{overflow:hidden;text-overflow:ellipsis;max-width:1100px}
 .mem .tbl .rw .us .nm .me-tag{margin-left:5px;font-size:10px;font-weight:600;color:#f47920;border:1px solid rgba(244,121,32,.35);border-radius:3px;padding:0 4px;line-height:14px}
@@ -1588,17 +1592,17 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
   <div class="main" id="main">
     <header class="topbar">
       <nav class="crumbs" id="crumbs"></nav>
-      <div class="tb-panel-ic">
-        <button id="panel-close" title="패널 닫기"><svg width="16" height="16.1"><use href="#i-dbl"/></svg></button>
-        <button id="panel-expand" title="전체 페이지로 열기"><svg width="14.5" height="14.5"><use href="#i-expand"/></svg></button>
-      </div>
       <div class="tb-right">
-        <button class="sh-btn" id="full-shrink" title="옆 패널 크기로 좁히기"><svg width="14.5" height="14.5"><use href="#i-shrink"/></svg>패널로 좁히기</button>
         <div class="tb-user" id="tb-user"><span class="av"><span class="avatar av22"></span><i class="dt" style="display:none"></i></span><span class="nm">최원 기사</span></div>
         <button class="tb-ic tb-share" id="tb-share" title="공유"></button>
         <button class="tb-ic tb-star" id="tb-star" title="즐겨찾기"><svg width="20.8" height="19.7"><use href="#i-star"/></svg></button>
       </div>
     </header>
+    <div class="tb-panel-ic" id="panel-ic">
+      <button id="panel-close" title="패널 닫기"><svg width="16" height="16.1"><use href="#i-dbl"/></svg></button>
+      <button id="panel-expand" title="전체 페이지로 열기"><svg width="14.5" height="14.5"><use href="#i-expand"/></svg></button>
+      <button id="full-shrink" title="패널로 좁히기" aria-label="패널로 좁히기"><svg width="14.5" height="14.5"><use href="#i-shrink"/></svg></button>
+    </div>
     <div class="content scroll" id="content">
     <div class="notice" id="notice">
       <div class="head"><svg class="tri" width="5.6" height="4.4"><use href="#i-tri-d" style="color:#4f4f4f"/></svg><span class="lb">공지사항</span><span class="msg">판교 AIDC 관련 업무 진척도 변경 알림</span></div>
@@ -2372,11 +2376,12 @@ function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closeP
 const panelSavedW=()=>{const v=+localStorage.getItem('aidc-panelw'); return v>=900&&v<=1500?v:1031.9;};
 function panelFullGeom(){ const cs=getComputedStyle($('#app')); const L=parseFloat(cs.getPropertyValue('--L'))||145, dd=parseFloat(cs.getPropertyValue('--d'))||0, w=$('#main').clientWidth;
   return {w, ml:Math.max(0,L-115), mr:Math.max(0,w-(L+1)-(1338+dd)-88)}; } // the panel's content sits 115 / 88 px from its edges, the full page's L+1 from the left and is 1338+d wide
+const panelIcRest=()=>{const a=$('#app');a.style.removeProperty('--panel-k');a.style.removeProperty('--panel-ky');};
 function panelRestW(){ const app=$('#app'), v=+localStorage.getItem('aidc-panelw'); if(v>=900&&v<=1500)app.style.setProperty('--panelw',v+'px'); else app.style.removeProperty('--panelw'); }
 let panelGrowing=0;
 function panelGrow(from,to,done){ const app=$('#app'), pin=$('#panel-pin'), run=++panelGrowing, t0=performance.now(); const still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches; const ms=still?0:280;
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; app.classList.add('panel-anim');
-  const frame=now=>{ if(run!==panelGrowing)return; const t=ms?Math.min(1,(now-t0)/ms):1, k=ease(t); app.style.setProperty('--panelw',(from.w+(to.w-from.w)*k)+'px'); pin.style.marginLeft=(from.ml+(to.ml-from.ml)*k)+'px'; pin.style.marginRight=(from.mr+(to.mr-from.mr)*k)+'px';
+  const frame=now=>{ if(run!==panelGrowing)return; const t=ms?Math.min(1,(now-t0)/ms):1, k=ease(t), kk=from.k+(to.k-from.k)*k; app.style.setProperty('--panelw',(from.w+(to.w-from.w)*k)+'px'); app.style.setProperty('--panel-k',kk.toFixed(3)); app.style.setProperty('--panel-ky',Math.min(1,kk*2.2).toFixed(3)); pin.style.marginLeft=(from.ml+(to.ml-from.ml)*k)+'px'; pin.style.marginRight=(from.mr+(to.mr-from.mr)*k)+'px';
     if(t<1){requestAnimationFrame(frame);return;} app.classList.remove('panel-anim'); done(); };
   requestAnimationFrame(frame); }
 const panelBusy=()=>$('#app').classList.contains('panel-anim');
@@ -2389,16 +2394,16 @@ function pinSettle(pin,before,ms){ const z=LAYOUT.zoom||1, kids=[...pin.children
   if(!moved.length)return; void pin.offsetWidth; requestAnimationFrame(()=>{ moved.forEach(c=>{c.style.transition=`transform ${ms}ms cubic-bezier(.2,.7,.2,1)`;c.style.transform='';}); setTimeout(()=>moved.forEach(c=>{c.style.transition='';}),ms+80); }); }
 function expandPanel(){const id=S.panel; if(!id||!item(id)){toast('이 항목은 전체 페이지 보기를 지원하지 않습니다.');return;} if(panelBusy())return; if(S.full&&S.full!==id&&guardLeave(expandPanel,'full'))return;
   const app=$('#app'), pin=$('#panel-pin'), w0=parseFloat(getComputedStyle(app).getPropertyValue('--panelw'))||1031.9, g=panelFullGeom();
-  panelGrow({w:w0,ml:0,mr:0},g,()=>{ const reset=()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();};
+  panelGrow({w:w0,ml:0,mr:0,k:0},{...g,k:1},()=>{ const reset=()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();panelIcRest();};
     if(S.panel!==id){reset();return;} // closed or changed while it grew
     const top=$('#panel').scrollTop, before=pinTops(pin); app.classList.add('panel-swap');
     captureEditor(); S.panel=null; $('#panel').classList.remove('on'); app.classList.remove('panel-open'); S.full=id; S.ctx='full'; dropEmptyNew(); render(); $('#content').scrollTop=top;
     reset(); pinSettle($('#item-pin'),before,180); void app.offsetWidth; requestAnimationFrame(()=>app.classList.remove('panel-swap')); }); }
 function shrinkFull(){const id=S.full; if(!id)return; if(panelBusy())return; if(S.panel&&guardLeave(shrinkFull,'panel'))return;
   const app=$('#app'), pin=$('#panel-pin'), g=panelFullGeom(), top=$('#content').scrollTop, before=pinTops($('#item-pin'));
-  app.classList.add('panel-swap'); app.style.setProperty('--panelw',g.w+'px'); pin.style.marginLeft=g.ml+'px'; pin.style.marginRight=g.mr+'px';
+  app.classList.add('panel-swap'); app.style.setProperty('--panelw',g.w+'px'); app.style.setProperty('--panel-k','1'); app.style.setProperty('--panel-ky','1'); pin.style.marginLeft=g.ml+'px'; pin.style.marginRight=g.mr+'px';
   captureEditor(); S.panel=null; $('#panel').classList.remove('on'); app.classList.remove('panel-open'); S.full=null; render(); openPanel(id,true); $('#panel').scrollTop=top; pinSettle(pin,before,280);
-  void app.offsetWidth; requestAnimationFrame(()=>{ app.classList.remove('panel-swap'); panelGrow(g,{w:panelSavedW(),ml:0,mr:0},()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();}); }); }
+  void app.offsetWidth; requestAnimationFrame(()=>{ app.classList.remove('panel-swap'); panelGrow({...g,k:1},{w:panelSavedW(),ml:0,mr:0,k:0},()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();panelIcRest();}); }); }
 function rerenderItem(id){ id=id||curId(); if(!id)return; const it=item(id);
   if(id===S.full){renderItemPage();}
   if(id===S.panel&&it){const pin=$('#panel-pin'),st=$('#panel').scrollTop;pin.innerHTML=itemHtml(it,'panel');pin.dataset.id=id;fitTitle(pin);$('#panel').scrollTop=st;}
@@ -2451,7 +2456,7 @@ document.addEventListener('click',async e=>{
   let el;
   if(el=q('[data-pimg]')){const id=el.dataset.pimg;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
   if(el=q('[data-copy]')){const v=el.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('주소를 복사했습니다.',1200),()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('주소를 복사했습니다.',1200);}catch{toast('복사하지 못했습니다.');}ta.remove();});if(el.closest('.pop'))closePop();return;}
-  if(S.panel&&!T.closest('#panel,.topbar,.pop,.dlg,#ovl,#sb,.sb-resize,.panel-resize,.tb-logo,.sb-open,#toast,[data-open],[data-go],[data-lib],[data-partnername],.slash-menu,.ed-toolbar,.mention-pop')){closePanel();return;}
+  if(S.panel&&!T.closest('#panel,.topbar,.tb-panel-ic,.pop,.dlg,#ovl,#sb,.sb-resize,.panel-resize,.tb-logo,.sb-open,#toast,[data-open],[data-go],[data-lib],[data-partnername],.slash-menu,.ed-toolbar,.mention-pop')){closePanel();return;}
   if(el=q('[data-unlink]')){const [f,id]=el.dataset.unlink.split(':');const it=itemFromEvent();if(it&&canEditItem(it)&&(f==='actions'||f==='research')){it[f]=(it[f]||[]).filter(x=>x!==id);it.dirty=true;rerenderItem();}return;}
   if(el=q('[data-unfav]')){toggleFav(el.dataset.unfav);toast('즐겨찾기에서 제거했습니다.',1100);return;}
   if(el=q('#sb .agent .ext')){const row=el.closest('[data-open]');const u=row?agentUrl(item(row.dataset.open)):'';if(u){e.stopPropagation();window.open(u,'_blank','noopener');return;}}
