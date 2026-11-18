@@ -34,7 +34,8 @@ const sfx = Date.now().toString(36).slice(-5);
   const dr = await ev(t => { const it = newItem('research'); openPanel(it.id); return it.id; }); await sleep(300); await p.click('#panel-pin .ititle'); await kb.type('초안 ' + sfx); await p.click('#panel-pin .ProseMirror'); await kb.type('초안 본문'); await p.click('#panel-close'); await sleep(1300);
   const d1 = await api(q, '/api/versions?item=' + dr), d2 = await api(p, '/api/versions?item=' + dr);
   check('HIST a draft has no history and another member cannot ask for it', d1.status === 404 && d2.status === 200 && d2.body.versions.length === 0, [d1, d2]);
-  const seedId = await ev(() => { const x = ITEMS.find(y => y.status === 'published' && y.type === 'action' && !y.arch && y.body && !y.ed && !/검수|버전/.test(y.title || '')); return x && x.id; });
+  // an item of the first editor that has no history yet (earlier runs against the same database may have used some)
+  const seedId = await ev(async () => { for (const x of ITEMS.filter(y => y.status === 'published' && y.type === 'action' && !y.arch && y.body && !y.ed && !/검수|버전/.test(y.title || '') && !otherLock('item:' + y.id))) { const d = await (await apiFetch('/api/versions?item=' + x.id)).json(); if (d.versions && !d.versions.length) return x.id; } return null; });
   const seedBody = await ev(i => item(i).body, seedId); await editSave(p, seedId, ' (검수 중 덧붙임)');
   vs = (await api(p, '/api/versions?item=' + seedId)).body.versions;
   check('HIST the first change of an item written earlier also keeps what was there before', vs.length === 2 && vs[1].kind === 'base' && vs[0].kind === 'save', vs);

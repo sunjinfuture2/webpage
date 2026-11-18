@@ -121,7 +121,7 @@ const LEGACY = '<h2>회의 안건</h2><p>첫 줄\n둘째 줄</p><div class="todo
   await ev(id => openPanel(id), id4); await sleep(300); await p.click('#panel-pin [data-ed="edit"]'); await sleep(500); await ev(() => NB[S.panel].inst.focus('end')); await kb.press('Enter');
   await kb.type('[[저장 왕복 ' + sfx); await sleep(350);
   check('REF-01 "[[" lists pages by title', await ev(() => !!document.querySelector('.nb-at .nb-it')));
-  await kb.press('Enter'); await sleep(150); await kb.type('@둘째'); await sleep(350); await kb.press('Enter'); await sleep(150);
+  await kb.press('Enter'); await sleep(150); await kb.type('@EDC'); await sleep(350); await kb.press('Enter'); await sleep(150);
   const pl = await ev(() => NB[S.panel].inst.getHTML());
   check('REF-03 / T31 page link stores the item id, mention the member id', new RegExp('data-type="pageLink" data-item="[^"]+"').test(pl) && /class="mention" data-type="mention" data-id="EDC"/.test(pl), pl.slice(-500));
   const bid = await ev(() => NB[S.panel].inst.editor.state.doc.firstChild.attrs.id);

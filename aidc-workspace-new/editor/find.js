@@ -1,7 +1,7 @@
 // Find and replace inside one body (Ctrl+F while editing). Matches are decorations: the document itself is only changed by "바꾸기".
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { el } from './ui.js';
 import { ctx } from './host.js';
 

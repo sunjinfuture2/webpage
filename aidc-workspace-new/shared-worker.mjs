@@ -1,9 +1,13 @@
 import seedText from './seed.json';
+import { mergeUpdates } from 'yjs'; // editing one body together: the Worker only relays and merges the editors' updates
 const seed = JSON.parse(seedText);
+const toB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const fromB64 = b => { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 
-const MIN_CLIENT = 3;            // pages built before this version are asked to reload
+const MIN_CLIENT = 4;            // pages built before this version are asked to reload
 const META_TITLES = { 'meta:notices': '공지사항', 'meta:settings': '워크스페이스 설정', 'meta:members': '멤버 역할·정보', 'meta:archive': '자료실 카드', 'meta:rows': '자료실 목록', 'meta:tabs': '자료실 탭', 'meta:roadmap': '업무 로드맵' };
 const SESSION_MS = 14 * 864e5;   // default: a login stays valid for 14 days after its last request (설정 > 보안 can change it)
+const Y_MAX = 4 * 1024 * 1024;     // a shared editing session is dropped by the Worker beyond this size
 const VERSION_MERGE_MS = 60000;   // saves by the same member within a minute share one version (ticking boxes one after another)
 const VERSION_KEEP = 100;         // versions kept per item
 const PRESENCE_MS = 120000;      // a session counts as "online" (may hold edit locks) for 2 minutes after its last request
@@ -80,6 +84,9 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, size INTEGER, item TEXT, employee TEXT, at TEXT, data BLOB)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS versions (id INTEGER PRIMARY KEY AUTOINCREMENT, item TEXT, at TEXT, employee TEXT, title TEXT, body TEXT, ed INTEGER, kind TEXT)');
     this.sql.exec('CREATE INDEX IF NOT EXISTS versions_item ON versions (item, id)');
+    // Editing an item together: the first editor holds the lock as before, the others are noted here; ydocs is the shared document of a running session.
+    this.sql.exec('CREATE TABLE IF NOT EXISTS co_locks (id TEXT, token TEXT, employee TEXT, expires INTEGER, PRIMARY KEY (id, token))');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS ydocs (item TEXT PRIMARY KEY, state BLOB, at INTEGER)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
   }
 
@@ -98,13 +105,23 @@ export class Workspace {
     this.sql.exec('INSERT INTO versions(item,at,employee,title,body,ed,kind) VALUES (?,?,?,?,?,?,?)', id, now.toISOString(), me, title, body, ed, 'save');
     this.sql.exec('DELETE FROM versions WHERE item=? AND id NOT IN (SELECT id FROM versions WHERE item=? ORDER BY id DESC LIMIT ?)', id, id, VERSION_KEEP);
   }
+  // When the first editor of an item leaves while others still edit along, the one who joined first takes the lock over.
+  promote() {
+    for (const r of this.sql.exec('SELECT rowid,id,token,employee,expires FROM co_locks WHERE id NOT IN (SELECT id FROM edit_locks) ORDER BY rowid').toArray()) {
+      if (this.sql.exec('SELECT id FROM edit_locks WHERE id=?', r.id).toArray().length) continue;
+      this.sql.exec('INSERT OR REPLACE INTO edit_locks VALUES (?,?,?,?)', r.id, r.token, r.employee, r.expires); this.sql.exec('DELETE FROM co_locks WHERE id=? AND token=?', r.id, r.token);
+    }
+  }
+  mayEdit(id, token) { return !!this.sql.exec('SELECT id FROM edit_locks WHERE id=? AND token=? UNION SELECT id FROM co_locks WHERE id=? AND token=?', id, token, id, token).toArray().length; }
   // may this member read the item (and so its versions)? A draft is only its writer's.
   readable(id, me) { const v = this.get('item:' + id); return !!v && !(v.status === 'draft' && v.authorId && v.authorId !== me); }
   get(id) { const r = this.sql.exec('SELECT data FROM records WHERE id=?', id).toArray()[0]; return r ? JSON.parse(r.data) : null; }
   users() { return Object.fromEntries(this.sql.exec('SELECT * FROM users').toArray().map(u => [u.employee, u.name])); }
   locks() {
     const now = Date.now();
-    return Object.fromEntries(this.sql.exec('SELECT l.id,l.employee,u.name,l.expires FROM edit_locks l LEFT JOIN users u ON l.employee=u.employee WHERE l.expires>? AND l.token IN (SELECT token FROM live_sessions WHERE expires>? AND seen>?)', now, now, now - PRESENCE_MS).toArray().map(l => [l.id, l]));
+    const out = Object.fromEntries(this.sql.exec('SELECT l.id,l.employee,u.name,l.expires FROM edit_locks l LEFT JOIN users u ON l.employee=u.employee WHERE l.expires>? AND l.token IN (SELECT token FROM live_sessions WHERE expires>? AND seen>?)', now, now, now - PRESENCE_MS).toArray().map(l => [l.id, l]));
+    for (const c of this.sql.exec('SELECT c.id,c.employee,u.name FROM co_locks c LEFT JOIN users u ON c.employee=u.employee WHERE c.expires>? AND c.token IN (SELECT token FROM live_sessions WHERE expires>? AND seen>?)', now, now, now - PRESENCE_MS).toArray()) if (out[c.id]) (out[c.id].co ||= []).push({ employee: c.employee, name: c.name });
+    return out;
   }
   broadcast(data) {
     for (const ws of this.ctx.getWebSockets()) {
@@ -121,6 +138,7 @@ export class Workspace {
     const now = Date.now();
     this.sql.exec('DELETE FROM live_sessions WHERE expires<?', now);
     this.sql.exec('DELETE FROM edit_locks WHERE expires<? OR token NOT IN (SELECT token FROM live_sessions WHERE seen>?)', now, now - PRESENCE_MS);
+    this.sql.exec('DELETE FROM co_locks WHERE expires<? OR token NOT IN (SELECT token FROM live_sessions WHERE seen>?)', now, now - PRESENCE_MS); this.promote();
     if (now - this.lastPurge > 3600000) { this.lastPurge = now; this.purgeTrash(); }
   }
   // Items that have sat in the trash for TRASH_DAYS are removed for good, together with their attachments.
@@ -192,7 +210,7 @@ export class Workspace {
       const me = session.employee;
 
       if (path === '/api/logout') {
-        this.sql.exec('DELETE FROM live_sessions WHERE token=?', token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', token);
+        this.sql.exec('DELETE FROM live_sessions WHERE token=?', token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', token); this.sql.exec('DELETE FROM co_locks WHERE token=?', token); this.promote();
         this.broadcast({ locks: this.locks() });
         return json({ ok: true }, 200, { 'Set-Cookie': fileCookie(req, '', 0) });
       }
@@ -242,11 +260,15 @@ export class Workspace {
       if (path === '/api/lock' && req.method === 'POST') {
         const { id, action } = await req.json(); if (!/^(item:|project:)/.test(id)) return json({ error: '잘못된 항목' }, 400);
         this.cleanup();
-        const old = this.sql.exec('SELECT * FROM edit_locks WHERE id=?', id).toArray()[0];
-        if (old && old.token !== token) return json({ error: (this.users()[old.employee] || old.employee) + '님이 수정 중입니다', locks: this.locks() }, 423);
-        if (action === 'release') this.sql.exec('DELETE FROM edit_locks WHERE id=? AND token=?', id, token);
+        const old = this.sql.exec('SELECT * FROM edit_locks WHERE id=?', id).toArray()[0]; const others = old && old.token !== token;
+        const along = !!this.sql.exec('SELECT id FROM co_locks WHERE id=? AND token=?', id, token).toArray().length; let co = false;
+        if (action === 'release') { this.sql.exec('DELETE FROM edit_locks WHERE id=? AND token=?', id, token); this.sql.exec('DELETE FROM co_locks WHERE id=? AND token=?', id, token); this.promote(); }
+        else if (others && (along || (action === 'join' && id.startsWith('item:')))) { // editing along with the member who holds the lock
+          if (!this.get(id)) return json({ error: '항목을 찾을 수 없습니다.' }, 404);
+          this.sql.exec('INSERT OR REPLACE INTO co_locks VALUES (?,?,?,?)', id, token, me, Date.now() + LOCK_MS); co = true; }
+        else if (others) return json({ error: (this.users()[old.employee] || old.employee) + '님이 수정 중입니다', locks: this.locks() }, 423);
         else { if (!this.get(id)) return json({ error: '항목을 찾을 수 없습니다.' }, 404); this.sql.exec('INSERT OR REPLACE INTO edit_locks VALUES (?,?,?,?)', id, token, me, Date.now() + LOCK_MS); }
-        const locks = this.locks(); this.broadcast({ locks }); return json({ locks, record: this.get(id) });
+        const locks = this.locks(); this.broadcast({ locks }); return json({ locks, record: this.get(id), co });
       }
       if (path === '/api/change' && req.method === 'POST') {
         const { changes } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
@@ -256,7 +278,7 @@ export class Workspace {
           if (c.field === 'comments' && String(c.id).startsWith('item:')) continue; // commenting is allowed while someone else edits the item
           const lockId = c.id === 'meta:head' && c.field ? 'project:' + c.field : c.id;
           const lock = this.sql.exec('SELECT * FROM edit_locks WHERE id=?', lockId).toArray()[0];
-          if (lock && lock.token !== token) return json({ error: (this.users()[lock.employee] || lock.employee) + '님이 수정 중입니다', locked: lockId, locks: this.locks() }, 423);
+          if (lock && lock.token !== token && !this.mayEdit(lockId, token)) return json({ error: (this.users()[lock.employee] || lock.employee) + '님이 수정 중입니다', locked: lockId, locks: this.locks() }, 423);
         }
         this.ctx.storage.transactionSync(() => {
           for (const c of changes) {
@@ -324,7 +346,33 @@ export class Workspace {
     } catch (e) { return json({ error: '서버 처리에 실패했습니다.' }, 500); }
   }
 
+  // Sockets that have the shared document of an item open (other than "but").
+  ysubs(item, but) { return this.ctx.getWebSockets().filter(w => { if (w === but) return false; try { const a = w.deserializeAttachment(); return !!(a && a.ys && a.ys[item]); } catch { return false; } }); }
+  ysend(list, data) { const s = JSON.stringify(data); for (const w of list) { try { w.send(s); } catch { } } }
+  yleave(ws, a, item) { if (!a || !a.ys || !a.ys[item]) return; const cid = a.ys[item]; delete a.ys[item]; try { ws.serializeAttachment(a); } catch { }
+    const rest = this.ysubs(item, ws); if (rest.length) this.ysend(rest, { y: 'left', item, cid }); else this.sql.exec('DELETE FROM ydocs WHERE item=?', item); } // the session ends with its last editor: the saved body is the document again
+  ymessage(ws, d) {
+    const a = ws.deserializeAttachment(); const item = String(d.item || ''); if (!a || !/^[\w-]{1,80}$/.test(item)) return;
+    if (d.y === 'leave') { this.yleave(ws, a, item); return; }
+    if (d.y === 'no') { // the member holding the lock cannot share this edit: tell those who asked to edit along
+      const tokens = new Set(this.sql.exec('SELECT token FROM co_locks WHERE id=?', 'item:' + item).toArray().map(r => r.token));
+      this.ysend(this.ctx.getWebSockets().filter(w => { try { return tokens.has(w.deserializeAttachment()?.token); } catch { return false; } }), { y: 'no', item }); return; }
+    if (!this.mayEdit('item:' + item, a.token)) { this.ysend([ws], { y: 'denied', item }); return; }
+    if (d.y === 'join') { a.ys = a.ys || {}; if (Object.keys(a.ys).length >= 4 && !a.ys[item]) return; a.ys[item] = String(d.cid || '').slice(0, 16) || 'x'; ws.serializeAttachment(a);
+      const row = this.sql.exec('SELECT state FROM ydocs WHERE item=?', item).toArray()[0];
+      this.ysend([ws], { y: 'state', item, u: row ? toB64(new Uint8Array(row.state)) : null, peers: this.ysubs(item, ws).length }); this.ysend(this.ysubs(item, ws), { y: 'hello', item }); return; }
+    if (!a.ys || !a.ys[item]) return;
+    if (d.y === 'aw' && typeof d.a === 'string' && d.a.length < 60000) { this.ysend(this.ysubs(item, ws), { y: 'aw', item, a: d.a }); return; }
+    if (d.y === 'up' && typeof d.u === 'string' && d.u.length < 1400000) {
+      let u; try { u = fromB64(d.u); } catch { return; }
+      const row = this.sql.exec('SELECT state FROM ydocs WHERE item=?', item).toArray()[0];
+      let state = u; if (row) { try { state = mergeUpdates([new Uint8Array(row.state), u]); } catch { return; } }
+      if (state.byteLength <= Y_MAX) this.sql.exec('INSERT OR REPLACE INTO ydocs VALUES (?,?,?)', item, state, Date.now());
+      this.ysend(this.ysubs(item, ws), { y: 'up', item, u: d.u });
+    }
+  }
   webSocketMessage(ws, message) {
+    if (typeof message === 'string' && message.charCodeAt(0) === 123) { let d; try { d = JSON.parse(message); } catch { return; } if (d && d.y) { try { this.ymessage(ws, d); } catch { } } return; }
     if (message === 'ping') {
       const a = ws.deserializeAttachment(); const now = Date.now();
       if (a) this.sql.exec('UPDATE live_sessions SET seen=?, expires=? WHERE token=? AND expires>?', now, now + this.sessionMs(), a.token, now);
@@ -334,6 +382,7 @@ export class Workspace {
   webSocketClose(ws) {
     // When the last tab of a session closes, let its edit locks lapse after 15 seconds instead of 2 minutes.
     const a = ws.deserializeAttachment();
+    if (a && a.ys) for (const item of Object.keys(a.ys)) { try { this.yleave(ws, a, item); } catch { } }
     if (a && !this.ctx.getWebSockets().some(other => other !== ws && other.deserializeAttachment()?.token === a.token)) this.sql.exec('UPDATE live_sessions SET seen=MIN(seen,?) WHERE token=?', Date.now() - PRESENCE_MS + 15000, a.token);
     ws.close();
   }

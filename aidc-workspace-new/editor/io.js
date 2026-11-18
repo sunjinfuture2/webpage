@@ -1,7 +1,7 @@
 // Getting a body out of the workspace (Markdown, HTML file, print / PDF) and into it (Markdown, text, HTML, CSV).
 // Export works from the stored HTML, so it is the same in read and in edit mode.
 import { marked } from 'marked';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { ctx, esc } from './host.js';
 import { upgrade } from './legacy.js';
 import { loadKatex, mathMarkup } from './math.js';

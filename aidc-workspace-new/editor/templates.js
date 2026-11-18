@@ -1,7 +1,7 @@
 // Templates (ready-made groups of blocks) and the button block that adds such a group, or opens a link, when pressed.
 import { Node, mergeAttributes } from '@tiptap/core';
 import { DOMSerializer } from '@tiptap/pm/model';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { ctx, safeHref } from './host.js';
 import { el, openMenu, askLine } from './ui.js';
 import { upgrade } from './legacy.js';

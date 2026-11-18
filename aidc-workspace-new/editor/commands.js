@@ -2,7 +2,7 @@
 import { Fragment, Slice } from '@tiptap/pm/model';
 import { NodeSelection, TextSelection, Selection } from '@tiptap/pm/state';
 import { dropPoint } from '@tiptap/pm/transform';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 
 // every block command is its own undo step, however quickly commands follow each other
 const send = (view, tr) => view.dispatch(closeHistory(tr));

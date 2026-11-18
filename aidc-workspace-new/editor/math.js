@@ -1,6 +1,6 @@
 // Equations (LaTeX, drawn by KaTeX). KaTeX and its fonts are loaded only when a body really contains an equation.
 import { Node, InputRule, mergeAttributes } from '@tiptap/core';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { el, openBox } from './ui.js';
 
 let katexP = null;

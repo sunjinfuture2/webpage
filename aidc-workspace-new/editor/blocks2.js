@@ -3,7 +3,7 @@
 //  - itemList: a list of workspace items chosen by kind / project / state (a small "database view")
 // Neither stores what it shows: the stored HTML is only the reference, the content is filled in when the body is shown.
 import { Node, mergeAttributes } from '@tiptap/core';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { el, openMenu } from './ui.js';
 import { ctx, fmtDate } from './host.js';
 import { hydrate } from './legacy.js';

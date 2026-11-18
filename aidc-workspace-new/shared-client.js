@@ -1,13 +1,13 @@
 /* Shared client: login, server sync, edit locks, conflict recovery and routing.
    build-shared.mjs injects this file into the app script at the LOGIN marker, so it uses the app's globals (ITEMS, S, render, …). */
-const CLIENT_VERSION=3;                       // must be >= MIN_CLIENT in shared-worker.mjs
+const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared-worker.mjs
 const TOKEN_KEY='aidc-token';                 // one login per browser, shared by all its tabs
 let sharedUser='',sharedName='',sharedToken='',sharedBase={},sharedUsers={},sharedLocks={};
 let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRoute=true,sharedRetryAt=0,sharedSocket;
 const ownedLocks=new Set();
 let META_FLAGS={};                            // one-time migrations already applied to this shared database
 // Client-only fields of an item: never sent to the server, never compared for changes.
-const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew','_recoverySignature'];
+const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew','_recoverySignature','_co'];
 const stripTransient=v=>{for(const k of TRANSIENT)delete v[k];return v;};
 const copy=v=>JSON.parse(JSON.stringify(v));
 const same=(a,b)=>JSON.stringify(a??null)===JSON.stringify(b??null);
@@ -85,6 +85,8 @@ function sharedApply(records){
     const it=key.startsWith('item:')?ITEMS.find(x=>x.id===key.slice(5)):null;
     if(it&&it.editing){ // my unsaved edit stands until I save; comments other people add meanwhile still come through
       const base=sharedBase[key];if(v&&base&&same(it.comments??[],base.comments??[])){const c=v.comments||[];it.comments=copy(c);base.comments=copy(c);if(it._editOriginal)it._editOriginal.comments=copy(c);}
+      // editing together: a member of the session saved the shared body. It becomes what my own save builds on (and what 취소 goes back to).
+      if(v&&base&&it._co)for(const f of ['body','ed','bodyV1','files','updatedAt','updatedBy']){for(const o of [base,it,it._editOriginal]){if(!o)continue;if(v[f]===undefined)delete o[f];else o[f]=copy(v[f]);}}
       continue;}
     if(v&&sharedBase[key]&&fieldLevel(key)&&targetOf(key)){mergeRecord(key,v,sharedBase[key]);continue;}
     if(!same(local[key],sharedBase[key]))continue; // my pending change stands; the server copy arrives after my save
@@ -198,8 +200,8 @@ async function sharedSaveProject(button){
 
 /* ---------- connection ---------- */
 function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebSocket(location.origin.replace('http','ws')+'/api/live?v='+CLIENT_VERSION+'&token='+encodeURIComponent(sharedToken));
- sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
- sharedSocket.onopen=()=>{sharedRefresh();};
+ sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
+ sharedSocket.onopen=()=>{sharedRefresh();for(const item of ySubs.keys())sharedYSend({y:'join',item,cid:sharedCid});};
  sharedSocket.onclose=()=>{if(sharedReady)sharedConnect.timer=setTimeout(sharedConnect,3000);};
 }
 async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);
@@ -342,11 +344,23 @@ setInterval(()=>{if(sharedPendingRedraw)sharedRedraw();saveRoute();},600);
 function sharedMeta(data){const changed=data.locks&&!same(data.locks,sharedLocks);if(data.users){sharedUsers=data.users;Object.assign(PEOPLE,sharedUsers);}
  if(data.minClient>CLIENT_VERSION&&sessionStorage.getItem('aidc-reloaded-for')!==String(data.minClient)){ // a newer build is live
   if(!openItems().some(x=>x.editing||x.status==='new')&&!S.editProj){sessionStorage.setItem('aidc-reloaded-for',String(data.minClient));location.reload();}else toast('새 버전이 배포되었습니다. 저장한 뒤 새로고침해 주세요.',5000);}
- if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(sharedLocks[id]?.employee!==sharedUser){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;
+ if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(!lockMine(sharedLocks[id])){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;
   if(it?.editing){sharedKeepDraft(it);const o=it._editOriginal;if(o){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,o);}it.editing=false;sharedStatus('편집 잠금이 해제되어 작성 내용을 초안으로 보관했습니다.');rerenderItem();}
   if(id.startsWith('project:')&&S.editProj&&id==='project:'+S.proj){restoreProjectSnap();S.editProj=false;render(true);}}}
- sharedUi();if(changed&&sharedReady)sharedRedraw();}
-function otherLock(id){const l=sharedLocks[id];return l&&l.expires>Date.now()&&l.employee!==sharedUser?l:null;}
+ sharedUi();if(changed&&sharedReady){sharedRedraw();if(typeof nbCoWatch==='function')nbCoWatch();}}
+// A lock is mine when I hold it or when I edit along with the member who holds it (l.co: those who joined).
+const lockMine=l=>!!l&&(l.employee===sharedUser||(l.co||[]).some(c=>c.employee===sharedUser));
+function otherLock(id){const l=sharedLocks[id];return l&&l.expires>Date.now()&&!lockMine(l)?l:null;}
+// Edit an item along with the member who is editing it. Resolves to {co:true} when joined, {co:false} when the lock was free after all, null when refused.
+async function sharedJoinEdit(id){if(!sharedReady||!sharedBase[id])return null;
+ try{const r=await postJson('/api/lock',{id,action:'join'});const d=await r.json();if(!r.ok){sharedMeta(d);toast(d.error||'함께 수정할 수 없습니다.');return null;}ownedLocks.add(id);sharedMeta(d);if(d.record&&!d.co)sharedApply({[id]:d.record});return {co:!!d.co};}catch{toast('연결을 확인한 후 다시 시도해 주세요.');return null;}}
+/* ---------- the shared document of an item that is edited together (messages go over the live socket) ---------- */
+const sharedCid=(crypto.randomUUID?crypto.randomUUID():String(Math.random())).replace(/-/g,'').slice(0,12); // this page
+const ySubs=new Map(); // item id -> handler of incoming messages
+function sharedYSend(o){if(sharedSocket&&sharedSocket.readyState===1){try{sharedSocket.send(JSON.stringify(o));return true;}catch{}}return false;}
+function sharedYOpen(item,handler){ySubs.set(item,handler);sharedYSend({y:'join',item,cid:sharedCid});}
+function sharedYClose(item){if(!ySubs.has(item))return;ySubs.delete(item);sharedYSend({y:'leave',item,cid:sharedCid});}
+function sharedYMessage(d){const h=ySubs.get(d.item);if(h){try{h(d);}catch(e){console.error(e);}}else if(d.y==='no'&&typeof nbCoRefused==='function')nbCoRefused(d.item);}
 async function sharedBeginEdit(id){if(!sharedReady)return false;if(!sharedBase[id])return true;
  try{const r=await postJson('/api/lock',{id,action:'acquire'});const d=await r.json();sharedMeta(d);if(!r.ok){toast(d.error);return false;}ownedLocks.add(id);if(d.record){sharedApply({[id]:d.record});}return true;}catch{toast('연결을 확인한 후 수정해주세요.');return false;}}
 async function sharedRelease(id){if(!ownedLocks.has(id))return;try{const r=await postJson('/api/lock',{id,action:'release'});if(r.ok){ownedLocks.delete(id);sharedMeta(await r.json());}}catch{}}

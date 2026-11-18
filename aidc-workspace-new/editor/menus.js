@@ -1,7 +1,7 @@
 // What the menus offer. Each entry ends in a command from commands.js or a Tiptap command, never in direct DOM edits.
 import { createTable } from '@tiptap/extension-table';
 import { TableMap, moveTableRow, moveTableColumn, selectedRect, CellSelection } from '@tiptap/pm/tables';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { ctx, COLORS, COLOR_NAMES, embedUrl, safeHref } from './host.js';
 import { swatch } from './ui.js';
 import { turnInto, insertBlock, blockOfSelection, duplicateBlocks, deleteBlocks } from './commands.js';

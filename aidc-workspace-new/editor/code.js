@@ -1,7 +1,7 @@
 // Code blocks: a language can be chosen, the code is coloured (lowlight / highlight.js grammars) while editing and when read.
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { createLowlight, common } from 'lowlight';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { el, openMenu } from './ui.js';
 import { ctx } from './host.js';
 

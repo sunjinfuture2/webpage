@@ -13,6 +13,7 @@ import { Code, codeOptions } from './code.js';
 import { MathInline, MathBlock } from './math.js';
 import { Button } from './templates.js';
 import { Synced, ItemList } from './blocks2.js';
+import { isChangeOrigin } from './collab.js';
 
 export const ID_TYPES = ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem', 'blockquote', 'codeBlock', 'horizontalRule',
   'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button', 'synced', 'itemList'];
@@ -183,6 +184,7 @@ export function buildExtensions(opts = {}) {
   const nv = opts.nodeViews || {}; const V = (ext, f) => f ? ext.extend({ addNodeView() { return f; } }) : ext;
   return [
     StarterKit.configure({
+      ...(opts.collab ? { undoRedo: false } : {}), // a shared document brings its own undo stack
       blockquote: false, heading: { levels: [1, 2, 3] },
       codeBlock: false,
       dropcursor: { color: '#2383e2', width: 3 },
@@ -195,7 +197,8 @@ export function buildExtensions(opts = {}) {
     DetailsSummary, DetailsContent,
     Code.configure(codeOptions), MathInline, MathBlock, V(Button, nv.button), V(Synced, nv.synced), V(ItemList, nv.itemList),
     Callout, V(Image, nv.image), FileCard, Bookmark, Embed, Columns, Column, V(Toc, nv.toc), V(Raw, nv.raw), DateChip, Mention, PageLink, TextColor, BgColor, Extras,
-    UniqueID.configure({ attributeName: 'id', types: ID_TYPES, generateID: () => newId() }),
+    // while editing together, an id is given by the member whose change made the block, never a second time by those who receive it
+    UniqueID.configure({ attributeName: 'id', types: ID_TYPES, generateID: () => newId(), ...(opts.collab ? { filterTransaction: tr => !isChangeOrigin(tr) } : {}) }),
     Placeholder.configure({ showOnlyCurrent: true, includeChildren: true, placeholder: ({ node }) => node.type.name === 'heading' ? '제목 ' + node.attrs.level : node.type.name === 'detailsSummary' ? '토글' : node.type.name === 'codeBlock' ? '' : "글을 입력하거나 '/'로 블록을 추가하세요" }),
     ...(opts.extra || []),
   ];

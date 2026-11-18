@@ -1474,8 +1474,18 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
 .nb-doc .nb-itemlist > .nb-note,.nb-doc .nb-synced .nb-note{padding:10px;color:#a0a0a0;font-size:12px}
 .nb-pop.nb-ilmenu{width:220px}
 .nb-doc .datechip[data-remind]::after{content:"⏰";font-size:11px;margin-left:3px}
+
+/* ====================================================================== editing together: carets, selections, presence */
+.nb-doc .nb-caret{position:relative;margin-left:-1px;margin-right:-1px;border-left:1px solid;border-right:1px solid;pointer-events:none;word-break:normal}
+.nb-doc .nb-caret-name{position:absolute;top:-1.35em;left:-1px;font:600 11px/1.3 Pretendard,system-ui,sans-serif;color:#fff;padding:1px 5px;border-radius:3px 3px 3px 0;white-space:nowrap;user-select:none;pointer-events:none}
+.nb-editor.nb-co-wait{min-height:120px;position:relative}
+.nb-editor.nb-co-wait::before{content:"함께 수정할 문서를 불러오는 중…";position:absolute;left:0;top:6px;color:#a0a0a0;font-size:14px}
+.nb-editor.nb-co-wait .nb-doc{visibility:hidden}
+.nb-co{display:inline-flex;align-items:center;gap:5px;margin:2px 0 0 10px;font-size:13px;color:#6b6b6b;white-space:nowrap}
+.nb-co i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ihead .nb-join{margin-left:8px;width:auto;padding:0 10px;color:#2383e2}
 </style>
-<script src="/editor.js?v=2d587ca812f6"></script>
+<script src="/editor.js?v=283f80b51920"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute">
@@ -2068,12 +2078,43 @@ function nbChanged(it){ clearTimeout(nbTimer); nbTimer=setTimeout(()=>{ if(!ITEM
 function nbMount(pin){ if(!window.AIDCEditor||!pin)return; if(!nbMount.ready){nbConfigure();nbMount.ready=true;}
   const id=pin.dataset.id, it=id&&ITEMS.find(x=>x.id===id), host=pin.querySelector('.ibody[data-nb="edit"]');
   if(host&&it){ let r=NB[id];
-    if(!r){ r=NB[id]={base:it.body||'',baseEd:it.ed,baseFiles:(it.files||[]).slice(),inst:null}; try{ r.inst=AIDCEditor.create(host,{html:bodyHtml(it),itemId:id,label:'본문',onChange:()=>nbChanged(it)}); }catch(e){ delete NB[id]; console.error(e); host.textContent='편집기를 여는 중 문제가 생겼습니다. 새로고침한 뒤 다시 시도하세요.'; }
+    if(!r){ r=NB[id]={base:it.body||'',baseEd:it.ed,baseFiles:(it.files||[]).slice(),inst:null,session:null};
+      try{ if(it._co==='join'&&it.editing){ r.session=nbSession(it); r.inst=AIDCEditor.create(host,{html:bodyHtml(it),itemId:id,label:'본문',onChange:()=>nbChanged(it),collab:r.session,onDestroy:()=>sharedYClose(id)}); nbCoStart(it,r); }
+        else r.inst=AIDCEditor.create(host,{html:bodyHtml(it),itemId:id,label:'본문',onChange:()=>nbChanged(it)}); }catch(e){ delete NB[id]; console.error(e); host.textContent='편집기를 여는 중 문제가 생겼습니다. 새로고침한 뒤 다시 시도하세요.'; }
       if(r.inst&&it.status==='new'&&!it.title){/* the title is typed first */} }
     else { r.inst.attach(host); r.inst.refreshLive&&r.inst.refreshLive(); } }
   pin.querySelectorAll('.ibody[data-nb="read"] > .nb-doc').forEach(n=>AIDCEditor.hydrate(n,{itemId:id}));
   // editors whose item is no longer on screen in edit mode are closed
-  for(const k of Object.keys(NB)){ const x=ITEMS.find(i=>i.id===k), r=NB[k]; if(!x||!r.inst||!r.inst.wrap.isConnected||(S.panel!==k&&S.full!==k)||!canEditItem(x)){ try{r.inst&&r.inst.destroy();}catch{} delete NB[k]; } } }
+  for(const k of Object.keys(NB)){ const x=ITEMS.find(i=>i.id===k), r=NB[k]; if(!x||!r.inst||!r.inst.wrap.isConnected||(S.panel!==k&&S.full!==k)||!canEditItem(x)){ try{r.inst&&r.inst.destroy();}catch{} delete NB[k]; delete NBP[k]; if(x&&!x.editing)delete x._co; } } }
+/* ----- editing together ----- */
+const NBP={}; // item id -> the other members in the session [{name,color}]
+const nbCanJoin=it=>!!(window.AIDCEditor&&AIDCEditor.collab&&it&&it.id!==NB_TRIAL&&nbOn()&&isPub(it)&&typeof sharedJoinEdit==='function');
+const nbCoHtml=id=>{const l=NBP[id]||[]; return l.length?l.map(p=>`<i style="background:${esc(p.color||'#2383e2')}"></i>`).join('')+esc(l.map(p=>p.name).join(', '))+'님과 함께 수정 중':'';};
+function nbCoPeers(id,list){ const seen=new Set(); NBP[id]=(list||[]).filter(p=>p&&p.name&&!seen.has(p.name)&&seen.add(p.name)); $$('.nb-co').forEach(n=>{ if(n.dataset.co===id)n.innerHTML=nbCoHtml(id); }); }
+function nbSession(it){ const id=it.id; return AIDCEditor.collab.makeSession({cid:sharedCid,user:{name:sharedName||sharedUser,color:AIDCEditor.collab.colorFor(sharedUser)},
+  send:(kind,b64)=>sharedYSend(kind==='up'?{y:'up',item:id,u:b64}:{y:'aw',item:id,a:b64}),onPeers:list=>nbCoPeers(id,list)}); }
+// "함께 수정": take part in the edit another member has open
+async function nbJoin(it){ if(!nbCanJoin(it)||it.editing)return; if(adoptRow(it))await sharedFlush(true);
+  const r=await sharedJoinEdit('item:'+it.id); if(!r)return;
+  if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; if(r.co)it._co='join'; else delete it._co; rerenderItem(it.id);
+  const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:it.body||''}); void b; }
+// a member who joined waits for the shared document; if the first editor's page does not answer, the join is undone
+function nbCoStart(it,r){ const id=it.id; if(NBNO[id]&&Date.now()-NBNO[id]<8000){ delete NBNO[id]; setTimeout(()=>nbCoRefused(id),0); return; } // the answer "no" was faster than this page
+  delete NBNO[id]; sharedYOpen(id,d=>{ if(d.y==='no'||d.y==='denied'){nbCoRefused(id);return;} r.session.receive(d); });
+  setTimeout(()=>{ if(NB[id]===r&&r.session&&!r.session.synced)nbCoRefused(id,'상대 화면에서 응답이 없어 함께 수정을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.'); },12000); }
+const NBNO={}; // item id -> when its first editor said the edit cannot be shared
+function nbCoRefused(id,msg){ const it=item(id), r=NB[id]; if(!it||!it.editing||it._co!=='join'){ if(!msg)NBNO[id]=Date.now(); return; } if(r&&r.session&&r.session.synced)return; revertItem(it); rerenderItem(id); toast(msg||'지금은 함께 수정할 수 없는 글입니다. 상대가 저장한 뒤에 수정해 주세요.',3600); }
+// The first editor: when somebody joined (the lock list says so), the document on screen becomes the shared one.
+function nbCoWatch(){ if(!window.AIDCEditor||!AIDCEditor.collab)return;
+  for(const [key,l] of Object.entries(sharedLocks||{})){ if(!key.startsWith('item:')||!l.co||!l.co.length)continue; const id=key.slice(5), it=item(id); if(!it||!it.editing||it._co==='join')continue;
+    const r=NB[id]; if(!r||!r.inst){ sharedYSend({y:'no',item:id}); continue; } // edited with the first editor (trial record): cannot be shared
+    if(!r.session)nbUpgrade(it,r,l); } }
+function nbUpgrade(it,r,l){ const id=it.id, old=r.inst; if(old.pending()){ setTimeout(nbCoWatch,1500); return; } // a file is still on its way: turn the document over right after
+  const host=old.host, json=old.getJSON(), baseJSON=old.baseJSON(), sel=old.selectionJSON(), focus=old.editor.view.hasFocus(), schema=old.editor.schema;
+  let s=null, inst=null; try{ s=nbSession(it); s.seed(schema,json); old.destroy(); inst=AIDCEditor.create(host,{itemId:id,label:'본문',onChange:()=>nbChanged(it),collab:s,baseJSON,onDestroy:()=>sharedYClose(id)}); }
+  catch(e){ console.error(e); try{s&&s.close();}catch{} sharedYSend({y:'no',item:id}); if(!inst){ try{ r.inst=AIDCEditor.create(host,{json,itemId:id,label:'본문',onChange:()=>nbChanged(it)}); }catch{} } return; }
+  r.inst=inst; r.session=s; it._co='host'; inst.restoreSelection(sel,focus); sharedYOpen(id,d=>{ if(d.y!=='no'&&d.y!=='denied')s.receive(d); });
+  toast(`${(l.co||[]).map(c=>userName(c.employee)).join(', ')}님이 함께 수정을 시작했습니다.`,2800); }
 function nbConfigure(){ if(!window.AIDCEditor)return; const first=t=>normT(t||'').split('\n')[0];
   const seeable=x=>x.status!=='trash'&&x.status!=='new'&&(typeof canSee!=='function'||canSee(x));
   AIDCEditor.configure({
@@ -2146,8 +2187,8 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const pk=k=>E?`data-pick="${k}"`:'';
   const last=`<span class="last">최종: ${esc(modTxt(it))}${lastBy(it)}</span>`;
   let head='';
-  if(lock) head=`<button class="lock sh-btn" disabled>${esc(userName(lock.employee))}님이 수정 중입니다</button>${last}`;
-  else if(it.editing) head=`<button class="sh-btn pub edit" data-ed="save">저장</button><button class="cancel" data-ed="cancel">취소</button>`;
+  if(lock) head=`<button class="lock sh-btn" disabled>${esc(userName(lock.employee))}님${lock.co&&lock.co.length?` 외 ${lock.co.length}명`:''}이 수정 중입니다</button>${nbCanJoin(it)?'<button class="sh-btn pub edit nb-join" data-ed="join" title="같은 본문을 동시에 수정합니다">함께 수정</button>':''}${last}`;
+  else if(it.editing) head=`<button class="sh-btn pub edit" data-ed="save">저장</button><button class="cancel" data-ed="cancel">취소</button><span class="nb-co" data-co="${esc(it.id)}">${nbCoHtml(it.id)}</span>`;
   else if(isPub(it)) head=`<button class="sh-btn pub edit" data-ed="edit">수정</button>${last}`;
   else if(E) head=`<button class="sh-btn pub ${it.title?'ready':''}" data-ed="publish">게시</button><span class="last">${it.status==='draft'?'초안 · 게시하기 전에는 목록에 보이지 않습니다':'게시하면 다른 멤버에게 보입니다'}</span>`;
   else head=`<span class="last" style="margin-left:0">${esc(userName(it.authorId))}님이 작성 중인 초안입니다</span>`;
@@ -2431,11 +2472,12 @@ document.addEventListener('click',async e=>{
   if(q('#full-shrink')){shrinkFull();return;}
   if(el=q('[data-ed]')){const k=el.dataset.ed;const it=itemFromEvent();
     if(k==='docmenu'&&it){nbDocMenu(it,el);return;}
+    if(k==='join'&&it){await nbJoin(it);return;}
     if((k==='publish'||k==='save')&&it&&nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
     if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); toast('게시했습니다.'); return;}
-    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
+    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} delete it._co; if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
     if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); toast('저장했습니다.'); return;}
-    if(k==='cancel'&&it){revertItem(it); rerenderItem(it.id); return;}
+    if(k==='cancel'&&it){const along=(NBP[it.id]||[]).length; revertItem(it); rerenderItem(it.id); if(along)toast('함께 수정하던 본문의 변경은 다른 멤버의 화면에 남아 있습니다.',3600); return;}
     if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
     if(k==='editpartner'||k==='editcard'){const id=S.panel; S.editSimple={id,kind:k==='editpartner'?'partner':'card'}; openPanel(id,true); const t=$('#panel-pin [data-sk="name"]'); if(t){t.focus();placeCaret(t,true);} return;}
     if(k==='savesimple'){const id=S.panel; if(saveSimple()){openPanel(id,true);render(true);toast('저장했습니다.');} return;}
@@ -2616,14 +2658,14 @@ function renderPane(pane){$$('#mnav .item').forEach(i=>i.classList.toggle('on',i
  h.addEventListener('mousedown',e=>{e.preventDefault();app.classList.add('resizing');const move=ev=>{const w=Math.min(440,Math.max(220,ev.clientX/LAYOUT.zoom));app.style.setProperty('--sbw',w+'px');};const up=()=>{app.classList.remove('resizing');onLayout();document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem('aidc-sbw',parseInt(getComputedStyle(app).getPropertyValue('--sbw'))||292);};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);});})();
 /* Shared client: login, server sync, edit locks, conflict recovery and routing.
    build-shared.mjs injects this file into the app script at the LOGIN marker, so it uses the app's globals (ITEMS, S, render, …). */
-const CLIENT_VERSION=3;                       // must be >= MIN_CLIENT in shared-worker.mjs
+const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared-worker.mjs
 const TOKEN_KEY='aidc-token';                 // one login per browser, shared by all its tabs
 let sharedUser='',sharedName='',sharedToken='',sharedBase={},sharedUsers={},sharedLocks={};
 let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRoute=true,sharedRetryAt=0,sharedSocket;
 const ownedLocks=new Set();
 let META_FLAGS={};                            // one-time migrations already applied to this shared database
 // Client-only fields of an item: never sent to the server, never compared for changes.
-const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew','_recoverySignature'];
+const TRANSIENT=['editing','_editOriginal','snap','dirty','sessionNew','_recoverySignature','_co'];
 const stripTransient=v=>{for(const k of TRANSIENT)delete v[k];return v;};
 const copy=v=>JSON.parse(JSON.stringify(v));
 const same=(a,b)=>JSON.stringify(a??null)===JSON.stringify(b??null);
@@ -2701,6 +2743,8 @@ function sharedApply(records){
     const it=key.startsWith('item:')?ITEMS.find(x=>x.id===key.slice(5)):null;
     if(it&&it.editing){ // my unsaved edit stands until I save; comments other people add meanwhile still come through
       const base=sharedBase[key];if(v&&base&&same(it.comments??[],base.comments??[])){const c=v.comments||[];it.comments=copy(c);base.comments=copy(c);if(it._editOriginal)it._editOriginal.comments=copy(c);}
+      // editing together: a member of the session saved the shared body. It becomes what my own save builds on (and what 취소 goes back to).
+      if(v&&base&&it._co)for(const f of ['body','ed','bodyV1','files','updatedAt','updatedBy']){for(const o of [base,it,it._editOriginal]){if(!o)continue;if(v[f]===undefined)delete o[f];else o[f]=copy(v[f]);}}
       continue;}
     if(v&&sharedBase[key]&&fieldLevel(key)&&targetOf(key)){mergeRecord(key,v,sharedBase[key]);continue;}
     if(!same(local[key],sharedBase[key]))continue; // my pending change stands; the server copy arrives after my save
@@ -2814,8 +2858,8 @@ async function sharedSaveProject(button){
 
 /* ---------- connection ---------- */
 function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebSocket(location.origin.replace('http','ws')+'/api/live?v='+CLIENT_VERSION+'&token='+encodeURIComponent(sharedToken));
- sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
- sharedSocket.onopen=()=>{sharedRefresh();};
+ sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
+ sharedSocket.onopen=()=>{sharedRefresh();for(const item of ySubs.keys())sharedYSend({y:'join',item,cid:sharedCid});};
  sharedSocket.onclose=()=>{if(sharedReady)sharedConnect.timer=setTimeout(sharedConnect,3000);};
 }
 async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);
@@ -2958,11 +3002,23 @@ setInterval(()=>{if(sharedPendingRedraw)sharedRedraw();saveRoute();},600);
 function sharedMeta(data){const changed=data.locks&&!same(data.locks,sharedLocks);if(data.users){sharedUsers=data.users;Object.assign(PEOPLE,sharedUsers);}
  if(data.minClient>CLIENT_VERSION&&sessionStorage.getItem('aidc-reloaded-for')!==String(data.minClient)){ // a newer build is live
   if(!openItems().some(x=>x.editing||x.status==='new')&&!S.editProj){sessionStorage.setItem('aidc-reloaded-for',String(data.minClient));location.reload();}else toast('새 버전이 배포되었습니다. 저장한 뒤 새로고침해 주세요.',5000);}
- if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(sharedLocks[id]?.employee!==sharedUser){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;
+ if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(!lockMine(sharedLocks[id])){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;
   if(it?.editing){sharedKeepDraft(it);const o=it._editOriginal;if(o){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,o);}it.editing=false;sharedStatus('편집 잠금이 해제되어 작성 내용을 초안으로 보관했습니다.');rerenderItem();}
   if(id.startsWith('project:')&&S.editProj&&id==='project:'+S.proj){restoreProjectSnap();S.editProj=false;render(true);}}}
- sharedUi();if(changed&&sharedReady)sharedRedraw();}
-function otherLock(id){const l=sharedLocks[id];return l&&l.expires>Date.now()&&l.employee!==sharedUser?l:null;}
+ sharedUi();if(changed&&sharedReady){sharedRedraw();if(typeof nbCoWatch==='function')nbCoWatch();}}
+// A lock is mine when I hold it or when I edit along with the member who holds it (l.co: those who joined).
+const lockMine=l=>!!l&&(l.employee===sharedUser||(l.co||[]).some(c=>c.employee===sharedUser));
+function otherLock(id){const l=sharedLocks[id];return l&&l.expires>Date.now()&&!lockMine(l)?l:null;}
+// Edit an item along with the member who is editing it. Resolves to {co:true} when joined, {co:false} when the lock was free after all, null when refused.
+async function sharedJoinEdit(id){if(!sharedReady||!sharedBase[id])return null;
+ try{const r=await postJson('/api/lock',{id,action:'join'});const d=await r.json();if(!r.ok){sharedMeta(d);toast(d.error||'함께 수정할 수 없습니다.');return null;}ownedLocks.add(id);sharedMeta(d);if(d.record&&!d.co)sharedApply({[id]:d.record});return {co:!!d.co};}catch{toast('연결을 확인한 후 다시 시도해 주세요.');return null;}}
+/* ---------- the shared document of an item that is edited together (messages go over the live socket) ---------- */
+const sharedCid=(crypto.randomUUID?crypto.randomUUID():String(Math.random())).replace(/-/g,'').slice(0,12); // this page
+const ySubs=new Map(); // item id -> handler of incoming messages
+function sharedYSend(o){if(sharedSocket&&sharedSocket.readyState===1){try{sharedSocket.send(JSON.stringify(o));return true;}catch{}}return false;}
+function sharedYOpen(item,handler){ySubs.set(item,handler);sharedYSend({y:'join',item,cid:sharedCid});}
+function sharedYClose(item){if(!ySubs.has(item))return;ySubs.delete(item);sharedYSend({y:'leave',item,cid:sharedCid});}
+function sharedYMessage(d){const h=ySubs.get(d.item);if(h){try{h(d);}catch(e){console.error(e);}}else if(d.y==='no'&&typeof nbCoRefused==='function')nbCoRefused(d.item);}
 async function sharedBeginEdit(id){if(!sharedReady)return false;if(!sharedBase[id])return true;
  try{const r=await postJson('/api/lock',{id,action:'acquire'});const d=await r.json();sharedMeta(d);if(!r.ok){toast(d.error);return false;}ownedLocks.add(id);if(d.record){sharedApply({[id]:d.record});}return true;}catch{toast('연결을 확인한 후 수정해주세요.');return false;}}
 async function sharedRelease(id){if(!ownedLocks.has(id))return;try{const r=await postJson('/api/lock',{id,action:'release'});if(r.ok){ownedLocks.delete(id);sharedMeta(await r.json());}}catch{}}

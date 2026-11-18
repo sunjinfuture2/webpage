@@ -1,9 +1,10 @@
 // One editor instance for one document body. The app only sees: create(host, opts) -> { getHTML, changed, pending, attach, focus, insertFiles, destroy }.
 import { Editor, Extension } from '@tiptap/core';
 import { Plugin, PluginKey, NodeSelection, TextSelection, Selection } from '@tiptap/pm/state';
+import { DOMParser as PMDOMParser } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { CellSelection } from '@tiptap/pm/tables';
-import { closeHistory } from '@tiptap/pm/history';
+import { closeHistory } from './hist.js';
 import { Suggestion, exitSuggestion } from '@tiptap/suggestion';
 import { buildExtensions, ID_TYPES } from './schema.js';
 import { upgrade, fillToc, hydrate } from './legacy.js';
@@ -31,22 +32,30 @@ const composing = e => e.isComposing || e.keyCode === 229;
 export function create(host, opts = {}) {
   const inst = { host, opts, itemId: opts.itemId || '', uploads: new Map(), tocs: new Set(), destroyed: false };
   const wrap = el('div', { class: 'nb-editor' }); host.append(wrap); inst.wrap = wrap;
+  // opts.collab: a session from collab.js when the body is edited together. The content then comes from the shared document;
+  // a member who joins cannot type until it has arrived.
+  const co = opts.collab || null;
   const editor = new Editor({
-    element: wrap, injectCSS: false, content: upgrade(opts.html || ''),
-    extensions: buildExtensions({ extra: [behaviors(inst)], nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView(), button: buttonView(inst), synced: syncedView(), itemList: itemListView() } }),
+    element: wrap, injectCSS: false, ...(co ? { editable: !!co.synced } : { content: opts.json || upgrade(opts.html || '') }),
+    extensions: buildExtensions({ extra: [behaviors(inst), ...(co ? co.extensions() : [])], collab: !!co, nodeViews: { image: imageView(inst), toc: tocView(inst), raw: rawView(), button: buttonView(inst), synced: syncedView(), itemList: itemListView() } }),
     editorProps: { attributes: { class: 'nb-doc', role: 'textbox', 'aria-multiline': 'true', 'aria-label': opts.label || '본문', spellcheck: 'false', translate: 'no' } },
     onUpdate: () => { refreshTocs(inst); opts.onChange && opts.onChange(); },
   });
   inst.editor = editor; const view = editor.view;
   // every block gets a lasting id; ids copied around by the old editor are made unique again
-  { const tr = editor.state.tr, seen = new Set(); let n = 0; editor.state.doc.descendants((node, pos) => { if (!ID_TYPES.includes(node.type.name)) return; const id = node.attrs.id; if (!id || seen.has(id)) { tr.setNodeAttribute(pos, 'id', newId()); n++; } else seen.add(id); });
+  if (co) { co.bind(editor); wrap.classList.toggle('nb-co-wait', !co.synced); if (!co.synced) co.provider.on('synced', () => { if (inst.destroyed) return; wrap.classList.remove('nb-co-wait'); editor.setEditable(true); refreshTocs(inst); opts.onSynced && opts.onSynced(); }); }
+  if (!co) { const tr = editor.state.tr, seen = new Set(); let n = 0; editor.state.doc.descendants((node, pos) => { if (!ID_TYPES.includes(node.type.name)) return; const id = node.attrs.id; if (!id || seen.has(id)) { tr.setNodeAttribute(pos, 'id', newId()); n++; } else seen.add(id); });
     if (n) view.dispatch(tr.setMeta('addToHistory', false)); }
-  const base = editor.state.doc; const sigs = new WeakMap();
+  // what "unchanged" means: alone, the document as it was opened; together, the saved body (the shared document already holds everyone's typing)
+  let base = editor.state.doc; if (co) { try { if (opts.baseJSON) base = editor.schema.nodeFromJSON(opts.baseJSON); else { const d = document.createElement('div'); d.innerHTML = upgrade(opts.html || ''); base = PMDOMParser.fromSchema(editor.schema).parse(d); } } catch { base = editor.state.doc; } }
+  const sigs = new WeakMap();
   const sig = doc => { let s = sigs.get(doc); if (s == null) { s = JSON.stringify(doc.toJSON(), (k, v) => k === 'open' ? undefined : v); sigs.set(doc, s); } return s; };
 
   Object.assign(inst, {
     getHTML: () => editor.isEmpty ? '' : editor.getHTML(),
-    getJSON: () => editor.getJSON(),
+    getJSON: () => editor.getJSON(), baseJSON: () => base.toJSON(), collab: co,
+    selectionJSON: () => editor.state.selection.toJSON(),
+    restoreSelection: (json, focus) => { try { const s = Selection.fromJSON(editor.state.doc, json); view.dispatch(editor.state.tr.setSelection(s).setMeta('addToHistory', false)); } catch { /* the place is gone */ } if (focus) view.focus(); },
     // opening or closing a toggle is not an edit
     changed: () => !editor.state.doc.eq(base) && sig(editor.state.doc) !== sig(base),
     pending: () => [...inst.uploads.values()].filter(u => u.state === 'uploading').length,
@@ -58,7 +67,7 @@ export function create(host, opts = {}) {
     jump: id => jumpToBlock(inst, id),
     refreshLive: () => { if (inst.destroyed) return; refreshComments(inst); refreshLive(wrap); },
     find: withReplace => openFind(inst, withReplace), importFile: () => importFile(inst), insertHtml: (h, atEnd) => insertHtml(inst, h, atEnd),
-    destroy: () => { if (inst.destroyed) return; inst.destroyed = true; live.delete(inst); inst.cleanup.forEach(f => { try { f(); } catch {} }); editor.destroy(); wrap.remove(); },
+    destroy: () => { if (inst.destroyed) return; inst.destroyed = true; live.delete(inst); inst.cleanup.forEach(f => { try { f(); } catch {} }); editor.destroy(); wrap.remove(); if (co) { try { co.close(); } catch {} } opts.onDestroy && opts.onDestroy(); },
   });
   inst.cleanup = []; chrome(inst); touchBar(inst); live.add(inst); refreshTocs(inst);
   return inst;
