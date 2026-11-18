@@ -23,7 +23,7 @@ const LEGACY = '<h2>회의 안건</h2><p>첫 줄\n둘째 줄</p><div class="todo
   const inst0 = await ev(() => { window.__inst = NB[S.panel].inst; return NB[S.panel].inst.editor.state.doc.toString(); });
   await p.click('#panel-expand'); await sleep(500);
   check('T42 panel -> full page keeps the same editor (content, caret, undo history)', await ev(() => S.full && !S.panel && NB[S.full] && NB[S.full].inst === window.__inst && NB[S.full].inst.wrap.isConnected && document.querySelector('#item-pin .ProseMirror') === NB[S.full].inst.editor.view.dom) && await doc() === inst0);
-  await ev(() => NB[S.full].inst.focus('end')); await kb.type(' 추가'); await sleep(700); await kb.press(mod + '+z'); await sleep(100);
+  await ev(() => NB[S.full].inst.focus('end')); await p.waitForFunction(() => NB[S.full].inst.editor.view.hasFocus()); await kb.type(' 추가'); await sleep(700); await kb.press(mod + '+z'); await sleep(100);
   check('T42 undo still works after the move', await doc() === inst0, await doc());
   await p.click('#full-shrink'); await sleep(500);
   check('T42 full page -> panel keeps it as well', await ev(() => S.panel && NB[S.panel] && NB[S.panel].inst === window.__inst && NB[S.panel].inst.wrap.isConnected) && await doc() === inst0);

@@ -629,6 +629,11 @@ svg{display:block}
 #app::after{content:"";position:absolute;right:var(--panelw);top:0;bottom:0;width:0;border-left:1px solid rgba(196,196,196,.6);box-shadow:-4px 0 12px rgba(0,0,0,.045);z-index:17;pointer-events:none;transform:translateX(calc(var(--panelw)*1.04 + 24px));transition:transform .28s cubic-bezier(.2,.7,.2,1)}
 #app.panel-open::after{transform:none}
 .panel.on{transform:translateX(0);visibility:visible;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s}
+/* panel <-> full page: the panel's width is animated (panelGrow); while it runs nothing in it reacts, and a swap between the two happens without the slide */
+#app.panel-swap .panel,#app.panel-swap::after{transition:none!important}
+#app.panel-anim .panel{pointer-events:none}
+#app.panel-anim .tb-panel-ic,#app.panel-anim .panel-resize{opacity:0;pointer-events:none}
+#app.panel-anim .crumbs{max-width:none}
 .panel .pin{position:relative;width:auto;min-height:100%}
 .ipage{position:relative;min-height:1035px}
 .ipage .pin{position:relative;margin-left:calc(var(--L) + 1px);width:calc(1200px + var(--d))}
@@ -1084,7 +1089,8 @@ html{overflow:hidden}
 .notice .list .ndel:hover{background:#e4e4e4;color:#d30000}
 .notice .list .nadd input{flex:1;border:0;border-bottom:1px solid #dcdcdc;background:transparent;font-size:12px;outline:none;padding:2px 0;margin-top:4px;color:var(--ink)}
 .notice .list .nadd input:focus{border-bottom-color:#8e8e8e}
-#full-shrink{position:absolute;right:250px;top:16px;height:24px;padding:0 10px;font-size:12px;font-weight:500;color:#4f4f4f;border-radius:8px;display:none}
+#full-shrink{position:absolute;right:250px;top:12px;height:30px;padding:0 12px 0 10px;font-size:13.5px;font-weight:500;color:#3f3f3f;border-radius:8px;display:none;align-items:center;gap:8px}
+#full-shrink svg{flex:none}
 #app.full-open:not(.panel-open) #full-shrink{display:inline-flex}
 .inb-none{padding:40px 0 0 35px;font-size:14px;color:#939393;line-height:23px}
 .inb .cm{overflow:hidden;text-overflow:ellipsis;max-width:1100px}
@@ -1520,6 +1526,7 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
     <symbol id="i-star" viewBox="0 0 21 20"><path d="M10.4 0.3l3.1 6.4 7 1-5 5 1.2 7-6.3-3.3L4.1 19.7l1.2-7-5-5 7-1z" fill="#ffce00"/></symbol>
     <symbol id="i-star-o" viewBox="0 0 21 20"><path d="M10.4 1.4l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L1.7 7.7l6-.9z" fill="none" stroke="#c9c9c9" stroke-width="1.2"/></symbol>
     <symbol id="i-dbl" viewBox="0 0 16 17"><path d="M1 0.7L8 8.4 1 16.2M7.5 0.7l7 7.7-7 7.8" fill="none" stroke="#5e5e5e" stroke-width="1.3"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 14.5 14.5"><path d="M5.9 1.1v4.8H1.1M0.65 0.65l5.25 5.25M8.6 13.4V8.6h4.8M13.85 13.85L8.6 8.6" fill="none" stroke="#5e5e5e" stroke-width="1.3"/></symbol>
     <symbol id="i-expand" viewBox="0 0 14.5 14.5"><path d="M0.65 6.35V0.65h5.7M0.65 0.65L13.85 13.85M13.85 8.15v5.7h-5.7" fill="none" stroke="#5e5e5e" stroke-width="1.3"/></symbol>
     <symbol id="i-more" viewBox="0 0 3 15"><circle cx="1.5" cy="1.5" r="1.3" fill="#c9c9c9"/><circle cx="1.5" cy="7.5" r="1.3" fill="#c9c9c9"/><circle cx="1.5" cy="13.5" r="1.3" fill="#c9c9c9"/></symbol>
     <symbol id="i-reply" viewBox="0 0 12 21.5"><path d="M1 0.5V19.2H11.4M9.2 17.05l2.2 2.15-2.2 2.15" fill="none" stroke="#a5a5a5" stroke-width="0.6"/></symbol>
@@ -1586,7 +1593,7 @@ body.nb-coldrop .prosemirror-dropcursor-block{display:none!important}
         <button id="panel-expand" title="전체 페이지로 열기"><svg width="14.5" height="14.5"><use href="#i-expand"/></svg></button>
       </div>
       <div class="tb-right">
-        <button class="sh-btn" id="full-shrink" title="옆 패널 크기로 줄이기">패널로 축소</button>
+        <button class="sh-btn" id="full-shrink" title="옆 패널 크기로 좁히기"><svg width="14.5" height="14.5"><use href="#i-shrink"/></svg>패널로 좁히기</button>
         <div class="tb-user" id="tb-user"><span class="av"><span class="avatar av22"></span><i class="dt" style="display:none"></i></span><span class="nm">최원 기사</span></div>
         <button class="tb-ic tb-share" id="tb-share" title="공유"></button>
         <button class="tb-ic tb-star" id="tb-star" title="즐겨찾기"><svg width="20.8" height="19.7"><use href="#i-star"/></svg></button>
@@ -2359,8 +2366,39 @@ function openPanel(id,force){ if(!id||id===S.full)return; if(S.panel===id)captur
   S.panel=id; if(S.editSimple&&S.editSimple.id!==id)S.editSimple=null; S.ctx='panel'; const pin=$('#panel-pin'); pin.innerHTML=html; pin.dataset.id=it?id:''; fitTitle(pin); $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
 function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closePanel(),'panel'))return; window.AIDCEditor&&AIDCEditor.closeFloating(); S.panel=null; S.editSimple=null; S.ctx='full'; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
 // panel → full page, and back. What is being typed moves along.
-function expandPanel(){const id=S.panel; if(!id||!item(id)){toast('이 항목은 전체 페이지 보기를 지원하지 않습니다.');return;} if(S.full&&S.full!==id&&guardLeave(expandPanel,'full'))return; captureEditor(); S.panel=null; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); S.full=id; S.ctx='full'; dropEmptyNew(); render(); $('#content').scrollTop=0;}
-function shrinkFull(){const id=S.full; if(!id)return; if(S.panel&&guardLeave(shrinkFull,'panel'))return; captureEditor(); S.panel=null; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); S.full=null; render(); openPanel(id,true);}
+/* The panel grows to the size of the full page and is then replaced by it; going back, the full page is replaced by a
+   full-size panel that shrinks. --panelw and the side margins of the panel's content are moved together, so that at
+   full size the content sits where the full page has it and the swap does not jump. */
+const panelSavedW=()=>{const v=+localStorage.getItem('aidc-panelw'); return v>=900&&v<=1500?v:1031.9;};
+function panelFullGeom(){ const cs=getComputedStyle($('#app')); const L=parseFloat(cs.getPropertyValue('--L'))||145, dd=parseFloat(cs.getPropertyValue('--d'))||0, w=$('#main').clientWidth;
+  return {w, ml:Math.max(0,L-115), mr:Math.max(0,w-(L+1)-(1338+dd)-88)}; } // the panel's content sits 115 / 88 px from its edges, the full page's L+1 from the left and is 1338+d wide
+function panelRestW(){ const app=$('#app'), v=+localStorage.getItem('aidc-panelw'); if(v>=900&&v<=1500)app.style.setProperty('--panelw',v+'px'); else app.style.removeProperty('--panelw'); }
+let panelGrowing=0;
+function panelGrow(from,to,done){ const app=$('#app'), pin=$('#panel-pin'), run=++panelGrowing, t0=performance.now(); const still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches; const ms=still?0:280;
+  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; app.classList.add('panel-anim');
+  const frame=now=>{ if(run!==panelGrowing)return; const t=ms?Math.min(1,(now-t0)/ms):1, k=ease(t); app.style.setProperty('--panelw',(from.w+(to.w-from.w)*k)+'px'); pin.style.marginLeft=(from.ml+(to.ml-from.ml)*k)+'px'; pin.style.marginRight=(from.mr+(to.mr-from.mr)*k)+'px';
+    if(t<1){requestAnimationFrame(frame);return;} app.classList.remove('panel-anim'); done(); };
+  requestAnimationFrame(frame); }
+const panelBusy=()=>$('#app').classList.contains('panel-anim');
+// the two buttons do not take the caret away: somebody who is typing goes on typing in the wider / narrower view
+document.addEventListener('mousedown',e=>{ if(e.target.closest&&e.target.closest('#panel-expand,#full-shrink'))e.preventDefault(); },true);
+// The two layouts space their parts a little differently (title, properties, comments, body). Each part starts where it was and slides to its new place.
+const pinTops=pin=>[...pin.children].map(c=>c.getBoundingClientRect().top);
+function pinSettle(pin,before,ms){ const z=LAYOUT.zoom||1, kids=[...pin.children], moved=[]; if(kids.length!==before.length)return;
+  kids.forEach((c,i)=>{ const dy=(before[i]-c.getBoundingClientRect().top)/z; if(Math.abs(dy)<0.5||Math.abs(dy)>240)return; c.style.transition='none'; c.style.transform=`translateY(${dy}px)`; moved.push(c); });
+  if(!moved.length)return; void pin.offsetWidth; requestAnimationFrame(()=>{ moved.forEach(c=>{c.style.transition=`transform ${ms}ms cubic-bezier(.2,.7,.2,1)`;c.style.transform='';}); setTimeout(()=>moved.forEach(c=>{c.style.transition='';}),ms+80); }); }
+function expandPanel(){const id=S.panel; if(!id||!item(id)){toast('이 항목은 전체 페이지 보기를 지원하지 않습니다.');return;} if(panelBusy())return; if(S.full&&S.full!==id&&guardLeave(expandPanel,'full'))return;
+  const app=$('#app'), pin=$('#panel-pin'), w0=parseFloat(getComputedStyle(app).getPropertyValue('--panelw'))||1031.9, g=panelFullGeom();
+  panelGrow({w:w0,ml:0,mr:0},g,()=>{ const reset=()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();};
+    if(S.panel!==id){reset();return;} // closed or changed while it grew
+    const top=$('#panel').scrollTop, before=pinTops(pin); app.classList.add('panel-swap');
+    captureEditor(); S.panel=null; $('#panel').classList.remove('on'); app.classList.remove('panel-open'); S.full=id; S.ctx='full'; dropEmptyNew(); render(); $('#content').scrollTop=top;
+    reset(); pinSettle($('#item-pin'),before,180); void app.offsetWidth; requestAnimationFrame(()=>app.classList.remove('panel-swap')); }); }
+function shrinkFull(){const id=S.full; if(!id)return; if(panelBusy())return; if(S.panel&&guardLeave(shrinkFull,'panel'))return;
+  const app=$('#app'), pin=$('#panel-pin'), g=panelFullGeom(), top=$('#content').scrollTop, before=pinTops($('#item-pin'));
+  app.classList.add('panel-swap'); app.style.setProperty('--panelw',g.w+'px'); pin.style.marginLeft=g.ml+'px'; pin.style.marginRight=g.mr+'px';
+  captureEditor(); S.panel=null; $('#panel').classList.remove('on'); app.classList.remove('panel-open'); S.full=null; render(); openPanel(id,true); $('#panel').scrollTop=top; pinSettle(pin,before,280);
+  void app.offsetWidth; requestAnimationFrame(()=>{ app.classList.remove('panel-swap'); panelGrow(g,{w:panelSavedW(),ml:0,mr:0},()=>{pin.style.marginLeft='';pin.style.marginRight='';panelRestW();}); }); }
 function rerenderItem(id){ id=id||curId(); if(!id)return; const it=item(id);
   if(id===S.full){renderItemPage();}
   if(id===S.panel&&it){const pin=$('#panel-pin'),st=$('#panel').scrollTop;pin.innerHTML=itemHtml(it,'panel');pin.dataset.id=id;fitTitle(pin);$('#panel').scrollTop=st;}
@@ -2659,11 +2697,13 @@ function renderPane(pane){$$('#mnav .item').forEach(i=>i.classList.toggle('on',i
   B.innerHTML=h+'<div class="scrollbar" style="display:none"></div>'; B.scrollTop=0;}
 
 /* panel width drag handle: the panel is anchored to the right edge and grows leftward */
+// The click the browser reports right after a drag ends (on whatever the two ends of the drag have in common) is not a click on the page.
+function swallowClick(){const stop=e=>{e.stopPropagation();e.preventDefault();};document.addEventListener('click',stop,true);setTimeout(()=>document.removeEventListener('click',stop,true),0);}
 (function(){const h=$('#panel-resize'),app=$('#app');if(!h)return;const saved=+localStorage.getItem('aidc-panelw');if(saved>=900&&saved<=1500)app.style.setProperty('--panelw',saved+'px');
- h.addEventListener('mousedown',e=>{e.preventDefault();app.classList.add('resizing');const right=app.getBoundingClientRect().right;const move=ev=>{const w=Math.min(1500,Math.max(900,(right-ev.clientX)/LAYOUT.zoom));app.style.setProperty('--panelw',w+'px');};const up=()=>{app.classList.remove('resizing');document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem('aidc-panelw',parseInt(getComputedStyle(app).getPropertyValue('--panelw'))||1032);};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);});})();
+ h.addEventListener('mousedown',e=>{e.preventDefault();app.classList.add('resizing');const right=app.getBoundingClientRect().right;const move=ev=>{const w=Math.min(1500,Math.max(900,(right-ev.clientX)/LAYOUT.zoom));app.style.setProperty('--panelw',w+'px');};const up=()=>{app.classList.remove('resizing');document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem('aidc-panelw',parseInt(getComputedStyle(app).getPropertyValue('--panelw'))||1032);swallowClick();};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);});})();
 /* sidebar width drag handle (kept outside the LOGIN block, which the shared build replaces) */
 (function(){const h=$('#sb-resize'),app=$('#app');if(!h)return;const saved=+localStorage.getItem('aidc-sbw');if(saved>=220&&saved<=440)app.style.setProperty('--sbw',saved+'px');
- h.addEventListener('mousedown',e=>{e.preventDefault();app.classList.add('resizing');const move=ev=>{const w=Math.min(440,Math.max(220,ev.clientX/LAYOUT.zoom));app.style.setProperty('--sbw',w+'px');};const up=()=>{app.classList.remove('resizing');onLayout();document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem('aidc-sbw',parseInt(getComputedStyle(app).getPropertyValue('--sbw'))||292);};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);});})();
+ h.addEventListener('mousedown',e=>{e.preventDefault();app.classList.add('resizing');const move=ev=>{const w=Math.min(440,Math.max(220,ev.clientX/LAYOUT.zoom));app.style.setProperty('--sbw',w+'px');};const up=()=>{app.classList.remove('resizing');onLayout();document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem('aidc-sbw',parseInt(getComputedStyle(app).getPropertyValue('--sbw'))||292);swallowClick();};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);});})();
 /* Shared client: login, server sync, edit locks, conflict recovery and routing.
    build-shared.mjs injects this file into the app script at the LOGIN marker, so it uses the app's globals (ITEMS, S, render, …). */
 const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared-worker.mjs
