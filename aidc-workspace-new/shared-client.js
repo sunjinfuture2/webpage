@@ -1,6 +1,6 @@
 /* Shared client: login, server sync, edit locks, conflict recovery and routing.
    build-shared.mjs injects this file into the app script at the LOGIN marker, so it uses the app's globals (ITEMS, S, render, …). */
-const CLIENT_VERSION=2;                       // must be >= MIN_CLIENT in shared-worker.mjs
+const CLIENT_VERSION=3;                       // must be >= MIN_CLIENT in shared-worker.mjs
 const TOKEN_KEY='aidc-token';                 // one login per browser, shared by all its tabs
 let sharedUser='',sharedName='',sharedToken='',sharedBase={},sharedUsers={},sharedLocks={};
 let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRoute=true,sharedRetryAt=0,sharedSocket;
@@ -107,6 +107,7 @@ function sharedStatus(text){if(!/못했|확인|필요|보관|겹|재시도|실�
 
 /* ---------- attachments, history, members ---------- */
 // Attachments are stored by the Worker (/api/file); the page embeds only the file id, so records stay small.
+async function sharedUnfurl(u){if(!sharedReady)return null;const r=await apiFetch('/api/unfurl?url='+encodeURIComponent(u));if(!r.ok)return null;const d=await r.json();return d&&d.ok?d:null;}
 async function sharedUploadFile(file,itemId){if(!sharedReady)throw Error('서버에 연결된 후 첨부할 수 있습니다.');if(file.size>1887436)throw Error('파일은 1.8MB까지 첨부할 수 있습니다. ('+file.name+')');
  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(Error('파일을 읽지 못했습니다.'));r.readAsDataURL(file);});
  const r=await postJson('/api/file',{name:file.name,type:file.type,size:file.size,item:itemId||'',data});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'파일을 올리지 못했습니다.');return d;}
@@ -349,7 +350,7 @@ async function sharedRelease(id){if(!ownedLocks.has(id))return;try{const r=await
 function sharedUi(){if(!sharedReady)return;
  for(const [id,pin] of [[S.panel,$('#panel-pin')],[S.full,$('#item-pin')]]){const it=id&&ITEMS.find(x=>x.id===id);if(!it||pin.dataset.id!==id)continue;const l=otherLock('item:'+id);
   for(const b of $$('[data-ed="edit"]',pin)){b.disabled=!!l;b.textContent=l?userName(l.employee)+'님이 수정 중입니다':'수정';b.title=l?'다른 사용자의 편집이 끝나면 수정할 수 있습니다.':'';}
-  for(const el of $$('.ititle[data-f="title"],.ibody[data-f="body"]',pin))el.contentEditable=canEditItem(it)?'true':'false';
+  for(const el of $$('.ititle[data-f="title"],.ibody[data-f="body"]:not([data-nb])',pin))el.contentEditable=canEditItem(it)?'true':'false';
   for(const b of $$('[data-pick], [data-ed="trash"]',pin)){b.style.opacity=l?'.5':'';b.title=l?userName(l.employee)+'님이 수정 중입니다':'';}}
  const p=otherLock('project:'+S.proj);for(const b of $$('[data-editproj]')){b.disabled=!!p;b.textContent=p?userName(p.employee)+'님이 수정 중입니다':S.editProj?'저장':'수정';}
  $('#tb-user .nm').textContent=sharedName;const n=$('#mnav .me .nm');if(n)n.textContent=sharedName;
@@ -379,7 +380,7 @@ function restoreRoute(){let r={};try{if(navigationType==='reload')r=JSON.parse(s
  r=cleanRoute(r);const scroll=r.scroll||0,panelScroll=r.panelScroll||0;delete r.scroll;delete r.panelScroll;
  if(r.q)r.q=Object.assign({action:'',research:'',partner:''},r.q);if(r.filters)r.filters=Object.assign({},S.filters,r.filters);
  for(const k of Object.keys(r))if(r[k]===undefined)delete r[k];
- Object.assign(S,r);S.editProj=false;sharedRestoreRoute=false;setTimeout(()=>{$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;saveRoute();},0);}
+ Object.assign(S,r);S.editProj=false;sharedRestoreRoute=false;sharedJumpBlock();setTimeout(()=>{$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;saveRoute();},0);}
 // Back / forward: show whatever the address now says. Unsaved edits get the usual "저장할까요?" question first.
 function applyRoute(r,force){
  if(!force&&guardLeave(()=>applyRoute(r,true))){history.pushState({aidc:1},'',location.pathname+location.search+(lastHash||''));return;}
@@ -390,6 +391,8 @@ function applyRoute(r,force){
  }finally{routeApplying=false;}
  lastHash=routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel});
  if(location.hash!==lastHash)history.replaceState({aidc:1},'',location.pathname+location.search+lastHash);sharedUi();}
-window.addEventListener('popstate',()=>{if(!sharedReady)return;const q=new URLSearchParams(location.hash.slice(1));const r={};for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;applyRoute(cleanRoute(r));});
+// An address may end in &block=<id>: once the item is open, that block is scrolled to and flashed.
+function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).get('block');if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);}
+window.addEventListener('popstate',()=>{if(!sharedReady)return;const q=new URLSearchParams(location.hash.slice(1));const r={};for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;const b=q.get('block');applyRoute(cleanRoute(r));if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);});
 
 sharedStart().catch(()=>sharedStatus('서버 연결을 확인해주세요.'));

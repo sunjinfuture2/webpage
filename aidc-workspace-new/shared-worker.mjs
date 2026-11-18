@@ -1,7 +1,7 @@
 import seedText from './seed.json';
 const seed = JSON.parse(seedText);
 
-const MIN_CLIENT = 2;            // pages built before this version are asked to reload
+const MIN_CLIENT = 3;            // pages built before this version are asked to reload
 const META_TITLES = { 'meta:notices': '공지사항', 'meta:settings': '워크스페이스 설정', 'meta:members': '멤버 역할·정보', 'meta:archive': '자료실 카드', 'meta:rows': '자료실 목록', 'meta:tabs': '자료실 탭', 'meta:roadmap': '업무 로드맵' };
 const SESSION_MS = 14 * 864e5;   // default: a login stays valid for 14 days after its last request (설정 > 보안 can change it)
 const PRESENCE_MS = 120000;      // a session counts as "online" (may hold edit locks) for 2 minutes after its last request
@@ -18,6 +18,44 @@ const cleanHtml = s => typeof s !== 'string' ? s : s
   .replace(/<\s*(script|style|object|embed|link|meta|base)\b[\s\S]*?(<\s*\/\s*\1\s*>|$)/gi, '')
   .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
   .replace(/\b(href|src|action|formaction|xlink:href)\s*=\s*(["']?)\s*(javascript|vbscript|data:text\/html)[^"'>\s]*\2/gi, '$1="#"');
+// Bookmark cards: title and description of a public web page. The address comes from a signed-in member, so it is
+// checked before every request (also after each redirect): http(s) only, a public host name, no IP literals, no odd ports.
+function publicUrl(raw) {
+  let u; try { u = new URL(raw); } catch { return null; }
+  if (!/^https?:$/.test(u.protocol) || u.username || u.password) return null;
+  const h = u.hostname.toLowerCase();
+  if (!h.includes('.') || /^[\d.]+$/.test(h) || h.includes(':') || /(^|\.)(localhost|local|internal|lan|home|corp|intranet)$/.test(h)) return null;
+  if (u.port && u.port !== '80' && u.port !== '443') return null;
+  return u;
+}
+const unescapeHtml = t => t.replace(/&(#x?[0-9a-f]+|amp|lt|gt|quot|apos|nbsp);/gi, (m, e) => { e = e.toLowerCase(); if (e[0] === '#') { const n = e[1] === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10); return n > 0 && n < 0x110000 ? String.fromCodePoint(n) : ''; } return { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }[e]; });
+async function unfurl(raw) {
+  let u = publicUrl(raw); if (!u) return { ok: false };
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 4500);
+  try {
+    let res = null;
+    for (let hop = 0; hop < 4; hop++) {
+      res = await fetch(u.href, { redirect: 'manual', signal: ctl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIDCWorkspaceBot/1.0)', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'ko,en;q=0.8' } });
+      const next = res.status >= 300 && res.status < 400 ? res.headers.get('Location') : '';
+      if (!next) break;
+      u = publicUrl(new URL(next, u).href); if (!u) return { ok: false }; res = null;
+    }
+    const type = res ? res.headers.get('Content-Type') || '' : '';
+    if (!res || !res.ok || !res.body || !/text\/html|application\/xhtml/i.test(type)) return { ok: false };
+    const reader = res.body.getReader(); const parts = []; let size = 0;
+    while (size < 262144) { const { done, value } = await reader.read(); if (done) break; parts.push(value); size += value.length; }
+    reader.cancel().catch(() => { });
+    const bytes = new Uint8Array(size); let at = 0; for (const c of parts) { bytes.set(c.subarray(0, Math.min(c.length, size - at)), at); at += c.length; if (at >= size) break; }
+    const ascii = new TextDecoder('latin1').decode(bytes.subarray(0, 4096));
+    const charset = (/charset=["']?([\w-]+)/i.exec(type) || /<meta[^>]+charset=["']?([\w-]+)/i.exec(ascii) || [])[1] || 'utf-8';
+    let html; try { html = new TextDecoder(charset).decode(bytes); } catch { html = new TextDecoder('utf-8').decode(bytes); }
+    const meta = name => { const re = new RegExp(`<meta[^>]+(?:property|name)=["']${name}["'][^>]*>`, 'i'); const tag = (re.exec(html) || [])[0]; const c = tag && /content=(?:"([^"]*)"|'([^']*)')/i.exec(tag); return c ? (c[1] ?? c[2]) : ''; };
+    const tidy = (t, n) => unescapeHtml(String(t || '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim().slice(0, n);
+    const title = tidy(meta('og:title') || (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html) || [])[1], 200);
+    const description = tidy(meta('og:description') || meta('description'), 300);
+    return { ok: !!(title || description), title, description, site: tidy(meta('og:site_name'), 80) };
+  } catch { return { ok: false }; } finally { clearTimeout(timer); }
+}
 // Only these types may be shown inside the page; everything else is always a download.
 const INLINE_OK = /^(image\/(png|jpe?g|gif|webp|bmp|avif)|application\/pdf|video\/(mp4|webm|ogg|quicktime)|audio\/(mpeg|mp4|ogg|wav|webm|aac|x-m4a))$/i;
 
@@ -137,6 +175,12 @@ export class Workspace {
         this.sql.exec('DELETE FROM live_sessions WHERE token=?', token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', token);
         this.broadcast({ locks: this.locks() });
         return json({ ok: true }, 200, { 'Set-Cookie': fileCookie(req, '', 0) });
+      }
+      if (path === '/api/unfurl' && req.method === 'GET') { // at most 30 look-ups a minute per member
+        const t = Date.now(); const log = ((this.unfurls ||= new Map()).get(me) || []).filter(x => t - x < 60000);
+        if (log.length >= 30) return json({ error: '잠시 후 다시 시도하세요.' }, 429);
+        log.push(t); this.unfurls.set(me, log);
+        return json(await unfurl(url.searchParams.get('url') || ''));
       }
       if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), minClient: MIN_CLIENT }); }
       if (path === '/api/state') {

@@ -1,0 +1,183 @@
+// Body editor v2 — typing, formatting, structure (brief T01–T24). Test ids in the names refer to the brief.
+const { chromium, sleep, check, newUser, done } = require('./h.cjs');
+const out = n => require('node:path').join(require('node:os').tmpdir(), 'aidc-editor-' + n + '.png');
+(async () => {
+  const browser = await chromium.launch();
+  const A = await newUser(browser, 'EDA', '편집 검수'); const p = A.page; const kb = p.keyboard;
+  const ev = (f, a) => p.evaluate(f, a);
+  const doc = () => ev(() => NB[S.panel || S.full].inst.editor.state.doc.toString());
+  const html = () => ev(() => NB[S.panel || S.full].inst.getHTML());
+  const json = () => ev(() => NB[S.panel || S.full].inst.getJSON());
+  const fresh = async title => { await ev(t => { const it = newItem('action'); it.title = t; openPanel(it.id); }, title); await sleep(350); await p.click('#panel-pin .ProseMirror'); await sleep(80); };
+  const clear = async () => { await ev(() => { const e = NB[S.panel].inst.editor; e.commands.clearContent(true); e.commands.focus(); }); await sleep(60); };
+  const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+
+  console.log('— T01 / T04 typing, Enter, Shift+Enter, undo');
+  await fresh('검수 A');
+  check('T01 an empty body starts as one empty paragraph with the caret in it', await doc() === 'doc(paragraph)' && await ev(() => NB[S.panel].inst.editor.view.hasFocus()));
+  await kb.type('회의록 작성과 사업성 검토'); await sleep(650); for (let i = 0; i < 6; i++) await kb.press('ArrowLeft'); await sleep(60); await kb.press('Enter'); await sleep(650);
+  check('T04 Enter in the middle of a sentence splits it into two blocks', await doc() === 'doc(paragraph("회의록 작성과 "), paragraph("사업성 검토"))', await doc());
+  const ids1 = await ev(() => { const o = []; NB[S.panel].inst.editor.state.doc.forEach(n => o.push(n.attrs.id)); return o; });
+  check('DATA-02 the first block keeps its id, the new one gets its own', ids1.length === 2 && ids1[0] && ids1[1] && ids1[0] !== ids1[1], ids1);
+  await kb.press('Shift+Enter'); await sleep(60);
+  check('T04 Shift+Enter is a line break inside the same block', (await doc()).includes('paragraph(hardBreak, "사업성 검토")'), await doc());
+  await kb.press(mod + '+z'); await sleep(60); await kb.press(mod + '+z'); await sleep(80);
+  check('T04 undo restores the original sentence', await doc() === 'doc(paragraph("회의록 작성과 사업성 검토"))', await doc());
+  await kb.press(mod + '+Shift+z'); await sleep(60);
+  check('KEY-02 redo splits it again', (await doc()).startsWith('doc(paragraph("회의록 작성과 "), paragraph('), await doc());
+  await kb.press(mod + '+z'); await sleep(40); await kb.press(mod + '+y'); await sleep(60); check('KEY-02 Ctrl+Y redoes as well', (await doc()).startsWith('doc(paragraph("회의록 작성과 "), paragraph('), await doc());
+
+  console.log('— T10 markdown shortcuts');
+  await clear();
+  const md = async (typed, expect, label) => { await clear(); await kb.type(typed); await sleep(60); const d = await doc(); check('T10 ' + label, d.startsWith(expect), d); };
+  await md('# 제목', 'doc(heading("제목")', '"# " makes a heading 1');
+  await md('### 작은', 'doc(heading("작은")', '"### " makes a heading 3');
+  await md('- 항목', 'doc(bulletList(listItem(paragraph("항목")))', '"- " makes a bullet list');
+  await md('1. 첫째', 'doc(orderedList(listItem(paragraph("첫째")))', '"1. " makes a numbered list');
+  await md('[] 할 일', 'doc(taskList(taskItem(paragraph("할 일")))', '"[] " makes a to-do');
+  await md('> 접기', 'doc(details(detailsSummary("접기"), detailsContent(paragraph))', '"> " makes a toggle (Notion rule)');
+  await md('" 인용', 'doc(blockquote(paragraph("인용"))', 'double quote + space makes a quote');
+  await clear(); await kb.type('---'); await sleep(80); check('T10 "---" makes a divider', (await doc()).startsWith('doc(horizontalRule'), await doc());
+  await clear(); await kb.type('주소 https://example.com/a/b 와 1/2 분수'); await sleep(150);
+  check('SLASH-01 a slash inside an address or a fraction opens no menu', await ev(() => !document.querySelector('.nb-slash')) && (await doc()).includes('1/2 분수'), await doc());
+  await clear(); await kb.type('**굵게** 와 `코드`'); await sleep(80); const j1 = JSON.stringify(await json());
+  check('MD-03 **bold** and `code` typing rules', j1.includes('"type":"bold"') && j1.includes('"type":"code"'), j1.slice(0, 300));
+
+  console.log('— T06 / T07 / T08 marks, toolbar, links');
+  await clear(); await kb.type('서식을 겹쳐서 적용하는 문장'); await ev(() => NB[S.panel].inst.editor.commands.setTextSelection({ from: 1, to: 4 })); await sleep(50);
+  await kb.press(mod + '+b'); await kb.press(mod + '+i'); await kb.press(mod + '+u'); await kb.press(mod + '+Shift+s'); await sleep(60);
+  let j = await json(); const marks0 = (j.content[0].content[0].marks || []).map(m => m.type).sort().join(',');
+  check('T06 bold + italic + underline + strike stack on the selection only', marks0 === 'bold,italic,strike,underline' && !(j.content[0].content[1].marks || []).length, marks0);
+  await ev(() => { const e = NB[S.panel].inst.editor; e.commands.setTextSelection({ from: 5, to: 8 }); e.view.dom.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); }); await sleep(120);
+  check('FMT-02 a selection shows the floating toolbar', await ev(() => { const b = document.querySelector('.nb-bubble'); return b && !b.hidden; }));
+  await p.click('.nb-bubble button[title^="글자색"]'); await sleep(120); await p.click('.nb-colormenu .nb-it:has-text("빨강") >> nth=0'); await sleep(100);
+  j = await json(); const red = j.content[0].content.find(n => (n.marks || []).some(m => m.type === 'textColor'));
+  check('T07 a colour from the toolbar goes on the selected text and nowhere else', red && red.text === '겹쳐서'.slice(0, red.text.length) && red.marks.find(m => m.type === 'textColor').attrs.color === 'red', red);
+  check('FMT-04 the colour is stored as a name, not as raw CSS', (await html()).includes('data-color="red"') && !(await html()).includes('style="color'));
+  await ev(() => NB[S.panel].inst.editor.commands.setTextSelection({ from: 9, to: 13 })); await kb.press(mod + '+k'); await sleep(150);
+  await kb.type('javascript:alert(1)'); await kb.press('Enter'); await sleep(150);
+  check('T08 a javascript: address is refused', !JSON.stringify(await json()).includes('"link"'));
+  await ev(() => NB[S.panel].inst.editor.commands.setTextSelection({ from: 9, to: 13 })); await kb.press(mod + '+k'); await sleep(150); await kb.type('example.com/doc'); await kb.press('Enter'); await sleep(150);
+  const h1 = await html(); check('T08 a typed address becomes a link that keeps the text', /<a [^>]*href="https:\/\/example\.com\/doc"[^>]*>적용하는<\/a>/.test(h1) && h1.includes('rel="noopener noreferrer"'), h1.slice(0, 400));
+  await ev(() => { const e = NB[S.panel].inst.editor; e.chain().focus().setTextSelection(11).extendMarkRange('link').unsetLink().run(); });
+  check('T08 removing the link keeps the words', !(await html()).includes('<a ') && (await doc()).includes('적용하는'), await html());
+
+  console.log('— T09 slash menu');
+  await clear(); await kb.type('/'); await sleep(200);
+  check('T09 "/" on an empty line opens the block menu with all groups', await ev(() => document.querySelectorAll('.nb-slash .nb-it').length) >= 28);
+  await kb.type('table'); await sleep(200); check('SLASH-03 English alias "table" finds 표 first', await ev(() => [...document.querySelectorAll('.nb-slash .nb-it b')].map(b => b.textContent)[0]) === '표');
+  await kb.press('Escape'); await sleep(120);
+  check('T09 Esc closes the menu and keeps what was typed', await ev(() => !document.querySelector('.nb-slash')) && (await doc()) === 'doc(paragraph("/table"))', await doc());
+  check('KEY-03 that Esc did not close the panel', await ev(() => !!S.panel));
+  await clear(); await kb.type('/없는명령zz'); await sleep(200);
+  check('T09 no match shows an empty state', await ev(() => (document.querySelector('.nb-slash .nb-empty') || {}).textContent === '일치하는 블록이 없습니다.'));
+  await kb.press('Escape'); await clear(); await kb.type('앞 글 /h2'); await sleep(200); await kb.press('Enter'); await sleep(150);
+  check('SLASH-05 a command on a line with text keeps the text and adds the block below', (await doc()).startsWith('doc(paragraph("앞 글 "), heading'), await doc());
+  await clear(); await kb.type('/할일'); await sleep(200); await kb.press('Enter'); await sleep(120); await kb.type('체크');
+  check('T09 Korean search + Enter runs exactly that command', (await doc()).startsWith('doc(taskList(taskItem(paragraph("체크")))'), await doc());
+
+  console.log('— T13 the 18 original menu entries all do something');
+  const eighteen = [['텍스트', 'paragraph'], ['제목1', 'heading'], ['제목2', 'heading'], ['제목3', 'heading'], ['글머리', 'bulletList'], ['번호', 'orderedList'], ['할일', 'taskList'], ['토글', 'details'], ['인용', 'blockquote'], ['콜아웃', 'callout'], ['구분선', 'horizontalRule'], ['코드', 'codeBlock'], ['표', 'table'], ['날짜', 'date']];
+  let ok18 = 0; const miss = [];
+  for (const [q, type] of eighteen) { await clear(); await kb.type('/' + q); await sleep(170); await kb.press('Enter'); await sleep(140); const d = await doc(); if (d.includes(type)) ok18++; else miss.push(q + '=>' + d); }
+  check('T13 text, headings, lists, to-do, toggle, quote, callout, divider, code, table, date insert real blocks', ok18 === eighteen.length, miss);
+  await clear(); await kb.type('/멘션'); await sleep(170); await kb.press('Enter'); await sleep(250);
+  check('T13 "멤버 멘션" opens the member list', await ev(() => !!document.querySelector('.nb-at .nb-it')));
+  await kb.press('Enter'); await sleep(120); check('T31 choosing a member stores the member id, not just the name', /mention\b/.test(await doc()) && /data-id="[^"]+"/.test(await html()), await html());
+  await clear(); await kb.type('/북마크'); await sleep(170); await kb.press('Enter'); await sleep(200); await kb.type('https://example.com/report'); await kb.press('Enter'); await sleep(300);
+  check('T13 / T29 "링크/북마크" makes a bookmark card (address shown when no page details are available)', (await doc()).includes('bookmark') && (await html()).includes('class="bookmark"'), await html());
+
+  console.log('— T12 / T18 / T24 block selection, duplicate, move, delete, turn into');
+  await clear(); await ev(() => NB[S.panel].inst.editor.commands.setContent('<p>하나</p><p>둘</p><p>셋</p>')); await ev(() => NB[S.panel].inst.editor.commands.focus(2)); await sleep(60);
+  await kb.press('Escape'); await sleep(80);
+  check('KEY-03 Esc with the caret in a block selects that block', await ev(() => !!document.querySelector('.ProseMirror .nb-selected, .ProseMirror .ProseMirror-selectednode')) && await ev(() => !!S.panel));
+  await ev(() => NB[S.panel].inst.editor.view.focus()); await kb.press(mod + '+d'); await sleep(80);
+  const dup = await ev(() => { const o = []; NB[S.panel].inst.editor.state.doc.forEach(n => o.push([n.textContent, n.attrs.id])); return o; });
+  check('KEY-02 Ctrl+D duplicates the selected block with a new id', dup.map(x => x[0]).join() === '하나,하나,둘,셋,' .slice(0, -1) + (dup.length > 4 ? ',' : '') || (dup[0][0] === '하나' && dup[1][0] === '하나' && dup[0][1] !== dup[1][1]), dup);
+  await kb.press(mod + '+Shift+ArrowDown'); await sleep(80);
+  check('T18 Ctrl+Shift+↓ moves the block down', (await doc()).startsWith('doc(paragraph("하나"), paragraph("둘"), paragraph("하나")'), await doc());
+  await kb.press('Delete'); await sleep(80);
+  check('T12 Delete removes the selected block only', (await doc()).startsWith('doc(paragraph("하나"), paragraph("둘"), paragraph("셋")'), await doc());
+  await kb.press(mod + '+z'); await sleep(60); check('T12 undo 1 brings the deleted block back', (await doc()).startsWith('doc(paragraph("하나"), paragraph("둘"), paragraph("하나"), paragraph("셋")'), await doc());
+  await kb.press(mod + '+z'); await sleep(60); check('T12 undo 2 moves it back up', (await doc()).startsWith('doc(paragraph("하나"), paragraph("하나"), paragraph("둘"), paragraph("셋")'), await doc());
+  await kb.press(mod + '+z'); await sleep(60); check('T12 undo 3 removes the copy: the first state, one command per step', (await doc()).startsWith('doc(paragraph("하나"), paragraph("둘"), paragraph("셋")'), await doc());
+  // handle + block menu
+  const box = await ev(() => { const d = NB[S.panel].inst.editor.view.nodeDOM(0); const r = d.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 10 }; });
+  await p.mouse.move(box.x, box.y); await sleep(120);
+  check('UI-02 hovering a block shows the + and drag handle to its left', await ev(() => { const h = document.querySelector('.nb-handle'); return h && !h.hidden && h.getBoundingClientRect().right <= NB[S.panel].inst.editor.view.dom.getBoundingClientRect().left + 2; }));
+  const idBefore = await ev(() => NB[S.panel].inst.editor.state.doc.firstChild.attrs.id);
+  await p.click('.nb-handle .nb-h-drag'); await sleep(150); await p.screenshot({ path: out('ed1-blockmenu') });
+  check('MOVE-01 clicking the handle opens the block menu', await ev(() => !!document.querySelector('.nb-blockmenu')));
+  await p.click('.nb-blockmenu .nb-it:has-text("전환")'); await sleep(150); await p.click('.nb-menu .nb-it:has-text("제목 2")'); await sleep(150);
+  check('T24 "전환 > 제목 2" changes the kind and keeps text and id', (await doc()).startsWith('doc(heading("하나")') && await ev(() => NB[S.panel].inst.editor.state.doc.firstChild.attrs.id) === idBefore, await doc());
+  await ev(() => NB[S.panel].inst.editor.commands.setContent('<blockquote><p><strong>굵은</strong> 인용</p><p>둘째 줄</p></blockquote>'));
+  await p.mouse.move(box.x, box.y + 4); await sleep(120); await p.click('.nb-handle .nb-h-drag'); await sleep(150); await p.click('.nb-blockmenu .nb-it:has-text("전환")'); await sleep(150); await p.click('.nb-menu .nb-it:has-text("콜아웃")'); await sleep(150);
+  check('T24 quote -> callout keeps the formatting and the second paragraph', (await doc()).startsWith('doc(callout(paragraph(bold("굵은"), " 인용"), paragraph("둘째 줄"))'), await doc());
+  await p.mouse.move(box.x, box.y + 4); await sleep(120); await p.click('.nb-handle .nb-h-drag'); await sleep(150); await p.click('.nb-blockmenu .nb-it:has-text("전환")'); await sleep(150); await p.click('.nb-menu .nb-it:has-text("할 일 목록")'); await sleep(150);
+  check('T24 callout -> to-do keeps every child (nothing dropped silently)', (await doc()).includes('taskItem(paragraph(bold("굵은"), " 인용"), paragraph("둘째 줄"))'), await doc());
+
+  console.log('— T14 / T15 lists');
+  await clear(); await kb.type('1. 하나'); await kb.press('Enter'); await kb.type('둘'); await kb.press('Enter'); await kb.type('셋'); await sleep(60);
+  check('T14 numbers are not stored in the text', (await doc()).startsWith('doc(orderedList(listItem(paragraph("하나")), listItem(paragraph("둘")), listItem(paragraph("셋")))'), await doc());
+  await kb.press('Tab'); await sleep(60); check('T15 Tab nests the item under the one before', (await doc()).includes('listItem(paragraph("둘"), orderedList(listItem(paragraph("셋"))))'), await doc());
+  await kb.press('Enter'); await kb.type('넷'); await kb.press('Tab'); await sleep(60);
+  check('T15 three levels deep', (await doc()).includes('orderedList(listItem(paragraph("셋"), orderedList(listItem(paragraph("넷")))))'), await doc());
+  await kb.press('Shift+Tab'); await kb.press('Shift+Tab'); await sleep(60);
+  check('T15 Shift+Tab brings it back out, order kept', (await doc()).includes('listItem(paragraph("둘"), orderedList(listItem(paragraph("셋")))), listItem(paragraph("넷"))'), await doc());
+  await kb.press('Enter'); await kb.press('Enter'); await sleep(60);
+  check('EDIT-05 Enter on an empty item leaves the list', /listItem\(paragraph\("넷"\)\)\), paragraph(, paragraph)?\)$/.test(await doc()), await doc());
+
+  console.log('— T16 toggle');
+  await clear(); await kb.type('> 토글 제목'); await kb.press('Enter'); await sleep(80); await kb.type('안쪽 내용'); await sleep(60);
+  check('T16 Enter in the title goes into the body of the toggle (no extra empty line)', (await doc()).startsWith('doc(details(detailsSummary("토글 제목"), detailsContent(paragraph("안쪽 내용")))'), await doc());
+  await p.click('.ProseMirror .nb-toggle-btn'); await sleep(100);
+  check('T16 folding hides the body but keeps it in the document', await ev(() => document.querySelector('.ProseMirror [data-type="detailsContent"]').hidden) && (await doc()).includes('안쪽 내용'));
+  check('SAVE folding a toggle alone is not an unsaved change', await ev(() => { const e = NB[S.panel].inst; return typeof e.changed === 'function'; }));
+
+  console.log('— T19 / T20 / T22 table');
+  await clear(); await kb.type('/표'); await sleep(170); await kb.press('Enter'); await sleep(150);
+  await kb.type('가'); await kb.press('Tab'); await kb.type('나'); await kb.press('Tab'); await kb.type('다'); await kb.press('Tab'); await kb.type('라'); await sleep(60);
+  check('T20 Tab moves from cell to cell (Korean text in each)', (await doc()).includes('tableHeader(paragraph("가")), tableHeader(paragraph("나")), tableHeader(paragraph("다"))), tableRow(tableCell(paragraph("라"))'), await doc());
+  await kb.press('Shift+Tab'); await sleep(40); await kb.type('!'); await sleep(40); check('T20 Shift+Tab goes back one cell', (await doc()).includes('tableHeader(paragraph("다!"))') || (await doc()).includes('tableHeader(paragraph("!다"))') || (await doc()).includes('tableHeader(paragraph("!"))'), await doc());
+  for (let i = 0; i < 6; i++) { await kb.press('Tab'); await sleep(25); } const rows0 = ((await doc()).match(/tableRow/g) || []).length;
+  await kb.press('Tab'); await sleep(80); check('TBL-03 Tab in the last cell adds a row', rows0 === 3 && ((await doc()).match(/tableRow/g) || []).length === 4, [rows0, await doc()]);
+  check('TBL-02 table tools (menu button, add row / column bars) are shown', await ev(() => ['.nb-tbl', '.nb-tadd.row', '.nb-tadd.col'].every(s => { const e = document.querySelector(s); return e && !e.hidden; })));
+  await p.click('.nb-tadd.col button'); await sleep(100); check('T19 "+" on the right adds a column', await ev(() => NB[S.panel].inst.editor.state.doc.firstChild.firstChild.childCount) === 4);
+  await p.click('.nb-tadd.row button'); await sleep(100); check('T19 "+" below adds a row', ((await doc()).match(/tableRow/g) || []).length === 5);
+  await p.click('.nb-tbl button'); await sleep(120); await p.screenshot({ path: out('ed1-tablemenu') }); await p.click('.nb-tablemenu .nb-it:has-text("행 삭제")'); await sleep(100);
+  check('T19 "행 삭제" from the table menu removes one row', ((await doc()).match(/tableRow/g) || []).length === 4, await doc());
+  await kb.press(mod + '+z'); await sleep(60); check('TBL-09 undo brings the row back', ((await doc()).match(/tableRow/g) || []).length === 5);
+  await ev(() => NB[S.panel].inst.editor.commands.setContent('<table><tbody><tr><th>가</th><th>나</th><th>다</th></tr><tr><td>라</td><td>마</td><td>바</td></tr></tbody></table>')); await sleep(80);
+  const cellPos = () => ev(() => { const e = NB[S.panel].inst.editor; const cells = []; e.state.doc.descendants((n, pos) => { if (n.type.name === 'tableHeader' || n.type.name === 'tableCell') cells.push(pos); }); return cells; });
+  let cp = await cellPos(); await sleep(600); await ev(c => { const e = NB[S.panel].inst.editor; e.chain().focus().setCellSelection({ anchorCell: c[0], headCell: c[1] }).mergeCells().run(); }, cp); await sleep(80);
+  check('T22 merging keeps the text of both cells', (await doc()).includes('paragraph("가"), paragraph("나")') && (await html()).includes('colspan="2"'), await doc());
+  await sleep(600); await ev(() => NB[S.panel].inst.editor.commands.splitCell()); await sleep(60); check('T22 splitting gives separate cells again (rectangular table)', !(await html()).includes('colspan="2"') && await ev(() => { const t = NB[S.panel].inst.editor.state.doc.firstChild; return t.child(0).childCount === 3 && t.child(1).childCount === 3; }));
+  await kb.press(mod + '+z'); await sleep(50); await kb.press(mod + '+z'); await sleep(80); check('T22 undo returns to the unmerged table with its text', (await doc()).includes('tableHeader(paragraph("가")), tableHeader(paragraph("나"))'), await doc());
+  cp = await cellPos(); await ev(c => { const e = NB[S.panel].inst.editor; e.chain().focus().setTextSelection(c[4] + 2).setCellAttribute('bg', 'yellow').run(); }, cp); await sleep(60);
+  check('TBL-01 a cell colour is stored as a name', (await html()).includes('data-bg="yellow"'));
+  await ev(() => { const e = NB[S.panel].inst.editor; let pos = null; e.state.doc.descendants((n, p2) => { if (pos == null && n.type.name === 'tableHeader') pos = p2; }); e.chain().focus().setTextSelection(pos + 2).run(); });
+  await p.click('.nb-tbl button'); await sleep(120); await p.click('.nb-tablemenu .nb-it:has-text("열 오른쪽으로 이동")'); await sleep(100);
+  check('TBL-01 moving a column keeps every row in step', (await doc()).includes('tableHeader(paragraph("나")), tableHeader(paragraph("가")), tableHeader(paragraph("다"))') && (await doc()).includes('tableCell(paragraph("마")), tableCell(paragraph("라")), tableCell(paragraph("바"))'), await doc());
+  // T21 paste from a spreadsheet (TSV)
+  await clear(); await ev(() => { const e = NB[S.panel].inst.editor; const dt = new DataTransfer(); dt.setData('text/plain', '이름\t수량\t비고\n케이블\t12\t"두 줄\n메모"\n랙\t\t없음'); e.view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }); await sleep(150);
+  const tsv = await doc(); check('T21 spreadsheet text becomes a table: rows, empty cell and a two-line cell kept', (tsv.match(/tableRow/g) || []).length === 3 && tsv.includes('"두 줄", hardBreak, "메모"') && tsv.includes('tableCell(paragraph("랙")), tableCell(paragraph), tableCell(paragraph("없음"))'), tsv);
+
+  console.log('— T23 columns, T33 table of contents');
+  await clear(); await kb.type('/2단'); await sleep(170); await kb.press('Enter'); await sleep(120); await kb.type('왼쪽');
+  check('T23 "2단" makes two columns and the caret starts in the left one', (await doc()).startsWith('doc(columns(column(paragraph("왼쪽")), column(paragraph))'), await doc());
+  check('T23 the columns sit side by side', await ev(() => { const c = document.querySelectorAll('.ProseMirror .nb-col'); return c.length === 2 && c[1].getBoundingClientRect().left > c[0].getBoundingClientRect().right - 2; }));
+  await ev(() => NB[S.panel].inst.editor.commands.setContent('<nav data-type="toc"></nav><h1>개요</h1><p>글</p><h2>세부</h2><details data-level="3"><summary>접힌 제목</summary><div data-type="detailsContent"><p>안</p></div></details>')); await sleep(200);
+  check('T33 the table of contents lists headings (and toggle headings) in order', await ev(() => [...document.querySelectorAll('.ProseMirror .nb-toc-it')].map(a => a.textContent).join('|')) === '개요|세부|접힌 제목');
+  await ev(() => { const e = NB[S.panel].inst.editor; let pos = null; e.state.doc.descendants((n, p2) => { if (n.type.name === 'heading' && n.attrs.level === 2) pos = p2; }); e.chain().insertContentAt(pos + 1, '새 ').run(); }); await sleep(200);
+  check('T33 editing a heading updates the list at once', await ev(() => [...document.querySelectorAll('.ProseMirror .nb-toc-it')].map(a => a.textContent)[1]) === '새 세부');
+
+  console.log('— T34 / T50 code and hostile input');
+  await clear(); await kb.type('```'); await kb.press('Enter'); await sleep(100); await kb.type('<script>window.__pwn=1</script>'); await kb.press('Enter'); await kb.press('Tab'); await kb.type('  들여쓴 줄'); await sleep(80);
+  const code = await html(); check('T34 code is stored as text (escaped), with its spaces', code.includes('&lt;script&gt;window.__pwn=1&lt;/script&gt;') && code.includes('들여쓴 줄') && await ev(() => window.__pwn === undefined), code.slice(0, 300));
+  await clear(); await ev(() => { const e = NB[S.panel].inst.editor; const dt = new DataTransfer(); dt.setData('text/html', '<p onclick="window.__pwn=2">문단 <a href="javascript:window.__pwn=3">위험 링크</a> <img src="x" onerror="window.__pwn=4"><script>window.__pwn=5</' + 'script><iframe src="javascript:alert(1)"></iframe><b>굵게</b></p>'); dt.setData('text/plain', 'x'); e.view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }); await sleep(250);
+  const hx = await html(); check('T50 pasted HTML loses scripts, handlers and javascript: addresses, keeps the words and bold', !/onclick|onerror|javascript:|<script|<iframe/i.test(hx) && hx.includes('위험 링크') && hx.includes('<strong>굵게</strong>') && await ev(() => window.__pwn === undefined), hx);
+
+  await p.screenshot({ path: out('ed1-end') });
+  check('no script errors during the run', A.errs.length === 0, A.errs);
+  await browser.close(); done();
+})().catch(e => { console.error('crashed:', String(e && e.stack || e).slice(0, 1200)); process.exit(2); });

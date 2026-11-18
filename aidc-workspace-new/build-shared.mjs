@@ -1,5 +1,9 @@
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import {build} from 'esbuild';
 // original.html is the app source (markup, styles, data and UI code). This build only
 // 1) regenerates seed.json from the demo fixtures in the first <script>,
 // 2) injects shared-client.js where the LOGIN marker is, and
@@ -13,6 +17,23 @@ const marker=/\/\* ===================== LOGIN ===================== \*\/[\s\S]*
 if((html.match(marker)||[]).length!==1)throw new Error('build-shared: LOGIN marker not found exactly once in original.html');
 const sharedClient=await fs.readFile(new URL('shared-client.js',root),'utf8');
 html=html.replace(marker,()=>sharedClient);
+// Body editor (editor/, Tiptap + ProseMirror, all MIT): bundled to public/editor.js, its stylesheet goes into the page.
+// The licence texts of everything that ends up in the bundle are written next to it.
+const here=fileURLToPath(root);
+const bundle=await build({entryPoints:[path.join(here,'editor/index.js')],absWorkingDir:here,bundle:true,format:'iife',minify:true,target:['es2020'],legalComments:'none',write:false,metafile:true,
+  banner:{js:'/*! AIDC WorkSpace body editor. Third-party licences: /editor.licenses.txt */'}});
+const editorJs=bundle.outputFiles[0].text;
+const pkgs=new Map();
+for(const f of Object.keys(bundle.metafile.inputs)){const m=/^(.*node_modules\/(?:@[^/]+\/)?[^/]+)\//.exec(f);if(m&&!pkgs.has(m[1]))pkgs.set(m[1],null);}
+let licences='Third-party software bundled in editor.js\n';
+for(const dir of [...pkgs.keys()].sort()){const abs=path.join(here,dir);const meta=JSON.parse(await fs.readFile(path.join(abs,'package.json'),'utf8'));
+  const file=(await fs.readdir(abs)).find(n=>/^licen[sc]e(\.(md|txt))?$/i.test(n));
+  licences+=`\n${'='.repeat(78)}\n${meta.name} ${meta.version} (${typeof meta.license==='string'?meta.license:'see below'})\n${'='.repeat(78)}\n${file?(await fs.readFile(path.join(abs,file),'utf8')).trim():'Licence: '+meta.license+' (no licence file in the package)'}\n`;}
+await fs.writeFile(new URL('public/editor.js',root),editorJs);
+await fs.writeFile(new URL('public/editor.licenses.txt',root),licences);
+const editorCss=await fs.readFile(new URL('editor/editor.css',root),'utf8');
+if(!html.includes('</style>'))throw new Error('build-shared: no </style> to attach the editor stylesheet to');
+html=html.replace('</style>',()=>'</style>\n<style id="nb-style">\n'+editorCss+'</style>\n<script src="/editor.js?v='+createHash('sha256').update(editorJs).digest('hex').slice(0,12)+'"></script>');
 // Isolated, removable toolbar experiment for the single Test research record.
 const trial=await fs.readFile(new URL('research-editor-trial.js',root),'utf8');
 html=html.replace('</body>',()=>'<script>'+trial+'</script></body>');

@@ -1713,6 +1713,45 @@ const lastBy=it=>{const n=editorName(it);return n?`<span class="by">${av()}${esc
 const urlHref=u=>{u=(u||'').trim();if(!u||/^(javascript|data|vbscript):/i.test(u))return '';if(/^dropbox\.com\.{3,}$/.test(u))return 'https://www.dropbox.com/';return /^https?:\/\//i.test(u)?u:'https://'+u;};
 const urlField=(it,E,style='')=>E?`<span class="url" contenteditable="true" data-f="url" data-ph="주소 입력" data-stop style="${style}">${esc(it.url||'')}</span>`:(urlHref(it.url)?`<a class="url" href="${esc(urlHref(it.url))}" target="_blank" rel="noopener" data-stop style="${style}">${esc(it.url)}</a><button class="copy-url" data-copy="${esc(urlHref(it.url))}" title="주소 복사">${svg('i-copy',13,13)}</button>`:'<span class="plain" style="color:#c4c4c4">없음</span>');
 function readUrl(it){const u=$('[data-f="url"]',pinOf(it));if(u&&u.isContentEditable){const v=u.textContent.trim();if(v!==(it.url||'')){it.url=v;it.dirty=true;}}}
+/* ===================== BODY EDITOR v2 (editor/ bundle) ===================== */
+// One editor per item being edited. It survives redraws of the page around it (the pin is rebuilt, the editor is put back),
+// so the caret, the undo history and a move between panel and full page are kept.
+const NB_TRIAL='r5cdb8f30-5b91-4ec8-9d7b-038aeca21001'; // the record that tries out the other editor (research-editor-trial.js)
+const NB={};
+const nbOn=()=>{try{return localStorage.getItem('aidc-editor')!=='v1'&&(typeof SETTINGS==='undefined'||SETTINGS.editor!=='v1');}catch{return true;}};
+// a body written by the new editor is always shown / edited by it; other bodies switch over when somebody edits them
+function nbUse(it,E){ if(!window.AIDCEditor||!it||it.id===NB_TRIAL)return false; return it.ed===2||(E&&nbOn()); }
+const nbOf=it=>it&&NB[it.id]||null;
+function nbBody(it){const r=nbOf(it); if(!r)return it.body||''; return r.inst.changed()?r.inst.getHTML():r.base;}
+function nbPending(it){const r=nbOf(it); return r?r.inst.pending():0;}
+function nbNote(it,text){const pin=pinOf(it); if(!pin||pin.dataset.id!==it.id)return; const head=pin.querySelector('.ihead'); if(!head)return; let n=head.querySelector('.nb-savenote'); if(!n){n=document.createElement('span');n.className='nb-savenote';n.title='이 브라우저에만 보관된 초안입니다. 저장을 눌러야 다른 멤버에게 보입니다.';const anchor=head.querySelector('.cancel,.pub');(anchor||head).after(n);} n.textContent=text;}
+let nbTimer=0;
+function nbChanged(it){ clearTimeout(nbTimer); nbTimer=setTimeout(()=>{ if(!ITEMS.includes(it)||!nbOf(it))return; if(typeof preserveLocal==='function'){preserveLocal(true); if(nbOf(it).inst.changed()){const t=new Date();nbNote(it,`초안 보관됨 ${t.getHours()<12?'오전':'오후'} ${((t.getHours()+11)%12)+1}:${String(t.getMinutes()).padStart(2,'0')}`);} else nbNote(it,'');} },900); }
+function nbMount(pin){ if(!window.AIDCEditor||!pin)return; if(!nbMount.ready){nbConfigure();nbMount.ready=true;}
+  const id=pin.dataset.id, it=id&&ITEMS.find(x=>x.id===id), host=pin.querySelector('.ibody[data-nb="edit"]');
+  if(host&&it){ let r=NB[id];
+    if(!r){ r=NB[id]={base:it.body||'',baseEd:it.ed,baseFiles:(it.files||[]).slice(),inst:null}; try{ r.inst=AIDCEditor.create(host,{html:bodyHtml(it),itemId:id,label:'본문',onChange:()=>nbChanged(it)}); }catch(e){ delete NB[id]; console.error(e); host.textContent='편집기를 여는 중 문제가 생겼습니다. 새로고침한 뒤 다시 시도하세요.'; }
+      if(r.inst&&it.status==='new'&&!it.title){/* the title is typed first */} }
+    else r.inst.attach(host); }
+  pin.querySelectorAll('.ibody[data-nb="read"] > .nb-doc').forEach(n=>AIDCEditor.hydrate(n));
+  // editors whose item is no longer on screen in edit mode are closed
+  for(const k of Object.keys(NB)){ const x=ITEMS.find(i=>i.id===k), r=NB[k]; if(!x||!r.inst||!r.inst.wrap.isConnected||(S.panel!==k&&S.full!==k)||!canEditItem(x)){ try{r.inst&&r.inst.destroy();}catch{} delete NB[k]; } } }
+function nbConfigure(){ if(!window.AIDCEditor)return; const first=t=>normT(t||'').split('\n')[0];
+  const seeable=x=>x.status!=='trash'&&x.status!=='new'&&(typeof canSee!=='function'||canSee(x));
+  AIDCEditor.configure({
+    users:()=>Object.keys(PEOPLE).map(k=>({id:k,name:PEOPLE[k]})),
+    userName:(id,fb)=>PEOPLE[id]||fb||id,
+    userIdByName:n=>Object.keys(PEOPLE).find(k=>PEOPLE[k]===n)||null,
+    pages:()=>[...ITEMS.filter(x=>seeable(x)&&x.title).map(x=>({id:x.id,title:first(x.title),kind:typeName(x)})),...Object.keys(PROJECTS).map(k=>({id:'project:'+k,title:first(PROJECTS[k].name||k),kind:'프로젝트'}))],
+    pageTitle:(id,fb)=>{ if(String(id).startsWith('project:')){const p=PROJECTS[id.slice(8)];return p?first(p.name||id.slice(8)):fb;} const x=ITEMS.find(i=>i.id===id); return x&&seeable(x)?(first(x.title)||'제목 없음'):fb; },
+    openItem:id=>{ if(String(id).startsWith('project:')){ if(PROJECTS[id.slice(8)])go(id); else toast('없는 프로젝트입니다.'); return; } const x=ITEMS.find(i=>i.id===id); if(!x||!seeable(x)){toast('삭제되었거나 볼 수 없는 페이지입니다.');return;} openPanel(id); },
+    fileKind, clean:cleanBody, toast:(m,ms)=>toast(m,ms), today:()=>TODAY, zoom:()=>LAYOUT.zoom||1,
+    upload:(f,itemId)=>uploadAttachment(f,ITEMS.find(x=>x.id===itemId)),
+    unfurl:typeof sharedUnfurl==='function'?u=>sharedUnfurl(u):null,
+    blockLink:(itemId,bid)=>location.origin+location.pathname+location.search+routeHash({page:S.page,proj:S.proj,full:S.full===itemId?itemId:null,panel:S.full===itemId?null:itemId})+'&block='+encodeURIComponent(bid),
+  }); }
+// a link to one block: open the item first (the address does that), then show the block
+function nbJump(bid){ for(const pin of [$('#panel-pin'),$('#item-pin')]){ if(!pin||!pin.dataset.id)continue; const r=NB[pin.dataset.id]; if(r&&r.inst.jump(bid))return true; const doc=pin.querySelector('.ibody[data-nb="read"] > .nb-doc'); if(doc&&window.AIDCEditor&&AIDCEditor.jump(doc,bid))return true; } return false; }
 function canEditItem(it){return !!(it&&ITEMS.includes(it)&&!otherLock('item:'+it.id)&&(it.editing||it.status==='new'||(it.status==='draft'&&(!it.authorId||it.authorId===sharedUser))));}
 function itemHtml(it,mode){ // mode 'panel'|'full'
   const full=mode==='full'; const p=proj(it.proj); const lock=otherLock('item:'+it.id); const E=canEditItem(it); const meeting=it.type==='meeting'; const tab=archTabOf(it);
@@ -1757,7 +1796,9 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   return `<div class="itype"><i></i>${esc(typeName(it))}</div><div class="ihead">${head}</div>${title}${props}
    <div class="cmt-row" style="top:calc(${cmtTop}px + var(--pshift,0px))" data-cmt>${av()}<span class="tx">댓글 추가</span></div><div class="ihr" style="top:calc(${hrTop}px + var(--pshift,0px))"></div>
    ${cmts?`<div class="cmt-list" style="top:calc(${hrTop+10}px + var(--pshift,0px));left:${full?7:115.3}px;right:${full?0:84}px">${cmts}</div>`:''}
-   <div class="ibody ${bodyEmpty?'empty':''} ${E?'ed':''}" style="top:calc(${bodyTop}px + var(--pshift,0px) + var(--cshift,0px))" ${E?'contenteditable="true"':''} data-f="body">${bodyEmpty?(E?'':'<p class="ph-empty">내용이 없습니다.</p>'):bodyHtml(it)}</div>`;
+   ${nbUse(it,E)?(E?`<div class="ibody ed" style="top:calc(${bodyTop}px + var(--pshift,0px) + var(--cshift,0px))" data-f="body" data-nb="edit"></div>`
+     :`<div class="ibody ${bodyEmpty?'empty':''}" style="top:calc(${bodyTop}px + var(--pshift,0px) + var(--cshift,0px))" data-f="body" data-nb="read">${bodyEmpty?'<p class="ph-empty">내용이 없습니다.</p>':`<div class="nb-doc">${bodyHtml(it)}</div>`}</div>`)
+   :`<div class="ibody ${bodyEmpty?'empty':''} ${E?'ed':''}" style="top:calc(${bodyTop}px + var(--pshift,0px) + var(--cshift,0px))" ${E?'contenteditable="true"':''} data-f="body">${bodyEmpty?(E?'':'<p class="ph-empty">내용이 없습니다.</p>'):bodyHtml(it)}</div>`}`;
 }
 async function listAttachments(){ if(typeof sharedListFiles==='function')return sharedListFiles(); const out=[]; ITEMS.forEach(it=>{const re=/<a class="file"[^>]*data-name="([^"]*)"[^>]*data-fid="([^"]*)"/g;let m;while((m=re.exec(it.body||'')))out.push({id:m[2],name:m[1],item:it.id,at:it.updatedAt||''});}); return out; }
 async function openLibrary(type){ const label=type==='meeting'?'미팅':type==='action'?'액션아이템':'리서치'; if(S.panel&&guardLeave(()=>openLibrary(type),'panel'))return; closePop(); S.panel='lib:'+type; S.ctx='panel'; const pin=$('#panel-pin'); pin.dataset.id=''; const hd=m=>`<div class="lib-view"><div class="libhd"><b>${label} 라이브러리</b><span class="m">${m}</span></div>`; pin.innerHTML=hd('불러오는 중…')+'</div>'; $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav();
@@ -1866,7 +1907,7 @@ function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content')
     console.error(err); const pg=$(S.full?'#page-item':S.page==='project'?'#page-project':S.page==='archive'?'#page-archive':'#page-main'); pg.classList.add('on');
     $('.pw,.pin',pg).innerHTML=`<div style="padding:140px 0;font-size:14px;color:#939393;line-height:24px">이 화면을 표시하는 중 문제가 생겼습니다. 새로고침(F5)해 주세요.<br>계속되면 이 문구를 관리자에게 알려 주세요: ${esc(String(err&&err.message||err))}</div>`; }
   crumbsFor(); sbState(); if(st!=null)$('#content').scrollTop=st; afterNav(); }
-function fitTitle(pin){ if(!pin)return; const t=pin.querySelector('.ititle'); const tExtra=t?Math.max(0,t.offsetHeight-53):0; let pExtra=0; const pr=pin.querySelector('.props'); if(pr){pExtra=Math.max(0,pr.offsetHeight-(pr.querySelector('.rcol')?5:6)*42);} const cl=pin.querySelector('.cmt-list'); pin.style.setProperty('--tshift',tExtra+'px'); pin.style.setProperty('--pshift',(tExtra+pExtra)+'px'); pin.style.setProperty('--cshift',(cl?cl.offsetHeight:0)+'px'); }
+function fitTitle(pin){ if(!pin)return; const t=pin.querySelector('.ititle'); const tExtra=t?Math.max(0,t.offsetHeight-53):0; let pExtra=0; const pr=pin.querySelector('.props'); if(pr){pExtra=Math.max(0,pr.offsetHeight-(pr.querySelector('.rcol')?5:6)*42);} const cl=pin.querySelector('.cmt-list'); pin.style.setProperty('--tshift',tExtra+'px'); pin.style.setProperty('--pshift',(tExtra+pExtra)+'px'); pin.style.setProperty('--cshift',(cl?cl.offsetHeight:0)+'px'); if(pin.classList.contains('pin')&&!fitTitle.busy){fitTitle.busy=true;try{nbMount(pin);}finally{fitTitle.busy=false;}} }
 document.addEventListener('input',e=>{ const t=e.target; if(t&&t.matches&&t.matches('.ititle'))fitTitle(t.closest('.pin')); });
 document.addEventListener('mouseover',e=>{ const li=e.target.closest&&e.target.closest('.arch .tabs li[data-tab]'); if(!li)return; const tabs=li.closest('.tabs'); tabs.style.setProperty('--tabidx',[...tabs.querySelectorAll('li[data-tab]')].indexOf(li)); S.hoverTab=li.dataset.tab; });
 document.addEventListener('error',e=>{const t=e.target; if(!t||t.tagName!=='IMG'||!t.classList)return; if(t.classList.contains('photo'))t.remove(); else if(t.classList.contains('logo')){const alt=t.dataset.alt; if(alt){t.removeAttribute('data-alt');t.src=alt;}else t.remove();}},true); // a project photo whose file is gone falls back to the plain card
@@ -1877,7 +1918,7 @@ function openPanel(id,force){ if(!id||id===S.full)return; if(S.panel===id)captur
   else if(/^\d+:/.test(id)){const [si,cid]=id.split(':');const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash); if(c)html=archCardHtml(c,+si,!!(S.editSimple&&S.editSimple.id===id));}
   if(!html){toast('삭제되었거나 없는 항목입니다.');return;}
   S.panel=id; if(S.editSimple&&S.editSimple.id!==id)S.editSimple=null; S.ctx='panel'; const pin=$('#panel-pin'); pin.innerHTML=html; pin.dataset.id=it?id:''; fitTitle(pin); $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
-function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closePanel(),'panel'))return; S.panel=null; S.editSimple=null; S.ctx='full'; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
+function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closePanel(),'panel'))return; window.AIDCEditor&&AIDCEditor.closeFloating(); S.panel=null; S.editSimple=null; S.ctx='full'; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
 // panel → full page, and back. What is being typed moves along.
 function expandPanel(){const id=S.panel; if(!id||!item(id)){toast('이 항목은 전체 페이지 보기를 지원하지 않습니다.');return;} if(S.full&&S.full!==id&&guardLeave(expandPanel,'full'))return; captureEditor(); S.panel=null; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); S.full=id; S.ctx='full'; dropEmptyNew(); render(); $('#content').scrollTop=0;}
 function shrinkFull(){const id=S.full; if(!id)return; if(S.panel&&guardLeave(shrinkFull,'panel'))return; captureEditor(); S.panel=null; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); S.full=null; render(); openPanel(id,true);}
@@ -1999,8 +2040,9 @@ document.addEventListener('click',async e=>{
   if(q('#panel-expand')){expandPanel();return;}
   if(q('#full-shrink')){shrinkFull();return;}
   if(el=q('[data-ed]')){const k=el.dataset.ed;const it=itemFromEvent();
+    if((k==='publish'||k==='save')&&it&&nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
     if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); toast('게시했습니다.'); return;}
-    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&b.isContentEditable?serializeBody(b):(it.body||'')}); return;}
+    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
     if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); toast('저장했습니다.'); return;}
     if(k==='cancel'&&it){revertItem(it); rerenderItem(it.id); return;}
     if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
@@ -2085,7 +2127,7 @@ document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.class
 document.addEventListener('focusout',e=>{const t=e.target; if(!t.classList)return; const pin=t.closest&&t.closest('.pin'); const it=pin&&pin.dataset.id?ITEMS.find(x=>x.id===pin.dataset.id):null; const ok=it&&canEditItem(it);
   if(t.classList.contains('ititle')){const v=readTitle(t);if(!v){t.classList.add('empty');t.textContent=t.dataset.ph;if(ok&&it.title){it.title='';it.dirty=true;}}else if(ok){if(normT(it.title)!==v){it.dirty=true;it.title=v;}crumbsFor();const b=$('.ihead .pub',pin);if(b&&b.dataset.ed==='publish')b.classList.add('ready');}}
   if(t.classList.contains('ibody')&&ok){readBody(it);}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(editorEsc&&editorEsc())return;if(popEl){closePop();return;}if($('#dlg')){return;}if($('#ovl').classList.contains('on'))closeModal();else if(S.panel)closePanel();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(window.AIDCEditor&&AIDCEditor.escHandled())return;if(editorEsc&&editorEsc())return;if(popEl){closePop();return;}if($('#dlg')){return;}if($('#ovl').classList.contains('on'))closeModal();else if(S.panel)closePanel();}
   if(e.target.classList&&e.target.classList.contains('ititle')&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();e.target.blur();} // Shift+Enter keeps a line break in the title
   if(e.target.id==='notice-in'&&e.key==='Enter'&&!e.isComposing){const v=e.target.value.trim();if(v){NOTICES=NOTICES.concat({id:'n'+Date.now(),date:TODAY,text:v,by:sharedUser});e.target.value='';e.target.blur();renderNotice();$('#notice').classList.add('open');toast('공지사항을 등록했습니다.');}}});
 function datePick(anchor,cur,cb,opt={}){let [y,m]=(cur||opt.min||TODAY).split('-').map(Number);
@@ -2194,7 +2236,7 @@ async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.
 function saveItem(it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&!t.classList.contains('empty')){const v=readTitle(t); if(v&&v!==normT(it.title))it.title=v;} readUrl(it); readBody(it); it.editing=false; it.dirty=false; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; delete it.snap; delete it._editOriginal;}
 function revertItem(it){const original=it._editOriginal;if(original){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,original);}else if(it.snap){Object.assign(it,JSON.parse(it.snap));}delete it.snap;delete it._editOriginal;it.editing=false;it.dirty=false;sharedRelease('item:'+it.id);}
 function itemDirty(it){ if(!it||!ITEMS.includes(it)||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
-  const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&b.isContentEditable?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
+  const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.editing){const s=it.snap?JSON.parse(it.snap):{}; return !!it.dirty||bodyNow!==(s.body||'')||titleNow!==(s.title||'');} return !!(titleNow||bodyNow||it.dirty);}
 /* leave guard: returns true if a dialog was shown (caller must stop) */
 // which: 'panel' (the side panel is closing or changing), 'full' (the full page is being replaced) or 'all' (leaving the page)
@@ -2209,7 +2251,7 @@ function guardLeave(proceed,which){
   const ids=which==='panel'?[S.panel]:which==='full'?[S.full]:[S.panel,S.full]; const it=ids.map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&itemDirty(x)); if(!it)return false;
   const name=(normT(it.title).split('\n')[0]||'새 글').slice(0,30);
   confirmDlg(`“${name}”에 저장하지 않은 내용이 있습니다. 저장할까요?`,[
-    {t:'저장',pri:true,fn:()=>{ const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title); if(!tv){toast('제목을 입력해야 저장할 수 있습니다.');t&&t.focus();return;}
+    {t:'저장',pri:true,fn:()=>{ if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;} const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title); if(!tv){toast('제목을 입력해야 저장할 수 있습니다.');t&&t.focus();return;}
       if(it.status==='new'){it.title=tv; readUrl(it); readBody(it); it.status='draft'; it.mod=nowTxt(); it.dirty=false; toast('초안으로 저장했습니다. 설정 > 작성 중인 초안에서 이어서 쓸 수 있습니다.',2800);} else {saveItem(it); toast('저장했습니다.');} proceed(); render(true);}},
     {t:'저장 안 함',fn:()=>{ if(it.status==='new'){const i=ITEMS.indexOf(it); if(i>=0)ITEMS.splice(i,1);} else revertItem(it); proceed(); render(true);}},
     {t:'취소',fn:()=>{}}]);
@@ -2233,7 +2275,7 @@ function attachmentHtml(f,up,mode){ const img=/^image\//.test(f.type), pdf=/pdf$
   return fileBlock(f.name,f.size,up.id); }
 async function insertAttachments(b,it,fs,preset){ if(!b||!fs.length)return; let choice=preset?{mode:preset,all:true}:await chooseInsertMode('file',fs.length); if(!choice)return; let n=0; for(let i=0;i<fs.length;i++){ const f=fs[i]; if(i>0&&!choice.all){const c=await chooseInsertMode('file',1); if(!c)break; choice={mode:c.mode,all:false};} try{ const up=await uploadAttachment(f,it); insertBlockHtml(b,attachmentHtml(f,up,choice.mode)); n++; }catch(e){ toast(e.message||'첨부에 실패했습니다.',2600); } } if(it)it.dirty=true; if(n)toast(`${n}개 파일을 추가했습니다.`); }
 async function insertLink(b,it,url,preset){ const c=preset?{mode:preset}:await chooseInsertMode('link',1); if(!c)return; if(c.mode==='link'){ b.focus(); restoreRange(); document.execCommand('insertHTML',false,`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>&nbsp;`); } else if(c.mode==='embed'){ insertBlockHtml(b,`<iframe class="embed" contenteditable="false" src="${esc(url)}" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" referrerpolicy="no-referrer-when-downgrade" loading="lazy" title="${esc(url)}"></iframe>`); } else { let host=url; try{host=new URL(url).hostname.replace(/^www\./,'');}catch{} insertBlockHtml(b,bookmarkHtml({title:host,sub:url,href:url,icon:`<span class="bm-glyph">${esc((host[0]||'•').toUpperCase())}</span>`})); } if(it)it.dirty=true; }
-function attachFile(it){ if(!it)return; const inp=document.createElement('input'); inp.type='file'; inp.multiple=true; inp.onchange=()=>{const fs=[...inp.files]; if(!fs.length)return; const b=activeBody()||$('.ibody[data-f="body"]',pinOf(it)); insertAttachments(b,it,fs);}; inp.click();}
+function attachFile(it){ if(!it)return; if(nbOf(it)){nbOf(it).inst.pickFiles('');return;} const inp=document.createElement('input'); inp.type='file'; inp.multiple=true; inp.onchange=()=>{const fs=[...inp.files]; if(!fs.length)return; const b=activeBody()||$('.ibody[data-f="body"]',pinOf(it)); insertAttachments(b,it,fs);}; inp.click();}
 const fmtSize=n=>n>1048576?(n/1048576).toFixed(1)+' MB':n>1024?Math.round(n/1024)+' KB':n+' B';
 const FILE_KINDS=[[/\.pdf$/i,'pdf','PDF'],[/\.hwpx?$/i,'hwp','HWP'],[/\.(docx?|odt|rtf)$/i,'doc','DOC'],[/\.(xlsx?|xlsm|csv|ods)$/i,'xls','XLS'],[/\.(pptx?|key|odp)$/i,'ppt','PPT'],[/\.(zip|rar|7z|tar|gz)$/i,'zip','ZIP'],[/\.(png|jpe?g|gif|webp|bmp|svg|heic)$/i,'img','IMG'],[/\.(mp4|mov|avi|mkv|webm)$/i,'vid','VID'],[/\.(mp3|wav|m4a|aac)$/i,'aud','AUD'],[/\.(txt|md|json|xml|log)$/i,'txt','TXT'],[/\.(dwg|dxf|skp|rvt|ifc)$/i,'cad','CAD']];
 const fileKind=name=>{for(const [re,cls,lb] of FILE_KINDS)if(re.test(name||''))return {cls,lb};const m=/\.([a-z0-9]{1,4})$/i.exec(name||'');return {cls:'etc',lb:m?m[1].toUpperCase().slice(0,4):'FILE'};};
@@ -2252,8 +2294,12 @@ function cleanBody(h){ if(!h||!/<[a-z]/i.test(h))return h; const doc=new DOMPars
   return doc.body.innerHTML;}
 function bodyHtml(it){ let h=''; (it.files||[]).forEach(f=>{h+=fileBlock(f.name,f.size);}); h+=upgradeFileBlocks(cleanBody(legacyToHtml(it.body||''))); return h; }
 const ALLOWED=new Set(['P','H1','H2','H3','UL','OL','LI','DIV','BLOCKQUOTE','HR','PRE','CODE','B','STRONG','I','EM','U','S','STRIKE','SPAN','A','BR','TABLE','TBODY','TR','TD','TH','FIGURE','IMG','FIGCAPTION','INPUT','BUTTON','MARK','SVG','USE','SUMMARY','DETAILS','IFRAME','VIDEO','AUDIO','SOURCE']);
-function serializeBody(b){ const c=b.cloneNode(true); c.querySelectorAll('.blk-handle,.ph-empty,.slash-menu,.ed-toolbar,.mention-pop').forEach(n=>n.remove()); c.querySelectorAll('*').forEach(n=>{ if(!ALLOWED.has(n.tagName.toUpperCase())){n.replaceWith(...n.childNodes);return;} n.removeAttribute('contenteditable'); n.removeAttribute('draggable'); n.classList.remove('dragging','over','cur-blk'); if(!n.getAttribute('class'))n.removeAttribute('class'); if(n.tagName==='SPAN'&&!n.className&&!n.getAttribute('style'))n.replaceWith(...n.childNodes); }); let h=c.innerHTML.trim(); if(/^(<p>(<br>)?<\/p>)*$/.test(h))h=''; return h; }
-function readBody(it){it=it||curItem(); if(!it||!ITEMS.includes(it))return; const pin=pinOf(it); if(pin.dataset.id!==it.id)return; const b=$('.ibody[data-f="body"]',pin); if(!b||!b.isContentEditable)return; const h=serializeBody(b); if(h!==(it.body||'')){it.dirty=true;} it.body=h; if(it.files&&it.files.length){it.files=[];} }
+function serializeBody(b){ if(b.dataset&&b.dataset.nb==='edit'){const pin=b.closest('.pin');return nbBody(pin&&ITEMS.find(x=>x.id===pin.dataset.id));} const c=b.cloneNode(true); c.querySelectorAll('.blk-handle,.ph-empty,.slash-menu,.ed-toolbar,.mention-pop').forEach(n=>n.remove()); c.querySelectorAll('*').forEach(n=>{ if(!ALLOWED.has(n.tagName.toUpperCase())){n.replaceWith(...n.childNodes);return;} n.removeAttribute('contenteditable'); n.removeAttribute('draggable'); n.classList.remove('dragging','over','cur-blk'); if(!n.getAttribute('class'))n.removeAttribute('class'); if(n.tagName==='SPAN'&&!n.className&&!n.getAttribute('style'))n.replaceWith(...n.childNodes); }); let h=c.innerHTML.trim(); if(/^(<p>(<br>)?<\/p>)*$/.test(h))h=''; return h; }
+function readBody(it){it=it||curItem(); if(!it||!ITEMS.includes(it))return; const pin=pinOf(it); if(pin.dataset.id!==it.id)return; const b=$('.ibody[data-f="body"]',pin); if(b&&b.dataset.nb==='edit'){ const r=nbOf(it); if(!r)return;
+    if(r.inst.changed()){ const h=r.inst.getHTML(); if(h!==(it.body||''))it.dirty=true; it.body=h; it.ed=2; if(it.files&&it.files.length)it.files=[]; if(r.baseEd!==2&&r.base&&it.bodyV1===undefined)it.bodyV1=r.base; } // the first-editor body is kept once, as written
+    else { it.body=r.base; if(r.baseEd===undefined)delete it.ed; else it.ed=r.baseEd; if(r.baseFiles.length)it.files=r.baseFiles.slice(); if(r.baseEd!==2)delete it.bodyV1; }
+    return; }
+  if(!b||!b.isContentEditable)return; const h=serializeBody(b); if(h!==(it.body||'')){it.dirty=true;} it.body=h; if(it.files&&it.files.length){it.files=[];} }
 const mentionHtml=t=>esc(t).replace(/@([가-힣A-Za-z]+(?:\s[가-힣A-Za-z]+)?)/g,(m,n)=>{const hit=Object.values(PEOPLE).find(p=>p===n||p.startsWith(n.split(' ')[0])); return hit?`<span class="mention">@${esc(hit)}</span>`:m;});
 
 /* ===================== COMMENTS with @mention ===================== */
