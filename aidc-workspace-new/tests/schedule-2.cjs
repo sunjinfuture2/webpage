@@ -10,6 +10,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await goP();
   await ev(() => { for (const k of Object.keys(SCHED.pangyo || {})) delete SCHED.pangyo[k]; SCH.memo.pangyo = null; SCHU.scn = ''; SCHU.q = ''; SCHU.phase = ''; SCHU.scope = 'all'; SCHU.scale = 'fit'; SCHU.open = []; render(true); }); await sleep(900);
 
+  await ev(async () => { for (const it of ITEMS.filter(x => /^견적 비교 /.test(x.title || ''))) await trashItem(it); }); await sleep(600);   // left by a run that stopped half-way
   console.log('— an action item and its task');
   const id = await ev(t => { const it = newItem('action'); it.title = t; it.proj = 'pangyo'; openPanel(it.id); return it.id; }, '견적 비교 ' + sfx); await sleep(500);
   const r0 = await ev(() => ({ stage: !!document.querySelector('#panel-pin [data-schp="link-phase"]'), task: !!document.querySelector('#panel-pin [data-schp="link-task"]'), keys: [...document.querySelectorAll('#panel-pin .props .k')].map(k => k.textContent) }));
@@ -23,7 +24,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.click('#panel-pin [data-ed="publish"]'); await sleep(1200);
   await ev(() => closePanel(true)); await sleep(300);
   await ev(() => { SCHU.tab = 'list'; SCHU.phase = 'W4'; SCHU.per = 50; schRefresh(); }); await sleep(400);
-  const li = await ev(s => { const rows = [...document.querySelectorAll('#sch-actions .tbl.sch-list .rw')]; const i = rows.findIndex(r => r.classList.contains('sub') && r.textContent.includes(s)); return { i, prev: i > 0 ? rows[i - 1].querySelector('.w').textContent : '', w: i >= 0 ? rows[i].querySelector('.w').textContent : '', un: [...document.querySelectorAll('.sch-sub-h + .tbl .rw')].some(r => r.textContent.includes(s)) }; }, sfx);
+  const li = await ev(s => { const rows = [...document.querySelectorAll('#sch-actions .tbl.sch-list .rw')]; const i = rows.findIndex(r => r.classList.contains('sub') && r.textContent.includes(s)); let j = i - 1; while (j > 0 && rows[j].classList.contains('sub')) j--; return { i, prev: i > 0 ? rows[j].querySelector('.w').textContent : '', w: i >= 0 ? rows[i].querySelector('.w').textContent : '', un: [...document.querySelectorAll('.sch-sub-h + .tbl .rw')].some(r => r.textContent.includes(s)) }; }, sfx);
   check('published, it is listed under its task (4-24) and no longer among the unlinked ones', li.i > 0 && li.prev === '4-24' && /4-24/.test(li.w) && !li.un, li);
   await ev(() => { const t = schModel('pangyo').byWbs.get('W4.24'); openPanel(schItemId(t.id)); SCHP.tab = 'links'; rerenderItem(S.panel); }); await sleep(400);
   check('the task\'s 연결된 아이템 tab lists the action', await ev(s => [...document.querySelectorAll('#panel-pin .sl-items .chip')].some(c => c.textContent.includes(s)), sfx));
@@ -43,6 +44,55 @@ const sfx = Date.now().toString(36).slice(-5);
   const b2 = await ev(() => { const t = schModel('pangyo').byWbs.get('W1.2'), el = document.querySelector('.sg-bar[data-bar="' + t.id + '"]'), host = document.querySelector('#sch-gantt .sg-scroll'); host.scrollLeft = Math.max(0, parseFloat(el.style.left) - 300); const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   await a.mouse.move(b2.x, b2.y); await a.mouse.down(); await a.mouse.move(b2.x + 40, b2.y, { steps: 5 }); await a.mouse.up(); await sleep(500);
   check('a task that has started does not move by dragging (its actual start holds it)', await ev(() => schModel('pangyo').byWbs.get('W1.2').plannedStart === '2026-11-02' && /실제 시작일/.test(document.querySelector('#toast').textContent)));
+
+  console.log('— relations in the chart');
+  await ev(() => { SCHU.open = ['W1']; SCHU.scale = 'day'; schRefresh(); const g = document.querySelector('#sch-gantt .sg-scroll'), t = schModel('pangyo').byWbs.get('W1.8'); g.scrollLeft = Math.max(0, g._rows.get(t.id).x1 - 120); }); await sleep(400);
+  const ends = await ev(() => { const m = schModel('pangyo'), a = m.byWbs.get('W1.8'), b = m.byWbs.get('W1.13'); const ra = document.querySelector('.sg-bar[data-bar="' + a.id + '"]').getBoundingClientRect(), rb = document.querySelector('.sg-bar[data-bar="' + b.id + '"]'); return { ax: ra.right, ay: ra.top + ra.height / 2, has: !!rb, n: m.succ.get(a.id).length }; });
+  await a.mouse.move(ends.ax - 12, ends.ay); await sleep(150);
+  const port = await ev(() => { const t = schModel('pangyo').byWbs.get('W1.8'), p = document.querySelector('.sg-bar[data-bar="' + t.id + '"] .pt.r'), r = p.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, shown: getComputedStyle(p).display !== 'none' }; });
+  const tgt = await ev(() => { const m = schModel('pangyo'), a = m.byWbs.get('W1.8'), t = ['W1.11', 'W1.12', 'W1.13'].map(w => m.byWbs.get(w)).find(x => !m.plan.dependencies.some(e => e.from === a.id && e.to === x.id)), r = document.querySelector('.sg-bar[data-bar="' + t.id + '"]').getBoundingClientRect(); return { x: r.left + 6, y: r.top + r.height / 2, wbs: schWbs(t.wbs), id: t.id }; });
+  await a.mouse.move(port.x, port.y); await a.mouse.down(); await a.mouse.move(port.x + 30, port.y + 10, { steps: 4 }); await a.mouse.move(tgt.x, tgt.y, { steps: 6 }); await sleep(150);
+  const tipTxt = await ev(() => (document.querySelector('.sg-tip') || {}).textContent || ''); await a.mouse.up(); await sleep(700);
+  const made = await ev(id => { const m = schModel('pangyo'), a = m.byWbs.get('W1.8'); const e = m.plan.dependencies.filter(x => x.from === a.id && x.to === id); return { n: e.length, types: e.map(x => x.type).sort().join(), toast: document.querySelector('#toast').textContent, added: Object.keys(SCHED.pangyo).filter(k => k.startsWith('d:')).length }; }, tgt.id);
+  check('pulling from the end of a bar to the start of another makes a relation of that kind (the hint names it while pulling)', port.shown && tipTxt.startsWith('1-8 → ' + tgt.wbs + ' · FS') && made.n === 1 && made.types === 'FS' && made.added === 1 && /관계 추가/.test(made.toast), { port, tipTxt, made, tgt });
+  const lineAt = await ev(() => { const id = Object.keys(SCHED.pangyo).find(k => k.startsWith('d:')).slice(2), g = document.querySelector('.sg-links g[data-link="' + id + '"] path.hit'), len = g.getTotalLength(), pt = g.getPointAtLength(len * 0.6), box = document.querySelector('#sch-gantt .sg-links').getBoundingClientRect(), z = LAYOUT.zoom || 1; return { x: box.left + pt.x * z, y: box.top + pt.y * z, id }; });
+  await a.mouse.click(lineAt.x, lineAt.y); await sleep(300);
+  const relMenu = await ev(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent));
+  check('a click on a relation line opens that relation: kind, gap, leave out, delete', relMenu.some(x => /^FS/.test(x)) && relMenu.some(x => /간격/.test(x)) && relMenu.some(x => /관계 삭제/.test(x)), relMenu);
+  await a.click('.pop .it:has-text("관계 삭제")'); await sleep(600);
+  check('…deleting it there removes the stored relation', await ev(() => !Object.keys(SCHED.pangyo).some(k => k.startsWith('d:'))));
+  await ev(() => { SCHU.scale = 'week'; schRefresh(); }); await sleep(300);
+
+  console.log('— tools from the user menu; Excel');
+  check('the page has no tools button; the user menu offers the schedule tools', await ev(() => !document.querySelector('[data-sch="tools"]') && schUserMenu().length === 1));
+  const x1 = await ev(async () => { const X = await schXlsx(); const w = schBackup('pangyo'), p = w.scenarios[0]; p.tasks.find(t => t.wbs === 'W7.8').delay = 2; const bytes = await X.makeXlsx(w, p, AIDCSchedule.calculate(p)); window.__xl = bytes; const u = new Uint8Array(bytes); return { n: u.length, zip: u[0] === 0x50 && u[1] === 0x4b }; });
+  check('the Excel bundle is fetched on demand and writes a workbook', x1.zip && x1.n > 200000, x1);
+  await ev(async () => { await schImportFile('pangyo', new File([window.__xl], '일정.xlsx')); }); await sleep(500);
+  const dl = await ev(() => (document.querySelector('#dlg .m') || {}).textContent || '');
+  await a.click('#dlg button.pri'); await sleep(900);
+  check('importing that workbook asks once and brings its plan in (two days on the SAT task give 2028-09-30), keeping assignees', /가져올까요/.test(dl) && await ev(() => schModel('pangyo').byWbs.get('W7.8').delay === 2 && schModel('pangyo').res.operationDate === '2028-09-30'), dl);
+  await ev(() => schUndo()); await sleep(400);
+  // a workbook made from another copy of the source carries other ids: tasks are matched by WBS
+  const rm = await ev(() => { const w = schBackup('pangyo'), p = w.scenarios[0], map = new Map(p.tasks.map(t => [t.id, 'x:' + t.wbs])); for (const t of p.tasks) { if (t.finishRule) t.finishRule.anchorId = map.get(t.finishRule.anchorId); t.id = map.get(t.id); } for (const e of p.dependencies) { e.from = map.get(e.from); e.to = map.get(e.to); e.id = 'l:' + e.id; } for (const x of p.procurement) for (const f of ['poTaskId', 'deliveryTaskId', 'installTaskId', 'satTaskId']) x[f] = map.get(x[f]); p.tasks.find(t => t.wbs === 'W1.9').delay = 4; const q = schRemapPlan(SCH.base.pangyo, p), ov = AIDCSchedule.diffPlans(SCH.base.pangyo, q); const mine = Object.keys(SCHED.pangyo || {}).filter(AIDCSchedule.isPlanKey).length; return { keys: Object.keys(ov).length, mine, only: Object.keys(ov).every(k => k.startsWith('t:')), delay: (ov['t:' + schModel('pangyo').byWbs.get('W1.9').id] || {}).delay }; });
+  check('a plan whose ids differ is matched by WBS: only the real change remains (no new tasks or relations)', rm.keys === rm.mine + 1 && rm.only && rm.delay === 4, rm);
+
+  console.log('— adding a package and a gate');
+  await ev(() => { SCHU.sec = 'proc'; schLowerRefresh(); document.querySelector('#sch-lower').scrollIntoView({ block: 'start' }); }); await sleep(300);
+  await a.click('#sch-lower [data-sch="lowadd"]'); await sleep(250); await a.fill('#ask-in', '비상발전 연료탱크 ' + sfx); await a.keyboard.press('Enter'); await sleep(350);
+  await a.fill('#sch-tm-q', '4-30'); await sleep(250); await a.click('.sch-tm .it >> nth=0'); await sleep(450);
+  await a.fill('#sch-tm-q', '5-37'); await sleep(250); await a.click('.sch-tm .it >> nth=0'); await sleep(800);
+  const pk = await ev(s => { const m = schModel('pangyo'), x = m.plan.procurement.find(q => q.name.includes(s)); return { n: m.plan.procurement.length, has: !!x, panel: S.panel, rows: document.querySelectorAll('#sch-lower .tbl.sch-proc .rw').length, ov: Object.keys(SCHED.pangyo).filter(k => k.startsWith('p:')).length, del: !!document.querySelector('#panel-pin [data-schx="pdel"]') }; }, sfx);
+  check('"+" on 외부설비 조달 adds a package with its ordering and installing tasks; it opens and can be deleted', pk.n === 17 && pk.has && /^sp-pangyo-추가/.test(pk.panel || '') && pk.rows === 17 && pk.ov === 1 && pk.del, pk);
+  await a.click('#panel-pin [data-schx="pdel"]'); await sleep(250); await a.click('#dlg button.pri'); await sleep(700);
+  check('…deleted again', await ev(() => schModel('pangyo').plan.procurement.length === 16 && !Object.keys(SCHED.pangyo).some(k => k.startsWith('p:'))));
+  await ev(() => { SCHU.sec = 'gate'; schLowerRefresh(); }); await sleep(300);
+  await a.click('#sch-lower [data-sch="lowadd"]'); await sleep(250); await a.fill('#ask-in', '연료 반입 승인 ' + sfx); await a.keyboard.press('Enter'); await sleep(350);
+  await a.fill('#sch-tm-q', '6-7'); await sleep(250); await a.click('.sch-tm .it >> nth=0'); await sleep(800);
+  const gt = await ev(s => ({ n: document.querySelectorAll('.sch-gates .gt').length, has: [...document.querySelectorAll('.sch-gates .gt .cat')].some(c => c.textContent.includes(s)), panel: S.panel, date: (document.querySelector('#panel-pin .props .plain') || {}).textContent }), sfx);
+  check('"+" on 승인게이트 adds a gate that takes its date from the task it waits for', gt.n === 9 && gt.has && /^sg-pangyo-u:/.test(gt.panel || ''), gt);
+  await a.click('#panel-pin [data-schx="gu:del"]'); await sleep(250); await a.click('#dlg button.pri'); await sleep(700);
+  check('…deleted again', await ev(() => document.querySelectorAll('.sch-gates .gt').length === 8));
+  await ev(() => { SCHU.sec = 'proc'; schLowerRefresh(); const c = document.querySelector('#content'), g = document.querySelector('#sch-actions'); c.scrollTop = g.getBoundingClientRect().top + c.scrollTop - 70; }); await sleep(300);
 
   console.log('— names with quotes');
   await ev(() => { window.__x = 0; const t = schModel('pangyo').byWbs.get('W1.13'); schEditTask('pangyo', t.id, 'q', x => { x.name = 'A" onmouseover="window.__x=1" data-z="'; }, true); }); await sleep(600);

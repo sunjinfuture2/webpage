@@ -10,6 +10,12 @@ function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schH
     if(!P.isDone(t)&&r.finish<today){const from=today>mStart?today:mStart;if(from<=mEnd)add(from,mEnd);} }   // a late task stays on every day from today
   for(const i of liveItems('action',pid)){ if(i.own||!i.date)continue; const b=itemEnd(i); if(i.date<=mEnd&&b>=mStart)add(i.date,b); }
   return out; }
+// The count beside a date: a small speech bubble pointing at the day number. Today's also says how many of its actions are new (green) and mention me (red).
+function schCalBadge(pid,date,count){ let dots='';
+  if(date===TODAY){ const m=schHas(pid)?schModel(pid):null, its=schDayItems(pid,date).concat(m?schDayTasks(pid,date).map(t=>ITEMS.find(i=>i.id===schItemId(t.id))).filter(Boolean):[]);
+    const g=its.filter(i=>dotsOf(i).includes('g')).length, r=its.filter(i=>dotsOf(i).includes('r')).length;
+    dots=(g?`<i class="g" title="새로 등록된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r" title="나를 멘션한 액션 ${r}건">${r>9?'9+':r}</i>`:''); }
+  return `<span class="acnt" title="이 날 진행 중이거나 지연된 액션 ${count}건">${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=S.selDate||TODAY, P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
   const dateTag=`<span class="d">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'<span class="td">오늘</span>':'<button class="sh-btn" data-seltoday>오늘로</button>'}</span>`;
@@ -23,7 +29,7 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=S.selDate||
     if(m)for(const t of schDayTasks(pid,D)){const r=m.res.tasks[t.id], done=P.isDone(t);rows.push({id:schItemId(t.id),title:schTaskTitle(t),ppl:schPeople(t),role:schRole(t),due:r.finish,done,dots:''});}
     for(const i of schDayItems(pid,D))rows.push({id:i.id,title:(i.task&&m&&m.byId.get(i.task)?schWbs(m.byId.get(i.task).wbs)+') ':'')+(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'',due:itemEnd(i),done:i.st==='done',dots:dotsHtml(i)});
     rows.sort((a,b)=>(a.done-b.done)||a.due.localeCompare(b.due)||a.title.localeCompare(b.title,undefined,{numeric:true}));
-    h+=`<div class="rsep"></div><div class="rcap">${pict('action')}${D===TODAY?'금일 액션':'이 날의 액션'}<span class="n">${rows.length}</span></div>`;
+    h+=`<div class="rsep"></div><div class="rcap">${svg('i-sch-tag',13,13)}${D===TODAY?'금일 액션':'이 날의 액션'}<span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
     h+=rows.slice(0,60).map(x=>`<div class="ra" data-open="${esc(x.id)}" title="${esc(x.title)}"><span class="tt">${x.dots}${esc(x.title)}</span>${x.ppl.length?avstack(x.ppl,3):(x.role?`<span class="sch-role">${esc(x.role)}</span>`:'')}${x.done?`<span class="sch-dd" style="color:#1acc00">완료</span>`:(schDdayHtml(x.due,false)||'<span class="sch-dd"></span>')}<span class="dt">${schD(x.due)}</span></div>`).join('');
     if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }

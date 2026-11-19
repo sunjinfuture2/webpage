@@ -74,6 +74,14 @@ function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule
   if(k==='delay'){num('추가지연 (일)',t.delay||null,0,36500,n=>edit('추가지연 '+(n||0)+'일',q=>{q.delay=Math.round(n||0);}),'일');return;}
   if(k==='remaining'){num('잔여기간 (일) · 비우면 미입력',t.remaining,0,36500,n=>edit('잔여기간 '+(n===null?'지움':n+'일'),q=>{q.remaining=n===null?null:Math.round(n);}),'일');return;}
   if(k==='criteria'||k==='conditions'||k==='evidence'){const lb={criteria:'완료 기준',conditions:'조건·확약',evidence:'증빙'}[k];askInput(lb,t[k]||'',v=>edit(lb+' 수정',q=>{q[k]=(v||'').trim();}));return;} }
+// what can be done with one relation: its kind, its gap, leaving it out of the calculation, deleting it
+function schRelMenu(el,pid,relId){ const m=schModel(pid), A=AIDCSchedule, rel=m&&m.plan.dependencies.find(x=>x.id===relId); if(!rel)return; const a=m.byId.get(rel.from), b=m.byId.get(rel.to);
+  const ch=(label,fn)=>schCommit(pid,d=>{const x=d.dependencies.find(q=>q.id===rel.id);if(x)fn(x,d);},label);
+  menuPop(el,[{hd:`${schWbs(a.wbs)} → ${schWbs(b.wbs)} 관계`}].concat(['FS','SS','FF','SF'].map(ty=>({t:ty+' · '+A.relationshipNames[ty],k:ty,sel:rel.type===ty,fn:()=>ch('관계 유형 '+ty,x=>{x.type=ty;})})),['-',
+    {t:'간격 '+(rel.lag?(rel.lag>0?'+':'')+rel.lag+'일':'없음')+' · 변경…',k:'lag',fn:()=>askInput('간격 (일) · 음수는 앞당김',String(rel.lag||0),v=>{const n=Math.round(Number(v));if(!Number.isFinite(n)||Math.abs(n)>36500){toast('정수를 입력하세요.');return;}ch('관계 간격 '+n+'일',x=>{x.lag=n;});})},
+    {t:rel.active?'계산에서 빼기 (조건부)':'계산에 다시 쓰기',k:'act',fn:()=>ch(rel.active?'관계 사용 중지':'관계 다시 사용',x=>{x.active=!x.active;})},
+    {t:'두 업무 보기',k:'see',fn:()=>{SCHU.sel=b.id;openPanel(schItemId(b.id));}},
+    {t:'관계 삭제',k:'del',danger:true,fn:()=>schCommit(pid,d=>{d.dependencies=d.dependencies.filter(q=>q.id!==rel.id);},`${schWbs(a.wbs)} → ${schWbs(b.wbs)} 관계 삭제`)}])); }
 // a list of tasks to choose from (relations, linking an action)
 function schTaskMenu(el,m,title,filter,pick){ const p=openPop(el,`<div class="hd">${esc(title)}</div><div style="padding:2px 6px 6px"><input id="sch-tm-q" placeholder="WBS 또는 업무명 검색"></div><div class="sch-tm"></div>`,{cls:'link'}); const box=p.querySelector('.sch-tm'), inp=p.querySelector('#sch-tm-q');
   const draw=()=>{const q=inp.value.trim();const list=m.plan.tasks.filter(t=>filter(t)&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs)))).slice(0,60);box.innerHTML=list.map(t=>`<div class="it" data-t="${t.id}"><b style="font-weight:600;min-width:38px">${schWbs(t.wbs)}</b>${esc(t.name)}</div>`).join('')||'<div class="msg">맞는 업무가 없습니다.</div>';};
@@ -91,9 +99,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='del'){confirmDlg(`“${schTaskTitle(t)}” 업무를 삭제할까요? 이 업무에 걸린 관계도 함께 지워집니다.`,[{t:'삭제',pri:true,fn:()=>{closePanel(true);schCommit(pid,d=>A.removeTasks(d,[t.id]),schWbs(t.wbs)+' 업무 삭제');}},{t:'취소',fn:()=>{}}]);return;}
   if(k==='addrel'){e.stopPropagation();const pre=el.dataset.k==='pre';const linked=new Set((pre?m.pred.get(t.id).map(x=>x.from):m.succ.get(t.id).map(x=>x.to)).concat(t.id));
     schTaskMenu(el,m,pre?'선행 업무 추가 (끝나면 이 업무가 시작)':'후행 업무 추가 (이 업무가 끝나면 시작)',x=>!linked.has(x.id),id=>schCommit(pid,d=>{d.dependencies.push(pre?A.newDependency(id,t.id,'FS',0):A.newDependency(t.id,id,'FS',0));},schWbs(t.wbs)+(pre?' 선행 관계 추가':' 후행 관계 추가')));return;}
-  if(k==='rel'){e.stopPropagation();e.preventDefault();const rel=m.plan.dependencies.find(x=>x.id===el.dataset.k);if(!rel)return;const ch=(label,fn)=>schCommit(pid,d=>{const x=d.dependencies.find(q=>q.id===rel.id);if(x)fn(x,d);},label);
-    menuPop(el,[{hd:'관계 유형'}].concat(['FS','SS','FF','SF'].map(ty=>({t:ty+' · '+A.relationshipNames[ty],k:ty,sel:rel.type===ty,fn:()=>ch('관계 유형 '+ty,x=>{x.type=ty;})})),['-',{t:'간격 '+(rel.lag?(rel.lag>0?'+':'')+rel.lag+'일':'없음')+' · 변경…',k:'lag',fn:()=>askInput('간격 (일) · 음수는 앞당김',String(rel.lag||0),v=>{const n=Math.round(Number(v));if(!Number.isFinite(n)||Math.abs(n)>36500){toast('정수를 입력하세요.');return;}ch('관계 간격 '+n+'일',x=>{x.lag=n;});})},
-      {t:rel.active?'계산에서 빼기 (조건부)':'계산에 다시 쓰기',k:'act',fn:()=>ch(rel.active?'관계 사용 중지':'관계 다시 사용',x=>{x.active=!x.active;})},{t:'관계 삭제',k:'del',danger:true,fn:()=>schCommit(pid,d=>{d.dependencies=d.dependencies.filter(q=>q.id!==rel.id);},'관계 삭제')}]));return;}
+  if(k==='rel'){e.stopPropagation();e.preventDefault();schRelMenu(el,pid,el.dataset.k);return;}
   if(k==='addref'){e.stopPropagation();const cur=((SCHED[pid]||{})['c:'+t.id]||{}).ids||[];const list=ITEMS.filter(i=>(i.type==='meeting'||i.type==='research')&&isLive(i)&&!cur.includes(i.id)).sort(newestFirst).slice(0,60);const short=x=>{x=(x||'제목 없음').split('\n').join(' ');return x.length>34?x.slice(0,34)+'…':x;};
     menuPop(el,[{hd:'미팅 · 리서치 연결 (일정에는 영향 없음)'}].concat(list.map(i=>({t:(i.type==='meeting'?'미팅 · ':'리서치 · ')+short(i.title),k:i.id,fn:()=>schSet(pid,'c:'+t.id,{ids:cur.concat(i.id)},'참고 자료를 연결했습니다')}))),{cls:'link'});return;}
   if(k==='unref'){e.stopPropagation();const cur=((SCHED[pid]||{})['c:'+t.id]||{}).ids||[];const nx=cur.filter(x=>x!==el.dataset.k);schSet(pid,'c:'+t.id,nx.length?{ids:nx}:null,'참고 자료 연결을 해제했습니다');return;}

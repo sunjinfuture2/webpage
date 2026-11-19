@@ -20,6 +20,7 @@ AIDC 워크스페이스 프로젝트 전달본 (2026-11-06)
 - schedule/: 일정 통합(WorkSpace × Schedule) 소스. core/는 SUNJIN Schedule 앱의 계산 엔진 사본(수정 금지), ui/는 화면 코드, schedule.css는 스타일. 구조와 결정 사항은 SCHEDULE.md
 - public/schedule/pangyo.json: 판교 마스터스케줄 원본 데이터 (생성물이 아님)
 - public/schedule.js: 일정 엔진 묶음 (생성물)
+- public/schedule-xlsx.js: 엑셀 가져오기·내보내기 묶음 (생성물, ExcelJS 포함, 필요할 때만 불러옴). 라이선스는 public/schedule.licenses.txt
 - tests/: 검사 (Playwright, 로컬 개발 서버 대상). editor-1..7, leave-1, panel-1, schedule-1..2 그리고 서버 없이 도는 schedule-engine.mjs
 - public/katex/: 수식 표시용 KaTeX (빌드가 node_modules에서 복사, 수식이 있는 화면에서만 불러옴)
 - public/index.html, public/editor.js, public/editor.licenses.txt: 배포용 생성 결과 (직접 수정하면 다시 생성할 때 덮어써집니다)

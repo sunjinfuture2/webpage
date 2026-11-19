@@ -1557,7 +1557,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=S.selDate||TODAY; const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
-  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''}">
+  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}">
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
     <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
@@ -1568,7 +1568,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     const ws=w*7-startDow+1, we=ws+6; let cells='';
     for(let c=0;c<7;c++){const idx=ws+c; let n,out=false;
       if(idx<1){n=prevDim+idx;out=true;}else if(idx>dim){n=idx-dim;out=true;}else n=idx;
-      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}><span class="n">${n}</span>${!out&&cnt&&cnt[n]?`<span class="acnt" title="이 날 진행 중이거나 지연된 액션 ${cnt[n]}건">${pict('action')}${cnt[n]}</span>`:''}${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
+      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}><span class="n">${n}</span>${!out&&cnt&&cnt[n]?schCalBadge(opts.proj,ymd(Y,M,n),cnt[n]):''}${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
     // events of this week: longer spans first, then meetings before action items before research; lanes are filled first-fit
     const lo=Math.max(ws,1), hi=Math.min(we,dim);
     const wk=evs.filter(x=>!(x.en<lo||x.s>hi)).map(x=>({e:x.e,s:Math.max(x.s,lo),en:Math.min(x.en,hi),contL:x.s<lo,contR:x.en>hi}));
@@ -1673,9 +1673,9 @@ function renderMain(){ if(schPreview())Object.keys(SCH_SOURCES).forEach(schLoad)
    <div class="projects" style="margin-top:111.5px;height:675.8px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>
-   <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${pict('action')}</span>액션`:'액션아이템'}${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
+   <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:'액션아이템'}${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
      <div data-sec="action">${actionSecHtml(null)}</div></div>
-   <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title" style="margin-left:-2.8px">리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
+   <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(null)}</div></div>
    ${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}`;
 }
@@ -1703,14 +1703,14 @@ function renderProject(pid){
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
-   <div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title" style="top:0">미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>
+   <div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>
      <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid)}</div></div>
      <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>
    ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">액션아이템${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
    ${PV?'':`<div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>
      <div class="box scroll" id="road-box"><div class="inner">${roadmapHtml(pid)}</div></div><div class="ruler" id="road-ruler">${rulerHtml()}</div><div class="hr bt"></div></div>`}
-   <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title" style="margin-left:-2.8px">리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
+   <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title ${PV?'sch-title':''}" style="margin-left:-2.8px">${PV?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(pid)}</div></div>`;
 }
 // Each project has its own roadmap. An entry made before projects were separated goes with the project of the items it links, else 판교.
@@ -2255,7 +2255,7 @@ document.addEventListener('click',async e=>{
   // topbar
   if(q('#tb-star')){const on=toggleFav(pageKey());toast(on?'즐겨찾기에 추가했습니다.':'즐겨찾기에서 제거했습니다.',1100);return;}
   if(el=q('#tb-share')){const url=location.origin+location.pathname+routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel&&!String(S.panel).startsWith('lib:')?S.panel:null});openPop(el,`<div class="hd">공유</div><div class="msg" style="padding-top:0;max-width:400px">지금 보고 있는 화면의 주소입니다. 워크스페이스에 로그인한 멤버가 열 수 있습니다.<div style="display:flex;gap:6px;margin-top:8px"><input value="${esc(url)}" readonly><button class="it" data-copy="${esc(url)}" style="flex:none;background:#0f0f0f;color:#fff">복사</button></div></div>`,{right:true});return;}
-  if(el=q('#tb-user')){const items=[{hd:'사번: '+sharedUser+' · '+roleOf(sharedUser)},{t:'내 계정',ico:pict('members'),k:'a',fn:()=>openModal('general')},{t:'수신함',ico:pict('inbox'),k:'i',badge:unreadNotes().length||'',fn:()=>openModal('inbox')},{t:'설정',ico:pict('general'),k:'s',fn:()=>openModal('general')},{t:'휴지통',ico:pict('trash'),k:'t',fn:()=>openModal('trash')}];if(canExport())items.push({t:'페이지 내보내기 (텍스트)',k:'x',fn:()=>{downloadText('page.txt',$('#content').innerText);toast('내보내기를 시작했습니다.');}});items.push('-',{t:'로그아웃',ico:pict('logout'),k:'o',fn:logout});menuPop(el,items,{right:true});return;}
+  if(el=q('#tb-user')){const items=[{hd:'사번: '+sharedUser+' · '+roleOf(sharedUser)},{t:'내 계정',ico:pict('members'),k:'a',fn:()=>openModal('general')},{t:'수신함',ico:pict('inbox'),k:'i',badge:unreadNotes().length||'',fn:()=>openModal('inbox')},{t:'설정',ico:pict('general'),k:'s',fn:()=>openModal('general')},{t:'휴지통',ico:pict('trash'),k:'t',fn:()=>openModal('trash')}];if(canExport())items.push({t:'페이지 내보내기 (텍스트)',k:'x',fn:()=>{downloadText('page.txt',$('#content').innerText);toast('내보내기를 시작했습니다.');}});if(typeof schUserMenu==='function')items.push(...schUserMenu());items.push('-',{t:'로그아웃',ico:pict('logout'),k:'o',fn:logout});menuPop(el,items,{right:true});return;}
   if(q('#notice .head')){$('#notice').classList.toggle('open');return;}
   if(el=q('[data-ndel]')){const x=NOTICES.find(n=>n.id===el.dataset.ndel);if(!x)return;confirmDlg('이 공지사항을 삭제할까요?',[{t:'삭제',pri:true,fn:()=>{NOTICES=NOTICES.filter(n=>n.id!==x.id);renderNotice();toast('공지사항을 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);return;}
   // sidebar

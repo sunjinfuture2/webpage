@@ -43,6 +43,14 @@ check('deleting a source task is one _del override (its relations go with it)', 
 let cyc = ''; try { A.validatedPlan(base, d => { d.dependencies.push(A.newDependency(byWbs['W8.6'].id, byWbs['W1.1'].id)); }); } catch (e) { cyc = e.message; }
 check('a relation that closes a loop is refused', /순환/.test(cyc), cyc);
 
+const pk = { id: '추가x', name: '시험 패키지', poTaskId: byWbs['W4.30'].id, deliveryTaskId: byWbs['W5.37'].id, installTaskId: byWbs['W5.37'].id, satTaskId: byWbs['W5.37'].id, delay: 0, leadWeeks: null, trigger: '미확정', triggerDate: null, transport: 0, commitment: '미확약', supplier: '', evidence: '', sourceIndex: -1 };
+const p6 = A.validatedPlan(base, d => { d.procurement.push(pk); }), ov6 = A.diffPlans(base, p6);
+check('a package a member adds is one _new override and comes back', Object.keys(ov6).length === 1 && ov6['p:추가x']._new === true && A.applyOverrides(base, ov6).procurement.length === 17 && A.calculate(A.applyOverrides(base, ov6)).operationDate === '2028-09-28', Object.keys(ov6));
+const p7 = A.validatedPlan(p6, d => { d.procurement = d.procurement.filter(x => x.id !== '추가x'); });
+check('…and removing it removes the override', Object.keys(A.overrideChanges(base, ov6, p7)).length === 1 && A.overrideChanges(base, ov6, p7)['p:추가x'] === null);
+const ov8 = { ['p:' + base.procurement[0].id]: { _del: true } };
+check('a source package can be left out (_del) without touching the others', A.applyOverrides(base, ov8).procurement.length === 15 && JSON.stringify(A.diffPlans(base, A.applyOverrides(base, ov8))) === JSON.stringify(ov8));
+
 console.log('— weighted progress');
 const P = A.progress, w1 = base.tasks.filter(t => t.phase === 'W1');
 const g0 = P.of(w1, r0, () => undefined, '2026-11-19');

@@ -3,7 +3,7 @@
 //   cfg            { statusDate?, powerRoute? }
 //   t:<task id>    changed task fields | { _new: true, ...whole task } | { _del: true }
 //   d:<link id>    changed dependency fields | { _new: true, ...whole dependency } | { _del: true }
-//   p:<package id> changed procurement fields
+//   p:<package id> changed procurement fields | { _new: true, ...whole package } | { _del: true }
 // Other prefixes (g: gate state, e: evidence state, sc: scenarios, c: content links) do not affect the calculation and are left alone here.
 import type { Dependency, Plan, Procurement, Task } from './core/types';
 
@@ -21,7 +21,7 @@ export function applyOverrides(base: Plan, ov: Overrides | null | undefined): Pl
   if (cfg.powerRoute === '9800' || cfg.powerRoute === '5000') plan.powerRoute = cfg.powerRoute;
   const tasks = new Map(plan.tasks.map(t => [t.id, t])), gone = new Set<string>();
   const links = new Map(plan.dependencies.map(e => [e.id, e])), cut = new Set<string>();
-  const pkgs = new Map(plan.procurement.map(x => [x.id, x]));
+  const pkgs = new Map(plan.procurement.map(x => [x.id, x])), lost = new Set<string>();
   for (const [key, v] of Object.entries(ov)) {
     if (!v || typeof v !== 'object') continue;
     const id = key.slice(2);
@@ -36,11 +36,16 @@ export function applyOverrides(base: Plan, ov: Overrides | null | undefined): Pl
       if (cur) { for (const [f, x] of Object.entries(v)) if (!f.startsWith('_') && f !== 'id') (cur as any)[f] = clone(x); }
       else if (v._new) { const e = clone(v); delete e._new; e.id = id; plan.dependencies.push(e as Dependency); links.set(id, e as Dependency); }
     } else if (key.startsWith('p:')) {
-      const cur = pkgs.get(id); if (cur) for (const [f, x] of Object.entries(v)) if (!f.startsWith('_') && f !== 'id') (cur as any)[f] = clone(x);
+      if (v._del) { lost.add(id); continue; }
+      const cur = pkgs.get(id);
+      if (cur) { for (const [f, x] of Object.entries(v)) if (!f.startsWith('_') && f !== 'id') (cur as any)[f] = clone(x); }
+      else if (v._new) { const x = clone(v); delete x._new; x.id = id; plan.procurement.push(x as Procurement); pkgs.set(id, x as Procurement); }
     }
   }
   if (gone.size) plan.tasks = plan.tasks.filter(t => !gone.has(t.id));
   const alive = new Set(plan.tasks.map(t => t.id));
+  // a package whose tasks are gone (or that was removed) is not part of the calculation
+  plan.procurement = plan.procurement.filter(x => !lost.has(x.id) && [x.poTaskId, x.deliveryTaskId, x.installTaskId, x.satTaskId].every(id => alive.has(id)));
   plan.dependencies = plan.dependencies.filter(e => !cut.has(e.id) && alive.has(e.from) && alive.has(e.to));
   plan.tasks.sort((a, b) => a.order - b.order);
   return plan;
@@ -64,8 +69,9 @@ export function diffPlans(base: Plan, plan: Plan): Overrides {
   const bl = new Map(base.dependencies.map(e => [e.id, e])), pl = new Map(plan.dependencies.map(e => [e.id, e]));
   for (const e of plan.dependencies) { const b = bl.get(e.id); if (!b) ov['d:' + e.id] = { ...clone(e), _new: true }; else { const d = fieldDiff(b, e); if (d) ov['d:' + e.id] = d; } }
   for (const b of base.dependencies) if (!pl.has(b.id) && pt.has(b.from) && pt.has(b.to)) ov['d:' + b.id] = { _del: true };
-  const bp = new Map(base.procurement.map(x => [x.id, x]));
-  for (const x of plan.procurement) { const b = bp.get(x.id); if (b) { const d = fieldDiff(b as Procurement, x); if (d) ov['p:' + x.id] = d; } }
+  const bp = new Map(base.procurement.map(x => [x.id, x])), pp = new Set(plan.procurement.map(x => x.id));
+  for (const x of plan.procurement) { const b = bp.get(x.id); if (!b) ov['p:' + x.id] = { ...clone(x), _new: true }; else { const d = fieldDiff(b as Procurement, x); if (d) ov['p:' + x.id] = d; } }
+  for (const b of base.procurement) if (!pp.has(b.id) && [b.poTaskId, b.deliveryTaskId, b.installTaskId, b.satTaskId].every(id => pt.has(id))) ov['p:' + b.id] = { _del: true };
   return ov;
 }
 export const isPlanKey = (key: string) => key === 'cfg' || /^[tdp]:/.test(key);

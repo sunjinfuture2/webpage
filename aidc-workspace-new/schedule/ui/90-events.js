@@ -3,6 +3,8 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='reload'){schLoad(pid);schRefresh();return;}
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
   if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}
+  // a task in the gantt or the relation map: the first click selects it (green, its direct relations drawn stronger), the second opens it
+  if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;} SCHU.sel=v; schUiSave(); if($('#sch-gantt'))schGanttBuild(pid); if($('#sch-net'))schNetBuild(pid); return; }
   if(k==='tab'){if(SCHU.tab!==v){SCHU.tab=v;schRefresh();}return;}
   if(k==='toggle'){SCHU[v]=!SCHU[v];schRefresh();return;}
   if(k==='phase'){const i=SCHU.open.indexOf(v);if(i>=0)SCHU.open.splice(i,1);else SCHU.open.push(v);schRefresh();return;}
@@ -10,8 +12,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='sort'){if(SCHU.sort===v)SCHU.dir=-SCHU.dir;else{SCHU.sort=v;SCHU.dir=1;}SCHU.page=1;schRefresh();return;}
   if(k==='page'){const key=v, cur=SCHU[key]||1, x=el.dataset.v;SCHU[key]=x==='prev'?cur-1:x==='next'?cur+1:+x;if(key==='evPage'){schLowerRefresh();const lw=$('#sch-lower');if(lw)lw.scrollIntoView({block:'start'});return;}schRefresh();const top=$('#sch-actions');if(top&&key==='page')top.scrollIntoView({block:'start'});return;}
   if(k==='sec'){if(SCHU.sec!==v){SCHU.sec=v;SCHU.evPage=1;schLowerRefresh();}return;}
-  if(k==='evadd'){ const kind=SCHU.evKind==='assumptionsAndReferences'?'assumptionsAndReferences':'commitmentReviews'; e.stopPropagation();
-    askInput(kind==='commitmentReviews'?'보완·확약 항목 제목':'전제·근거 항목 제목','',t=>{t=(t||'').trim();if(!t)return;const id=crypto.randomUUID().slice(0,8);SCHU.evKind=kind;schSet(pid,'e:u:'+id,{kind,title:t,status:kind==='commitmentReviews'?'확인 필요':'',by:sharedUser,at:new Date().toISOString()},'항목을 추가했습니다');openPanel(`se-${pid}-u-${id}`);});return;}
+  if(k==='lowadd'){e.stopPropagation();schLowerAdd(el,pid);return;}
   if(k==='netmode'){SCHU.netMode=v;schRefresh();return;}
   if(k==='netfit'){schNetZoom(0);return;}
   if(k==='netzoom'){schNetZoom(+v);return;}
@@ -41,7 +42,23 @@ window.addEventListener('resize',()=>{ clearTimeout(schQT); schQT=setTimeout(()=
 
 // Dragging a bar of the gantt moves the task's managed dates by whole days (not for a task that has started or whose length is a rule).
 // What is drawn is the forecast, so the new managed start is "forecast start + the days dragged"; if a predecessor still holds the task, the toast says so.
-document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const bar=e.target.closest&&e.target.closest('#sch-gantt [data-bar]'); if(!bar)return; const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'); if(!m||!host||!host._px)return;
+// A line of the gantt can be clicked: the menu of that relation opens where the pointer is.
+document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt g[data-link]'); if(!g||!schReady(S.proj))return; e.stopPropagation(); const a=document.createElement('i'); a.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY-6}px;width:1px;height:1px`; document.body.appendChild(a); schRelMenu(a,S.proj,g.dataset.link); a.remove(); },true);
+// Pulling from the small circle at the start or the end of a bar to another bar makes a relation. The ends decide its kind:
+// end -> start is FS (the usual "after"), start -> start SS, end -> end FF, start -> end SF.
+function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), svgEl=$('#sch-gantt .sg-links'), bar=port.closest('[data-bar]'); if(!m||!svgEl||!bar)return; e.preventDefault(); const from=bar.dataset.bar, fromEnd=port.dataset.port, z=LAYOUT.zoom||1;
+  const box=()=>svgEl.getBoundingClientRect(), r0=port.getBoundingClientRect(), b0=box(), x0=(r0.left+r0.width/2-b0.left)/z, y0=(r0.top+r0.height/2-b0.top)/z;
+  const line=document.createElementNS('http://www.w3.org/2000/svg','path'); line.setAttribute('class','draft'); svgEl.appendChild(line); bar.classList.add('linking'); document.body.style.userSelect='none'; let target=null, toEnd='s', tip=null;
+  const kind=()=>fromEnd==='f'?(toEnd==='s'?'FS':'FF'):(toEnd==='s'?'SS':'SF');
+  const move=ev=>{ const b=box(); line.setAttribute('d',`M${x0},${y0} L${(ev.clientX-b.left)/z},${(ev.clientY-b.top)/z}`); const el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-gantt [data-bar]');
+    if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.bar!==from?hit:null;
+    if(!tip){tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);} tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+16)+'px';
+    if(target){target.classList.add('target');const r=target.getBoundingClientRect();toEnd=target.classList.contains('sg-msb')||ev.clientX<=r.left+r.width/2?'s':'f';tip.textContent=`${schWbs(m.byId.get(from).wbs)} → ${schWbs(m.byId.get(target.dataset.bar).wbs)} · ${kind()} ${AIDCSchedule.relationshipNames[kind()]}`;}else tip.textContent='연결할 업무의 막대에 놓으세요'; };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; line.remove(); if(tip)tip.remove(); bar.classList.remove('linking'); swallowClick(); if(!target)return; target.classList.remove('target');
+    const to=target.dataset.bar, ty=kind(), a=m.byId.get(from), b=m.byId.get(to); if(m.plan.dependencies.some(x=>x.from===from&&x.to===to&&x.type===ty)){toast('이미 있는 관계입니다.');return;}
+    SCHU.sel=to; schCommit(pid,d=>{d.dependencies.push(AIDCSchedule.newDependency(from,to,ty,0));},`${schWbs(a.wbs)} → ${schWbs(b.wbs)} 관계 추가 (${ty})`); };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
+document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const port=e.target.closest&&e.target.closest('#sch-gantt [data-port]'); if(port){schLinkDrag(e,port);return;} const bar=e.target.closest&&e.target.closest('#sch-gantt [data-bar]'); if(!bar)return; const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'); if(!m||!host||!host._px)return;
   const t=m.byId.get(bar.dataset.bar); if(!t)return; const D=AIDCSchedule.dates, r=m.res.tasks[t.id], px=host._px, x0=e.clientX, left0=parseFloat(bar.style.left)||0, lock=t.actualStart?'착수한 업무는 실제 시작일로 고정됩니다. 상세창에서 날짜를 바꾸세요.':t.finishRule?'검수 완료 후 개월 수로 정해지는 업무입니다.':''; let moved=false, days=0, tip=null;
   const move=ev=>{ const dx=(ev.clientX-x0)/(LAYOUT.zoom||1); if(!moved&&Math.abs(dx)<4)return; if(!moved){moved=true;document.body.style.userSelect='none';if(lock){toast(lock,3200);}else{tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);}}
     if(lock)return; days=Math.round(dx/px); bar.style.left=(left0+days*px)+'px'; bar.classList.add('drag'); const a=D.addDays(r.start,days), b=D.addDays(r.finish,days); tip.textContent=`${schD(a)}${t.kind==='milestone'?'':' → '+schD(b)} (${days>0?'+':''}${days}일)`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+16)+'px'; };
@@ -54,3 +71,8 @@ function schPreviewBadge(){ if(!schPreview()||$('#sch-pv'))return; const host=$(
   b.addEventListener('click',e=>{e.stopPropagation();menuPop(b,[{hd:'일정 통합 화면 미리보기'},{t:'기존 화면으로 돌아가기',k:'off',fn:()=>{try{localStorage.removeItem('aidc-preview');}catch(x){}location.href=location.pathname+'?v=1'+location.hash;}},{t:'미리보기 주소 복사',k:'cp',fn:()=>{const u=location.origin+location.pathname+'?v=2'+location.hash;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('미리보기 주소를 복사했습니다.'),()=>toast(u,6000));}}],{right:true});});
   host.insertBefore(b,host.firstChild); }
 schPreviewBadge();
+
+// The row under the pointer is marked across the outline and the time line.
+document.addEventListener('mouseover',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt .sg-body'); const band=$('#sch-gantt .sg-band'); if(!band)return; const el=g&&e.target.closest('[data-row]'), id=el?el.dataset.row:'';
+  if(band._id===id)return; band._id=id; $$('#sch-gantt .hover').forEach(x=>x.classList.remove('hover')); const host=$('#sch-gantt .sg-scroll'), r=id&&host._rows?host._rows.get(id):null;
+  if(!r){band.hidden=true;return;} band.hidden=false; band.style.top=(r.y+2.1)+'px'; $$(`#sch-gantt [data-row="${id}"]`).forEach(x=>x.classList.add('hover')); });
