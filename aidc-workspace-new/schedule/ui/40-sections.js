@@ -4,9 +4,9 @@ function schOpsRow(pid){ const m=schModel(pid); if(!m)return `<div class="fr"><b
   const r=m.res, d=r.operationDelay;
   return `<div class="fr"><b>운영개시 예상</b><span class="v sch-ops" data-sch="ops" title="일정에서 계산한 날짜입니다 (상용서비스 개시 업무의 예상 완료일). 눌러서 일정 보기">${schD(r.operationDate)}${d?`<em class="${d>0?'late':'early'}">목표 대비 ${d>0?'+':''}${d}일</em>`:''}${r.operationValid?'':'<em class="late">전력 경로 재승인 전 · 참고값</em>'}</span></div>`; }
 
-const SCH_COMMIT=['미확약','견적 수령','조건부 확약','확약'], SCH_COMMIT_CLS={'확약':'ok','견적 수령':'quote','조건부 확약':'cond','미확약':'none'};
+const SCH_COMMIT=['미확약','견적 수령','조건부 확약','확약'];   // drawn with the status marks (SCH_MARK_OF)
 const SCH_TRIGGERS=['미확정','PO 발행','선금 지급','도면 승인','복합 조건'];
-const SCH_GATE_ST=['확인 전','준비 중','검토 요청','승인','보완·반려'], SCH_GATE_CLS={'승인':'ok','검토 요청':'cond','준비 중':'quote','보완·반려':'bad','확인 전':'none'};
+const SCH_GATE_ST=['확인 전','준비 중','검토 요청','승인','보완·반려'];
 const SCH_EV=[['commitmentReviews','보완·확약'],['assumptionsAndReferences','전제·근거'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS 일정검토'],['offtakers','오프테이커 후보'],['sourceMappings','원자료 대조']];
 const SCH_EV_ST=['확인 필요','확인 중','반영 완료','조건부 미발동','보류'];
 // "W7.10~W7.18", "W6.8/W6.27" ...: every WBS in a text becomes a link to its task
@@ -45,7 +45,7 @@ function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.pro
   for(const x of list){ const po=m.byId.get(x.poTaskId), pr=m.res.tasks[x.poTaskId], ins=m.res.tasks[x.installTaskId], f=schSrcFields(pid,'procurementPackages',x.sourceIndex), ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
     h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schWbs(po.wbs)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
       <div class="rg">${pr&&ins?schRange(pr.start,ins.finish):'-'}</div><div class="dl"><span class="sf-e" data-schc="pdelay" data-k="${esc(x.id)}" title="PO 추가지연 (일) 변경">${x.delay?x.delay+'일':'-'}</span></div>
-      <div><span class="sf-e sch-cm cm-${SCH_COMMIT_CLS[x.commitment]||'none'}" data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경">${esc(x.commitment||'미확약')}</span></div>
+      <div>${schStateMark(x.commitment||'미확약','sf-e',`data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경"`)}</div>
       <div class="who">${ppl.length?ppl.map(k=>`<span>${av()}${esc(userName(k))}</span>`).join(''):`<span class="sch-role">${esc(f['실행 역할']||'')}</span>`}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
       <div class="lead">${x.leadWeeks!==null?`${+(+x.leadWeeks).toFixed(1)}주${dl?` <small>${schD(dl)} 납품</small>`:''}`:'-'}</div></div>`; }
   if(!list.length)h+=`<div class="none">조건에 맞는 설비가 없습니다.</div>`;
@@ -61,7 +61,7 @@ function schGatesHtml(pid,m){ const q=(SCHU.lq||'').trim(), today=schToday(), D=
   let h=`<div class="sch-filters"><div class="right" style="margin-left:0;font-size:12.5px;color:#8e8e8e">날짜는 연결된 업무의 예상 완료일입니다. 날짜가 지나도 자동으로 승인되지 않습니다.</div></div><div class="sch-gates">`;
   list.forEach((g,i)=>{ const reached=g.st==='승인'||g.date<=today, slip=g.plan&&g.date?D.diffDays(g.date,g.plan):0;
     h+=`<div class="gt ${reached?'past':''} ${g.st==='승인'?'ok':''} ${S.panel===`sg-${pid}-${g.code}`?'sel':''}" data-open="sg-${pid}-${esc(g.code)}"><i class="ln"></i><div class="date">${g.date?schD(g.date):'<span style="color:#c4c4c4;font-weight:500">업무 미연결</span>'}${slip?`<em class="${slip>0?'late':''}">${slip>0?'+':''}${slip}일</em>`:''}</div><i class="dot"></i>
-      <div class="hd2"><div class="cat"><small>${g.user?'추가':esc(g.code)}</small>${esc(g.title)}</div>${g.t?`<span class="chip pj-g" data-open="${schItemId(g.t.id)}" title="${esc(schTaskTitle(g.t))}"><span class="t">${esc(schTaskTitle(g.t))}</span></span>`:''}<span class="sf-e sch-cm cm-${SCH_GATE_CLS[g.st]||'none'}" data-schc="gstate" data-k="${esc(g.code)}" title="승인 상태 변경">${esc(g.st)}</span></div>
+      <div class="hd2"><div class="cat"><small>${g.user?'추가':esc(g.code)}</small>${esc(g.title)}</div>${g.t?`<span class="chip pj-g" data-open="${schItemId(g.t.id)}" title="${esc(schTaskTitle(g.t))}"><span class="t">${esc(schTaskTitle(g.t))}</span></span>`:''}${schStateMark(g.st,'sf-e',`data-schc="gstate" data-k="${esc(g.code)}" title="승인 상태 변경"`)}</div>
       <dl><dt>승인 역할</dt><dd>${esc(g.f['승인 역할']||'-')}</dd><dt>통과 증빙</dt><dd>${esc(g.f['통과 증빙']||'-')}</dd><dt>미충족 처리</dt><dd>${esc(g.f['미충족 처리']||'-')}</dd></dl></div>`; });
   if(!list.length)h+=`<div class="sch-empty">조건에 맞는 승인게이트가 없습니다.</div>`;
   return h+`</div>`; }
@@ -75,7 +75,7 @@ function schEvidHtml(pid,m){ const kind=SCHU.evKind, q=(SCHU.lq||'').trim(); let
   let h=`<div class="sch-filters">${schSf('evKind',`${name} (${(src[kind]||[]).length})`,true)}${sts.length?schSf('evState',SCHU.evState||'전체 상태',!!SCHU.evState):''}<div class="right" style="font-size:12.5px;color:#8e8e8e">원본 일정 파일의 ‘${esc(((src[kind]||[])[0]||{provenance:{}}).provenance.sheet||name)}’ 시트 기록입니다. 일정 날짜에는 영향을 주지 않습니다.</div></div>
     <div class="tbl sch-ev"><div class="hd">${th('ID')}${th('구분')}${th('제목')}${th('연결 업무')}${th('상태')}${th('확인 역할')}${th('기한')}${th('내용')}</div>`;
   for(const r of page)h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(r.no)}</div><div class="ct">${esc(r.cat)}</div><div class="nm"><span class="tx">${esc(r.title)}</span></div><div class="lk"><span class="tx">${schWbsLinks(m,r.link)||'-'}</span></div>
-      <div>${r.st||r.user||kind==='commitmentReviews'?`<span class="sf-e sch-cm cm-${r.st==='반영 완료'?'ok':r.st==='확인 중'?'cond':r.st==='확인 필요'?'quote':'none'}" data-schc="estate" data-k="${esc(r.key)}" title="상태 변경">${esc(r.st||'상태 없음')}</span>`:'<span style="color:#c4c4c4">-</span>'}</div>
+      <div>${r.st||r.user||kind==='commitmentReviews'?(r.st?schStateMark(r.st,'sf-e',`data-schc="estate" data-k="${esc(r.key)}" title="상태 변경"`):`<span class="sf-e sch-cm cm-none" data-schc="estate" data-k="${esc(r.key)}" title="상태 변경">상태 없음</span>`):'<span style="color:#c4c4c4">-</span>'}</div>
       <div class="rl"><span class="tx">${esc(r.role||'-')}</span></div><div class="du">${r.due?schD(r.due):'-'}</div><div class="bd"><span class="tx">${esc(r.body)}</span></div></div>`;
   if(!page.length)h+=`<div class="none">조건에 맞는 기록이 없습니다.</div>`;
   return h+`<div class="ft"></div></div>${total>1?schPager(SCHU.evPage,total,'evPage',32):''}`; }
@@ -90,7 +90,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     const ins=m.res.tasks[x.installTaskId], ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
     return wrap('action','외부설비 조달 · '+esc(x.sourceIndex<0?'추가':x.id),x.name,[
       ...(x.sourceIndex<0?[R('설비 이름',e('name',`<span class="plain wrap">${esc(x.name)}</span>`))]:[]),
-      R('확약 상태',e('commitment',`<span class="sch-cm cm-${SCH_COMMIT_CLS[x.commitment]||'none'}">${esc(x.commitment||'미확약')}</span>`)),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join('')}</span>`:`<span class="sch-role" style="font-size:14px">${esc(f['실행 역할']||'')}</span>${ph('지정')}`)),
+      R('확약 상태',e('commitment',schStateMark(x.commitment||'미확약'))),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join('')}</span>`:`<span class="sch-role" style="font-size:14px">${esc(f['실행 역할']||'')}</span>${ph('지정')}`)),
       R('PO 추가지연',e('delay',x.delay?x.delay+'일':ph('없음'),'계약·PO 업무에 더하는 지연 일수')),R('확약 납기',e('leadWeeks',x.leadWeeks!==null?(+(+x.leadWeeks).toFixed(2))+'주':ph('미입력'),'공급사가 확약한 납기 (주)')+(dl?`<span class="plain" style="color:#8e8e8e;margin-left:8px">확약 기준 예상 납품 ${schD(dl)}</span>`:'')),
       R('납기 기산조건',e('trigger',esc(x.trigger||'미확정'))+(x.trigger&&x.trigger!=='PO 발행'&&x.trigger!=='미확정'?`<span class="plain" style="margin:0 6px;color:#c4c4c4">충족일</span>`+e('triggerDate',x.triggerDate?schD(x.triggerDate):ph('입력')):'')),R('별도 운송',e('transport',x.transport?x.transport+'일':ph('없음'))),
       R('공급사·계약상태',e('supplier',x.supplier?`<span class="plain wrap">${esc(x.supplier)}</span>`:ph('입력')),true),R('견적·조건 증빙',e('evidence',x.evidence?`<span class="plain wrap">${esc(x.evidence)}</span>`:ph('입력')),true),
@@ -100,7 +100,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     const ue=(k,v,p)=>U?e('gu:'+k,v?`<span class="plain wrap">${esc(v)}</span>`:ph(p)):txt(v);
     return wrap('action','승인게이트 · '+(U?'추가':esc(g.code)),g.title,[
       ...(U?[R('승인 사항',e('gu:title',`<span class="plain wrap">${esc(g.title)}</span>`))]:[]),
-      R('승인 상태',e('gstate',`<span class="sch-cm cm-${SCH_GATE_CLS[g.st]||'none'}">${esc(g.st)}</span>`)+(g.o.by?`<span class="plain" style="color:#8e8e8e;margin-left:10px">${esc(userName(g.o.by))} · ${esc((g.o.at||'').slice(0,10))}</span>`:'')),
+      R('승인 상태',e('gstate',schStateMark(g.st))+(g.o.by?`<span class="plain" style="color:#8e8e8e;margin-left:10px">${esc(userName(g.o.by))} · ${esc((g.o.at||'').slice(0,10))}</span>`:'')),
       R('예상 승인일',`<span class="plain">${g.date?schD(g.date):'-'}</span>${slip?`<em class="sch-delta ${slip>0?'late':''}">계획 대비 ${slip>0?'+':''}${slip}일</em>`:''}`),...(U?[]:[R('계획 승인일',`<span class="plain">${g.plan?schD(g.plan):'-'}</span>`)]),
       R('연결 업무',(g.t?`<a class="sch-wl" data-open="${schItemId(g.t.id)}">${esc(schTaskTitle(g.t))}</a>`:none)+(U?e('gu:task',ph(g.t?'변경':'선택')):''),true),...(U?[]:[R('연계 업무',`<span class="plain wrap">${schWbsLinks(m,g.f['연계업무'])}</span>`,true)]),
       R('승인 역할',ue('role',g.f['승인 역할'],'입력')),R('통과 증빙',ue('evidence',g.f['통과 증빙'],'입력'),true),R('미충족 처리',ue('fallback',g.f['미충족 처리'],'입력'),true),R('메모',e('gnote',g.o.note?`<span class="plain wrap">${esc(g.o.note)}</span>`:ph('입력')),true)],
@@ -108,7 +108,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
   const um=/^u-(.+)$/.exec(rest), km=/^([A-Za-z]+)-(\d+)$/.exec(rest); let r=null, kind='';
   if(um){const v=(SCHED[pid]||{})['e:u:'+um[1]];if(!v)return '';kind=v.kind;r=schEvRows(pid,kind).find(q=>q.key==='e:u:'+um[1]);} else if(km){kind=km[1];r=schEvRows(pid,kind)[+km[2]];}
   if(!r)return ''; const name=(SCH_EV.find(q=>q[0]===kind)||['',''])[1], isUrl=v=>/^https?:\/\/\S+$/.test(String(v||'').trim());
-  const rows=[R('상태',e('estate',r.st?`<span class="sch-cm cm-${r.st==='반영 완료'?'ok':r.st==='확인 중'?'cond':r.st==='확인 필요'?'quote':'none'}">${esc(r.st)}</span>`:ph('지정'))+(r.st0&&r.st!==r.st0?`<span class="plain" style="color:#8e8e8e;margin-left:10px">원본: ${esc(r.st0)}</span>`:''))];
+  const rows=[R('상태',e('estate',r.st?schStateMark(r.st):ph('지정'))+(r.st0&&r.st!==r.st0?`<span class="plain" style="color:#8e8e8e;margin-left:10px">원본: ${esc(r.st0)}</span>`:''))];
   if(r.user){ const ue=(k,v,p)=>e('u:'+k,v?`<span class="plain wrap">${esc(v)}</span>`:ph(p));
     rows.push(R('구분',ue('cat',r.cat,'입력')),R('연결 업무',r.link?`<span class="plain wrap">${schWbsLinks(m,r.link)}</span>${e('u:link',ph('변경'))}`:ue('link','','예: W4.24 또는 4-24'),true),R('확인 역할',ue('role',r.role,'입력')),R('기한',e('u:due',r.due?schD(r.due):ph('입력'))),R('내용',ue('body',r.body,'입력'),true),R('근거·URL',r.ref&&isUrl(r.ref)?`<a class="url" style="margin-left:0" href="${esc(r.ref)}" target="_blank" rel="noopener" data-stop>${esc(r.ref)}</a>${e('u:ref',ph('변경'))}`:ue('ref',r.ref,'입력'),true),
       R('작성',`<span class="plain">${esc(userName(r.by))} · ${esc((r.at||'').slice(0,10))}</span>`)); }

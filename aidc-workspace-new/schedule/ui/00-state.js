@@ -4,7 +4,7 @@
 // Nothing here runs for a project without a schedule, or while the preview is off.
 
 const SCH_SOURCES={pangyo:'/schedule/pangyo.json'};           // projects that have a master schedule (static source plans)
-const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{}};
+const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{},note:{},last:{},tick:0};
 // Preview (owner, 2026-11-19): the combined page is shown only to a browser that opened the site with ?v=2 once; ?v=1 turns it off again.
 (function(){try{const v=new URLSearchParams(location.search).get('v');if(v==='2')localStorage.setItem('aidc-preview','1');else if(v==='1')localStorage.removeItem('aidc-preview');}catch(e){}})();
 const schPreview=()=>{try{return localStorage.getItem('aidc-preview')==='1';}catch(e){return false;}};
@@ -90,10 +90,17 @@ const schPhaseNo=c=>String(c||'').replace(/^W/,'');
 const schPhaseName=l=>String(l||'').replace(/^\d+\s*/,'');                          // "1 사업정의·RFP" -> "사업정의·RFP"
 const schPhaseLabel=g=>`${schPhaseNo(g.code)}) ${schPhaseName(g.label)}`;
 const schToday=()=>TODAY;
-const SCH_ST={'완료':{c:'done',ic:'i-check',w:9.3,h:7.1},'진행':{c:'prog',ic:'i-prog',w:10.5,h:10.5},'확인 전':{c:'ask',ic:'i-sch-bang',w:3,h:10.5},'계획':{c:'plan',ic:'i-sch-plan',w:11,h:11},'조건부 미발동':{c:'cond',ic:'i-sch-plan',w:11,h:11}};
-const SCH_STATUSES=['계획','확인 전','진행','완료','조건부 미발동'];
+// One status design for the whole page (owner's sheet, 2026-11-19): a mark and a word in one colour. Six kinds:
+// plan (grey, spokes), ask (amber, !), prog (blue, open ring), done (green, check), hold (red, pause), cond (purple, triangle).
+// The marks are symbols i-st-<kind> (10-actions.js); their sizes are in em so they follow the size of the word beside them.
+const SCH_ST={'계획':{c:'plan'},'확인 전':{c:'ask'},'진행':{c:'prog'},'완료':{c:'done'},'보류':{c:'hold'},'조건부 미발동':{c:'cond'}};
+const SCH_STATUSES=['계획','확인 전','진행','완료','보류','조건부 미발동'];
+// States of other things that are shown with the same six marks: gates, evidence records, supplier commitments.
+const SCH_MARK_OF={'확인 전':'ask','준비 중':'plan','검토 요청':'prog','승인':'done','보완·반려':'hold','확인 필요':'ask','확인 중':'prog','반영 완료':'done','조건부 미발동':'cond','보류':'hold','미확약':'plan','견적 수령':'ask','조건부 확약':'cond','확약':'done'};
+const schMark=(kind,label,cls,attrs)=>`<span class="sch-st st-${kind} ${cls||''}" ${attrs||''}><i class="si"><svg class="si-${kind}" aria-hidden="true"><use href="#i-st-${kind}"/></svg></i>${esc(label)}</span>`;
+const schStateMark=(label,cls,attrs)=>schMark(SCH_MARK_OF[label]||'plan',label,cls,attrs);
 const schStatus=t=>{const P=AIDCSchedule.progress;return P.isDone(t)?'완료':(t.status==='완료'?'진행':t.status||'계획');};
-const schStIcon=st=>{const d=SCH_ST[st]||SCH_ST['계획'];return `<span class="sch-st st-${d.c}">${svg(d.ic,d.w,d.h)}${esc(st)}</span>`;};
+const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
 // D-day of a task that is not finished: against its forecast finish. Late ones read "n일 지연".
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
 const schDdayHtml=(finish,done)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}">${d.txt}</span>`:'';};
@@ -127,3 +134,50 @@ function schVirtualItem(id){ const taskId=schTaskIdOf(id); if(!taskId)return und
 function schAdopt(it){ if(!it||ITEMS.includes(it)||!schTaskIdOf(it.id)||SCH.virt[it.id]!==it)return false; delete SCH.virt[it.id]; it.createdAt=new Date().toISOString(); it.authorId=sharedUser; ITEMS.push(it); return true; }
 const schLinked=(pid,taskId)=>ITEMS.filter(i=>i.task===taskId&&!i.own&&i.proj===pid&&isLive(i));
 const schUnlinked=pid=>liveItems('action',pid).filter(i=>!i.task);
+
+/* ---------- notices on actions (owner, 2026-11-19) ----------
+   green: the action's schedule starts today.
+   red:   something changed on an action that concerns me (I am one of its assignees, I am mentioned in it, or it is linked with an
+          action of mine) and I have not opened it since.
+   What I have seen is kept per member in the inbox record (meta:inbox:<사번>): seen = {<item id>: signature of the action}. An action
+   that newly concerns me has no entry, so it is red until I open it. The first time a member meets a project everything is taken as
+   seen (seenInit), otherwise the whole list would start red.
+   Whose change it was: what differs right after data came from the server (SCH.tick moved) is somebody else's; what differs while no
+   server data came in between is my own and is taken as seen (schNoticeSettle is called before and after every merge). */
+const schHash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);};
+const schMeIn=it=>{ if(!it||!sharedUser)return false; if((it.people||[]).includes(sharedUser))return true; const first=String(ME||'').split(' ')[0];
+  if(first&&(it.comments||[]).some(c=>c.authorId!==sharedUser&&String(c.text||'').includes('@'+first)))return true; return typeof it.body==='string'&&it.body.includes('data-id="'+sharedUser+'"'); };
+const schItemSig=it=>!it?'':[it.title||'',it.date||'',it.end||'',it.st||'',it.pri||'',(it.people||[]).join(','),it.task||'',it.url||'',schHash(String(it.body||'')),(it.comments||[]).filter(c=>c.authorId!==sharedUser).map(c=>c.id||c.ts||'').join(',')].join('|');
+function schNotices(pid){ const now=Date.now(), c=SCH.note[pid]; if(c&&now-c.at<300)return c;
+  const out={at:now,red:new Set(),green:new Set(),sig:new Map()}; SCH.note[pid]=out;
+  const m=schHas(pid)?schModel(pid):null, P=AIDCSchedule.progress, acts=liveItems('action',pid).filter(i=>!i.own);
+  if(m)for(const t of m.plan.tasks){ if(!P.isDone(t)&&!P.isExcluded(t)&&m.res.tasks[t.id].start===TODAY)out.green.add(schItemId(t.id)); }
+  for(const i of acts)if(i.st!=='done'&&i.date===TODAY)out.green.add(i.id);
+  if(!sharedUser||(schHas(pid)&&!m)||schScenario(pid))return out;   // nothing to compare with yet, or a scenario is being looked at
+  // what concerns me, with its signature
+  const rel=new Map(), mineItems=new Set(acts.filter(schMeIn).map(i=>i.id)), mineTasks=new Set(), byTask=new Map(), own=new Map();
+  for(const i of acts)if(i.task){if(!byTask.has(i.task))byTask.set(i.task,[]);byTask.get(i.task).push(i);}
+  if(m){ for(const i of ITEMS)if(i.own&&i.task&&i.proj===pid&&isLive(i))own.set(i.task,i);
+    for(const t of m.plan.tasks)if(schPeople(t).includes(sharedUser)||schMeIn(own.get(t.id)))mineTasks.add(t.id);
+    for(const t of m.plan.tasks){ const linked=byTask.get(t.id)||[], refs=(((SCHED[pid]||{})['c:'+t.id]||{}).ids||[]);
+      if(!(mineTasks.has(t.id)||linked.some(i=>mineItems.has(i.id))||refs.some(id=>schMeIn(ITEMS.find(i=>i.id===id)))))continue; const r=m.res.tasks[t.id];
+      rel.set(schItemId(t.id),schHash([t.name,schStatus(t),r.start,r.finish,t.plannedStart,t.plannedFinish,t.actualStart||'',t.actualFinish||'',t.progress??'',schPeople(t).join(','),t.pri||'',t.url||'',linked.map(i=>i.id+':'+i.st).join(','),refs.join(','),schItemSig(own.get(t.id))].join('|'))); } }
+  for(const i of acts)if(mineItems.has(i.id)||(i.task&&mineTasks.has(i.task)))rel.set(i.id,schHash(schItemSig(i)));
+  const st=INBOX_STATE, seen=st.seen||{}, last=SCH.last[pid]; let next=null; const put=(id,v)=>{next=next||{...seen}; if(v===null)delete next[id]; else next[id]=v;};
+  if(!(st.seenInit&&st.seenInit[pid])){ for(const [id,sig] of rel)put(id,sig); st.seenInit={...(st.seenInit||{}),[pid]:1}; }
+  else{ for(const [id,sig] of rel){ if(seen[id]===sig)continue;
+      if(id===S.panel||id===S.full){put(id,sig);continue;}                                                     // I am looking at it
+      if(last&&last.tick===SCH.tick&&last.sig.get(id)!==sig&&!last.red.has(id)){put(id,sig);continue;}          // my own change
+      out.red.add(id); }
+    for(const id of Object.keys(seen)){ if(rel.has(id))continue; const tid=schTaskIdOf(id), x=tid?null:ITEMS.find(i=>i.id===id);   // no longer mine: forget, so that it is red again if it comes back
+      if(tid?(m&&m.byId.has(tid)):(!x||x.proj===pid))put(id,null); } }
+  if(next)st.seen=next; out.sig=rel; SCH.last[pid]={tick:SCH.tick,sig:rel,red:out.red}; return out; }
+// Called by the sync code before (false) and after (true) data from the server is merged in.
+function schNoticeSettle(remote){ if(!schPreview()||!sharedUser)return; if(remote)SCH.tick++;
+  for(const pid of Object.keys(SCH_SOURCES)){ if(!SCH.base[pid])continue; if(remote&&SCH.memo[pid])SCH.memo[pid].at=-1e9;   // the model looks at the overrides again (it would trust its copy for 40 ms)
+    SCH.note[pid]=null; schNotices(pid); } }
+// Opening an action is seeing it: its red mark goes at once (the rest of the page is redrawn later as usual).
+function schSeenOpen(id){ if(!sharedUser||!schPreview())return; const it=item(id), pid=it&&it.proj; if(!pid||!SCH.last[pid]||!SCH.last[pid].red.has(id))return;
+  SCH.note[pid]=null; schNotices(pid); $$('[data-open="'+CSS.escape(id)+'"] .sdot.r').forEach(x=>x.remove());
+  const b=$('#page-project .cal .cell.today .acnt'); if(b&&S.proj===pid)b.outerHTML=schCalBadge(pid,TODAY,+((b.querySelector('b')||{}).textContent)||0); }
+const schDotsHtml=(n,id)=>{const r=n.red.has(id), g=n.green.has(id);return (r?'<i class="sdot r" title="내가 담당·호출·연결된 액션에 변동이 있습니다"></i>':'')+(g?`<i class="sdot g ${r?'two':''}" title="오늘 일정이 시작된 액션입니다"></i>`:'');};

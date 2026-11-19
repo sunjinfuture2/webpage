@@ -3,8 +3,13 @@
 (function(){ // icons the schedule views add to the page's sprite
   const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); s.setAttribute('aria-hidden','true');
   s.innerHTML='<symbol id="i-sch-arr" viewBox="0 0 11 8"><path d="M0.5 4h9.3M6.7 0.9L9.9 4 6.7 7.1" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>'
-   +'<symbol id="i-sch-bang" viewBox="0 0 3 10.5"><path d="M1.5 0.4v6.4M1.5 8.6v1.6" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>'
-   +'<symbol id="i-sch-plan" viewBox="0 0 11 11"><path d="M5.5 0.6v2.2M5.5 8.2v2.2M0.6 5.5h2.2M8.2 5.5h2.2M2 2l1.6 1.6M7.4 7.4L9 9M9 2L7.4 3.6M3.6 7.4L2 9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></symbol>'
+   // status marks, traced from the owner's sheet (numbers are that sheet's pixels; 91 of them are one em of the word beside the mark)
+   +'<symbol id="i-st-plan" viewBox="0 0 83 83"><path d="M41.5 .5v20M41.5 62.5v20M.5 41.5h20M62.5 41.5h20M12.5 12.5l14.15 14.15M12.5 70.5l14.15-14.15M70.5 70.5L56.35 56.35" fill="none" stroke="currentColor" stroke-width="10"/></symbol>'
+   +'<symbol id="i-st-ask" viewBox="0 0 13.5 72"><path d="M0 0h13.5v47.7H0zM0 59.3h13.5V72H0z" fill="currentColor"/></symbol>'
+   +'<symbol id="i-st-prog" viewBox="0 0 77 77"><path d="M64.19 19.84A31.75 31.75 0 1 1 38.5 6.75" fill="none" stroke="currentColor" stroke-width="13.5"/></symbol>'
+   +'<symbol id="i-st-done" viewBox="0 0 73 62.5"><path d="M5 30.5L27 53 67.5 5" fill="none" stroke="currentColor" stroke-width="13" stroke-linejoin="miter"/></symbol>'
+   +'<symbol id="i-st-hold" viewBox="0 0 40.5 57"><path d="M0 0h13v57H0zM27.5 0h13v57h-13z" fill="currentColor"/></symbol>'
+   +'<symbol id="i-st-cond" viewBox="0 0 81 70"><path fill-rule="evenodd" d="M0 70L40.5 0 81 70zM22.7 58h36.3L40.7 26.7z" fill="currentColor"/></symbol>'
    +'<symbol id="i-sch-fit" viewBox="0 0 22 22"><path d="M1 7V1h6M15 1h6v6M21 15v6h-6M7 21H1v-6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>'
    +'<symbol id="i-sch-ext" viewBox="0 0 9 9"><path d="M1 8L8 1M2.6 1H8v5.4" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>'
    +'<symbol id="i-sch-tag" viewBox="184.8 114.6 13.7 13.7"><path transform="matrix(1,0,0,-1,189.0314,119.889987)" d="M0 0C-.637 0-1.154 .516-1.154 1.154-1.154 1.791-.637 2.308 0 2.308 .637 2.308 1.154 1.791 1.154 1.154 1.154 .516 .637 0 0 0M8.424-.853 3.802 3.769C3.167 4.404 2.307 4.76 1.41 4.76H-1.948C-2.918 4.76-3.706 3.973-3.706 3.003V-.25C-3.706-1.148-3.349-2.008-2.715-2.642L1.958-7.315C2.47-7.827 3.299-7.827 3.811-7.315L8.424-2.702C8.935-2.191 8.935-1.364 8.424-.853" fill="currentColor"/></symbol>'
@@ -81,16 +86,26 @@ function schItemRow(x,cls,wbs){ const done=x.st==='done', end=itemEnd(x), u=urlH
 // Sizes are those of the design file (261118, page 9), measured on a 4x render: the outline is 508 wide, the header 40.75
 // (months 24.25, days 16.5), a phase row 36.4 (30 when its tasks follow), a task row 33.25, a bar 22 high, a day 13.45 wide.
 const SG={left:508,head:40.75,padTop:1.3,ph:36.4,phOpen:30,tk:33.25,padAfter:9.7,bar:22,day:13.45,port:21.5,ms:13.25};
-// A relation is drawn the way the design draws it: it leaves the earlier task from its lower edge, 21.5 from the left,
-// runs down to the later task's row and turns into that task's left edge. When the later task starts at or before that
-// point there is no room for the turn: the line then hooks into the later task's upper edge. A later task that is drawn
-// above mirrors this (out of the upper edge, into the lower one). Every relation of one task shares the same starting point.
-function schLinkPath(a,b){ const down=b.cy>=a.cy, s=down?1:-1, px=a.port, py=down?a.bottom:a.top, tip=b.x1-2;
-  if(tip-px>=10){ const dy=Math.abs(b.cy-py), r=Math.min(dy>100?12:6,dy,tip-px-3);
-    return {d:`M${px},${py} L${px},${b.cy-s*r} Q${px},${b.cy} ${px+r},${b.cy} L${tip},${b.cy}`,head:`M${tip-3.6},${b.cy-3} L${tip},${b.cy} L${tip-3.6},${b.cy+3}`,dot:[px,py]}; }
-  const ex=b.ms?b.cx:(b.x2-b.x1<SG.port*2?(b.x1+b.x2)/2:b.x1+SG.port), ey=down?b.top-1.5:b.bottom+1.5, my=py+s*4.5, dir=Math.sign(ex-px)||1, r=Math.min(3,Math.abs(ex-px)/2), head=`M${ex-3},${ey-s*3.6} L${ex},${ey} L${ex+3},${ey-s*3.6}`;
-  if(Math.abs(ex-px)<1.5||Math.abs(ey-py)<8)return {d:`M${px},${py} L${ex},${ey}`,head,dot:[px,py]};
-  return {d:`M${px},${py} L${px},${my-s*r} Q${px},${my} ${px+dir*r},${my} L${ex-dir*r},${my} Q${ex},${my} ${ex},${my+s*r} L${ex},${ey}`,head,dot:[px,py]}; }
+// A relation is drawn the way the design draws it: it leaves the earlier task from its lower edge at that task's starting
+// point (21.5 from the left, the middle of a short bar, the lower corner of a milestone), runs down to the later task's row
+// and turns into that task's left edge. When there is no room for that turn (the later task starts at or before the line)
+// the line ends on the later task's upper edge instead: straight down when it already stands over the task, otherwise with
+// one sideways step in the gap above it. Every piece is vertical, horizontal or a round turn; nothing is slanted. A later
+// task that is drawn above mirrors all of this. Every relation of one task shares the same starting point.
+function schLinkPath(a,b){ const down=b.cy>=a.cy, s=down?1:-1, px=a.port, py=down?a.bottom:a.top, tip=b.x1-2, dot=[px,py], f=n=>Math.round(n*100)/100;
+  if(tip-px>=3){ const dy=Math.abs(b.cy-py), r=Math.max(.5,Math.min(dy>100?12:6,dy,tip-px));
+    return {d:`M${f(px)},${f(py)} L${f(px)},${f(b.cy-s*r)} Q${f(px)},${f(b.cy)} ${f(px+r)},${f(b.cy)} L${f(tip)},${f(b.cy)}`,head:`M${f(tip-3.6)},${f(b.cy-3)} L${f(tip)},${f(b.cy)} L${f(tip-3.6)},${f(b.cy+3)}`,dot,into:'left'}; }
+  // onto the upper edge. Where the two tasks stand over each other the line is simply straight: it may leave up to 7 beside the
+  // starting point for that (a milestone is left and entered on its slanted edge near the corner).
+  const edge=down?b.top:b.bottom, aLo=a.ms?a.cx-6:a.x1+2, aHi=a.ms?a.cx+6:a.x2-2, bLo=b.ms?b.cx-5:b.x1+2, bHi=b.ms?b.cx+5:b.x2-2, lo=Math.max(aLo,bLo,px-7), hi=Math.min(aHi,bHi,px+7);
+  const aY=x=>a.ms?py-s*Math.abs(x-a.cx):py, bY=x=>(b.ms?edge+s*Math.abs(x-b.cx):edge)-s*1.5, arrow=(x,y)=>`M${f(x-3)},${f(y-s*3.6)} L${f(x)},${f(y)} L${f(x+3)},${f(y-s*3.6)}`;
+  if(lo<=hi){ const x=Math.min(hi,Math.max(lo,px)); return {d:`M${f(x)},${f(aY(x))} L${f(x)},${f(bY(x))}`,head:arrow(x,bY(x)),dot:[x,aY(x)],into:'edge'}; }
+  // otherwise one sideways step in the gap above the later task
+  const ins=b.ms?0:Math.min(6,(b.x2-b.x1)/2), ex=b.ms?b.cx:Math.min(b.x2-ins,Math.max(b.x1+ins,px)), ey=bY(ex), jy=ey-s*4.8, dir=ex>px?1:-1, r=Math.max(.3,Math.min(4,Math.abs(ex-px)/2,Math.abs(jy-py)));
+  return {d:`M${f(px)},${f(py)} L${f(px)},${f(jy-s*r)} Q${f(px)},${f(jy)} ${f(px+dir*r)},${f(jy)} L${f(ex-dir*r)},${f(jy)} Q${f(ex)},${f(jy)} ${f(ex)},${f(jy+s*r)} L${f(ex)},${f(ey)}`,head:arrow(ex,ey),dot,into:'step'}; }
+// Width of a piece of text in the chart's type (for deciding whether a name fits inside its bar).
+function schTextW(text,weight){ const c=schTextW.c||(schTextW.c=document.createElement('canvas').getContext('2d')); if(!schTextW.f)schTextW.f=getComputedStyle(document.body).fontFamily||'sans-serif';
+  c.font=`${weight||400} 12px ${schTextW.f}`; return c.measureText(text).width-text.length*.144; }
 function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const m=schModel(pid); if(!m){host.innerHTML='';return;} const A=AIDCSchedule, D=A.dates, P=A.progress;
   const shown=schFiltered(m), shownIds=new Set(shown.map(t=>t.id)), force=schFiltering(), sel=schTaskIdOf(S.panel)||SCHU.sel;
   // time range: like the Schedule app, the long support tail after the operation date is cut (it would flatten everything else)
@@ -128,12 +143,13 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
       continue; }
     const t=r.t, x=m.res.tasks[t.id], done=P.isDone(t), late=!done&&x.finish<today, isSel=t.id===sel, isNear=near.has(t.id), cls=`${isSel?'sel':''} ${isNear?'near':''} ${done?'done':''}`, ms=t.kind==='milestone';
     L+=`<div class="sg-row tk ${isSel?'sel':''}" style="top:${r.y}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><span class="bl"><i class="${ms?'ms':''}"></i></span><span class="nm" title="${esc(schTaskTitle(t))}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>${schPeople(t).length?avstack(schPeople(t),3):''}${done?'':schDdayHtml(x.finish,false)}<span class="fill"></span>
-      <span class="rg">${ms?schD(x.start):schRange(x.start,x.finish)}</span><span class="st">${schStIcon(schStatus(t))}</span></div>`;
+      <span class="rg">${ms?schD(x.start):schRange(x.start,x.finish)}</span><span class="st" title="${esc(schStatus(t))}">${schStatus(t)==='조건부 미발동'?schMark('cond','조건부'):schStIcon(schStatus(t))}</span></div>`;
     const x1=X(x.start), x2=X(x.finish)+px, cy=r.y+r.h/2, top=cy-SG.bar/2, tip=`${schTaskTitle(t)}\n예상 ${schD(x.start)}${ms?'':' → '+schD(x.finish)+' ('+x.duration+'일)'} · ${schStatus(t)}${x.delta?`\n참조계획 대비 ${x.delta>0?'+':''}${x.delta}일`:''}${x.slack!==null?`\n운영개시 여유 ${x.slack}일`:''}${isSel?'\n한 번 더 누르면 상세가 열립니다':''}`;
     if(SCHU.ref){const a=X(t.referenceStart), b=X(t.referenceFinish)+px;R+=`<i class="sg-ref" style="left:${a}px;top:${top+SG.bar+2}px;width:${Math.max(3,b-a)}px" title="참조계획 ${schD(t.referenceStart)} → ${schD(t.referenceFinish)}"></i>`;}
     if(ms){ Object.assign(r,{ms:true,cx:x1,cy,x1:x1-SG.ms,x2:x1+SG.ms,top:cy-SG.ms,bottom:cy+SG.ms});
       R+=`<i class="sg-msb ${cls}" style="left:${x1-9.35}px;top:${cy-9.35}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}"></i><span class="sg-tx ${isSel?'sel':''}" style="left:${x1+SG.ms+3}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>`; continue; }
-    const w=Math.max(4,x2-x1), label=`<b>${schWbs(t.wbs)})</b>${esc(t.name)}`, inside=w>=58, prog=!done&&typeof t.progress==='number'?t.progress:0;
+    // the name stands inside the bar when it fits, or when the bar is long enough to show a good part of it (as in the design); otherwise right of the bar
+    const w=Math.max(4,x2-x1), label=`<b>${schWbs(t.wbs)})</b>${esc(t.name)}`, inside=w>=110||w>=schTextW(schWbs(t.wbs)+')',600)+5+schTextW(t.name)+22, prog=!done&&typeof t.progress==='number'?t.progress:0;
     Object.assign(r,{x1,x2:x1+w,cy,top,bottom:top+SG.bar});
     // the managed finish, when the forecast differs from it: a dashed mark inside the bar (later than managed) or a dashed outline after it (earlier)
     let mark=''; if(!done&&x.finish!==t.plannedFinish&&px>=3){const pf=X(t.plannedFinish)+px; if(pf>x1+10&&pf<x1+w-6)mark=`<i class="pl in" style="width:${pf-x1}px" title="관리일정 완료 ${schD(t.plannedFinish)}"></i>`; else if(pf>x1+w+3)mark=`<i class="pl out" style="left:${w-1}px;width:${pf-x1-w}px" title="관리일정 완료 ${schD(t.plannedFinish)}"></i>`;}

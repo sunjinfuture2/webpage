@@ -32,8 +32,13 @@
 .sch-empty{height:120px;display:flex;align-items:center;color:#939393;font-size:14px}
 .sch-rg{display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sch-rg svg{color:#4f4f4f;flex:none}
-.sch-st{display:inline-flex;align-items:center;gap:5px;font-weight:500;white-space:nowrap}
-.sch-st.st-done{color:#1acc00}.sch-st.st-prog{color:#0b93e6}.sch-st.st-ask{color:#f59a00}.sch-st.st-plan{color:#9a9a9a}.sch-st.st-cond{color:#b9b9b9}
+/* status marks: one design everywhere (owner's sheet). Sizes in em of the word: the sheet's pixels / 91. */
+.sch-st{display:inline-flex;align-items:center;gap:.22em;font-weight:600;white-space:nowrap;letter-spacing:-0.01em}
+.sch-st .si{flex:none;width:.91em;height:.91em;display:inline-flex;align-items:center;justify-content:center;font-style:normal}
+.sch-st .si svg{display:block;flex:none}
+.sch-st .si-plan{width:.91em;height:.91em}.sch-st .si-ask{width:.148em;height:.79em}.sch-st .si-prog{width:.846em;height:.846em}
+.sch-st .si-done{width:.8em;height:.687em}.sch-st .si-hold{width:.445em;height:.626em}.sch-st .si-cond{width:.89em;height:.77em}
+.sch-st.st-plan{color:#939393}.sch-st.st-ask{color:#efad1b}.sch-st.st-prog{color:#1da3ed}.sch-st.st-done{color:#1acc00}.sch-st.st-hold{color:#ea4949}.sch-st.st-cond{color:#b751ed}
 .sch-dd{font-weight:700;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sch-dd.hot{color:#d30000}
 .sch-role{color:#a9a9a9;font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -118,7 +123,7 @@
 .sg-row.tk .rg .sch-rg{gap:4px}
 .sg-row.tk .rg .sch-rg svg{color:#5b5b5b;width:9px;height:7px}
 .sg-row.tk .st{width:56.7px;flex:none;font-size:11.5px}
-.sg-row.tk .st .sch-st{gap:3.5px}
+.sg-row.tk .st .sch-st{letter-spacing:-0.02em}
 .sg-right{position:absolute;top:0;overflow:hidden}
 .sg-shade{position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#f6f6f6,rgba(250,250,250,0));pointer-events:none}
 .sg-band{position:absolute;left:0;right:0;height:29px;background:#f9f8f7;pointer-events:none}
@@ -145,7 +150,7 @@
 .sg-bar .pt.l{left:-5px}.sg-bar .pt.r{right:-5px}
 .sg-bar:hover .pt,.sg-bar.linking .pt{display:block}
 .sg-bar.target{border-color:#1f8e00;box-shadow:0 0 0 1.5px rgba(31,142,0,.35)}
-.sg-tx{position:absolute;height:22px;line-height:22px;font-size:12px;color:#474747;white-space:nowrap;cursor:pointer;z-index:2;letter-spacing:-0.012em}
+.sg-tx{position:absolute;height:22px;line-height:22px;font-size:12px;color:#474747;white-space:nowrap;cursor:pointer;z-index:2;letter-spacing:-0.012em;text-shadow:0 0 2px #fff,0 0 2px #fff,1px 0 1px #fff,-1px 0 1px #fff,0 1px 1px #fff,0 -1px 1px #fff}
 .sg-tx b{font-weight:600;margin-right:5px}
 .sg-tx.sel,.sg-tx.sel b{color:#1f8e00}
 .sg-msb{position:absolute;width:18.7px;height:18.7px;border:1px solid #cfcfcf;background:#f9f8f7;transform:rotate(45deg);border-radius:2.5px;cursor:pointer;z-index:2}
@@ -198,7 +203,7 @@
 .sn-node .who .avstack .avatar{width:23px;height:23px;margin-left:-9.7px;border:1px solid #fff;box-sizing:content-box}
 .sn-node .who .avstack .avatar:first-child{margin-left:0}
 .sn-node .who .sch-role{font-size:11.5px}
-.sn-node.done .dd .sch-st{color:#1acc00}
+.sn-node.done .dd .sch-st{color:#1acc00;font-weight:700}
 .sn-tools{position:absolute;right:28px;bottom:28px;display:flex;align-items:center;gap:8px;z-index:3}
 .sn-tools .sh-btn{width:30px;height:30px;border-radius:8px;font-size:17px;color:#4f4f4f}
 .sn-tools .sn-fit{width:44px;height:44px;border-radius:10px;color:#111}
@@ -280,7 +285,7 @@
 /* ----- calendar: actions of the day are a count next to the date ----- */
 /* measured on the design (page 9, 8x): bubble 16.75 high, hairline #f4f4f4 / tag and number #dfdfdf; today's #e6e6e6 / #4f4f4f */
 .cal.pv .cell .n{display:inline-block;vertical-align:top}
-.cal .cell .acnt{position:relative;display:inline-flex;align-items:center;vertical-align:top;gap:3px;height:16.75px;margin:-0.9px 0 0 8.6px;padding:0 6.6px 0 5px;border-radius:2.75px;border:1px solid #f4f4f4;background:#fff;font-size:11px;font-weight:500;line-height:1;color:#dddddd;pointer-events:none}
+.cal .cell .acnt{position:relative;display:inline-flex;align-items:center;vertical-align:top;gap:3px;height:16.75px;margin:-0.9px 0 0 8.6px;padding:0 6.6px 0 5px;border-radius:2.75px;border:1px solid #f4f4f4;background:#fff;font-size:11px;font-weight:500;line-height:1;color:#dddddd;cursor:default}
 .cal .cell .acnt::before{content:"";position:absolute;left:-3.1px;top:50%;width:4.6px;height:4.6px;margin-top:-2.3px;background:#fff;border-left:1px solid #f4f4f4;border-bottom:1px solid #f4f4f4;transform:rotate(45deg);border-radius:0 0 0 1px}
 .cal .cell .acnt svg{width:9.75px;height:9.5px;color:#dfdfdf;flex:none}
 .cal .cell .acnt b{font-weight:500}
@@ -298,6 +303,7 @@
 .cal.pv .cell.sel.sat .n{color:var(--sat)!important}
 .cal.pv .cell.sel:not(.today){box-shadow:inset 0 0 0 1px #ececec}
 .rlist.sch{border-top:1px solid #d9d9d9;padding-top:22px;max-height:640px}
+.rlist.sch.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
 .rlist.sch .rcap{font-size:12.5px;font-weight:600;color:#4f4f4f;margin:0 0 20px 1px;display:flex;align-items:center;gap:8px}
 .rlist.sch .rcap .n{font-size:11px;font-weight:600;color:#3d3d3d;border:1px solid #e3e3e3;border-radius:4px;padding:1px 6px;background:#fff}
 .rlist.sch .rcap svg{width:13px;height:13px;color:#3d3d3d;flex:none}
@@ -305,9 +311,15 @@
 .rlist.sch .rcap .td{font-size:10px;font-weight:600;color:#fff;background:#0f0f0f;border-radius:9px;padding:1px 7px}
 .rlist.sch .rcap .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
 .rlist.sch .rsep{border-top:1px solid #e7e7e7;margin:22px 0 26px}
-.rlist.sch .ra{display:flex;align-items:center;height:42px;margin:0 -16px;padding:0 16px;border-radius:8px;cursor:pointer;gap:10px}
+.rlist.sch .ra{position:relative;display:flex;align-items:center;height:42px;margin:0 -16px;padding:0 16px;border-radius:8px;cursor:pointer;gap:10px}
+.rlist.sch .ra .sp,.sch-daypop .ra .sp{flex:1 1 0;min-width:0}
+/* notice dots at the upper left corner of a title: red = one of my actions changed, green = starts today */
+.sdot{position:absolute;left:11.5px;top:calc(50% - 10.5px);width:5px;height:5px;border-radius:50%;pointer-events:auto;font-style:normal}
+.sdot.r{background:#ff0000}.sdot.g{background:#2bdb00}.sdot.g.two{left:5.5px}
+.tbl.sch-main .rw .ttl .tx{position:relative}
+.tbl.sch-main .rw .ttl .tx .sdot{left:-7px;top:-1px}.tbl.sch-main .rw .ttl .tx .sdot.g.two{left:-13px}
 .rlist.sch .ra:hover{background:#f4f4f4}
-.rlist.sch .ra .tt{flex:1 1 auto;min-width:0;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.rlist.sch .ra .tt{flex:0 1 auto;min-width:0;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rlist.sch .ra .avstack{flex:none}
 .rlist.sch .ra .sch-role{flex:none;max-width:92px;font-size:11.5px}
 .rlist.sch .ra .sch-dd{flex:none;width:72px;text-align:center;font-size:14px}
@@ -415,3 +427,20 @@
 .sch-lib .lr.none{color:#c4c4c4;cursor:default;display:flex}
 .sch-title .sch-evadd{display:inline-flex}
 .sch-title .sch-evadd .plus-btn{margin-left:10.7px}
+
+/* the day window of the calendar (owner's picture, 2026-11-19): 505 wide, white, hairline, rows 48 apart */
+.sch-daypop{position:fixed;z-index:9000;width:505px;padding:44px 0 53px;background:#fff;border:1px solid #c9c9c9;border-radius:9px;box-shadow:0 6px 24px rgba(0,0,0,.10);transform-origin:0 0;font-family:inherit;animation:schDayPop .12s ease-out}
+@keyframes schDayPop{from{opacity:0;margin-top:-3px}to{opacity:1;margin-top:0}}
+.sch-daypop .dp-in{max-height:384px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d9d9d9 transparent}
+.sch-daypop .dp-in.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+.sch-daypop .dp-more{position:absolute;left:39px;bottom:19px;font-size:11.5px;color:#a9a9a9;letter-spacing:-0.01em}
+.sch-daypop .ra{position:relative;display:flex;align-items:center;height:48px;padding:0 45.5px 0 39px;cursor:pointer}
+.sch-daypop .ra:hover{background:#f6f6f6}
+.sch-daypop .ra .tt{flex:0 1 auto;min-width:0;max-width:212px;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-daypop .ra .avstack{flex:none;margin-left:11.5px}
+.sch-daypop .ra .avstack .avatar{width:23px;height:23px}
+.sch-daypop .ra .sch-role{flex:none;max-width:96px;margin-left:11.5px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-daypop .ra .sch-dd{flex:none;width:84px;text-align:center;font-size:14.5px;font-weight:700}
+.sch-daypop .ra .dt{flex:none;width:50px;margin-left:10px;text-align:right;font-size:14.5px;color:#4f4f4f;letter-spacing:-0.045em}
+.sch-daypop .sdot{left:34.5px;top:calc(50% - 10.5px)}.sch-daypop .sdot.g.two{left:28.5px}
+.sch-daypop .dp-none{padding:0 39px;font-size:13.5px;color:#9a9a9a}

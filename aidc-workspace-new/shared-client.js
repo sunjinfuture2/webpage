@@ -84,6 +84,10 @@ function mergeRecord(key,v,mine){const cur=targetOf(key);
   for(const f of new Set([...Object.keys(v),...Object.keys(mine),...Object.keys(cur)])){if(TRANSIENT.includes(f)||!same(cur[f],mine[f])||same(cur[f],v[f]))continue;if(v[f]===undefined)delete cur[f];else cur[f]=copy(v[f]);}
   sharedBase[key]=copy(v);}
 function sharedApply(records){
+  const notes=typeof schNoticeSettle==='function'; if(notes)schNoticeSettle(false); // what differs up to here is this member's own doing
+  try{ sharedApplyRecords(records); } finally{ if(notes)schNoticeSettle(true); }  // what differs from here on came from the others
+}
+function sharedApplyRecords(records){
   const local=sharedRecords();
   for(const [key,v] of Object.entries(records)){
     if(same(v,sharedBase[key]))continue; // nothing new from the server: leave the live objects untouched
@@ -392,7 +396,7 @@ function cleanRoute(r){r={...r};if(!['main','project','archive'].includes(r.page
  if(typeof schDeferRoute==='function')schDeferRoute(r); // a task of a schedule that is still loading is opened once it is there
  if(r.full&&!item(r.full))r.full=null;if(r.panel&&!panelExists(r.panel))r.panel=null;return r;}
 function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else openPanel(id,true);}
-function afterNav(){sharedUi();saveRoute();}
+function afterNav(){sharedUi();saveRoute();if(typeof schAfterNav==='function')schAfterNav();}
 function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
  const route={page:S.page,proj:S.proj,panel:S.panel,full:S.full,actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
   q:S.q,filters:S.filters,typeOff:S.typeOff,partnerCat:S.partnerCat,actPer:S.actPer,selDate:S.selDate,sort:S.sort,scroll:$('#content').scrollTop,panelScroll:$('#panel').scrollTop};

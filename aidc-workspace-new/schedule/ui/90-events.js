@@ -76,3 +76,11 @@ schPreviewBadge();
 document.addEventListener('mouseover',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt .sg-body'); const band=$('#sch-gantt .sg-band'); if(!band)return; const el=g&&e.target.closest('[data-row]'), id=el?el.dataset.row:'';
   if(band._id===id)return; band._id=id; $$('#sch-gantt .hover').forEach(x=>x.classList.remove('hover')); const host=$('#sch-gantt .sg-scroll'), r=id&&host._rows?host._rows.get(id):null;
   if(!r){band.hidden=true;return;} band.hidden=false; band.style.top=(r.y+2.1)+'px'; $$(`#sch-gantt [data-row="${id}"]`).forEach(x=>x.classList.add('hover')); });
+
+// the day window of the calendar: it opens a moment after the pointer comes to rest on a pale count and stays while the pointer is on it
+document.addEventListener('mouseover',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell:not(.today):not(.out) .acnt'); if(!b)return; clearTimeout(schPopHideT); clearTimeout(schPopT); if(schPop&&schPop._a===b)return; schPopT=setTimeout(()=>schDayPopShow(b),schPop?60:160); });
+document.addEventListener('mouseout',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell .acnt'); if(!b||b.contains(e.relatedTarget))return; clearTimeout(schPopT); if(schPop&&!(e.relatedTarget&&schPop.contains(e.relatedTarget)))schDayPopHide(); });
+document.addEventListener('mousedown',e=>{ if(schPop&&!schPop.contains(e.target))schDayPopHide(true); },true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&schPop)schDayPopHide(true); });
+document.addEventListener('scroll',e=>{ if(schPop&&!(e.target instanceof Node&&schPop.contains(e.target)))schDayPopHide(true); },true);
+window.addEventListener('resize',()=>{ if(schPop)schDayPopHide(true); if(schPreview())setTimeout(schFitRight,60); });

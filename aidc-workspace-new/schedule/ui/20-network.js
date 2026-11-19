@@ -4,7 +4,7 @@
 // of that card and from there into the later card's left edge, with round turns and an open arrow. One card's relations
 // share their start, so several later tasks read as one branching line. Only relations between neighbouring columns are
 // drawn in the "selected task" view; whatever else connects the shown tasks is counted below the map.
-const SN={w:271,h:128.5,gx:89,gy:33.5,trunk:38,pad:60};
+const SN={w:271,h:128.5,gx:89,gy:33.5,trunk:38,pad:60,port:24};
 function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools"><span class="sn-info"></span><button class="sh-btn" data-sch="netzoom" data-k="-1" title="축소">−</button><button class="sh-btn" data-sch="netzoom" data-k="1" title="확대">+</button><button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기">${svg('i-sch-fit',20,20)}</button></div></div>`; }
 function schNetFocus(m){ const sel=schTaskIdOf(S.panel)||SCHU.sel; if(sel&&m.byId.has(sel)&&(!SCHU.phase||SCHU.netMode==='focus'||m.byId.get(sel).phase===SCHU.phase))return sel;
   const list=schFiltered(m); const today=schToday(); const cur=list.find(t=>!AIDCSchedule.progress.isDone(t)&&m.res.tasks[t.id].finish>=today)||list[0]||m.plan.tasks[0]; return cur?cur.id:''; }
@@ -40,7 +40,8 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   for(const k of keys){ let n=0; for(const id of lay.cols.get(k).slice().sort((a,b)=>row.get(a)-row.get(b))){ const out=lay.edges.filter(e=>e.from===id&&lay.col.get(e.to)===k+1); if(!out.length)continue; starts.set(id,px(id)+SN.w+SN.trunk+(out.length>1||n?Math.min(n,4)*7:0)); if(out.length>1)n++; } }
   const arrow=(x,y)=>`M${x-6},${y-5.2} L${x},${y} L${x-6},${y+5.2}`;
   for(const e of lay.edges){ const ca=lay.col.get(e.from), cb=lay.col.get(e.to); if(cb!==ca+1){hidden++;continue;}
-    const x1=px(e.from)+SN.w, y1=py(e.from)+SN.h/2, x2=px(e.to)-6, same=Math.abs(py(e.to)-py(e.from))<1, y2=same?y1:py(e.to)+24, tx=Math.min(starts.get(e.from)||x1+SN.trunk,x2-22), s=y2>y1?1:-1, dy=Math.abs(y2-y1);
+    // out of the earlier card's right edge and into the later card's left edge, both 24 below the top (the design's title line): cards of one row are joined by a straight line
+    const x1=px(e.from)+SN.w, y1=py(e.from)+SN.port, x2=px(e.to)-6, same=Math.abs(py(e.to)-py(e.from))<1, y2=py(e.to)+SN.port, tx=Math.min(starts.get(e.from)||x1+SN.trunk,x2-22), s=y2>y1?1:-1, dy=Math.abs(y2-y1);
     const r1=Math.min(26,dy/2,tx-x1-4), r2=Math.min(30,dy/2,x2-tx-4);
     const d=same?`M${x1},${y1} L${x2},${y2}`:`M${x1},${y1} L${tx-r1},${y1} Q${tx},${y1} ${tx},${y1+s*r1} L${tx},${y2-s*r2} Q${tx},${y2} ${tx+r2},${y2} L${x2},${y2}`;
     const isHot=e.from===focus||e.to===focus, g=`<g class="${isHot?'hot':''}"><path d="${d}"/><path d="${arrow(x2,y2)}"/><circle cx="${x1}" cy="${y1}" r="${isHot?3:2.4}"/>${e.type!=='FS'||e.lag?`<text x="${(tx+x2)/2+4}" y="${y2-6}" text-anchor="middle">${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''}</text>`:''}</g>`;

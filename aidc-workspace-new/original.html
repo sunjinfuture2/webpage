@@ -1493,7 +1493,8 @@ const TYPE_NAME={meeting:'미팅',action:'액션아이템',research:'리서치'}
 const archTabOf=it=>it.arch||(ITEMS.includes(it)?null:(archRowOf(it.id)||{}).tab)||null;
 const typeName=it=>{if(!it)return '';const t=archTabOf(it);return t?'자료실 · '+t:(it.agent?'에이전트':(TYPE_NAME[it.type]||''));};
 const priTxt={high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};
-const stIcon=st=>st==='done'?`<span class="status-ic st-done">${svg('i-check',9.3,7.1)}완료</span>`:`<span class="status-ic st-prog">${svg('i-prog',10.5,10.5,'margin:-1px -1px 0 -1px')}진행중</span>`;
+// with the schedule preview on, every status on the page is drawn with the one design of schedule/ (schStIcon)
+const stIcon=st=>typeof schPreview==='function'&&schPreview()?schStIcon(st==='done'?'완료':'진행'):st==='done'?`<span class="status-ic st-done">${svg('i-check',9.3,7.1)}완료</span>`:`<span class="status-ic st-prog">${svg('i-prog',10.5,10.5,'margin:-1px -1px 0 -1px')}진행중</span>`;
 let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m;if(act){const b=document.createElement('button');b.type='button';b.textContent=act.t;b.onclick=()=>{clearTimeout(toastT);t.classList.remove('on');act.fn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);};
 const pager=(cur,total,cls='')=>{let h=`<div class="pager ${cls}"><button class="arr" data-pg="prev" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;for(let i=1;i<=total;i++)h+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;h+=`<button class="arr" data-pg="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;return h;};
 function downloadText(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
@@ -1927,7 +1928,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   } else {
     const rows=[tab?V('자료실 구분',`<span class="plain" ${pk('arch')}>${esc(tab)}</span>`,'txt'):V('사업명',projV),
       V('날짜',dateV,'txt'),
-      V('상태',`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
+      V('상태',typeof schPreview==='function'&&schPreview()?`<span class="st sch" ${pk('st')}>${schStIcon(it.st==='done'?'완료':'진행')}</span>`:`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
       V('중요도',`<span class="pri pri-${it.pri||'mid'}" ${pk('pri')}>${priTxt[it.pri||'mid']}</span>`),
       V('담당자',`<span class="people" ${pk('people')}>${who(it.people)}</span>`),
       V(tab?'출처 URL':'URL',urlField(it,E)),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
@@ -2063,7 +2064,7 @@ function openPanel(id,force){ if(!id||id===S.full)return; if(S.panel===id)captur
   else if(/^\d+:/.test(id)){const [si,cid]=id.split(':');const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash); if(c)html=archCardHtml(c,+si,!!(S.editSimple&&S.editSimple.id===id));}
   if(!html&&typeof schPanelHtml==='function'&&/^s[pget]-/.test(id))html=schPanelHtml(id)||''; // a procurement package, a gate or an evidence record of a schedule
   if(!html){toast('삭제되었거나 없는 항목입니다.');return;}
-  S.panel=id; if(S.editSimple&&S.editSimple.id!==id)S.editSimple=null; S.ctx='panel'; const pin=$('#panel-pin'); pin.innerHTML=html; pin.dataset.id=it?id:''; fitTitle(pin); $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
+  S.panel=id; if(S.editSimple&&S.editSimple.id!==id)S.editSimple=null; S.ctx='panel'; const pin=$('#panel-pin'); pin.innerHTML=html; pin.dataset.id=it?id:''; fitTitle(pin); $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); if(typeof schSeenOpen==='function')schSeenOpen(id); afterNav(); }
 function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closePanel(),'panel'))return; window.AIDCEditor&&AIDCEditor.closeFloating(); S.panel=null; S.editSimple=null; S.ctx='full'; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
 // panel → full page, and back. What is being typed moves along.
 /* The panel grows to the size of the full page and is then replaced by it; going back, the full page is replaced by a
