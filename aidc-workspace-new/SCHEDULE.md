@@ -123,6 +123,29 @@ Outside the preview
 
 Readings that were reported to the owner: "names aligned with the title without a milestone" was done for the list and the main table (in the gantt outline the names already started at one place); "bar" for the gates was read as a scroll bar; the height "one screen shows" was set to 600.
 
+## Fifth round (owner, 2026-11-19)
+
+Main page (preview only)
+- Partner list: the box before a name holds the site's logo (logoImg) over the first letter of the name; no pictogram.
+- No "오늘" tag beside 금일 주요일정; no "n개 중 n개 표시" beside 프로젝트.
+- A project can be deleted: the button stands at the right end of the row of 수정 (`.phead .pdel`), asks first and says that the project can be brought back. The project then leaves PROJECTS and waits whole in SETTINGS.projTrash (trashProject / restoreProject) for 30 days; it is listed in the trash of the settings (kind `project`) and purged with the other old trash. Its items, PHEAD entry and schedule record are not touched.
+- Research has no project row in its panel.
+
+액션 일정
+- The percentage tags stand clear of the chart (they used to be cut by its edge).
+- 운영개시 예상 · 운영개시 경로 · 상태일 stand in the upper left corner of the chart (`.sg-corner`), larger; the line below the chart with the counts is gone.
+- The chart keeps its place over a redraw of the page (SCH.gs / SCH.ns hold the scroll position per view key): it used to jump back to today whenever the page was redrawn, e.g. after a change from another member, which looked like "moving while the pointer rests".
+- The soft edge between table and chart is `.sg-left::after`, so it stays while the chart scrolls.
+- Type of the outline 12.2 (was 11.5), D-day 500.
+- Dashed is the reference plan (owner): a dashed line inside a bar = the task now runs longer than the reference plan, a dashed outline after a bar = it now ends earlier. The 참조계획 box (SCHU.refm, on by default) shows and hides these marks; the thin grey reference bars are gone.
+- The horizontal scroll bar is a bar of its own above the chart (`.sg-topbar`, kept in step with the chart, which itself has overflow-x hidden; shift + wheel and sideways wheel still scroll). The edge between table and chart can be pulled (`.sg-split`, SCHU.gl, 340 to chart width - 280; double click = 508).
+- Summary bars are rounded by 2 on all corners; a selected bar's frame is 0.75.
+- The name of a task stands inside its bar, cut with … when short; only bars under 44 wide have it beside them (this takes back the third round's "beside when it does not fit").
+- Filters show beside the section title as tags with an x (schChips / schLowChips, `data-sch="chip"`), the way the partner list shows its 구분; the list's 조건 지우기 button is gone.
+
+승인게이트
+- 76 between gates; the menus of gate / evidence / commitment states show the marks and colours (schStateMark).
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): no second project has a schedule.

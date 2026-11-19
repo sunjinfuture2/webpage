@@ -55,6 +55,7 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   host._lay={w:LW,h:LH};
   const info=$('#sch-net .sn-info'); if(info)info.textContent=`업무 ${row.size}${lay.total&&lay.total>row.size?' / '+lay.total:''}건 · 관계 ${lay.edges.length-hidden}건`+(hidden?` · 이웃 열이 아닌 관계 ${hidden}건은 숨김`:'');
   // keep the selected task in view
-  const key=pid+'|'+focus+'|'+SCHU.netMode+'|'+SCHU.netDepth+'|'+SCHU.netDir+'|'+SCHU.phase+'|'+z; if(host._key!==key){host._key=key;host.scrollLeft=Math.max(0,(ox+px(focus)+SN.w/2)*z-host.clientWidth/2);host.scrollTop=Math.max(0,(oy+py(focus)+SN.h/2)*z-host.clientHeight/2);} }
+  const key=pid+'|'+focus+'|'+SCHU.netMode+'|'+SCHU.netDepth+'|'+SCHU.netDir+'|'+SCHU.phase+'|'+z; if(host._key!==key){ host._key=key; if(SCH.ns&&SCH.ns.key===key){host.scrollLeft=SCH.ns.x;host.scrollTop=SCH.ns.y;} else{host.scrollLeft=Math.max(0,(ox+px(focus)+SN.w/2)*z-host.clientWidth/2);host.scrollTop=Math.max(0,(oy+py(focus)+SN.h/2)*z-host.clientHeight/2);} }
+  if(!host._keep){host._keep=true;host.addEventListener('scroll',()=>{if(host._key)SCH.ns={key:host._key,x:host.scrollLeft,y:host.scrollTop};},{passive:true});} }
 function schNetZoom(dir){ const host=$('#sch-net .sn-scroll'); if(!host||!host._lay)return; if(dir===0){SCHU.netZoom=Math.max(.25,Math.min(1,Math.min((host.clientWidth-8)/host._lay.w,(host.clientHeight-8)/host._lay.h)));}
   else SCHU.netZoom=Math.max(.25,Math.min(1.5,Math.round(((SCHU.netZoom||1)+dir*.15)*100)/100)); schNetBuild(S.proj); schUiSave(); }

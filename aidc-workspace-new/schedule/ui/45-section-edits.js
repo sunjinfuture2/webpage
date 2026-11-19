@@ -3,7 +3,7 @@ function schPkgEdit(pid,id,label,fn){ return schCommit(pid,d=>{const x=d.procure
 function schPkgField(el,pid,id,k){ const m=schModel(pid), x=m.plan.procurement.find(q=>q.id===id); if(!x)return; const nm=x.name;
   const num=(label,cur,hi,apply,int)=>askInput(label,cur==null||cur===0?'':String(cur),v=>{v=(v||'').trim();if(v===''){apply(null);return;}const n=Number(v.replace(/[^\d.]/g,''));if(!Number.isFinite(n)||n<0||n>hi){toast(`0~${hi} 사이의 숫자를 입력하세요.`);return;}apply(int?Math.round(n):n);});
   if(k==='delay'){num('PO 추가지연 (일)',x.delay,36500,n=>schPkgEdit(pid,id,`${nm} PO 추가지연 ${n||0}일`,q=>{q.delay=n||0;}),true);return;}
-  if(k==='commitment'){menuPop(el,SCH_COMMIT.map((s,i)=>({t:s,k:'c'+i,sel:x.commitment===s,fn:()=>schPkgEdit(pid,id,`${nm} ${s}`,q=>{q.commitment=s;})})));return;}
+  if(k==='commitment'){menuPop(el,SCH_COMMIT.map((s,i)=>({t:s,html:schStateMark(s),k:'c'+i,sel:x.commitment===s,fn:()=>schPkgEdit(pid,id,`${nm} ${s}`,q=>{q.commitment=s;})})),{cls:'sch-colmenu'});return;}
   if(k==='leadWeeks'){num('확약 납기 (주) · 비우면 미입력',x.leadWeeks,5200,n=>schPkgEdit(pid,id,`${nm} 확약 납기 ${n===null?'지움':n+'주'}`,q=>{q.leadWeeks=n;}));return;}
   if(k==='trigger'){menuPop(el,SCH_TRIGGERS.map((s,i)=>({t:s,k:'t'+i,sel:x.trigger===s,fn:()=>schPkgEdit(pid,id,`${nm} 납기 기산조건 ${s}`,q=>{q.trigger=s;if(s==='PO 발행'||s==='미확정')q.triggerDate=null;})})));return;}
   if(k==='triggerDate'){datePick(el,x.triggerDate||schToday(),v=>schPkgEdit(pid,id,`${nm} 기산조건 충족일`,q=>{q.triggerDate=v||null;}),{clear:'충족일 없음'});return;}
@@ -21,9 +21,9 @@ function schLowerAdd(el,pid){ const m=schModel(pid), A=AIDCSchedule; if(!m)retur
   const kind=SCHU.evKind==='assumptionsAndReferences'?'assumptionsAndReferences':'commitmentReviews';
   askInput(kind==='commitmentReviews'?'보완·확약 항목 제목':'전제·근거 항목 제목','',t=>{t=(t||'').trim();if(!t)return;const id=crypto.randomUUID().slice(0,8);SCHU.evKind=kind;schSet(pid,'e:u:'+id,{kind,title:t,status:kind==='commitmentReviews'?'확인 필요':'',by:sharedUser,at:new Date().toISOString()},'항목을 추가했습니다');openPanel(`se-${pid}-u-${id}`);}); }
 function schGateState(el,pid,code){ const root=SCHED[pid]||{}, cur=root['g:'+code]||{}, m=schModel(pid), g=schGates(pid,m).find(q=>q.code===code); if(!g)return;
-  menuPop(el,SCH_GATE_ST.map((s,i)=>({t:s,k:'g'+i,sel:g.st===s,fn:()=>schSet(pid,'g:'+code,{...cur,status:s,by:sharedUser,at:new Date().toISOString()},`${code} ${s}`)}))); }
+  menuPop(el,SCH_GATE_ST.map((s,i)=>({t:s,html:schStateMark(s),k:'g'+i,sel:g.st===s,fn:()=>schSet(pid,'g:'+code,{...cur,status:s,by:sharedUser,at:new Date().toISOString()},`${code} ${s}`)})),{cls:'sch-colmenu'}); }
 function schEvState(el,pid,key){ const root=SCHED[pid]||{}, cur=root[key]||{};
-  menuPop(el,SCH_EV_ST.map((s,i)=>({t:s,k:'e'+i,sel:cur.status===s,fn:()=>schSet(pid,key,{...cur,status:s},'상태: '+s)})).concat(key.startsWith('e:u:')?[]:['-',{t:'원본 상태로',k:'reset',fn:()=>{const nx={...cur};delete nx.status;schSet(pid,key,Object.keys(nx).length?nx:null,'원본 상태로 되돌렸습니다');}}])); }
+  menuPop(el,SCH_EV_ST.map((s,i)=>({t:s,html:schStateMark(s),k:'e'+i,sel:cur.status===s,fn:()=>schSet(pid,key,{...cur,status:s},'상태: '+s)})).concat(key.startsWith('e:u:')?[]:['-',{t:'원본 상태로',k:'reset',fn:()=>{const nx={...cur};delete nx.status;schSet(pid,key,Object.keys(nx).length?nx:null,'원본 상태로 되돌렸습니다');}}]),{cls:'sch-colmenu'}); }
 // row cells that change a value without opening the panel
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-schc]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schReady(pid))return; e.stopPropagation(); e.preventDefault(); const k=el.dataset.schc, v=el.dataset.k;
   if(k==='pdelay')schPkgField(el,pid,v,'delay'); else if(k==='pcommit')schPkgField(el,pid,v,'commitment'); else if(k==='gstate')schGateState(el,pid,v); else if(k==='estate')schEvState(el,pid,v);

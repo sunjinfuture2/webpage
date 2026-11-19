@@ -31,7 +31,7 @@ function schCalBadge(pid,date,count){ let dots='';
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
-  const dateTag=`<span class="d">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'<span class="td">오늘</span>':'<button class="sh-btn" data-seltoday>오늘로</button>'}</span>`;
+  const dateTag=`<span class="d">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</span>`;
   let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':'top:150px'}"><div class="rline"></div><div class="rcap">${D===TODAY?'금일 주요일정':'주요일정'}${dateTag}</div>`;
   if(!evs.length&&!rss.length)h+=`<div class="rnone">${D===TODAY?'오늘':'이 날짜에'} 등록된 미팅·리서치가 없습니다.</div>`;
   evs.forEach(e=>{const p=proj(e.proj);

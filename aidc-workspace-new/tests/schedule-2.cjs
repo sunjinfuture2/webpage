@@ -112,7 +112,7 @@ const sfx = Date.now().toString(36).slice(-5);
 
   console.log('— addresses, full page, badge');
   const tid = await ev(() => schModel('pangyo').byWbs.get('W7.8').id);
-  await a.goto('http://127.0.0.1:8787/#page=project&proj=pangyo&panel=wt-' + tid); await a.reload(); await a.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady && schReady('pangyo'), null, { timeout: 20000 }); await sleep(1200);
+  await a.goto('http://127.0.0.1:8787/#page=project&proj=pangyo&panel=wt-' + tid); await a.reload(); await a.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady && schReady('pangyo'), null, { timeout: 20000 }); await a.waitForFunction(() => !!document.querySelector('#panel-pin .ititle[data-wbs]'), null, { timeout: 15000 }).catch(() => { }); await sleep(600);
   check('an address with a task opens that task after the schedule has loaded', await ev(t => S.page === 'project' && S.panel === 'wt-' + t && document.querySelector('#panel-pin .ititle').dataset.wbs === '7-8', tid));
   await a.click('#panel-expand'); await sleep(900);
   const full = await ev(t => ({ full: S.full === 'wt-' + t, props: !!document.querySelector('#item-pin .sch-props'), tabs: document.querySelectorAll('#item-pin .sp-tabs button').length, hash: location.hash }), tid);

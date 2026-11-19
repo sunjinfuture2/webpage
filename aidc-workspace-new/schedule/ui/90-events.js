@@ -7,8 +7,8 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;} SCHU.sel=v; schUiSave(); if($('#sch-gantt'))schGanttBuild(pid); if($('#sch-net'))schNetBuild(pid); return; }
   if(k==='tab'){if(SCHU.tab!==v){SCHU.tab=v;schRefresh();}return;}
   if(k==='col'&&m){e.stopPropagation();schColMenu(el,pid,m,v);return;}
-  if(k==='cf-clear'){SCHU.cf={};SCHU.who='';SCHU.page=1;schRefresh();return;}
-  if(k==='toggle'){SCHU[v]=!SCHU[v];schRefresh();return;}
+  if(k==='chip'){ e.stopPropagation(); if(v==='procState'||v==='evState'){SCHU[v]='';SCHU.evPage=1;schLowerRefresh();return;} if(v==='phase')SCHU.phase=''; else if(v==='scope')SCHU.scope='all'; else if(v==='who')SCHU.who=''; else if(v.startsWith('cf:'))delete schCf()[v.slice(3)]; SCHU.page=1; schRefresh(); return; }
+  if(k==='toggle'){SCHU[v]=v==='refm'?SCHU.refm===false:!SCHU[v];schRefresh();return;}
   if(k==='phase'){const i=SCHU.open.indexOf(v);if(i>=0)SCHU.open.splice(i,1);else SCHU.open.push(v);schRefresh();return;}
   if(k==='expand'){SCHU.open=v==='1'&&m?m.phases.map(g=>g.code):[];schRefresh();return;}
   if(k==='sort'){if(SCHU.sort===v)SCHU.dir=-SCHU.dir;else{SCHU.sort=v;SCHU.dir=1;}SCHU.page=1;schRefresh();return;}
@@ -102,3 +102,10 @@ document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const card=e.
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; document.body.style.userSelect=''; card.classList.remove('linking'); if(line)line.remove(); if(tip)tip.remove(); swallowClick(); if(!target)return; target.classList.remove('target');
     schPropose(pid,{kind:'new',from,to:target.dataset.k,type:'FS'}); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); });
+
+// the edge between the outline and the chart can be pulled to make the table narrower or wider (double click: the design's width)
+document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const sp=e.target.closest&&e.target.closest('#sch-gantt .sg-split'); if(!sp)return; e.preventDefault(); e.stopPropagation(); const z=LAYOUT.zoom||1, x0=e.clientX, w0=SG.left; let raf=0, moved=false; document.body.style.userSelect='none'; document.body.style.cursor='col-resize';
+  const move=ev=>{ const dx=(ev.clientX-x0)/z; if(!moved&&Math.abs(dx)<2)return; moved=true; SCHU.gl=Math.round(w0+dx); if(!raf)raf=requestAnimationFrame(()=>{raf=0;schGanttBuild(S.proj);}); };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; if(moved){swallowClick();SCHU.gl=SG.left;schUiSave();} };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); },true);
+document.addEventListener('dblclick',e=>{ if(e.target.closest&&e.target.closest('#sch-gantt .sg-split')){delete SCHU.gl;schGanttBuild(S.proj);schUiSave();} });

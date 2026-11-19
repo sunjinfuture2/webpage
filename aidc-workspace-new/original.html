@@ -1626,7 +1626,7 @@ function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide
 const partnerMeeting=pt=>(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))?item(pt.meet):null)||liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]||null;
 function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>설명</em></span><span><em>미팅</em></span></div>`;
   rows.forEach(r=>{const m=partnerMeeting(r); const u=r.site&&r.site!=='-'?urlHref(r.site):'';
-    h+=`<div class="rw" data-partner="${r.id}"><div class="nm"><span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat"><a data-cat="${esc(r.cat)}">${esc(r.cat)}</a></div><div class="ds">${esc(r.desc)}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
+    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat"><a data-cat="${esc(r.cat)}">${esc(r.cat)}</a></div><div class="ds">${esc(r.desc)}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
   if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
   h+=`<div class="ft"></div></div>`; return h;}
 // Project cards read the project overview (PHEAD), so editing the overview updates the card.
@@ -1653,7 +1653,7 @@ function carouselInfo(k){const inner=$(k==='proj'?'#proj-inner':'#meet-inner');i
   const step=cards.length>1?cards[1].offsetLeft-x0:(last?last.offsetWidth:0);return {inner,cards,view,x0,step,max:Math.max(0,Math.ceil(total-view))};}
 function applyCarousel(k){const c=carouselInfo(k);if(!c)return;const off=Math.min(Math.max(0,S.car[k]||0),c.max);S.car[k]=off;c.inner.style.transform=off?`translateX(${-off}px)`:'';
   const box=c.inner.closest('.projects,.meet');if(box){box.classList.toggle('at-start',off<=0);box.classList.toggle('at-end',off>=c.max);}
-  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
+  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=PREVIEW_ON&&k==='proj'?'':c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
 function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car[k]||0)+dir*c.step;if(dir>0&&off>c.max-8)off=c.max;if(off<8)off=0;S.car[k]=off;applyCarousel(k);}
 
 
@@ -1694,7 +1694,7 @@ function renderProject(pid){
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
   const lk=(t,k)=>`<span class="lk"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i><a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
   $('#proj-pw').innerHTML=`
-   <div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button><span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`:''}</div>
+   <div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button><span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`:''}</div>${PREVIEW_ON&&!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="cols">
      <div class="col col1"><div class="fr"><b>분류</b>${E?`<span class="v stpick" data-pickstatus>${statusBadge(p.status)}${svg('i-chev-d',7.2,3.6,'color:#8e8e8e')}</span>`:`<span class="v">${statusBadge(p.status)}</span>`}</div><div class="fr" style="margin-bottom:25.7px"><b>진행도</b><span class="v${EC}" ${edk('prog')}>${esc(d.prog)}</span></div>
@@ -1931,7 +1931,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
     const R=`<div class="pr"></div>${V(ACT,`<span class="chips" ${pk('actions')}>${linkChips(it,'actions',E)}</span>`)}${V('리서치',`<span class="chips" ${pk('research')}>${linkChips(it,'research',E)}</span>`)}${V('드롭박스 URL',urlField(it,E,'margin-left:0'))}${V('최종수정일자',`<span class="plain">${esc(modTxt(it))}</span>`)}`;
     props=`<div class="props"><div>${L}</div><div class="rcol">${R}</div></div>`;
   } else {
-    const rows=[tab?V('자료실 구분',`<span class="plain" ${pk('arch')}>${esc(tab)}</span>`,'txt'):V('사업명',projV),
+    const rows=[...(tab?[V('자료실 구분',`<span class="plain" ${pk('arch')}>${esc(tab)}</span>`,'txt')]:PREVIEW_ON&&it.type==='research'?[]:[V('사업명',projV)]),
       V('날짜',dateV,'txt'),
       V('상태',typeof schPreview==='function'&&schPreview()?`<span class="st sch" ${pk('st')}>${schStIcon(it.st==='done'?'완료':'진행')}</span>`:`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
       V('중요도',`<span class="pri pri-${it.pri||'mid'}" ${pk('pri')}>${priTxt[it.pri||'mid']}</span>`),
@@ -2142,12 +2142,16 @@ function openSearch(el){const p=openPop(el,`<div class="srch"><input id="srch-in
   p.addEventListener('click',ev=>{ if(ev.target.closest('[data-smore]')){ev.stopPropagation(); limit+=30; draw(); inp.focus();} });}
 function askDropbox(el){const p=openPop(el,`<div class="hd">부서 드롭박스</div><div class="msg" style="padding-top:0;max-width:320px">${canAdmin()?'연결할 드롭박스 폴더 주소를 입력하세요. 저장하면 모든 멤버의 사이드바에서 열립니다.':'아직 주소가 등록되지 않았습니다. 소유자·관리자가 설정 > 일반에서 등록할 수 있습니다.'}${canAdmin()?`<input id="dbx-in" placeholder="https://www.dropbox.com/..." style="margin-top:8px"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button class="it" data-dbx="cancel">취소</button><button class="it" data-dbx="ok" style="background:#0f0f0f;color:#fff">저장</button></div>`:''}</div>`); const inp=$('#dbx-in',p); if(!inp)return; inp.focus();
   p.addEventListener('click',ev=>{const b=ev.target.closest('[data-dbx]'); if(!b)return; ev.stopPropagation(); if(b.dataset.dbx==='ok'){const v=inp.value.trim(); if(!urlHref(v)){inp.focus();return;} SETTINGS.dropboxUrl=v; closePop(); toast('드롭박스 주소를 저장했습니다.');} else closePop();});}
-function purgeOne(k,id){ if(k==='item'){const i=ITEMS.findIndex(x=>x.id===id&&x.status==='trash'); if(i>=0)ITEMS.splice(i,1);} else if(k==='partner'){const i=PARTNERS.findIndex(x=>x.id===id&&x.trash); if(i>=0)PARTNERS.splice(i,1);} else {const [si,cid]=id.split(':'); const s=ARCH_SECTIONS[si]; if(s)s.cards=s.cards.filter(c=>!(c.id===cid&&c.trash));} }
+function purgeOne(k,id){ if(k==='item'){const i=ITEMS.findIndex(x=>x.id===id&&x.status==='trash'); if(i>=0)ITEMS.splice(i,1);} else if(k==='partner'){const i=PARTNERS.findIndex(x=>x.id===id&&x.trash); if(i>=0)PARTNERS.splice(i,1);} else if(k==='project'){const rest={...(SETTINGS.projTrash||{})}; delete rest[id]; SETTINGS.projTrash=rest; if(!PROJECTS[id])delete PHEAD[id];} else {const [si,cid]=id.split(':'); const s=ARCH_SECTIONS[si]; if(s)s.cards=s.cards.filter(c=>!(c.id===cid&&c.trash));} }
 const trashList=()=>{const out=[]; ITEMS.filter(i=>i.status==='trash').forEach(i=>out.push({k:'item',id:i.id,t:(i.title||'').split('\n').join(' ')||'(제목 없음)',ty:typeName(i),at:i.trashedAt||''}));
   PARTNERS.filter(p=>p.trash).forEach(p=>out.push({k:'partner',id:p.id,t:p.name,ty:'협력업체',at:p.trashedAt||''}));
+  Object.entries(SETTINGS.projTrash||{}).forEach(([id,t])=>out.push({k:'project',id,t:(t.project&&(t.project.full||t.project.tag))||id,ty:'프로젝트',at:t.at||''}));
   ARCH_SECTIONS.forEach((s,si)=>s.cards.filter(c=>c.trash).forEach(c=>out.push({k:'card',id:si+':'+c.id,t:c.name,ty:'자료실 · '+s.name,at:c.trashedAt||''})));
   return out.sort((a,b)=>String(b.at).localeCompare(String(a.at)));};
 // Trashed partners and 자료실 cards are removed 30 days after they were trashed (trashed items are purged by the server).
+// A deleted project waits in the settings record (projTrash) for 30 days: out of PROJECTS, so every list forgets it, but whole.
+function trashProject(id){ const p=PROJECTS[id]; if(!p)return; SETTINGS.projTrash={...(SETTINGS.projTrash||{}),[id]:{project:copy(p),at:new Date().toISOString(),by:sharedUser}}; delete PROJECTS[id]; }
+function restoreProject(id){ const t=(SETTINGS.projTrash||{})[id]; if(!t)return; if(!PROJECTS[id]){PROJECTS[id]=copy(t.project);applyProjectStatus(id,PROJECTS[id].status);} const rest={...SETTINGS.projTrash}; delete rest[id]; SETTINGS.projTrash=rest; }
 function purgeOldTrash(){const limit=new Date(Date.now()-30*864e5).toISOString(); trashList().forEach(x=>{if(x.k!=='item'&&x.at&&x.at<limit)purgeOne(x.k,x.id);});}
 
 /* ===================== EVENTS ===================== */
@@ -2195,6 +2199,8 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-libopen]')){closePop();openPanel(el.dataset.libopen);return;}
   if(el=q('[data-per]')){menuPop(el,[10,20,50].map(n=>({t:n+'개씩 보기',k:String(n),sel:S.actPer===n,fn:()=>{S.actPer=n;S.actPage=1;render(true);}})),{right:true});return;}
   if(el=q('[data-editproj]')){if(S.editProj){await sharedSaveProject(el);}else{const id=S.proj;if(!await sharedBeginEdit('project:'+id))return;if(S.proj!==id)return;S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])};S.editProj=true;S.collapsed=false;render(true);}return;}
+  if(el=q('[data-projdel]')){const id=S.proj, p=PROJECTS[id]; if(!p)return; if(otherLock('project:'+id)){toast('다른 멤버가 이 프로젝트를 수정 중입니다.');return;}
+    confirmDlg(`“${p.full||p.tag}” 프로젝트를 정말 삭제할까요? 삭제한 프로젝트는 30일 안에 설정 > 쓰레기통에서 복구할 수 있습니다.`,[{t:'삭제',pri:true,fn:()=>{ if(!PROJECTS[id])return; trashProject(id); closePanel(true); go('main'); toast('프로젝트를 삭제했습니다. 30일 안에 쓰레기통에서 복구할 수 있습니다.',6000,{t:'되돌리기',fn:()=>{restoreProject(id);render(true);}}); }},{t:'취소',fn:()=>{}}]); return;}
   if(el=q('[data-canceledit]')){const id=S.proj;restoreProjectSnap();S.editProj=false;await sharedRelease('project:'+id);render(true);return;}
   if(el=q('[data-pickstatus]')){menuPop(el,PSTATUS_ORDER.map(st=>({t:st,k:st,sel:normStatus(PROJECTS[S.proj].status)===st,fn:()=>{saveProjectHead();applyProjectStatus(S.proj,st);render(true);}})));return;}
   if(el=q('[data-pickowner]')){menuPop(el,[{hd:'담당자 선택'}].concat(Object.keys(PEOPLE).map(id=>({t:PEOPLE[id],k:id,ico:av('av15'),sel:PHEAD[S.proj].owner===PEOPLE[id],fn:()=>{saveProjectHead();PHEAD[S.proj].owner=PEOPLE[id];PROJECTS[S.proj].owner=PEOPLE[id];render(true);}}))));return;}
@@ -2289,6 +2295,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-restore]')){const [k,id]=el.dataset.restore.split('|');
     if(k==='item'){const it=ITEMS.find(x=>x.id===id);if(it){it.status=it.prevStatus||'published';delete it.prevStatus;delete it.trashedAt;delete it.trashedBy;if(it.arch&&!ARCH_TABS.includes(it.arch)){ARCH_TABS.push(it.arch);if(!ARCH_ROWS[it.arch])ARCH_ROWS[it.arch]=[];}}}
     else if(k==='partner'){const p=PARTNERS.find(x=>x.id===id);if(p){delete p.trash;delete p.trashedAt;}}
+    else if(k==='project'){restoreProject(id);}
     else{const [si,cid]=id.split(':');const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid);if(c){delete c.trash;delete c.trashedAt;}}
     renderPane('trash');render(true);toast('복원했습니다.');return;}
   if(el=q('[data-purge]')){const [k,id]=el.dataset.purge.split('|');confirmDlg('영구 삭제하면 되돌릴 수 없습니다. 삭제할까요?',[{t:'영구 삭제',pri:true,fn:()=>{purgeOne(k,id);renderPane('trash');toast('영구 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);return;}

@@ -39,7 +39,7 @@
 .sch-st .si-plan{width:.91em;height:.91em}.sch-st .si-ask{width:.148em;height:.79em}.sch-st .si-prog{width:.846em;height:.846em}
 .sch-st .si-done{width:.8em;height:.687em}.sch-st .si-hold{width:.445em;height:.626em}.sch-st .si-cond{width:.89em;height:.77em}
 .sch-st.st-plan{color:#939393}.sch-st.st-ask{color:#efad1b}.sch-st.st-prog{color:#1da3ed}.sch-st.st-done{color:#1acc00}.sch-st.st-hold{color:#ea4949}.sch-st.st-cond{color:#b751ed}
-.sch-dd{font-weight:600;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dd{font-weight:500;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sch-dd.hot{color:#d30000}
 .sch-role{color:#a9a9a9;font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* (an importance the schedule works out itself used to be drawn paler: the owner asked for full colour, 2026-11-19) */
@@ -89,10 +89,17 @@
    Sizes and colours are those of the design file (page 9), measured on a 4x render. The design's hairlines are 0.5px #848484;
    they are written as 1px of the same weight (#c1c1c1) so that they look the same on an ordinary screen. */
 .sch-gantt{margin-top:24px;width:calc(1337.9px + var(--d));border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative}
-.sg-scroll{overflow:auto;max-height:var(--schh);position:relative;scrollbar-width:thin;overscroll-behavior:auto}
+.sg-scroll{overflow-x:hidden;overflow-y:auto;max-height:var(--schh);position:relative;scrollbar-width:thin;overscroll-behavior:auto}
+/* the horizontal scroll bar: above the chart, over the time line only */
+.sg-topbar{overflow-x:auto;overflow-y:hidden;height:11px;scrollbar-width:thin;scrollbar-color:#bdbdbd transparent;border-bottom:1px solid #f1f1f1}
+.sg-topbar.none{visibility:hidden}
+.sg-topbar i{display:block;height:1px}
+.sg-topbar::-webkit-scrollbar{height:8px}.sg-topbar::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}
 .sg-inner{position:relative}
 .sg-head{position:sticky;top:0;z-index:6;height:40.75px;background:#fff}
-.sg-corner{position:sticky;left:0;z-index:7;height:40.75px;background:#fff;border-right:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;float:left}
+.sg-corner{position:sticky;left:0;z-index:7;height:40.75px;background:#fff;border-right:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;float:left;display:flex;align-items:center;gap:20px;padding:0 10px 0 1px;font-size:13px;color:#8e8e8e;white-space:nowrap;overflow:hidden;letter-spacing:-0.012em}
+.sg-corner b{color:#3d3d3d;font-weight:600;margin-left:2px}
+.sg-corner em{font-style:normal;margin-left:5px;font-size:11.5px}
 .sg-axis{position:absolute;top:0;height:40.75px;border-bottom:1px solid #c1c1c1}
 .sg-axis::after{content:"";position:absolute;left:0;right:0;top:24.25px;border-top:1px solid #f1f1f1}
 .sg-axis .mo{position:absolute;top:0;height:24.25px;padding:9.5px 0 0 4px;font-size:11.5px;font-weight:600;line-height:11px;color:#848484;white-space:nowrap;overflow:hidden;letter-spacing:-0.01em}
@@ -104,6 +111,10 @@
 .sg-axis .dy.tick{border-left:1px solid #f1f1f1;text-align:left;padding-left:3px}
 .sg-body{position:relative;clear:both}
 .sg-left{position:sticky;left:0;z-index:4;float:left;background:#fff;border-right:1px solid #c1c1c1}
+/* the soft edge between the table and the chart stays at the table's edge while the chart scrolls */
+.sg-left::after{content:"";position:absolute;left:calc(100% + 1px);top:0;bottom:0;width:16px;background:linear-gradient(90deg,#f6f6f6,rgba(250,250,250,0));pointer-events:none}
+.sg-split{position:absolute;right:-5px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:8}
+.sg-split:hover{background:linear-gradient(90deg,transparent 3.5px,#8e8e8e 3.5px,#8e8e8e 5.5px,transparent 5.5px)}
 .sg-row{position:absolute;left:0;right:0;display:flex;align-items:center;white-space:nowrap;cursor:pointer}
 .sg-row.ph{font-size:13.5px;font-weight:700;color:#000;letter-spacing:-0.012em;padding-left:0}
 .sg-row.ph .tw{width:10px;height:8.75px;margin:0 7.3px 0 -2.2px;display:flex;color:#474747;flex:none}
@@ -118,7 +129,7 @@
 .sg-row.ph .add{margin-left:auto;margin-right:12px;width:20px;height:20px;border-radius:5px;display:none;align-items:center;justify-content:center}
 .sg-row.ph:hover .add{display:flex}
 .sg-row.ph .add:hover{background:#ececec}
-.sg-row.tk{height:33.25px;font-size:11.5px;color:#5b5b5b;padding-left:23.5px}
+.sg-row.tk{height:33.25px;font-size:12.2px;color:#5b5b5b;padding-left:23.5px}
 .sg-row.tk.hover{background:linear-gradient(#f9f8f7,#f9f8f7) 0 2.1px/100% 29px no-repeat}
 .sg-row.tk .bl{width:2.5px;flex:none;display:flex;align-items:center;justify-content:center;margin-right:5.3px}
 .sg-row.tk .bl i{width:2.3px;height:2.3px;border-radius:50%;background:#5b5b5b}
@@ -128,9 +139,9 @@
 .sg-row.tk .avstack{margin-left:10px;flex:none}
 .sg-row.tk .avstack .avatar{width:15.25px;height:15.25px;margin-left:-6.3px;border:1px solid #fff;box-sizing:content-box}
 .sg-row.tk .avstack .avatar:first-child{margin-left:0}
-.sg-row.tk .sch-dd{margin-left:6.5px;font-size:11.5px;font-weight:600;flex:none}
+.sg-row.tk .sch-dd{margin-left:6.5px;font-size:12.2px;font-weight:500;flex:none}
 .sg-row.tk .fill{flex:1 1 0;min-width:6px}
-.sg-row.tk .rg{width:127.5px;flex:none}
+.sg-row.tk .rg{width:134px;flex:none}
 .sg-row.tk .rg .sch-rg{gap:4px}
 .sg-row.tk .rg .sch-rg svg{color:#5b5b5b;width:9px;height:7px}
 .sg-row.tk .st{width:56.7px;flex:none;font-size:11.5px}
@@ -139,7 +150,7 @@
 .sg-shade{position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#f6f6f6,rgba(250,250,250,0));pointer-events:none}
 .sg-band{position:absolute;left:0;right:0;height:29px;background:#f9f8f7;pointer-events:none}
 .sg-right .now{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:repeating-linear-gradient(to bottom,#1f8e00 0 2px,transparent 2px 5px);opacity:.75;z-index:3;pointer-events:none}
-.sg-sum{position:absolute;height:9.75px;border-radius:0 2px 2px 0;background:#474747;cursor:pointer;min-width:3px}
+.sg-sum{position:absolute;height:9.75px;border-radius:2px;background:#474747;cursor:pointer;min-width:3px}
 .sg-sum em{position:absolute;right:6.5px;top:0;font-style:normal;font-size:8.5px;line-height:9.75px;color:#fff;font-weight:500;white-space:nowrap;letter-spacing:-0.01em}
 .sg-sum.out em{right:auto;left:calc(100% + 5px);color:#848484}
 .sg-dia{position:absolute;width:7.2px;height:7.2px;border:1px solid #6f6f6f;background:#fff;transform:rotate(45deg);cursor:pointer;border-radius:1px}
@@ -152,7 +163,7 @@
 .sg-bar.done{color:#9a9a9a}
 .sg-bar:hover{border-color:#8e8e8e}
 .sg-bar.near{border-color:#6a6a6a}
-.sg-bar.sel{background:#e8f3e5;border-color:#474747;color:#1f8e00;box-shadow:0 0 0 0.25px #474747}
+.sg-bar.sel{background:#e8f3e5;border-color:#474747;color:#1f8e00;box-shadow:0 0 0 0.75px #474747}
 .sg-bar .pc{position:absolute;left:3px;bottom:1.5px;height:2px;max-width:calc(100% - 6px);background:#8fc780;border-radius:1px}
 .sg-bar .pl{position:absolute;top:-1px;bottom:-1px;pointer-events:none}
 .sg-bar .pl.in{left:-1px;border-right:1px dashed #8e8e8e;border-radius:0 4.5px 4.5px 0}
@@ -167,12 +178,12 @@
 .sg-msb{position:absolute;width:18.7px;height:18.7px;border:1px solid #cfcfcf;background:#f9f8f7;transform:rotate(45deg);border-radius:2.5px;cursor:pointer;z-index:2}
 .sg-msb.near{border-color:#6a6a6a}
 .sg-msb.done{background:#e9e9e9}
-.sg-msb.sel{background:#e8f3e5;border-color:#474747}
+.sg-msb.sel{background:#e8f3e5;border-color:#474747;box-shadow:0 0 0 0.75px #474747}
 .sg-ref{position:absolute;height:2.5px;border-radius:1.5px;background:#d6d6d6;z-index:1}
 .sg-links{position:absolute;left:0;top:0;z-index:1;overflow:visible;pointer-events:none}
 .sg-links path{fill:none;stroke:#afafaf;stroke-width:.6;stroke-linecap:round;stroke-linejoin:round}
 .sg-links circle{fill:#afafaf}
-.sg-links g.hot path{stroke:#474747;stroke-width:.9}
+.sg-links g.hot path{stroke:#474747;stroke-width:1.1}
 .sg-links g.hot circle{fill:#474747}
 .sg-links g.off path{stroke-dasharray:2.5 2.5}
 .sg-links path.hit{stroke:transparent!important;stroke-width:9;pointer-events:stroke;cursor:pointer}
@@ -181,7 +192,7 @@
 .sg-links .draft{stroke:#1f8e00;stroke-width:1.1;stroke-dasharray:3 3;fill:none}
 .sg-mark{position:absolute;left:0;right:0;height:0;border-top:1px dashed #d9d9d9;z-index:5;pointer-events:none}
 .sg-tags{position:absolute;left:0;top:0;width:0;height:0}
-.sg-tags b{position:absolute;left:-35.5px;margin-top:-6.6px;height:13.2px;padding:0 8px 0 5px;font-size:9px;font-weight:400;line-height:12px;color:#8e8e8e;background:#fff;border:1px solid #cfcfcf;border-right:0;border-radius:2.5px 0 0 2.5px;white-space:nowrap;cursor:default}
+.sg-tags b{position:absolute;left:-45px;margin-top:-6.6px;height:13.2px;padding:0 8px 0 5px;font-size:9px;font-weight:400;line-height:12px;color:#8e8e8e;background:#fff;border:1px solid #cfcfcf;border-right:0;border-radius:2.5px 0 0 2.5px;white-space:nowrap;cursor:default}
 .sg-tags b::after{content:"";position:absolute;right:-4.7px;top:1.4px;width:8.6px;height:8.6px;background:#fff;border-top:1px solid #cfcfcf;border-right:1px solid #cfcfcf;transform:rotate(45deg)}
 .sch-gantt .sg-foot{display:flex;align-items:center;gap:16px;height:28px;font-size:11px;color:#9a9a9a;border-top:1px solid #f1f1f1;padding:0 2px}
 .sch-gantt .sg-foot b{color:#5b5b5b;font-weight:600}
@@ -401,7 +412,7 @@
 /* as tall as fits one screen; the rest by its scroll bar */
 .sch-gates{position:relative;margin-top:34px;width:calc(1337.9px + var(--d));border-top:1px solid #c9c9c9;border-bottom:1px solid #c9c9c9;padding:40px 0 6px;max-height:596px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#bdbdbd transparent}
 .sch-gates::-webkit-scrollbar{width:8px}.sch-gates::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}.sch-gates::-webkit-scrollbar-track{background:transparent}
-.sch-gates .gt{position:relative;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:0;padding:0 0 46px 210px;cursor:pointer;min-height:112px}
+.sch-gates .gt{position:relative;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:0;padding:0 0 76px 210px;cursor:pointer;min-height:112px}
 .sch-gates .gt:last-child{padding-bottom:30px}
 .sch-gates .gt .ln{position:absolute;left:173.6px;top:12px;height:100%;width:1.6px;background:#cfcfcf}   /* from this gate's dot to the next one's */
 .sch-gates .gt:last-child .ln{display:none}
@@ -537,3 +548,19 @@
 .sn-node.target{border-color:#1f8e00;box-shadow:0 0 0 1.5px rgba(31,142,0,.35)}
 .sn-node.linking{border-color:#474747}
 .sn-links .draft{stroke:#1f8e00;stroke-width:1.4;stroke-dasharray:4 4;fill:none}
+
+/* partner list (preview): the site's logo in the box before the name; without a site, or when the logo cannot be had, the first letter */
+.sch-on .tbl.partners .rw .nm .lg.mono{position:relative;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;color:#8e8e8e;overflow:hidden}
+.sch-on .tbl.partners .rw .nm .lg.mono img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+/* deleting a project: at the right end of the row of 수정 */
+.phead .pdel{position:absolute;right:0;top:86px;width:27.9px;height:27.9px;background:transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.phead .pdel:hover{background:#eee}
+.phead .pdel .pict{width:14px;height:14px}
+
+/* what is filtered, beside a section's title (each with an x) */
+.sch-chips{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-left:2px}
+.sch-chips .sch-chip{color:#4f4f4f;white-space:nowrap}
+.sch-chips:empty{display:none}
+/* a status never leaves its cell */
+.tbl .rw .sch-st{max-width:100%;overflow:hidden}
+.tbl .rw > div:has(> .sch-st){min-width:0;overflow:hidden}
