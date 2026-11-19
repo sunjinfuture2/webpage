@@ -310,6 +310,7 @@ export class Workspace {
             if (c.field) entry.field = c.field;
             if (isItem || c.id.startsWith('project:') || c.id.startsWith('partner:')) { entry.t = ref.title || ref.full || ref.name || ''; if (ref.type) entry.ty = ref.type; }
             else if (META_TITLES[c.id]) entry.t = META_TITLES[c.id];
+            else if (c.id.startsWith('meta:sched:')) entry.t = '프로젝트 일정';
             summary.push(entry);
           }
           // one version per item and request, taken once every field of the request is in (title, body and "ed" arrive as separate fields)

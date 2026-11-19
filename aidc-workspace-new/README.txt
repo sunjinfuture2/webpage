@@ -17,11 +17,19 @@ AIDC 워크스페이스 프로젝트 전달본 (2026-11-06)
 - shared-worker.mjs: 서버 API와 Durable Object 데이터 저장 (첨부 파일, 활동 기록, 쓰레기통 30일 정리 포함)
 - build-shared.mjs: original.html에 shared-client.js를 넣어 public/index.html을 만들고 seed.json을 생성하며, editor/를 묶어 public/editor.js를 만듦
 - editor/: 본문 편집기 소스 (Tiptap 3 기반 블록 편집기). 구조·저장 형식·항목별 구현 상태는 EDITOR.md
-- tests/: 본문 편집기 검사 (Playwright, 로컬 개발 서버 대상). editor-1..7, leave-1
+- schedule/: 일정 통합(WorkSpace × Schedule) 소스. core/는 SUNJIN Schedule 앱의 계산 엔진 사본(수정 금지), ui/는 화면 코드, schedule.css는 스타일. 구조와 결정 사항은 SCHEDULE.md
+- public/schedule/pangyo.json: 판교 마스터스케줄 원본 데이터 (생성물이 아님)
+- public/schedule.js: 일정 엔진 묶음 (생성물)
+- tests/: 검사 (Playwright, 로컬 개발 서버 대상). editor-1..7, leave-1, panel-1, schedule-1..2 그리고 서버 없이 도는 schedule-engine.mjs
 - public/katex/: 수식 표시용 KaTeX (빌드가 node_modules에서 복사, 수식이 있는 화면에서만 불러옴)
 - public/index.html, public/editor.js, public/editor.licenses.txt: 배포용 생성 결과 (직접 수정하면 다시 생성할 때 덮어써집니다)
 - seed.json: 최초 빈 저장소에 넣는 예시 데이터; 실제 운영 DB 백업이 아닙니다
 - wrangler.jsonc: 기존 Worker와 데이터 저장소 연결 설정
+
+일정 통합 화면 미리보기 (2026-11-19~)
+- 주소 끝에 ?v=2 를 붙여 한 번 열면 그 브라우저에서 새 판교 화면(액션 일정·리스트·관계도, 조달·승인게이트·근거 및 확약)이 보입니다.
+  https://sunjin-aidc-workspace-demo.sunjinfuture2.workers.dev/?v=2#page=project&proj=pangyo
+- 끄려면 상단의 '미리보기' 표시를 눌러 '기존 화면으로 돌아가기'를 고르거나 ?v=1 로 여세요. 다른 사람의 화면은 바뀌지 않습니다.
 
 Claude에게 전달할 요청
 "README.txt와 CLAUDE.md를 읽고 이 프로젝트를 이어서 수정해줘. 원본과 생성 코드를 수정하고 npm run build로 최종 HTML을 만들어줘. 실제 배포는 sunjin-aidc-workspace-demo에만 하고 기존 운영 데이터와 Durable Object 연결을 유지해줘."

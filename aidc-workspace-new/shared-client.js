@@ -14,7 +14,10 @@ const same=(a,b)=>JSON.stringify(a??null)===JSON.stringify(b??null);
 const userName=id=>sharedUsers[id]||PEOPLE[id]||id||'';
 // Meta records that are compared field by field (two people changing different fields do not collide).
 const FIELD_META=new Set(['meta:head','meta:rows','meta:members','meta:settings','meta:flags']);
-const metaTarget=key=>({'meta:head':PHEAD,'meta:rows':ARCH_ROWS,'meta:members':MEMBERS_META,'meta:settings':SETTINGS,'meta:flags':META_FLAGS})[key];
+// A project's schedule (meta:sched:<project>) is one such record too: one field per changed task / relation / package (see schedule/overlay.ts).
+const schedKey=key=>key.startsWith('meta:sched:');
+const isFieldMeta=key=>FIELD_META.has(key)||schedKey(key);
+const metaTarget=key=>schedKey(key)?(SCHED[key.slice(11)]||(SCHED[key.slice(11)]={})):({'meta:head':PHEAD,'meta:rows':ARCH_ROWS,'meta:members':MEMBERS_META,'meta:settings':SETTINGS,'meta:flags':META_FLAGS})[key];
 const SETTINGS_DEFAULT=copy(SETTINGS);
 const FIXTURE_DRAFT_TITLES=new Set(ITEMS.filter(i=>i.status==='draft').map(i=>i.title)); // demo drafts shipped with the page
 
@@ -41,12 +44,13 @@ function sharedRecords(){
   Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':head,'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS),
     'meta:flags':copy(META_FLAGS),'meta:notices':copy(NOTICES),'meta:settings':copy(SETTINGS),'meta:members':copy(MEMBERS_META)});
   if(sharedUser)out['meta:inbox:'+sharedUser]=copy(INBOX_STATE);
+  for(const [pid,ov] of Object.entries(SCHED))if(Object.keys(ov).length||sharedBase['meta:sched:'+pid])out['meta:sched:'+pid]=copy(ov);
   for(const k of Object.keys(sharedBase))if(!(k in out)&&k.startsWith('meta:'))out[k]=copy(sharedBase[k]); // records this page does not model (other people's inbox state, future keys)
   return out;
 }
 function sharedDiff(a,b){const changes=[];for(const id of new Set([...Object.keys(a),...Object.keys(b)])){
   if(same(a[id],b[id]))continue;
-  if((id.startsWith('meta:')&&!FIELD_META.has(id))||!a[id]||!b[id]){changes.push({id,before:a[id]??null,after:b[id]??null});continue;}
+  if((id.startsWith('meta:')&&!isFieldMeta(id))||!a[id]||!b[id]){changes.push({id,before:a[id]??null,after:b[id]??null});continue;}
   for(const field of new Set([...Object.keys(a[id]),...Object.keys(b[id])]))if(!same(a[id][field],b[id][field]))changes.push({id,field,before:a[id][field]??null,after:b[id][field]??null});
  }return changes;}
 // Writes one server record into the page state, whatever is there now.
@@ -58,6 +62,7 @@ function applyRecord(key,v){
     else ITEMS.push(copy(v));}
   else if(key.startsWith('project:')){const k=key.slice(8);if(v==null)delete PROJECTS[k];else PROJECTS[k]=copy(v);}
   else if(key.startsWith('partner:')){const idx=PARTNERS.findIndex(x=>x.id===key.slice(8));if(idx>=0)PARTNERS.splice(idx,1,...(v?[copy(v)]:[]));else if(v)PARTNERS.push(copy(v));}
+  else if(schedKey(key)){const t=metaTarget(key);for(const k of Object.keys(t))if(!v||!(k in v))delete t[k];if(v)Object.assign(t,copy(v));}
   else if(v==null)return;                                                           // a meta record missing on the server keeps the page default
   else if(key==='meta:order')PROJ_ORDER.splice(0,PROJ_ORDER.length,...v);
   else if(key==='meta:roadmap')ROADMAP.splice(0,ROADMAP.length,...copy(v));
@@ -72,7 +77,7 @@ function applyRecord(key,v){
   else if(key==='meta:inbox:'+sharedUser)INBOX_STATE=Object.assign({read:[],checked:[]},copy(v));
 }
 // Records that are saved field by field, and the live object behind each of them.
-const fieldLevel=key=>key.startsWith('item:')||key.startsWith('project:')||FIELD_META.has(key);
+const fieldLevel=key=>key.startsWith('item:')||key.startsWith('project:')||isFieldMeta(key);
 const targetOf=key=>key.startsWith('item:')?ITEMS.find(x=>x.id===key.slice(5)):key.startsWith('project:')?PROJECTS[key.slice(8)]:metaTarget(key);
 // Takes a server record over field by field. A field I have changed since `mine` (my last known copy) keeps my value; everything else follows the server.
 function mergeRecord(key,v,mine){const cur=targetOf(key);
@@ -183,7 +188,7 @@ async function sharedResolveConflict(){
    if(!same(rest(mine),rest(base))){lost++;if(!same(mine.title,(base||{}).title)||!same(mine.body||'',(base||{}).body||'')){sharedKeepCopy(mine);kept++;}}
    applyRecord(key,server);
    if(server&&added.length){const it=item(key.slice(5));it.comments=(it.comments||[]).concat(added);}                  // my comments go on top of the server copy
-  }else if(FIELD_META.has(key)&&mine&&server){
+  }else if(isFieldMeta(key)&&mine&&server){
    const keep={};for(const f of new Set([...Object.keys(mine),...Object.keys(base||{})])){if(same(mine[f],(base||{})[f]))continue;if(same(server[f],(base||{})[f]))keep[f]=mine[f];else lost++;}
    applyRecord(key,server);const target=metaTarget(key);for(const [f,v] of Object.entries(keep)){if(v===undefined)delete target[f];else target[f]=copy(v);}
   }else{applyRecord(key,server);lost++;}
@@ -381,9 +386,10 @@ setInterval(()=>{if(!sharedReady||sharedBusy)return;const diff=sharedDiff(shared
 /* ---------- routing: the address always describes the open page, so reload, back/forward and shared links work ---------- */
 const ROUTE_KEYS=['page','proj','full','panel'];
 let lastHash=null,routeApplying=false;
-const panelExists=id=>!!(item(id)||PARTNERS.some(p=>p.id===id&&!p.trash)||/^lib:(meeting|action|research)$/.test(id)||(/^\d+:/.test(id)&&(ARCH_SECTIONS[+id.split(':')[0]]||{cards:[]}).cards.some(c=>c.id===id.split(':')[1]&&!c.trash)));
+const panelExists=id=>!!(item(id)||(typeof schPanelHtml==='function'&&/^s[pget]-/.test(id)&&schPanelHtml(id))||PARTNERS.some(p=>p.id===id&&!p.trash)||/^lib:(meeting|action|research)$/.test(id)||(/^\d+:/.test(id)&&(ARCH_SECTIONS[+id.split(':')[0]]||{cards:[]}).cards.some(c=>c.id===id.split(':')[1]&&!c.trash)));
 const routeHash=r=>{const p=new URLSearchParams();for(const k of ROUTE_KEYS)if(r[k])p.set(k,r[k]);const s=p.toString();return s?'#'+s:'';};
 function cleanRoute(r){r={...r};if(!['main','project','archive'].includes(r.page))r.page='main';if(r.page==='project'&&!PROJECTS[r.proj]){r.page='main';r.proj=null;}if(r.page!=='project')r.proj=null;
+ if(typeof schDeferRoute==='function')schDeferRoute(r); // a task of a schedule that is still loading is opened once it is there
  if(r.full&&!item(r.full))r.full=null;if(r.panel&&!panelExists(r.panel))r.panel=null;return r;}
 function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else openPanel(id,true);}
 function afterNav(){sharedUi();saveRoute();}

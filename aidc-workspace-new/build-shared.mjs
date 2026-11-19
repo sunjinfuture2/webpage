@@ -41,6 +41,20 @@ await fs.writeFile(new URL('public/editor.licenses.txt',root),licences);
 const editorCss=await fs.readFile(new URL('editor/editor.css',root),'utf8');
 if(!html.includes('</style>'))throw new Error('build-shared: no </style> to attach the editor stylesheet to');
 html=html.replace('</style>',()=>'</style>\n<style id="nb-style">\n'+editorCss+'</style>\n<script src="/editor.js?v='+createHash('sha256').update(editorJs).digest('hex').slice(0,12)+'"></script>');
+// Schedule (schedule/): the calculation core (the SUNJIN Schedule app's engine) is bundled to public/schedule.js, the page code
+// in schedule/ui/*.js becomes one inline script (it shares the page's globals, like shared-client.js) and schedule.css goes
+// into the page. The source plans themselves are static files in public/schedule/ and are fetched when a schedule is shown.
+const sched=await build({entryPoints:[path.join(here,'schedule/index.ts')],absWorkingDir:here,bundle:true,format:'iife',minify:true,target:['es2020'],legalComments:'none',write:false,
+  banner:{js:'/*! AIDC WorkSpace schedule engine (SUNJIN Schedule core). */'}});
+const schedJs=sched.outputFiles[0].text;
+await fs.writeFile(new URL('public/schedule.js',root),schedJs);
+const schedCss=await fs.readFile(new URL('schedule/schedule.css',root),'utf8');
+let schedUi='';
+for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.endsWith('.js')).sort())schedUi+='\n/* ---- schedule/ui/'+f+' ---- */\n'+await fs.readFile(new URL('schedule/ui/'+f,root),'utf8');
+if(/<\/script/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing script tag');
+if(!html.includes('<style id="nb-style">'))throw new Error('build-shared: editor stylesheet anchor missing');
+html=html.replace('<style id="nb-style">',()=>'<style id="sch-style">\n'+schedCss+'</style>\n<script src="/schedule.js?v='+createHash('sha256').update(schedJs).digest('hex').slice(0,12)+'"></script>\n<style id="nb-style">');
+html=html.replace('</body>',()=>'<script>'+schedUi+'</script></body>');
 // Isolated, removable toolbar experiment for the single Test research record.
 const trial=await fs.readFile(new URL('research-editor-trial.js',root),'utf8');
 html=html.replace('</body>',()=>'<script>'+trial+'</script></body>');

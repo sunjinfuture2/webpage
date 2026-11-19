@@ -1460,11 +1460,11 @@ ITEMS.forEach(i=>{ if(!i.created) i.created = (i.dots&&i.dots.includes('g')) ? D
 <script>
 /* ===================== HELPERS ===================== */
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); // quotes too: the result is also used inside attribute values (title="…")
 const withS=s=>esc(s).replace(/&lt;s&gt;/g,'<s>').replace(/&lt;\/s&gt;/g,'</s>').replace(/&lt;b&gt;/g,'<b>').replace(/&lt;\/b&gt;/g,'</b>');
 // 자료실 rows live in ARCH_ROWS until someone edits one; then it becomes a normal item (see adoptRow).
 const archRowOf=id=>{for(const t of Object.keys(ARCH_ROWS)){const r=(ARCH_ROWS[t]||[]).find(x=>x.id===id);if(r)return {row:r,tab:t};}return null;};
-const item=id=>ITEMS.find(i=>i.id===id)||(typeof id==='string'&&id.startsWith('ar')?(archRowOf(id)||{}).row:undefined);
+const item=id=>ITEMS.find(i=>i.id===id)||(typeof id==='string'&&id.startsWith('ar')?(archRowOf(id)||{}).row:undefined)||(typeof id==='string'&&id.startsWith('wt-')&&typeof schVirtualItem==='function'?schVirtualItem(id):undefined);
 const NOPROJ={id:'',tag:'미지정',full:'미지정',cls:'pj-k',color:'#8e8e8e',status:'',stColor:'#8e8e8e',grad:'#d1d0d0'};
 const proj=id=>PROJECTS[id]||NOPROJ;
 const av=(cls='')=>`<span class="avatar ${cls}"></span>`;
@@ -1540,6 +1540,7 @@ const searchBox=(k,ph)=>`<label class="srch">${svg('pic-search',13.5,13.5)}<inpu
 const perBox=()=>`<div class="tbl-tools" data-per>${S.actPer}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div>`;
 /* ===================== STATE ===================== */
 const NOW0=new Date();
+const SCHED={}; // schedule changes per project (record meta:sched:<project>): see schedule/overlay.ts and schedule/ui
 const S={page:'main',proj:null,panel:null,full:null,ctx:'panel',q:{action:'',research:'',partner:''},filters:{},typeOff:{},selDate:null,sort:{k:'',dir:1},car:{proj:0,meet:0},an:{mode:'30',y:NOW0.getFullYear(),m:NOW0.getMonth()+1},
   calY:NOW0.getFullYear(),calM:NOW0.getMonth()+1,actPage:1,actPer:10,resPage:1,ptPage:1,archTab:'설계',archPage:1,memPage:1,fav:true,calYp:NOW0.getFullYear(),calMp:NOW0.getMonth()+1,checks:{},partnerCat:null,collapsed:false,editProj:false};
 
@@ -1553,20 +1554,21 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const prevDim=new Date(Y,M-1,0).getDate(); const weeks=Math.ceil((startDow+dim)/7);
   const dd=sbDelta()/5; const COLW=[79.4,113.3+dd,113.3+dd,113.3+dd,113.3+dd,113.3+dd,79.4], COLX=[0]; for(let i=1;i<7;i++)COLX[i]=COLX[i-1]+COLW[i-1];
   const mStart=ymd(Y,M,1), mEnd=ymd(Y,M,dim); const dayNo=x=>x<mStart?0:(x>mEnd?dim+1:+x.slice(8)); const RANK={meeting:0,action:1,research:2};
-  const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
+  const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
+  const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=S.selDate||TODAY; const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
   let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''}">
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
     <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
   if(!opts.proj) h+=`<div class="filters">${orderedProjects().map(k=>pill(PROJECTS[k],(S.filters[k]!==false?'':'off')+' flt nosq').replace('class="pill','data-flt="'+k+'" title="이 프로젝트의 일정 보기/숨기기" class="pill')).join('')}</div>`;
-  h+=`<div class="legend">${['meeting','action','research'].map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${pict(t)}</i>${TYPE_NAME[t]}</span>`).join('')}</div>`;
+  h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
   h+=`<div class="grid"><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="rows">`;
   for(let w=0;w<weeks;w++){
     const ws=w*7-startDow+1, we=ws+6; let cells='';
     for(let c=0;c<7;c++){const idx=ws+c; let n,out=false;
       if(idx<1){n=prevDim+idx;out=true;}else if(idx>dim){n=idx-dim;out=true;}else n=idx;
-      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}><span class="n">${n}</span>${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
+      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}><span class="n">${n}</span>${!out&&cnt&&cnt[n]?`<span class="acnt" title="이 날 진행 중이거나 지연된 액션 ${cnt[n]}건">${pict('action')}${cnt[n]}</span>`:''}${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
     // events of this week: longer spans first, then meetings before action items before research; lanes are filled first-fit
     const lo=Math.max(ws,1), hi=Math.min(we,dim);
     const wk=evs.filter(x=>!(x.en<lo||x.s>hi)).map(x=>({e:x.e,s:Math.max(x.s,lo),en:Math.min(x.en,hi),contL:x.s<lo,contR:x.en>hi}));
@@ -1585,6 +1587,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   return h;
 }
 function rightList(opts){ // what is on for the selected date (today unless a date was clicked); opts.proj → project page variant
+  if(schPreview())return schRightList(opts);
   const pid=opts.proj||null, main=!pid; const D=S.selDate||TODAY; const all=itemsOn(D,pid); const by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), ais=by('action'), rss=by('research'); const [y,m,dn]=D.split('-').map(Number); const dow='일월화수목금토'[new Date(y,m-1,dn).getDay()];
   const one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
@@ -1653,7 +1656,7 @@ function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car
 /* ===================== PAGES ===================== */
 // Each list section can be redrawn on its own (search, paging, sorting), so typing never rebuilds the whole page.
 const actRows=pid=>sortActs(liveItems('action',pid).filter(i=>matchQ(S.q.action,i.title,...(i.people||[]).map(userName),proj(i.proj).tag)));
-function actionSecHtml(pid){const acts=actRows(pid); const total=Math.max(1,Math.ceil(acts.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const rows=acts.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
+function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const acts=actRows(pid); const total=Math.max(1,Math.ceil(acts.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const rows=acts.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
 function researchSecHtml(pid){const res=sortResearch(liveItems('research',pid).filter(i=>matchQ(S.q.research,i.title,i.desc))); const total=Math.max(1,Math.ceil(res.length/12)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*12,S.resPage*12);
   return `<div style="margin-top:${pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
@@ -1664,13 +1667,13 @@ function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.pa
   if(k==='cal')el.innerHTML=(pid?renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true}):renderCalendar({year:S.calY,month:S.calM}))+rightList(pid?{proj:pid}:{});
   else if(k==='action')el.innerHTML=actionSecHtml(pid); else if(k==='research')el.innerHTML=researchSecHtml(pid); else if(k==='partner')el.innerHTML=partnerSecHtml();
   afterNav();}
-function renderMain(){
+function renderMain(){ if(schPreview())Object.keys(SCH_SOURCES).forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
    <div class="projects" style="margin-top:111.5px;height:675.8px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>
-   <div class="sec" id="sec-actions"><div class="sec-title" style="margin-left:-2.8px">액션아이템${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
+   <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${pict('action')}</span>액션`:'액션아이템'}${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
      <div data-sec="action">${actionSecHtml(null)}</div></div>
    <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title" style="margin-left:-2.8px">리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(null)}</div></div>
@@ -1683,7 +1686,7 @@ function partnerSection(extraStyle){
 function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]={}); const def={cls:p.status||'',prog:'',owner:p.owner||'',loc:p.site||'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:p.cost||'',fundType:'',struct:'',main:''};
   for(const k of Object.keys(def))if(typeof h[k]!=='string')h[k]=def[k]; if(!Array.isArray(h.partners))h.partners=[]; if(!Array.isArray(h.scale)||!h.scale.length||!h.scale.every(s=>Array.isArray(s)&&s.length>=2))h.scale=['공사면적:','IT 용량:','총 수전용량 :','서버:'].map((l,i)=>{const s=Array.isArray(h.scale)?h.scale[i]:null;return Array.isArray(s)?[s[0]||l,s[1]||'']:[l,''];}); return h;}
 function renderProject(pid){
-  const p=PROJECTS[pid], d=headOf(pid);
+  const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
   const lk=(t,k)=>`<span class="lk"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i><a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
   $('#proj-pw').innerHTML=`
@@ -1693,7 +1696,7 @@ function renderProject(pid){
      <div class="col col1"><div class="fr"><b>분류</b>${E?`<span class="v stpick" data-pickstatus>${statusBadge(p.status)}${svg('i-chev-d',7.2,3.6,'color:#8e8e8e')}</span>`:`<span class="v">${statusBadge(p.status)}</span>`}</div><div class="fr" style="margin-bottom:25.7px"><b>진행도</b><span class="v${EC}" ${edk('prog')}>${esc(d.prog)}</span></div>
       <div class="fr" style="margin-bottom:17.5px"><b>담당자</b><span class="who ${E?'pk':''}" ${E?'data-pickowner':''}>${av()}<span>${esc(d.owner)}</span>${E?svg('i-chev-d',7.2,3.6,'color:#8e8e8e;margin-left:4px'):''}</span></div>
       <div class="fr" style="margin-bottom:0"><b>대상위치</b><div><div class="v${EC}" style="line-height:21px;margin-top:-0.3px" ${edk('loc','주소')}>${esc(d.loc)}</div>${mapBox(d.loc,'margin-top:6.7px')}<div class="v${EC}" style="line-height:21px;margin-top:31.9px" ${edk('alt','대체부지')}>${esc(d.alt)}</div>${mapBox(d.alt,'margin-top:5.4px')}</div></div></div>
-     <div class="col col2"><div class="fr"><b>용도지역</b><span class="v${EC}" ${edk('zone')}>${esc(d.zone)}</span></div><div class="fr"><b>사업형태</b><span class="v${EC}" ${edk('kind')}>${esc(d.kind)}</span></div><div class="fr"><b>사업시행자</b>${d.dev||E?lk(d.dev,'dev'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div><div class="fr"><b>토지소유자</b>${d.land||E?lk(d.land,'land'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div>
+     <div class="col col2 ${SC?'sch':''}">${SC?schOpsRow(pid):''}<div class="fr"><b>용도지역</b><span class="v${EC}" ${edk('zone')}>${esc(d.zone)}</span></div><div class="fr"><b>사업형태</b><span class="v${EC}" ${edk('kind')}>${esc(d.kind)}</span></div><div class="fr"><b>사업시행자</b>${d.dev||E?lk(d.dev,'dev'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div><div class="fr"><b>토지소유자</b>${d.land||E?lk(d.land,'land'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div>
       <div class="fr"><b>자금조달</b><span class="v${EC}" ${edk('fund')}>${esc(d.fund)}</span></div><div class="fr"><b>총사업비</b><span class="v${EC}" ${edk('cost')}>${esc(d.cost)}</span></div><div class="fr"><b>자금조달방식</b><span class="v${EC}" ${edk('fundType')}>${esc(d.fundType)}</span></div>
       <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(s[1])}</span></div>`).join('')}</div></div>
       <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>`:''}</div></div></div>
@@ -1703,11 +1706,11 @@ function renderProject(pid){
    <div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title" style="top:0">미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>
      <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid)}</div></div>
      <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>
-   <div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">액션아이템${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
-     <div data-sec="action">${actionSecHtml(pid)}</div></div>
-   <div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>
-     <div class="box scroll" id="road-box"><div class="inner">${roadmapHtml(pid)}</div></div><div class="ruler" id="road-ruler">${rulerHtml()}</div><div class="hr bt"></div></div>
-   <div class="sec" style="margin-top:145.7px;padding-bottom:122.2px"><div class="sec-title" style="margin-left:-2.8px">리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
+   ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">액션아이템${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action','액션아이템 검색')}</div>
+     <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
+   ${PV?'':`<div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>
+     <div class="box scroll" id="road-box"><div class="inner">${roadmapHtml(pid)}</div></div><div class="ruler" id="road-ruler">${rulerHtml()}</div><div class="hr bt"></div></div>`}
+   <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title" style="margin-left:-2.8px">리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(pid)}</div></div>`;
 }
 // Each project has its own roadmap. An entry made before projects were separated goes with the project of the items it links, else 판교.
@@ -1754,7 +1757,7 @@ function newItem(type,extra={}){const id=type[0]+crypto.randomUUID(); const base
   if(type==='meeting')Object.assign(base,{partner:'',extAtt:'',actions:[],research:[],checks:[]});
   Object.assign(base,extra); ITEMS.push(base); return base;}
 // An untouched 자료실 row becomes a normal item the first time it is edited, commented on or trashed.
-function adoptRow(it){const f=it&&!ITEMS.includes(it)?archRowOf(it.id):null; if(!f)return false; const rows=ARCH_ROWS[f.tab]; rows.splice(rows.indexOf(f.row),1);
+function adoptRow(it){if(typeof schAdopt==='function'&&schAdopt(it))return true; const f=it&&!ITEMS.includes(it)?archRowOf(it.id):null; if(!f)return false; const rows=ARCH_ROWS[f.tab]; rows.splice(rows.indexOf(f.row),1);
   Object.assign(it,{arch:f.tab,type:'research',status:it.status||'published',st:it.st||'prog',pri:it.pri||'mid',people:it.people||[],body:it.body||'',comments:it.comments||[],created:it.created||it.date||TODAY}); if(it.dot)it.dots=['g']; delete it.dot; delete it.page; ITEMS.push(it); return true;}
 /* which item an action applies to: the side panel and a full page can be open together (a linked item opened from a full page) */
 const pinOf=it=>it&&S.panel===it.id?$('#panel-pin'):$('#item-pin');
@@ -1906,9 +1909,9 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const agentGo=it.agent?agentUrl(it):'';
   if(agentGo) head+=`<a class="sh-btn agent-go" href="${esc(agentGo)}" target="_blank" rel="noopener" data-stop>에이전트 열기 ↗</a>`;
   if(window.AIDCEditor&&it.id!==NB_TRIAL&&(E||isPub(it))) head+=`<button type="button" class="nb-more" data-ed="docmenu" title="문서 메뉴 (찾기 · 내보내기 · 가져오기)" aria-label="문서 메뉴" aria-haspopup="menu">⋯</button>`;
-  if(E||isPub(it)) head+=`<button class="trash" data-ed="trash" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
+ if((E||isPub(it))&&!(it.own&&it.task)) head+=`<button class="trash" data-ed="trash" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
   const ph=meeting?'새 미팅':(it.type==='action'?'새 액션아이템':(tab?'새 자료':'새 리서치'));
-  const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}">${titleEmpty?ph:esc(E?it.title:it.title.split('\n').join(' '))}</div>`;
+  const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}"${typeof schTitleAttr==='function'?schTitleAttr(it):''}>${titleEmpty?ph:esc(E?it.title:it.title.split('\n').join(' '))}</div>`;
   const V=(k,inner,cls='')=>`<div class="pr"><span class="k">${k}</span><span class="v ${cls} ${E?'pk':''}" data-pf="${k}">${inner}</span></div>`;
   const none=t=>`<span class="plain" style="color:#c4c4c4">${t}</span>`;
   const who=ppl=>(ppl||[]).length?ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join(''):none(E?'선택':'없음');
@@ -1927,8 +1930,8 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
       V('상태',`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
       V('중요도',`<span class="pri pri-${it.pri||'mid'}" ${pk('pri')}>${priTxt[it.pri||'mid']}</span>`),
       V('담당자',`<span class="people" ${pk('people')}>${who(it.people)}</span>`),
-      V(tab?'출처 URL':'URL',urlField(it,E))];
-    props=`<div class="props" style="grid-template-columns:449px"><div>${rows.join('')}</div></div>`;
+      V(tab?'출처 URL':'URL',urlField(it,E)),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
+    props=(typeof schItemProps==='function'?schItemProps(it,E,full):null)||`<div class="props" style="grid-template-columns:449px"><div>${rows.join('')}</div></div>`;
   }
   const cmtTop=full?(meeting?463.4:540.9-18.3):(meeting?481.7:540.9); const hrTop=cmtTop+30.3; const bodyTop=hrTop+(full?64.6:80.2)-1.3;
   const cmts=(it.comments||[]).map((c,ci)=>{const mine=!!c.authorId&&c.authorId===sharedUser; const tm=c.ts?relTime(c.ts):(c.at&&c.at!=='방금'?c.at:'');
@@ -2043,7 +2046,7 @@ function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content')
   if(S.full){ $('#page-item').classList.add('on'); $('#notice').style.display='none'; renderItemPage(); }
   else { $('#notice').style.display=''; renderNotice();
     if(S.page==='main'){renderMain();$('#page-main').classList.add('on');applyCarousel('proj');}
-    else if(S.page==='project'){renderProject(S.proj);$('#page-project').classList.add('on');applyCarousel('meet');const box=$('#road-box');fixRoadLine();if(box){if(S._roadProj!==S.proj){S._roadProj=S.proj;S._roadScroll=roadOf(S.proj).length>1?160:0;}box.scrollTop=S._roadScroll;}}
+    else if(S.page==='project'){renderProject(S.proj);$('#page-project').classList.add('on');schMount();applyCarousel('meet');const box=$('#road-box');fixRoadLine();if(box){if(S._roadProj!==S.proj){S._roadProj=S.proj;S._roadScroll=roadOf(S.proj).length>1?160:0;}box.scrollTop=S._roadScroll;}}
     else {renderArchive();$('#page-archive').classList.add('on');} }
   }catch(err){ // one broken record must not leave a blank screen: say what happened and keep the rest of the app usable
     console.error(err); const pg=$(S.full?'#page-item':S.page==='project'?'#page-project':S.page==='archive'?'#page-archive':'#page-main'); pg.classList.add('on');
@@ -2058,6 +2061,7 @@ function openPanel(id,force){ if(!id||id===S.full)return; if(S.panel===id)captur
   if(it){ if(ITEMS.includes(it)&&!canSee(it)&&it.status!=='new'){toast(it.status==='trash'?'쓰레기통에 있는 항목입니다.':'다른 멤버가 작성 중인 초안입니다.');return;} trackRecent('item:'+id); html=itemHtml(it,'panel'); }
   else if(id.startsWith('pt')){const pt=PARTNERS.find(x=>x.id===id&&!x.trash); if(pt)html=partnerHtml(pt,!!(S.editSimple&&S.editSimple.id===id));}
   else if(/^\d+:/.test(id)){const [si,cid]=id.split(':');const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash); if(c)html=archCardHtml(c,+si,!!(S.editSimple&&S.editSimple.id===id));}
+  if(!html&&typeof schPanelHtml==='function'&&/^s[pget]-/.test(id))html=schPanelHtml(id)||''; // a procurement package, a gate or an evidence record of a schedule
   if(!html){toast('삭제되었거나 없는 항목입니다.');return;}
   S.panel=id; if(S.editSimple&&S.editSimple.id!==id)S.editSimple=null; S.ctx='panel'; const pin=$('#panel-pin'); pin.innerHTML=html; pin.dataset.id=it?id:''; fitTitle(pin); $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
 function closePanel(force){ if(!S.panel)return; if(!force&&guardLeave(()=>closePanel(),'panel'))return; window.AIDCEditor&&AIDCEditor.closeFloating(); S.panel=null; S.editSimple=null; S.ctx='full'; $('#panel').classList.remove('on'); $('#app').classList.remove('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav(); }
@@ -2412,7 +2416,7 @@ async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.
   if(it.status==='new'){const i=ITEMS.indexOf(it); if(i>=0)ITEMS.splice(i,1); toast('작성하던 내용을 버렸습니다.');} // never saved: nothing to keep
   else {it.prevStatus=it.status==='locked'?'published':it.status; it.status='trash'; it.trashedAt=new Date().toISOString(); it.trashedBy=sharedUser; toast('휴지통으로 이동했습니다. 쓰레기통에서 30일 안에 복원할 수 있습니다.',2600);}
   if(S.panel===it.id)closePanel(true); if(S.full===it.id){S.full=null;render();}else render(true);}
-function saveItem(it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&!t.classList.contains('empty')){const v=readTitle(t); if(v&&v!==normT(it.title))it.title=v;} readUrl(it); readBody(it); it.editing=false; it.dirty=false; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; delete it.snap; delete it._editOriginal;}
+function saveItem(it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&!t.classList.contains('empty')){const v=readTitle(t); if(v&&v!==normT(it.title))it.title=v;} readUrl(it); readBody(it); it.editing=false; it.dirty=false; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; delete it.snap; delete it._editOriginal; if(typeof schAfterSave==='function')schAfterSave(it);}
 function revertItem(it){const original=it._editOriginal;if(original){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,original);}else if(it.snap){Object.assign(it,JSON.parse(it.snap));}delete it.snap;delete it._editOriginal;it.editing=false;it.dirty=false;sharedRelease('item:'+it.id);}
 function itemDirty(it){ if(!it||!ITEMS.includes(it)||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
   const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
