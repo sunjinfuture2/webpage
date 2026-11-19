@@ -74,7 +74,7 @@ function applyRecord(key,v){
   else if(key==='meta:notices')NOTICES=copy(v);
   else if(key==='meta:settings')SETTINGS=Object.assign(copy(SETTINGS_DEFAULT),copy(v));
   else if(key==='meta:members')MEMBERS_META=copy(v);
-  else if(key==='meta:inbox:'+sharedUser)INBOX_STATE=Object.assign({read:[],checked:[]},copy(v));
+  else if(key==='meta:inbox:'+sharedUser){INBOX_STATE=Object.assign({read:[],checked:[]},copy(v));if(typeof myPrefsApply==='function')myPrefsApply();}
 }
 // Records that are saved field by field, and the live object behind each of them.
 const fieldLevel=key=>key.startsWith('item:')||key.startsWith('project:')||isFieldMeta(key);
@@ -111,6 +111,7 @@ function sharedRedraw(){if(!sharedReady)return;sharedUi();const active=document.
  const scroll=$('#content').scrollTop,panelScroll=$('#panel').scrollTop;render();if(S.panel)rerenderItem(S.panel);$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;
  const pane=$('#mnav .item.on')?.dataset.pane; // panes with a form or a server-side list are left alone
  if($('#ovl').classList.contains('on')&&['inbox','members','mine','drafts','trash','teamspace','analytics'].includes(pane)){const st=$('#mbody').scrollTop;renderPane(pane);$('#mbody').scrollTop=st;}
+ if(PREVIEW_ON&&typeof mpLive==='function')mpLive();
 }
 // Routine connection/save states stay silent; only problems surface, as a toast, at most once per 10 seconds per message.
 let lastStatus='',lastStatusAt=0;
@@ -126,7 +127,11 @@ async function sharedUploadFile(file,itemId){if(!sharedReady)throw Error('서버
  const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(Error('파일을 읽지 못했습니다.'));r.readAsDataURL(file);});
  const r=await postJson('/api/file',{name:file.name,type:file.type,size:file.size,item:itemId||'',data});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'파일을 올리지 못했습니다.');return d;}
 async function sharedListFiles(){const r=await apiFetch('/api/files');if(!r.ok)throw Error('첨부 파일 목록을 가져오지 못했습니다.');return (await r.json()).files||[];}
-async function sharedHistory(limit=100,before=0){const r=await apiFetch(`/api/history?limit=${limit}${before?'&before='+before:''}`);if(!r.ok)throw Error('활동 기록을 가져오지 못했습니다.');return r.json();}
+async function sharedHistory(limit=100,before=0,audit=false){const r=await apiFetch(`/api/history?limit=${limit}${before?'&before='+before:''}${audit?'&audit=1':''}`);if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.error||'활동 기록을 가져오지 못했습니다.');}return r.json();}
+// My logins (my page > 계정 > 로그인·기기)
+async function sharedSessions(){const r=await apiFetch('/api/sessions');if(r.status===401){sharedEnd();throw Error('로그인이 필요합니다.');}if(!r.ok)throw Error('로그인 기기를 가져오지 못했습니다.');return r.json();}
+async function sharedEndSession(body){const r=await postJson('/api/session',body);const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'로그아웃하지 못했습니다.');return d;}
+async function sharedDeleteFile(id){try{await apiFetch('/api/file/'+encodeURIComponent(id),{method:'DELETE'});}catch{}}
 async function sharedSetName(name){const r=await postJson('/api/me',{name});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'이름을 바꾸지 못했습니다.');sharedName=d.name;ME=sharedName;sharedMeta(d);localStorage.setItem('aidc-known-name:'+sharedUser,d.name);return d.name;}
 async function sharedAddUser(employee,name){const r=await postJson('/api/user',{employee,name});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'멤버를 추가하지 못했습니다.');sharedMeta(d);return d;}
 
@@ -165,6 +170,7 @@ async function sharedFlush(wait=false){
  try{const r=await postJson('/api/change',{changes});const data=await r.json().catch(()=>({}));
   if(r.status===401){sharedEnd(data.error);return false;}
   if(r.status===409||r.status===423){await sharedResolveConflict();return false;}
+  if(r.status===403&&data.denied){await sharedDenied(data);return false;}
   if(!r.ok)throw Error(data.error||'save failed');
   for(const [key,v] of Object.entries(data.records)){
    if(v===null){delete sharedBase[key];continue;}
@@ -172,12 +178,19 @@ async function sharedFlush(wait=false){
    if(cur&&sent[key]&&!cur.editing)mergeRecord(key,v,sent[key]); // also brings in what others changed meanwhile, the cleaned body and the author / time stamps
    else sharedBase[key]=copy(v);}
   for(const key of [...ownedLocks])if(!(key.startsWith('item:')?item(key.slice(5))?.editing:S.editProj))await sharedRelease(key);
+  if(data.denied)sharedDeniedNote(data);
   sharedRetryAt=0;preserveLocal();return true;
  }catch(e){sharedRetryAt=Date.now()+3000;sharedStatus('저장하지 못했습니다 · 연결을 확인해 주세요. 내용은 이 브라우저에 보관됩니다.');return false;}
  finally{sharedBusy=false;sharedRedraw();}
 }
 // The server refused my changes because someone else changed (or is editing) the same thing.
 // Take the server copy, keep what can be merged (my comments, untouched fields) and park the rest as a recovery draft.
+// The server refused a change because of my role (my-page spec): its copy is taken back, whatever the page shows, and the reason is said.
+let sharedDeniedAt=0,sharedDeniedWhy='';
+function sharedDeniedNote(data){sharedDeniedAt=Date.now();sharedDeniedWhy=data.error||'권한이 없어 적용되지 않았습니다.';toast(sharedDeniedWhy,3600);if($('#ovl').classList.contains('on')&&typeof renderPane==='function')setTimeout(()=>{if($('#ovl').classList.contains('on'))renderPane();},0);}
+async function sharedDenied(data){const ids=(data.denied||[]).map(d=>d.id);
+ try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(r.ok){const d=await r.json();sharedMeta(d);for(const id of ids)applyRecord(id,d.records[id]??null);}else sharedRetryAt=Date.now()+3000;}catch{sharedRetryAt=Date.now()+3000;}
+ sharedDeniedNote(data);}
 async function sharedResolveConflict(){
  const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok){sharedRetryAt=Date.now()+3000;return;}
  const d=await r.json();sharedMeta(d);const local=sharedRecords();let lost=0,kept=0;
@@ -327,12 +340,12 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
- purgeOldTrash();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;
  restoreLocal();
  for(const [id,l] of Object.entries(sharedLocks))if(l.employee===sharedUser&&!ownedLocks.has(id)){ownedLocks.add(id);await sharedRelease(id);} // locks left over from a closed tab
  $('#login').style.display='none';$('#app').hidden=false;
- restoreRoute();render();if(S.panel)openAny(S.panel);sharedUi();sharedConnect();return true;
+ if(typeof myPrefsApply==='function')myPrefsApply();
+ restoreRoute();render();if(S.panel)openAny(S.panel);if(S.my&&PREVIEW_ON&&typeof mpOpen==='function')mpOpen(S.my);S.my=null;sharedUi();sharedConnect();return true;
 }
 async function login(){const employee=$('#lg-id').value.trim();if(!employee){$('#lg-err').textContent='사번을 입력하세요.';$('#lg-err').style.display='block';return;}$('#lg-btn').disabled=true;
  try{const r=await postJson('/api/login',{employee,name:$('#lg-name').value.trim()});const d=await r.json();if(!r.ok)throw Error(d.error);
@@ -388,7 +401,7 @@ setInterval(()=>{if(!sharedReady||sharedBusy)return;const diff=sharedDiff(shared
  if(!it?.editing&&!(id==='project:'+S.proj&&S.editProj)&&!diff.some(c=>c.id===id))sharedRelease(id);}},3000);
 
 /* ---------- routing: the address always describes the open page, so reload, back/forward and shared links work ---------- */
-const ROUTE_KEYS=['page','proj','full','panel'];
+const ROUTE_KEYS=['page','proj','full','panel','my'];
 let lastHash=null,routeApplying=false;
 const panelExists=id=>!!(item(id)||(typeof schPanelHtml==='function'&&/^s[pget]-/.test(id)&&schPanelHtml(id))||PARTNERS.some(p=>p.id===id&&!p.trash)||/^lib:(meeting|action|research)$/.test(id)||(/^\d+:/.test(id)&&(ARCH_SECTIONS[+id.split(':')[0]]||{cards:[]}).cards.some(c=>c.id===id.split(':')[1]&&!c.trash)));
 const routeHash=r=>{const p=new URLSearchParams();for(const k of ROUTE_KEYS)if(r[k])p.set(k,r[k]);const s=p.toString();return s?'#'+s:'';};
@@ -399,7 +412,7 @@ function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else open
 function afterNav(){sharedUi();saveRoute();if(typeof schAfterNav==='function')schAfterNav();}
 function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
  const route={page:S.page,proj:S.proj,panel:S.panel,full:S.full,actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
-  q:S.q,filters:S.filters,typeOff:S.typeOff,partnerCat:S.partnerCat,actPer:S.actPer,selDate:S.selDate,sort:S.sort,scroll:$('#content').scrollTop,panelScroll:$('#panel').scrollTop};
+  q:S.q,filters:S.filters,typeOff:S.typeOff,partnerCat:S.partnerCat,actPer:S.actPer,selDate:S.selDate,sort:S.sort,scroll:$('#content').scrollTop,panelScroll:$('#panel').scrollTop,my:typeof mpRoute==='function'?mpRoute():null};
  sessionStorage.setItem('aidc-route:'+sharedUser,JSON.stringify(route));
  const hash=routeHash(route);if(hash===lastHash)return;
  const url=location.pathname+location.search+hash;if(lastHash===null)history.replaceState({aidc:1},'',url);else history.pushState({aidc:1},'',url);lastHash=hash;}
@@ -414,9 +427,9 @@ function applyRoute(r,force){
  routeApplying=true;try{closePop();closeModal();const d=$('#dlg');if(d)d.remove();
   if(S.editProj){restoreProjectSnap();sharedRelease('project:'+S.proj);S.editProj=false;}
   S.page=r.page;S.proj=r.proj;S.full=r.full;S.panel=null;$('#panel').classList.remove('on');$('#app').classList.remove('panel-open');
-  render();if(r.panel)openAny(r.panel);
+  render();if(r.panel)openAny(r.panel);if(r.my&&typeof mpOpen==='function'&&PREVIEW_ON)mpOpen(r.my);
  }finally{routeApplying=false;}
- lastHash=routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel});
+ lastHash=routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel,my:typeof mpRoute==='function'?mpRoute():null});
  if(location.hash!==lastHash)history.replaceState({aidc:1},'',location.pathname+location.search+lastHash);sharedUi();}
 // An address may end in &block=<id>: once the item is open, that block is scrolled to and flashed.
 function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).get('block');if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);}

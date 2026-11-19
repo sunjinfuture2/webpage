@@ -56,6 +56,7 @@ const xlsxV=createHash('sha256').update(xlsx.outputFiles[0].text).digest('hex').
 {const dir=path.join(here,'node_modules/exceljs');const meta=JSON.parse(await fs.readFile(path.join(dir,'package.json'),'utf8'));
  await fs.writeFile(new URL('public/schedule.licenses.txt',root),`Third-party software bundled in schedule-xlsx.js\n\n${'='.repeat(78)}\n${meta.name} ${meta.version} (${meta.license})\n${'='.repeat(78)}\n${(await fs.readFile(path.join(dir,'LICENSE'),'utf8')).trim()}\n\nThe ExcelJS browser build contains its own dependencies (JSZip, saxes, readable-stream and others), each under the licence stated in its source header.\n`);}
 const schedCss=await fs.readFile(new URL('schedule/schedule.css',root),'utf8');
+const myCss=await fs.readFile(new URL('mypage/mypage.css',root),'utf8');
 let schedUi='';
 for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.endsWith('.js')).sort())schedUi+='\n/* ---- schedule/ui/'+f+' ---- */\n'+await fs.readFile(new URL('schedule/ui/'+f,root),'utf8');
 if(/<\/script/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing script tag');
@@ -63,6 +64,12 @@ schedUi=schedUi.replace('__SCH_XLSX_V__',xlsxV);
 if(!html.includes('<style id="nb-style">'))throw new Error('build-shared: editor stylesheet anchor missing');
 html=html.replace('<style id="nb-style">',()=>'<style id="sch-style">\n'+schedCss+'</style>\n<script src="/schedule.js?v='+createHash('sha256').update(schedJs).digest('hex').slice(0,12)+'"></script>\n<style id="nb-style">');
 html=html.replace('</body>',()=>'<script>'+schedUi+'</script></body>');
+// My page (mypage/): page code like schedule/ui (one inline script sharing the page's globals) and its stylesheet.
+let myUi='';
+for(const f of (await fs.readdir(new URL('mypage/',root))).filter(n=>n.endsWith('.js')).sort())myUi+='\n/* ---- mypage/'+f+' ---- */\n'+await fs.readFile(new URL('mypage/'+f,root),'utf8');
+if(/<\/script/i.test(myUi))throw new Error('build-shared: mypage must not contain a closing script tag');
+html=html.replace('<style id="nb-style">',()=>'<style id="mp-style">\n'+myCss+'</style>\n<style id="nb-style">');
+html=html.replace('</body>',()=>'<script>'+myUi+'</script></body>');
 // Isolated, removable toolbar experiment for the single Test research record.
 const trial=await fs.readFile(new URL('research-editor-trial.js',root),'utf8');
 html=html.replace('</body>',()=>'<script>'+trial+'</script></body>');

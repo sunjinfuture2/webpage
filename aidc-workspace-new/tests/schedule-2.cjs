@@ -73,8 +73,8 @@ const sfx = Date.now().toString(36).slice(-5);
   check('…and 확인 removes the stored relation', await ev(() => !Object.keys(SCHED.pangyo).some(k => k.startsWith('d:'))));
   await ev(() => { SCHU.scale = 'week'; schRefresh(); }); await sleep(300);
 
-  console.log('— tools from the user menu; Excel');
-  check('the page has no tools button; the user menu offers the schedule tools', await ev(() => !document.querySelector('[data-sch="tools"]') && schUserMenu().length === 1));
+  console.log('— tools (no way in since the my-page specification, the functions stay); Excel');
+  check('the page has no tools button and the user menu no tools entry', await ev(() => !document.querySelector('[data-sch="tools"]') && typeof schUserMenu === 'undefined' && typeof schToolsMenu === 'function'));
   const x1 = await ev(async () => { const X = await schXlsx(); const w = schBackup('pangyo'), p = w.scenarios[0]; p.tasks.find(t => t.wbs === 'W7.8').delay = 2; const bytes = await X.makeXlsx(w, p, AIDCSchedule.calculate(p)); window.__xl = bytes; const u = new Uint8Array(bytes); return { n: u.length, zip: u[0] === 0x50 && u[1] === 0x4b }; });
   check('the Excel bundle is fetched on demand and writes a workbook', x1.zip && x1.n > 200000, x1);
   await ev(async () => { await schImportFile('pangyo', new File([window.__xl], '일정.xlsx')); }); await sleep(500);

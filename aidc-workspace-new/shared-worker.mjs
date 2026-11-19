@@ -79,6 +79,8 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS users (employee TEXT PRIMARY KEY, name TEXT NOT NULL)');
     // live_sessions replaces the older active_sessions table, which allowed only one session per employee.
     this.sql.exec('CREATE TABLE IF NOT EXISTS live_sessions (token TEXT PRIMARY KEY, employee TEXT, expires INTEGER, seen INTEGER)');
+    for (const col of ['created INTEGER', 'ua TEXT', 'sid TEXT']) { try { this.sql.exec('ALTER TABLE live_sessions ADD COLUMN ' + col); } catch { /* already there */ } }
+    try { this.sql.exec("UPDATE live_sessions SET sid=lower(hex(randomblob(8))) WHERE sid IS NULL OR sid=''"); } catch { }
     this.sql.exec('CREATE TABLE IF NOT EXISTS edit_locks (id TEXT PRIMARY KEY, token TEXT, employee TEXT, expires INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, employee TEXT, changed TEXT, at TEXT)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, size INTEGER, item TEXT, employee TEXT, at TEXT, data BLOB)');
@@ -114,7 +116,7 @@ export class Workspace {
   }
   mayEdit(id, token) { return !!this.sql.exec('SELECT id FROM edit_locks WHERE id=? AND token=? UNION SELECT id FROM co_locks WHERE id=? AND token=?', id, token, id, token).toArray().length; }
   // may this member read the item (and so its versions)? A draft is only its writer's.
-  readable(id, me) { const v = this.get('item:' + id); return !!v && !(v.status === 'draft' && v.authorId && v.authorId !== me); }
+  readable(id, me) { const v = this.get('item:' + id); return !!v && !this.privateDraft(v, me); }
   get(id) { const r = this.sql.exec('SELECT data FROM records WHERE id=?', id).toArray()[0]; return r ? JSON.parse(r.data) : null; }
   users() { return Object.fromEntries(this.sql.exec('SELECT * FROM users').toArray().map(u => [u.employee, u.name])); }
   locks() {
@@ -127,10 +129,46 @@ export class Workspace {
     for (const ws of this.ctx.getWebSockets()) {
       try {
         const a = ws.deserializeAttachment();
-        if (a && this.sql.exec('SELECT token FROM live_sessions WHERE token=? AND expires>?', a.token, Date.now()).toArray().length) ws.send(JSON.stringify(data));
+        if (a && this.sql.exec('SELECT token FROM live_sessions WHERE token=? AND expires>?', a.token, Date.now()).toArray().length) {
+          let out = data;
+          if (data.records) { const rec = {}; for (const [k, v] of Object.entries(data.records)) { if (!this.hidden(k, v, a.employee)) rec[k] = v; else if (k.startsWith('item:')) rec[k] = null; } out = { ...data, records: rec }; }   // another member's draft reads as "not there"
+          ws.send(JSON.stringify(out));
+        }
         else ws.close(4001, 'Session ended');
       } catch { }
     }
+  }
+  // Roles live in meta:members ({<사번>: {role, …}}). Until somebody is 소유자 everybody may manage (the page's long-standing rule,
+  // owner decision 2026-11-12); from then on the Worker itself refuses what the page hides (my-page spec, 2026-11-19).
+  roles() { const m = this.get('meta:members') || {}; const role = id => (m[id] && m[id].role) || '멤버'; const owners = Object.keys(m).filter(id => role(id) === '소유자');
+    return { m, role, owners, hasOwner: owners.length > 0, admin: id => !owners.length || ['소유자', '관리자'].includes(role(id)), owner: id => !owners.length || role(id) === '소유자' }; }
+  // What a member may be sent: not other members' inbox / personal records, not other members' drafts.
+  // (Drafts of the demo data that the design lists — table / card / cal — are listed for everybody, as before.)
+  privateDraft(v, me) { return !!v && !!v.authorId && v.authorId !== me && !(v.table || v.card || v.cal) && (v.status === 'draft' || (v.status === 'trash' && v.prevStatus === 'draft')); }
+  hidden(key, v, me) { if (key.startsWith('meta:inbox:')) return key !== 'meta:inbox:' + me; return key.startsWith('item:') && this.privateDraft(v, me); }
+  // A change this member may not make: returns the reason, or '' when it is fine.
+  denied(c, old, me, R) {
+    const id = String(c.id);
+    if (id.startsWith('meta:inbox:')) return id === 'meta:inbox:' + me ? '' : '다른 멤버의 수신함은 바꿀 수 없습니다.';
+    if (id.startsWith('item:')) {
+      if (this.privateDraft(old, me)) return '다른 멤버의 초안입니다.';
+      if (!c.field && c.after == null && old && !(old.status === 'draft' && (!old.authorId || old.authorId === me)) && !R.owner(me)) return '영구 삭제는 소유자만 할 수 있습니다.';
+      return '';
+    }
+    if (id === 'meta:members') {
+      if (!R.hasOwner) return '';
+      const one = (who, before, after) => { const a = before || {}, b = after || {}, ra = a.role || '멤버', rb = b.role || '멤버';
+        if (ra !== rb) { if (!R.owner(me)) return '역할은 소유자만 바꿀 수 있습니다.'; if (ra === '소유자' && R.owners.length <= 1 && R.owners[0] === who) return '마지막 소유자는 바꿀 수 없습니다. 다른 소유자를 먼저 지정하세요.'; }
+        if (JSON.stringify(a.ws || []) !== JSON.stringify(b.ws || []) && !R.admin(me)) return '팀스페이스 소속은 소유자·관리자가 바꿉니다.';
+        if (who !== me && !R.admin(me)) return '다른 멤버의 정보는 소유자·관리자만 바꿀 수 있습니다.';
+        return ''; };
+      if (c.field) return one(c.field, (old || {})[c.field], c.after);
+      for (const who of new Set([...Object.keys(old || {}), ...Object.keys(c.after || {})])) { const why = one(who, (old || {})[who], (c.after || {})[who]); if (why) return why; }
+      return '';
+    }
+    // Two fields of the settings record are every member's to write: the trash of projects (deleting a project) and the editor's shared templates.
+    if (id === 'meta:settings') { if (c.field === 'projTrash' || c.field === 'templates' || R.admin(me)) return ''; return '워크스페이스 설정은 소유자·관리자만 바꿀 수 있습니다.'; }
+    return '';
   }
   // Login lifetime chosen in 설정 > 보안 (7 / 14 / 30 / 90 days after the last request).
   sessionMs() { const days = +(this.get('meta:settings')?.security?.sessionDays); return [7, 14, 30, 90].includes(days) ? days * 864e5 : SESSION_MS; }
@@ -148,7 +186,15 @@ export class Workspace {
       let v; try { v = JSON.parse(r.data); } catch { continue; }
       if (v.status === 'trash' && v.trashedAt && v.trashedAt < limit) { this.sql.exec('DELETE FROM records WHERE id=?', r.id); this.sql.exec('DELETE FROM files WHERE item=?', r.id.slice(5)); this.sql.exec('DELETE FROM versions WHERE item=?', r.id.slice(5)); gone[r.id] = null; }
     }
-    if (Object.keys(gone).length) this.broadcast({ records: gone });
+    for (const r of this.sql.exec(`SELECT id,data FROM records WHERE id LIKE 'partner:%' AND data LIKE '%"trash":true%'`).toArray()) {
+      let v; try { v = JSON.parse(r.data); } catch { continue; }
+      if (v.trash && v.trashedAt && v.trashedAt < limit) { this.sql.exec('DELETE FROM records WHERE id=?', r.id); gone[r.id] = null; }
+    }
+    const arch = this.get('meta:archive');
+    if (Array.isArray(arch)) { let ch = false; for (const s of arch) { if (!s || !Array.isArray(s.cards)) continue; const keep = s.cards.filter(c => !(c && c.trash && c.trashedAt && c.trashedAt < limit)); if (keep.length !== s.cards.length) { s.cards = keep; ch = true; } } if (ch) { this.put('meta:archive', arch); gone['meta:archive'] = arch; } }
+    const st = this.get('meta:settings');
+    if (st && st.projTrash) { const keep = Object.fromEntries(Object.entries(st.projTrash).filter(([, t]) => !(t && t.at && t.at < limit))); if (Object.keys(keep).length !== Object.keys(st.projTrash).length) { st.projTrash = keep; this.put('meta:settings', st); gone['meta:settings'] = st; } }
+    if (Object.keys(gone).length) { this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', 'system', JSON.stringify({ event: 'auto-purge', title: Object.keys(gone).length + '건' }), new Date().toISOString()); this.broadcast({ records: gone }); }
   }
   // One line per changed record for the 업데이트 / 감사 로그 screens. Older history rows hold the full changes; newer ones are already summarised.
   feed(limit, before) {
@@ -196,7 +242,7 @@ export class Workspace {
         if (!display || display.length > 40) return json({ error: '처음 로그인할 때 이름을 입력하세요. (40자 이내)' }, 400);
         const token = crypto.randomUUID(); const now = Date.now();
         this.sql.exec('INSERT OR IGNORE INTO users VALUES (?,?)', id, display);
-        this.sql.exec('INSERT INTO live_sessions VALUES (?,?,?,?)', token, id, now + this.sessionMs(), now);
+        this.sql.exec('INSERT INTO live_sessions (token,employee,expires,seen,created,ua,sid) VALUES (?,?,?,?,?,?,?)', token, id, now + this.sessionMs(), now, now, String(req.headers.get('User-Agent') || '').slice(0, 300), crypto.randomUUID().replace(/-/g, '').slice(0, 16));
         this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', id, JSON.stringify({ event: 'login' }), new Date().toISOString());
         this.broadcast({ users: this.users() });
         return json({ employee: id, name: display, token }, 200, { 'Set-Cookie': fileCookie(req, token, this.sessionMs() / 1000) });
@@ -208,6 +254,7 @@ export class Workspace {
       if (!session) return json({ error: '로그인이 필요합니다.' }, 401);
       this.sql.exec('UPDATE live_sessions SET expires=?, seen=? WHERE token=?', now + this.sessionMs(), now, token);
       const me = session.employee;
+      if (path === '/api/state') { try { this.sql.exec("UPDATE live_sessions SET ua=? WHERE token=? AND (ua IS NULL OR ua='')", String(req.headers.get('User-Agent') || '').slice(0, 300), token); } catch { } }
 
       if (path === '/api/logout') {
         this.sql.exec('DELETE FROM live_sessions WHERE token=?', token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', token); this.sql.exec('DELETE FROM co_locks WHERE token=?', token); this.promote();
@@ -223,16 +270,31 @@ export class Workspace {
       if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), minClient: MIN_CLIENT }); }
       if (path === '/api/state') {
         return json({ employee: me, name: this.users()[me], users: this.users(), locks: this.locks(), minClient: MIN_CLIENT,
-          records: Object.fromEntries(this.sql.exec('SELECT * FROM records').toArray().map(r => [r.id, JSON.parse(r.data)])) },
+          records: Object.fromEntries(this.sql.exec('SELECT * FROM records').toArray().map(r => [r.id, JSON.parse(r.data)]).filter(([k, v]) => !this.hidden(k, v, me))) },
           200, { 'Set-Cookie': fileCookie(req, token, this.sessionMs() / 1000) });
       }
       if (path === '/api/live' && req.headers.get('Upgrade') === 'websocket') {
         const pair = new WebSocketPair(); this.ctx.acceptWebSocket(pair[1]); pair[1].serializeAttachment({ token, employee: me });
         return new Response(null, { status: 101, webSocket: pair[0] });
       }
+      // My logins: where I am signed in, and ending one of them (or all the others). Tokens are never sent back; a login is named by its sid.
+      if (path === '/api/sessions' && req.method === 'GET') {
+        const mine = this.sql.exec('SELECT token,sid,created,seen,expires,ua FROM live_sessions WHERE employee=? AND expires>? ORDER BY seen DESC', me, now).toArray();
+        const online = new Set(this.ctx.getWebSockets().map(w => { try { return w.deserializeAttachment()?.token; } catch { return ''; } }));
+        return json({ sessions: mine.map(s => ({ id: s.sid, current: s.token === token, created: s.created || null, seen: s.seen, expires: s.expires, ua: s.ua || '', online: online.has(s.token) })), sessionDays: Math.round(this.sessionMs() / 864e5) });
+      }
+      if (path === '/api/session' && req.method === 'POST') {
+        const b = await req.json(); const rows = this.sql.exec('SELECT token,sid FROM live_sessions WHERE employee=? AND token<>?', me, token).toArray().filter(s => b.others === true || s.sid === String(b.id || ''));
+        for (const s of rows) { this.sql.exec('DELETE FROM live_sessions WHERE token=?', s.token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', s.token); this.sql.exec('DELETE FROM co_locks WHERE token=?', s.token); }
+        if (rows.length) { const gone = new Set(rows.map(s => s.token)); this.promote();
+          for (const ws of this.ctx.getWebSockets()) { try { if (gone.has(ws.deserializeAttachment()?.token)) ws.close(4001, 'Session ended'); } catch { } }
+          this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify({ event: 'logout-other', title: rows.length + '개 기기' }), new Date().toISOString());
+          this.broadcast({ locks: this.locks() }); }
+        return json({ ended: rows.length });
+      }
       if (path === '/api/me' && req.method === 'POST') { // change my own display name
         const name = String((await req.json()).name || '').trim();
-        if (!name || name.length > 40) return json({ error: '이름은 1~40자로 입력하세요.' }, 400);
+        if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) return json({ error: '이름은 1~40자로 입력하세요. (제어문자는 쓸 수 없습니다)' }, 400);
         this.sql.exec('UPDATE users SET name=? WHERE employee=?', name, me); this.broadcast({ users: this.users() });
         return json({ name, users: this.users() });
       }
@@ -254,6 +316,7 @@ export class Workspace {
         return json({ version: row });
       }
       if (path === '/api/history') {
+        if (url.searchParams.get('audit') === '1' && !this.roles().admin(me)) return json({ error: '감사 로그는 소유자·관리자만 볼 수 있습니다.' }, 403);
         const limit = Math.min(300, Math.max(1, +url.searchParams.get('limit') || 100));
         return json(this.feed(limit, +url.searchParams.get('before') || 0));
       }
@@ -271,9 +334,18 @@ export class Workspace {
         const locks = this.locks(); this.broadcast({ locks }); return json({ locks, record: this.get(id), co });
       }
       if (path === '/api/change' && req.method === 'POST') {
-        const { changes } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
+        let { changes } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
         const applied = {}; let conflict = null; const summary = []; const versioned = new Set(), seenFirst = new Map();
         this.cleanup();
+        // What this member may not change. A whole record (or a delete) refuses the request; a single field is left out and the record is
+        // handed back as it stands, so the page shows the server's value again instead of retrying.
+        const refused = [];
+        { const R = this.roles(); const keep = [];
+          for (const c of changes) { if (!c || typeof c.id !== 'string') { keep.push(c); continue; } const why = this.denied(c, this.get(c.id), me, R);
+            if (!why) { keep.push(c); continue; }
+            if (!c.field) return json({ error: why, denied: [{ id: c.id, field: '', why }] }, 403);
+            refused.push({ id: c.id, field: c.field, why }); }
+          changes = keep; }
         for (const c of changes) {
           if (c.field === 'comments' && String(c.id).startsWith('item:')) continue; // commenting is allowed while someone else edits the item
           const lockId = c.id === 'meta:head' && c.field ? 'project:' + c.field : c.id;
@@ -315,11 +387,13 @@ export class Workspace {
           }
           // one version per item and request, taken once every field of the request is in (title, body and "ed" arrive as separate fields)
           for (const id of versioned) this.version(id.slice(5), seenFirst.get(id) || null, this.get(id), me);
-          this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify(summary), new Date().toISOString());
+          if (summary.length) this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify(summary), new Date().toISOString());
         });
         if (conflict) return json({ error: '다른 사용자의 변경과 겹칩니다.', conflict }, 409);
-        this.broadcast({ records: applied, users: this.users(), locks: this.locks() });
-        return json({ records: applied });
+        if (Object.keys(applied).length) this.broadcast({ records: applied, users: this.users(), locks: this.locks() });
+        if (!refused.length) return json({ records: applied });
+        const back = { ...applied }; for (const d of refused) if (!(d.id in back)) back[d.id] = this.get(d.id) ?? null;
+        return json({ records: back, denied: refused, error: refused[0].why });
       }
       if (path === '/api/file' && req.method === 'POST') {
         const { name, type, item, data } = await req.json(); const nm = String(name || '').trim().slice(0, 200); if (!nm || typeof data !== 'string') return json({ error: '잘못된 파일 요청' }, 400);

@@ -89,5 +89,5 @@ function schToolPanelHtml(pid,kind){ const m=schModel(pid), A=AIDCSchedule, R=(k
       h+=R(esc(s.name),`<span class="plain wrap"><b>운영개시 ${schD(x.res.operationDate)}</b> (${d===0?'차이 없음':(d>0?'+':'')+d+'일'}) · 날짜가 달라지는 업무 ${diff.length}건\n${diff.slice(0,40).map(t=>{const a=base.res.tasks[t.id],b=x.res.tasks[t.id];return `${schWbs(t.wbs)}) ${esc(t.name)}: ${a?schD(a.finish):'-'} → ${schD(b.finish)}`;}).join('\n')}${diff.length>40?`\n… 외 ${diff.length-40}건`:''}</span>`); }
     return wrap('프로젝트 도구','시나리오 비교',h); }
   return ''; }
-// The tools have no button on the page (owner, 2026-11-19): they are an entry of the user menu while a project with a schedule is open.
-function schUserMenu(){ return S.page==='project'&&!S.full&&schReady(S.proj)?[{t:'일정 도구 (엑셀 · 백업 · 시나리오)',ico:svg('i-sch-tag',16,16),k:'sch',fn:()=>schToolsMenu($('#tb-user'),S.proj)}]:[]; }
+// The tools have no way in any more (my-page spec DEL-02, 2026-11-19: the entry of the user menu is gone). The functions stay: schToolsMenu(anchor, pid) opens them.
+

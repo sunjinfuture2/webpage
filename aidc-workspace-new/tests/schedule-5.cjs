@@ -32,7 +32,7 @@ const sfx = Date.now().toString(36).slice(-5);
   const B = await newUser(browser, 'R5B', '한결 이', { url: 'http://127.0.0.1:8787/?v=2' }), b = B.page;
   check('another member no longer has the project either, and sees it in the trash', await b.evaluate(id => !PROJECTS[id] && trashList().some(x => x.k === 'project' && x.id === id), pid));
   await ev(() => openModal('trash')); await sleep(500);
-  await a.click(`[data-restore="project|${pid}"]`); await sleep(1200);
+  await a.click(`[data-mp="tr-restore:project|${pid}"]`); await sleep(1200);
   const back = await ev(id => ({ there: !!PROJECTS[id] && PROJECTS[id].full, trash: !!(SETTINGS.projTrash || {})[id], card: [...document.querySelectorAll('#proj-inner .pcard')].some(c => c.dataset.go === 'project:' + id) }), pid);
   check('복원 from the trash brings the project back whole', /5차 검사 사업/.test(back.there) && !back.trash && back.card, back);
   await ev(() => closeModal()); await sleep(1200);
