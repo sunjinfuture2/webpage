@@ -3,15 +3,15 @@
 function schMainTasks(pid){ const m=schModel(pid); if(!m)return []; const P=AIDCSchedule.progress, today=schToday(), D=AIDCSchedule.dates, red=schNotices(pid).red;
   return m.plan.tasks.filter(t=>{ if(red.has(schItemId(t.id)))return true;   // a change on a task of mine is shown whatever its dates are
     if(P.isDone(t)||P.isExcluded(t))return false; const r=m.res.tasks[t.id]; return P.isStarted(t)||(r.start<=today&&r.finish>=today)||D.diffDays(r.finish,today)<=30; })
-    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:schRole(t),start:r.start,end:r.finish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,mod:it?modDate(it):null,order:t.order};}); }
+    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,mod:it?modDate(it):null,order:t.order};}); }
 function schMainRows(){ const q=S.q.action, out=[];
   for(const i of liveItems('action')){ if(i.own)continue; const m=i.task&&schHas(i.proj)?schModel(i.proj):null, t=m&&m.byId.get(i.task);
-    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:false,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'',start:i.date,end:itemEnd(i),done:i.st==='done',st:i.st==='done'?'완료':'진행',pri:i.pri||'mid',auto:false,mod:modDate(i),item:i,order:0}); }
+    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:false,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end:itemEnd(i),done:i.st==='done',st:i.st==='done'?'완료':'진행',pri:i.pri||'mid',auto:false,mod:modDate(i),item:i,order:0}); }
   for(const pid of Object.keys(SCH_SOURCES))if(schHas(pid))out.push(...schMainTasks(pid));
-  return out.filter(r=>matchQ(q,r.title,r.wbs,proj(r.proj).tag,r.role,...r.ppl.map(userName))); }
+  return out.filter(r=>matchQ(q,r.title,r.wbs,proj(r.proj).tag,...r.ppl.map(userName))); }
 function schMainActions(){ const rows=schMainRows(), k=S.sort.k, dir=S.sort.dir||1, notes={};
   for(const r of rows){ const n=notes[r.proj]||(notes[r.proj]=schNotices(r.proj)); r.red=n.red.has(r.id); r.green=n.green.has(r.id); r.dots=schDotsHtml(n,r.id); }
-  const key={proj:r=>proj(r.proj).tag,who:r=>userName(r.ppl[0])||'~'+r.role,title:r=>norm(r.title),date:r=>r.end||'',pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>r.done?1:0,mod:r=>r.mod?r.mod.getTime():0}[k];
+  const key={proj:r=>proj(r.proj).tag,who:r=>userName(r.ppl[0])||'~',title:r=>norm(r.title),date:r=>r.end||'',pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>r.done?1:0,mod:r=>r.mod?r.mod.getTime():0}[k];
   // without a chosen order: changed ones (red), those that start today (green), then what is not finished, nearest deadline first
   rows.sort(key?(a,b)=>{const x=key(a),y=key(b);return (x<y?-1:x>y?1:0)*dir||(a.end||'').localeCompare(b.end||'');}:(a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||(a.end||'9').localeCompare(b.end||'9')||a.order-b.order);
   const total=Math.max(1,Math.ceil(rows.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const page=rows.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);

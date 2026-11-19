@@ -83,6 +83,46 @@ no trash button for a task), `saveItem()` (renaming a task from its panel), `ope
 
 Readings of the owner's words that were reported to them and not yet confirmed: today's count has no window; what "linked" covers; red actions of other days joining today's list; "nearest D-day" meaning late ones first; which gate / evidence state gets which mark.
 
+## Fourth round (owner, 2026-11-19, a list of about thirty points)
+
+Project calendar
+- A click on a day of a project's calendar does nothing any more (no selection, no frame; the list beside it is always today's). The hook is in the page's click handler and in renderCalendar (`sel` is today for a project while the preview is on). The main page's calendar still selects.
+- The list's upper line is an element of its own (`.rline`), level with the calendar's line under the weekdays (schFitRight moves the list), and both lines of the list are the calendar's line: 1px #ededed, as wide as the text.
+
+Lower section
+- 승인게이트 is at most 596 high and scrolls. The line is black only where it leads into an approved gate and only as far as that gate's dot: each gate's `.ln` runs from its dot to the next one and is black when the next gate is approved (`to-ok`), `.ln0` is the piece above the first gate. Reaching a date paints nothing. The code (G1) is as large as the title and 700.
+- The sentence above the procurement table was removed.
+
+액션 일정 · 리스트 · 관계도
+- One height for the three views: `--schh` (600) on `.sch-sec`; the gantt, the list (its header is sticky) and the relation map scroll inside it.
+- Relation map: no + / − buttons; the fit pictogram stands at the upper left (a second press goes back to full size), Ctrl + wheel zooms; the dots are the background of `.sn-canvas`, so they scroll and scale with the drawing; the pointer on a card thickens the lines of that card (`g.hov`, the lines carry data-a / data-b).
+- An importance worked out by the schedule is no longer paler. A status had no opacity; 계획 is the sheet's grey.
+- Where nobody is assigned every view says 미지정 and nothing else (the role of the source plan is only in 일정 상세 of the panel).
+- A column title of the list opens a menu: how to order by that column and what to keep (schColMenu; conditions in SCHU.cf, the assignee in SCHU.who, the phase in SCHU.phase; a green dot marks a title with a condition, 조건 지우기 clears them). The conditions apply to the list only.
+- 일정 미연결 is a choice of the phase picker, after the last phase (SCHU.phase === 'none', list only). There is no separate group under the table any more: with 전체 단계 those actions follow the tasks in the same table. An action may also belong to a phase without a task (`phase` on the item): it is listed after that phase's tasks with the phase's number.
+- D-day is 600 in the outline, the list, the main table and the panel (700 stays where the owner's pictures show it: the day list, the day window, the cards).
+- A name of the list (and of the main table) starts where the column title starts; a milestone's mark hangs to its left.
+- A relation is never stored by letting go any more. Pulling in the gantt, pulling a card of the relation map onto another, and every change from a relation's menu (kind, gap, in / out, delete) open schPropose (schedule/ui/35-propose.js): what is connected, the later task's forecast before and after, the operation date, a small chart of the tasks that move (dashed = before, green = after, the relation as a line) and their list; the kind can still be changed there; 확인 saves (schCommit, 되돌리기 as always), 취소 stores nothing. A relation that cannot be (a loop, a duplicate) shows the reason and cannot be confirmed. This is the one place where the owner asked for a confirming step; it does not bring back "save?" anywhere else.
+
+Item panel (all types, only while the preview is on: html.sch-on, PREVIEW_ON in original.html)
+- Menus of values that have a colour (status, importance, project) show their entries as they look in the page (menuPop entries may carry `html`).
+- 사업명 is a plain tag without the pictogram; while editing a click on it lists the projects as tags and the x beside it takes the project off.
+- While editing, what can be changed is paler and underlined; 저장 is a filled button, 수정 an outlined one.
+- No assignee: 미지정.
+- The trash is in the head of a task's panel too: it deletes the task after asking (the toast brings it back).
+- The type is called 액션 instead of 액션아이템 everywhere (ACT in original.html; a browser without the preview still reads 액션아이템).
+
+Task panel
+- Nothing of a task can be changed before 수정. While editing a change still applies at once (the other views follow), tagged with the item's id (SCH.tag); 취소 takes back exactly those changes (schEditCancel), 저장 keeps them (schEditKeep from schAfterSave).
+- Rows of 정보: 사업명, 예상 기한 (one row for the dates: it shows the forecast, what is typed is the managed date behind it; "선행 업무 반영" marks a forecast that differs), 실제 기한, 개발 단계 (the phase, changeable, also to a new phase made on the spot: records `ph:<code>` {label}; the task gets the next number of that phase), 마일스톤 (예 / 아니오), 참고 자료 (moved here; its picker starts with a search field) | 담당자, 상태, 중요도, URL. 진척률 is gone; 일정 상세 no longer has 추가지연, 잔여기간, 참조계획.
+- The second tab is 연결된 액션 (its number as large as the word): only the chart of the tasks before and after, with more room above and below; no captions, no add buttons, no rows of linked actions.
+- An ordinary action: 개발 단계 chooses a phase, then optionally a task of it; a new phase and a new task can be added from those menus.
+
+Outside the preview
+- The notes of a schedule task (items `wt-…`, `own`) are left out of the old page's lists (isLive): pressing 수정 on a task now creates that item, and a browser without the preview would otherwise list them as action items.
+
+Readings that were reported to the owner: "names aligned with the title without a milestone" was done for the list and the main table (in the gantt outline the names already started at one place); "bar" for the gates was read as a scroll bar; the height "one screen shows" was set to 600.
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): no second project has a schedule.

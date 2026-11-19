@@ -26,25 +26,44 @@ const schScopeName=()=>(SCH_SCOPES.find(x=>x[0]===SCHU.scope)||SCH_SCOPES[0])[1]
 function schScopeTest(m,t){ const r=m.res.tasks[t.id], k=SCHU.scope, P=AIDCSchedule.progress;
   if(k==='mine')return schMine(t); if(k==='open')return !P.isDone(t); if(k==='prog')return !P.isDone(t)&&(P.isStarted(t)||schOnDay(m,t,schToday()));
   if(k==='late')return schLate(m,t); if(k==='soon'){const d=schDday(r.finish,P.isDone(t));return !!d&&d.n<=30;} if(k==='ms')return t.kind==='milestone'; if(k==='crit')return r.criticality==='critical'||r.criticality==='near'; return true; }
-function schWhoTest(t){ const w=SCHU.who; if(!w)return true; if(w.startsWith('r:'))return !schPeople(t).length&&schRole(t)===w.slice(2); return schPeople(t).includes(w); }
-// The tasks the three views show, in WBS order.
-function schFiltered(m){ const q=(SCHU.q||'').trim();
-  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs),schRole(t),t.status,...schPeople(t).map(userName)))); }
-const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who;
+function schWhoTest(t){ const w=SCHU.who; if(!w)return true; if(w==='none'||w.startsWith('r:'))return !schPeople(t).length; return schPeople(t).includes(w); }
+// What the titles of the list's columns filter by (owner, 2026-11-19): kept in SCHU.cf, used by the list only.
+const schCf=()=>SCHU.cf||(SCHU.cf={});
+const schCfOn=()=>Object.keys(schCf()).length>0;
+function schSpanTest(c,a,b,done){ const today=schToday(), D=AIDCSchedule.dates;
+  if(c.plan){ const mo=today.slice(0,7); if(c.plan==='now'&&!(a<=today&&b>=today))return false; if(c.plan==='month'&&!(a.slice(0,7)<=mo&&b.slice(0,7)>=mo))return false; if(c.plan==='past'&&!(b<today))return false; if(c.plan==='next'&&!(a>today))return false; }
+  return true; }
+function schDueTest(c,finish,done){ if(!c.due)return true; if(done||!finish)return false; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return c.due==='late'?n<0:c.due==='7'?(n>=0&&n<=7):(n>=0&&n<=30); }
+function schColTest(m,t){ const c=schCf(); if(!schCfOn())return true; const r=m.res.tasks[t.id], done=AIDCSchedule.progress.isDone(t);
+  if(c.kind&&(c.kind==='ms')!==(t.kind==='milestone'))return false; if(c.pri&&schPri(m,t)!==c.pri)return false; if(c.st&&schStatus(t)!==c.st)return false; if(c.url&&(c.url==='y')!==!!urlHref(t.url))return false;
+  return schSpanTest(c,t.plannedStart,t.plannedFinish)&&schDueTest(c,r.finish,done); }
+// an ordinary action that is not linked to the schedule, against the same filters
+function schItemTest(i,q){ const c=schCf(), done=i.st==='done', a=i.date||'', b=itemEnd(i)||a, today=schToday(), k=SCHU.scope, ppl=i.people||[];
+  if(q&&!matchQ(q,i.title,...ppl.map(userName)))return false;
+  if(k==='mine'&&!ppl.includes(sharedUser))return false; if(k==='open'&&done)return false; if(k==='prog'&&(done||!(a<=today&&b>=today)))return false; if(k==='late'&&(done||!(b<today)))return false;
+  if(k==='soon'&&(done||!b||AIDCSchedule.dates.diffDays(b,today)>30))return false; if(k==='ms'||k==='crit')return false;
+  const w=SCHU.who; if(w&&(w==='none'?ppl.length>0:!ppl.includes(w)))return false;
+  if(c.kind==='ms')return false; if(c.pri&&(i.pri||'mid')!==c.pri)return false; if(c.st&&(done?'완료':'진행')!==c.st)return false; if(c.url&&(c.url==='y')!==!!urlHref(i.url))return false;
+  return schSpanTest(c,a,b)&&schDueTest(c,b,done); }
+// The tasks the three views show, in WBS order (cols: also what the list's column titles filter by).
+function schFiltered(m,cols){ const q=(SCHU.q||'').trim();
+  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!cols||schColTest(m,t))&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs),t.status,...schPeople(t).map(userName)))); }
+const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who||(SCHU.tab==='list'&&schCfOn());
 
 function schActionSection(pid){ const tabs=[['gantt','일정'],['list','리스트'],['net','관계도']];
   return `<div class="sec sch-sec" id="sch-actions" style="margin-top:112px">
     <div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션<span class="sch-tabs">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.tab===k?'on':''}" data-sch="tab" data-k="${k}">${t}</button>`).join('')}</span>
-      ${plusBtn('new-action','새 액션아이템')}<button class="sh-btn lib" data-lib="action">라이브러리</button>
+      ${plusBtn('new-action','새 액션')}<button class="sh-btn lib" data-lib="action">라이브러리</button>
       <label class="srch box">${svg('pic-search',15,15)}<input data-schq="q" placeholder="검색" value="${esc(SCHU.q||'')}"></label></div>
     <div data-sec="sch-act">${schActionBody(pid)}</div></div>`; }
 function schActionBody(pid){ const m=schModel(pid);
   if(!m)return `<div class="sch-empty">${SCH.failed[pid]?esc(SCH.failed[pid])+' <button class="sh-btn" data-sch="reload" style="margin-left:12px;height:26px;padding:0 10px;font-size:12px">다시 시도</button>':'일정을 불러오는 중입니다…'}</div>`;
   const sf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
   const ck=(k,label)=>`<span class="ck ${SCHU[k]?'on':''}" data-sch="toggle" data-k="${k}"><i>${svg('i-sch-ck',8,6.4)}</i>${label}</span>`;
-  const g=SCHU.phase&&m.phases.find(x=>x.code===SCHU.phase); let f=sf('phase',g?schPhaseLabel(g):'전체 단계',!!g)+sf('scope',schScopeName(),SCHU.scope!=='all');
+  if(SCHU.phase==='none'&&SCHU.tab!=='list')SCHU.phase='';   // actions outside the schedule have no bar and no relations: they are a choice of the list only
+  const g=SCHU.phase&&m.phases.find(x=>x.code===SCHU.phase), none=SCHU.phase==='none'; let f=sf('phase',none?'일정 미연결':g?schPhaseLabel(g):'전체 단계',!!g||none)+sf('scope',schScopeName(),SCHU.scope!=='all');
   if(SCHU.tab==='gantt')f+=sf('scale',(SCH_SCALES.find(x=>x[0]===SCHU.scale)||SCH_SCALES[0])[1],false,'narrow')+`<div class="cks">${ck('ref','참조계획')}${ck('links','연결선')}${ck('today','오늘')}</div>`;
-  else if(SCHU.tab==='list')f+=sf('who',SCHU.who?(SCHU.who.startsWith('r:')?SCHU.who.slice(2):userName(SCHU.who)):'담당자별',!!SCHU.who)+`<div class="right"><div class="tbl-tools" data-sch="pick" data-k="per">${SCHU.per}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div></div>`;
+  else if(SCHU.tab==='list')f+=(schCfOn()||SCHU.who?`<button class="sh-btn sch-cfx" data-sch="cf-clear" title="표 머리글에서 건 조건을 모두 지웁니다">조건 지우기 ${svg('i-x',7,7)}</button>`:'')+`<div class="right"><div class="tbl-tools" data-sch="pick" data-k="per">${SCHU.per}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div></div>`;
   else f=`<div class="seg"><button class="${SCHU.netMode==='all'?'on':''}" data-sch="netmode" data-k="all">${g?esc(schPhaseLabel(g)):'전체 단계'}</button><button class="${SCHU.netMode==='focus'?'on':''}" data-sch="netmode" data-k="focus">선택 업무 중심</button></div>`
     +(SCHU.netMode==='focus'?sf('netDepth',SCHU.netDepth+'단계 연결',false)+sf('netDir',({both:'선행+후행',before:'선행만',after:'후행만'})[SCHU.netDir],false):sf('phase',g?schPhaseLabel(g):'전체 단계',!!g));
   const note=m.err?`<div class="sch-note">일정 관계가 서로 맞지 않아 최근에 추가한 관계 일부를 빼고 계산했습니다: ${esc(m.err)}</div>`:(schScenario(pid)?`<div class="sch-note">시나리오 “${esc((SCHED[pid]['sc:'+schScenario(pid)]||{}).name||'')}”를 보고 있습니다. 여기서 고친 내용은 기본 계획에 반영되지 않습니다. <button class="sh-btn" data-sch="scn-off" style="margin-left:8px;height:22px;padding:0 9px;font-size:12px">기본 계획으로</button></div>`:'');
@@ -56,26 +75,45 @@ function schPager(cur,total,key,top){let h=`<div class="pager" style="margin-top
   return h+`<button class="arr" data-sch="page" data-k="${key}" data-v="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;}
 /* ---------- list ---------- */
 const SCH_SORT={wbs:(m,t)=>t.order,name:(m,t)=>t.name,plan:(m,t)=>t.plannedStart+t.plannedFinish,pri:(m,t)=>({high:0,mid:1,low:2})[schPri(m,t)],st:(m,t)=>SCH_STATUSES.indexOf(schStatus(t)),
-  who:(m,t)=>schPeople(t).map(userName).join(',')||'~'+schRole(t),due:(m,t)=>m.res.tasks[t.id].finish};
-function schListHtml(pid,m){ const P=AIDCSchedule.progress; let rows=schFiltered(m); const f=SCH_SORT[SCHU.sort]||SCH_SORT.wbs;
-  rows=rows.slice().sort((a,b)=>{const x=f(m,a),y=f(m,b);return (x<y?-1:x>y?1:0)*SCHU.dir||a.order-b.order;});
+  who:(m,t)=>schPeople(t).map(userName).join(',')||'~',due:(m,t)=>m.res.tasks[t.id].finish};
+const SCH_SORT_I={wbs:i=>i._ord||1e9,name:i=>i.title||'',plan:i=>(i.date||'')+(itemEnd(i)||''),pri:i=>({high:0,mid:1,low:2})[i.pri||'mid'],st:i=>SCH_STATUSES.indexOf(i.st==='done'?'완료':'진행'),who:i=>(i.people||[]).map(userName).join(',')||'~',due:i=>itemEnd(i)||''};
+const schLoose=(pid,m)=>schUnlinked(pid).filter(i=>!(i.phase&&m.phases.some(g=>g.code===i.phase)));   // actions that belong to no phase and no task
+// One table: the tasks of the schedule (their linked actions under them) and, after them, the actions that are not linked to it.
+// The latter are also a choice of their own in the phase picker ("일정 미연결", below the last phase).
+function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(), c=schCf(), none=SCHU.phase==='none'; let rows=none?[]:schFiltered(m,true).map(t=>({t}));
+  // an action that belongs to a phase but to no task stands after that phase's tasks; one that belongs to nothing stands at the end ("일정 미연결")
+  { const end=new Map(m.phases.map(g=>[g.code,g.tasks.length?Math.max(...g.tasks.map(t=>t.order))+.9:1e8+(Number(schPhaseNo(g.code))||0)]));
+    rows=rows.concat(schUnlinked(pid).filter(i=>{const ph=i.phase&&end.has(i.phase)?i.phase:'';i._ord=ph?end.get(ph):1e9;return (none?!ph:!SCHU.phase||ph===SCHU.phase)&&schItemTest(i,q);}).sort(newestFirst).map(i=>({i}))); }
+  const fT=SCH_SORT[SCHU.sort]||SCH_SORT.wbs, fI=SCH_SORT_I[SCHU.sort]||SCH_SORT_I.wbs;
+  rows=rows.map((r,n)=>({...r,n,key:r.t?fT(m,r.t):fI(r.i)})).sort((a,b)=>(a.key<b.key?-1:a.key>b.key?1:0)*SCHU.dir||a.n-b.n);
   const total=Math.max(1,Math.ceil(rows.length/SCHU.per)); SCHU.page=Math.min(Math.max(1,SCHU.page),total); const page=rows.slice((SCHU.page-1)*SCHU.per,SCHU.page*SCHU.per);
-  const th=(k,t)=>`<span data-sch="sort" data-k="${k}" class="${SCHU.sort===k?'sorted':''} ${SCHU.sort===k&&SCHU.dir<0?'up':''}" title="눌러서 정렬">${t}${svg('i-chev-d',8,4)}</span>`;
-  const head=`<div class="hd">${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}<span style="cursor:default">URL</span></div>`;
+  const on={wbs:!!SCHU.phase,name:!!c.kind,plan:!!c.plan,pri:!!c.pri,st:!!c.st,who:!!SCHU.who,due:!!c.due,url:!!c.url};
+  const th=(k,t)=>`<span data-sch="col" data-k="${k}" class="${SCHU.sort===k?'sorted':''} ${SCHU.sort===k&&SCHU.dir<0?'up':''} ${on[k]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
+  const head=`<div class="hd">${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   const urlCell=u=>{const h=urlHref(u);return h?`<a href="${esc(h)}" target="_blank" rel="noopener" data-stop>${esc(u)}</a>`:'<span style="color:#c4c4c4">-</span>';};
   let h=`<div class="tbl sch-list">${head}`;
-  for(const t of page){ const r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
+  for(const row of page){ if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
     h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schWbs(t.wbs)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${t.kind==='milestone'?schD(t.plannedStart):schRange(t.plannedStart,t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false)}</div><div class="url">${urlCell(t.url)}</div></div>`;
     for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schWbs(t.wbs)}`); }
-  if(!page.length)h+=`<div class="none">${schFiltering()||SCHU.phase?'조건에 맞는 업무가 없습니다.':'등록된 업무가 없습니다.'}</div>`;
-  h+=`<div class="ft"></div></div>${schPager(SCHU.page,total,'page',32)}`;
-  // actions that are not part of the schedule stay in a group of their own until somebody links them to a task
-  const q=(SCHU.q||'').trim(), un=schUnlinked(pid).filter(i=>!q||matchQ(q,i.title,...(i.people||[]).map(userName))).sort(newestFirst);
-  if(un.length){ const ut=Math.max(1,Math.ceil(un.length/10)); SCHU.upage=Math.min(Math.max(1,SCHU.upage),ut);
-    h+=`<div class="sch-sub-h">일정 미연결 액션<small>${un.length}건 · 상세창의 ‘개발 단계’에서 업무를 고르면 그 업무 아래로 옮겨집니다</small></div><div class="tbl sch-list">${head.replace(/data-sch="sort" data-k="[a-z]+"/g,'').replace(/ title="눌러서 정렬"/g,' style="cursor:default"').replace(/<svg[^>]*><use href="#i-chev-d"\/><\/svg>/g,'')}`
-      +un.slice((SCHU.upage-1)*10,SCHU.upage*10).map(x=>schItemRow(x,'','-')).join('')+`<div class="ft"></div></div>${ut>1?schPager(SCHU.upage,ut,'upage',26):''}`; }
-  return h; }
+  if(!page.length)h+=`<div class="none">${schFiltering()||SCHU.phase?'조건에 맞는 액션이 없습니다.':'등록된 업무가 없습니다.'}</div>`;
+  return h+`<div class="ft"></div></div>${schPager(SCHU.page,total,'page',32)}`; }
+// The menu of a column title: how to order by that column and what to keep.
+function schColMenu(el,pid,m,v){ const c=schCf(), go=()=>{SCHU.page=1;schRefresh();};
+  const srt=(label,dir)=>({t:label,sel:SCHU.sort===v&&SCHU.dir===dir,fn:()=>{SCHU.sort=v;SCHU.dir=dir;go();}});
+  const fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}});
+  const set=(key,val,item)=>({...item,sel:(SCHU[key]||'')===val,fn:()=>{SCHU[key]=val;go();}});
+  let items=[];
+  if(v==='wbs')items=[{hd:'정렬'},srt('번호 순',1),srt('번호 역순',-1),'-',{hd:'단계'},set('phase','',{t:'전체 단계'}),...m.phases.map(g=>set('phase',g.code,{t:`${schPhaseLabel(g)} (${g.tasks.length})`})),set('phase','none',{t:`일정 미연결 (${schLoose(pid,m).length})`})];
+  else if(v==='name')items=[{hd:'정렬'},srt('가나다 순',1),srt('가나다 역순',-1),'-',{hd:'종류'},fl('kind','',{t:'전체'}),fl('kind','task',{t:'일반 업무'}),fl('kind','ms',{t:'마일스톤',ico:'<i class="sch-ms" style="margin:0 8px 1px 1px"></i>'})];
+  else if(v==='plan')items=[{hd:'정렬'},srt('시작이 빠른 순',1),srt('시작이 늦은 순',-1),'-',{hd:'기간'},fl('plan','',{t:'전체 기간'}),fl('plan','now',{t:'오늘 진행 중'}),fl('plan','month',{t:'이번 달에 걸친 일정'}),fl('plan','next',{t:'앞으로 시작'}),fl('plan','past',{t:'지난 일정'})];
+  else if(v==='pri')items=[{hd:'정렬'},srt('높은 순',1),srt('낮은 순',-1),'-',{hd:'중요도'},fl('pri','',{t:'전체'}),...['high','mid','low'].map(p=>fl('pri',p,{t:priTxt[p],html:`<span class="pri pri-${p}">${priTxt[p]}</span>`}))];
+  else if(v==='st')items=[{hd:'정렬'},srt('상태 순',1),srt('상태 역순',-1),'-',{hd:'상태'},fl('st','',{t:'전체'}),...SCH_STATUSES.map(x=>fl('st',x,{t:x,html:schStIcon(x)}))];
+  else if(v==='who'){ const ppl=[...new Set(m.plan.tasks.flatMap(schPeople).concat(schUnlinked(pid).flatMap(i=>i.people||[])))].sort((x,y)=>userName(x).localeCompare(userName(y)));
+    items=[{hd:'정렬'},srt('이름 순',1),srt('이름 역순',-1),'-',{hd:'담당자'},set('who','',{t:'전체 담당자'}),...ppl.map(u=>set('who',u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')})),set('who','none',{t:'미지정',html:'<span class="sch-role none">미지정</span>'})]; }
+  else if(v==='due')items=[{hd:'정렬'},srt('가까운 순',1),srt('먼 순',-1),'-',{hd:'기한'},fl('due','',{t:'전체'}),fl('due','late',{t:'지연',html:'<span class="sch-dd hot">지연</span>'}),fl('due','7',{t:'7일 안에 마감'}),fl('due','30',{t:'30일 안에 마감'})];
+  else if(v==='url')items=[{hd:'URL'},fl('url','',{t:'전체'}),fl('url','y',{t:'주소 있음'}),fl('url','n',{t:'주소 없음'})];
+  menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
 // A row for an ordinary action item (linked to a task or not).
 function schItemRow(x,cls,wbs){ const done=x.st==='done', end=itemEnd(x), u=urlHref(x.url);
   return `<div class="rw ${cls} ${S.panel===x.id?'sel':''}" data-open="${x.id}"><div class="w">${esc(wbs)}</div><div class="nm"><span class="gut"></span><span class="tx">${esc((x.title||'(제목 없음)').split('\n').join(' '))}</span></div>
@@ -137,8 +175,8 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
     if(r.k==='ph'){ const g=r.g, pr=schProgress(m,g.tasks), pc=schPct(pr); let a=Infinity,b=-Infinity; for(const t of g.tasks){const x=m.res.tasks[t.id];a=Math.min(a,D.dayNumber(x.start));b=Math.max(b,D.dayNumber(x.finish));}
       L+=`<div class="sg-row ph ${r.open?'open':''}" style="top:${r.y}px;height:${SG.ph}px" data-sch="phase" data-k="${g.code}"><span class="tw">${svg('i-sch-tri',10,8.75)}</span><span class="tt">${esc(schPhaseLabel(g))}</span><span class="n">(${force?r.ts.length+'/':''}${g.tasks.length})</span>
         <span class="pg ${pc?'has':''}" title="${esc(`완료 ${pr.done} / 대상 ${pr.total}${pr.started?' · 진행 '+pr.started:''}\n`+SCH_PROGRESS_TIP)}"><span class="bar"><i style="width:${Math.max(pc,pc?6:0)}%"></i></span>${pc}%</span><span class="add" data-sch="addtask" data-k="${g.code}" title="이 단계에 업무 추가">${svg('i-plus',9,9)}</span></div>`;
-      const x1=Math.max(-20,Math.min(TW,(a-origin)*px)), x2=Math.max(0,Math.min(TW,(b-origin+1)*px)), w=Math.max(3,x2-x1), fin=D.fromDay(b);
-      R+=`<div class="sg-sum ${w<52?'out':''}" style="left:${x1}px;top:${r.y+7.45}px;width:${w}px" data-sch="phase" data-k="${g.code}" title="${esc(schPhaseLabel(g))} · ${schD(D.fromDay(a))} → ${schD(fin)} · ${pc}%"><em>${schD(fin)}</em></div>`;
+      if(g.tasks.length){ const x1=Math.max(-20,Math.min(TW,(a-origin)*px)), x2=Math.max(0,Math.min(TW,(b-origin+1)*px)), w=Math.max(3,x2-x1), fin=D.fromDay(b);
+        R+=`<div class="sg-sum ${w<52?'out':''}" style="left:${x1}px;top:${r.y+7.45}px;width:${w}px" data-sch="phase" data-k="${g.code}" title="${esc(schPhaseLabel(g))} · ${schD(D.fromDay(a))} → ${schD(fin)} · ${pc}%"><em>${schD(fin)}</em></div>`; }   // a phase a member added has no task yet: no bar
       if(!r.open)for(const t of g.tasks)if(t.kind==='milestone'){const x=X(m.res.tasks[t.id].start);if(x>=0&&x<=TW)R+=`<i class="sg-dia ${P.isDone(t)?'done':''} ${t.id===sel?'sel':''}" style="left:${x-3.6}px;top:${r.y+20.4}px" data-sch="pickrow" data-k="${t.id}" title="${esc(schTaskTitle(t))} · ${schD(m.res.tasks[t.id].start)}"></i>`;}
       continue; }
     const t=r.t, x=m.res.tasks[t.id], done=P.isDone(t), late=!done&&x.finish<today, isSel=t.id===sel, isNear=near.has(t.id), cls=`${isSel?'sel':''} ${isNear?'near':''} ${done?'done':''}`, ms=t.kind==='milestone';

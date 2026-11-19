@@ -39,16 +39,25 @@
 .sch-st .si-plan{width:.91em;height:.91em}.sch-st .si-ask{width:.148em;height:.79em}.sch-st .si-prog{width:.846em;height:.846em}
 .sch-st .si-done{width:.8em;height:.687em}.sch-st .si-hold{width:.445em;height:.626em}.sch-st .si-cond{width:.89em;height:.77em}
 .sch-st.st-plan{color:#939393}.sch-st.st-ask{color:#efad1b}.sch-st.st-prog{color:#1da3ed}.sch-st.st-done{color:#1acc00}.sch-st.st-hold{color:#ea4949}.sch-st.st-cond{color:#b751ed}
-.sch-dd{font-weight:700;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dd{font-weight:600;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sch-dd.hot{color:#d30000}
 .sch-role{color:#a9a9a9;font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pri.auto{opacity:.55}
+/* (an importance the schedule works out itself used to be drawn paler: the owner asked for full colour, 2026-11-19) */
 .sch-ms{display:inline-block;width:7px;height:7px;background:#111;transform:rotate(45deg);margin:0 7px 1px 1px;flex:none}
 
 /* ----- list ----- */
 .tbl.sch-list{margin-top:34px}
 .tbl.sch-list .hd,.tbl.sch-list .rw{grid-template-columns:104px calc(396px + var(--d)) 216px 82px 126px 232px 82px 1fr;column-gap:0}
-.tbl.sch-list .hd{height:22px;background:#f7f7f6;border-top:1px solid #c9c9c9;align-items:center;font-size:11px}
+/* the three views of 액션 share one height (--schh); what does not fit scrolls inside (owner, 2026-11-19) */
+.sch-sec{--schh:600px}
+.tbl.sch-list{max-height:var(--schh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#c4c4c4 transparent;border-bottom:1px solid #c9c9c9}
+.tbl.sch-list::-webkit-scrollbar{width:8px}.tbl.sch-list::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}
+.tbl.sch-list .ft{display:none}
+.tbl.sch-list .hd{position:sticky;top:0;z-index:3;height:22px;background:#f7f7f6;border-top:1px solid #c9c9c9;align-items:center;font-size:11px}
+.tbl.sch-list .hd span.flt{color:#000;font-weight:600}
+.tbl.sch-list .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px}
+.sch-cfx{height:22px;padding:0 9px;font-size:12px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:#4f4f4f;margin-bottom:-1px}
+.pop.sch-colmenu .it .sch-st{font-size:13.5px}.pop.sch-colmenu .it .pri{font-size:13.5px}
 .tbl.sch-list .hd span{border-bottom:0;padding-left:10px;cursor:pointer;display:flex;align-items:center;gap:5px;height:22px;color:#4f4f4f}
 .tbl.sch-list .hd span svg{color:#6f6f6f}
 .tbl.sch-list .hd span.sorted{color:#000;font-weight:600}
@@ -57,7 +66,9 @@
 .tbl.sch-list .rw > div{padding-left:10px;font-size:15px;min-width:0}
 .tbl.sch-list .rw .w{font-size:15px;color:#3d3d3d;font-variant-numeric:tabular-nums}
 .tbl.sch-list .rw .nm{font-size:15px;font-weight:500;color:var(--ink);letter-spacing:-0.012em;padding-left:0}
-.tbl.sch-list .rw .nm .gut{width:22px;flex:none;display:flex;justify-content:center}
+/* a name starts where the column's title starts; the mark of a milestone hangs to its left and moves nothing */
+.tbl.sch-list .rw .nm .gut{position:relative;width:10px;flex:none;height:1px}
+.tbl.sch-list .rw .nm .gut .sch-ms{position:absolute;right:6px;top:-3.5px}
 .tbl.sch-list .rw .nm .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tbl.sch-list .rw .nm .cnt{margin-left:8px;font-size:11px;color:#8e8e8e;font-weight:500;flex:none}
 .tbl.sch-list .rw .rg{font-size:15px;color:#3d3d3d}
@@ -78,7 +89,7 @@
    Sizes and colours are those of the design file (page 9), measured on a 4x render. The design's hairlines are 0.5px #848484;
    they are written as 1px of the same weight (#c1c1c1) so that they look the same on an ordinary screen. */
 .sch-gantt{margin-top:24px;width:calc(1337.9px + var(--d));border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative}
-.sg-scroll{overflow:auto;max-height:857px;position:relative;scrollbar-width:thin;overscroll-behavior:auto}
+.sg-scroll{overflow:auto;max-height:var(--schh);position:relative;scrollbar-width:thin;overscroll-behavior:auto}
 .sg-inner{position:relative}
 .sg-head{position:sticky;top:0;z-index:6;height:40.75px;background:#fff}
 .sg-corner{position:sticky;left:0;z-index:7;height:40.75px;background:#fff;border-right:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;float:left}
@@ -117,7 +128,7 @@
 .sg-row.tk .avstack{margin-left:10px;flex:none}
 .sg-row.tk .avstack .avatar{width:15.25px;height:15.25px;margin-left:-6.3px;border:1px solid #fff;box-sizing:content-box}
 .sg-row.tk .avstack .avatar:first-child{margin-left:0}
-.sg-row.tk .sch-dd{margin-left:6.5px;font-size:11.5px;font-weight:700;flex:none}
+.sg-row.tk .sch-dd{margin-left:6.5px;font-size:11.5px;font-weight:600;flex:none}
 .sg-row.tk .fill{flex:1 1 0;min-width:6px}
 .sg-row.tk .rg{width:127.5px;flex:none}
 .sg-row.tk .rg .sch-rg{gap:4px}
@@ -176,7 +187,7 @@
 .sch-gantt .sg-foot b{color:#5b5b5b;font-weight:600}
 .sch-gantt .sg-foot .sp{margin-left:auto}
 /* ----- relation map (design page 10, measured on a 4x render) ----- */
-.sch-net{margin-top:26px;width:calc(1337.9px + var(--d));height:1000px;border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative;background-color:#f9f8f7;background-image:radial-gradient(circle,#eaeaea 1.5px,transparent 1.9px);background-size:30px 28.5px;background-position:9px 9px}
+.sch-net{margin-top:26px;width:calc(1337.9px + var(--d));height:var(--schh);border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative;background-color:#f9f8f7}
 .sn-scroll{position:absolute;inset:0;overflow:auto;scrollbar-width:thin}
 .sn-canvas{position:relative;min-width:100%;min-height:100%}
 .sn-zoom{position:absolute;left:0;top:0;transform-origin:0 0}
@@ -185,6 +196,8 @@
 .sn-links circle{fill:#9a9a9a}
 .sn-links g.hot path{stroke:#000;stroke-width:.75}
 .sn-links g.hot circle{fill:#000}
+.sn-links g.hov path{stroke:#1c1c1c;stroke-width:1.5}
+.sn-links g.hov circle{fill:#1c1c1c}
 .sn-links text{font-size:10px;fill:#848484;paint-order:stroke;stroke:#f9f8f7;stroke-width:4px}
 .sn-node{position:absolute;width:271px;height:128.5px;background:#fff;border:1px solid #d7d7d7;border-radius:4px;cursor:pointer;transition:border-color .12s;color:#000;letter-spacing:-0.012em}
 .sn-node:hover{border-color:#8e8e8e}
@@ -197,17 +210,18 @@
 .sn-node .rg .sch-rg{gap:6px}
 .sn-node .rg .sch-rg svg{color:#000}
 .sn-node .dd{top:89.5px;font-size:15px;line-height:19px}
-.sn-node .dd .sch-dd{font-size:15px}
+.sn-node .dd .sch-dd{font-size:15px;font-weight:700}
 .sn-node .dd .sch-st{font-size:13.5px}
 .sn-node .who{left:auto;right:20.5px;top:86.5px;height:23px;display:flex;align-items:center;max-width:120px;overflow:hidden}
 .sn-node .who .avstack .avatar{width:23px;height:23px;margin-left:-9.7px;border:1px solid #fff;box-sizing:content-box}
 .sn-node .who .avstack .avatar:first-child{margin-left:0}
 .sn-node .who .sch-role{font-size:11.5px}
 .sn-node.done .dd .sch-st{color:#1acc00;font-weight:700}
-.sn-tools{position:absolute;right:28px;bottom:28px;display:flex;align-items:center;gap:8px;z-index:3}
+.sn-tools{position:absolute;left:20px;top:20px;display:flex;align-items:center;gap:8px;z-index:3}
+.sch-net > .sn-info{position:absolute;right:22px;bottom:16px;z-index:3}
 .sn-tools .sh-btn{width:30px;height:30px;border-radius:8px;font-size:17px;color:#4f4f4f}
 .sn-tools .sn-fit{width:44px;height:44px;border-radius:10px;color:#111}
-.sn-tools .sn-info{font-size:11px;color:#8e8e8e;margin-right:6px;background:rgba(249,248,247,.92);padding:2px 6px;border-radius:4px}
+.sn-info{font-size:11px;color:#8e8e8e;background:rgba(249,248,247,.92);padding:2px 6px;border-radius:4px}
 /* the row above the map: two words to switch the mode, then the two choices */
 .sch-filters .seg{display:flex;gap:10.5px;align-items:flex-end}
 .sch-filters .seg button{font-size:13.5px;color:#d3d3d3;padding:0 0 3.5px;line-height:14px;border-bottom:1px solid transparent;white-space:nowrap}
@@ -222,7 +236,7 @@
 .sch-props .sp-tabs button{font:inherit;color:#c9c9c9;padding:0 2px 5px;border-bottom:2px solid transparent;transition:color .12s,border-color .12s}
 .sch-props .sp-tabs button:hover{color:#8e8e8e}
 .sch-props .sp-tabs button.on{color:#3d3d3d;border-bottom-color:#3d3d3d}
-.sch-props .sp-tabs small{font-size:11px;font-weight:600;color:#b5b5b5;margin-left:5px;vertical-align:2px}
+.sch-props .sp-tabs small{font-size:inherit;font-weight:600;color:inherit;opacity:.75;margin-left:6px}
 .sch-props .sp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .sch-props .sp-grid .pr .k,.sch-props .sp-more .pr .k{width:124px}
 .props .pr .v.sch-v{cursor:default;align-items:center;flex-wrap:wrap;gap:3.3px 6px;font-variant-numeric:tabular-nums}
@@ -250,8 +264,33 @@
 .sch-props .sp-more{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding-top:6px}
 .sch-props .sp-more .full{grid-column:1 / -1;padding-bottom:18px}
 .sch-props .sp-del{height:26px;padding:0 11px;font-size:12.5px;color:#d30000;border-radius:6px}
-.sp-links{padding-bottom:10px}
-.sl-cap{display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:#a9a9a9;margin-bottom:10px}
+.sp-links{padding:44px 0 56px}
+.sp-links .sl-map{margin:0 auto}
+.sl-none{margin-top:26px;font-size:12.5px;color:#a9a9a9;text-align:center}
+.sl-node em.rel{font-style:normal;background:transparent;color:#a9a9a9;display:inline-flex;align-items:center}
+.sch-v .sf-r{display:inline-flex;align-items:center;gap:6px;min-height:20px}
+.sch-v .sf-r i{font-style:normal;color:#c4c4c4}
+.sch-v .sch-mv{font-style:normal;font-size:11px;color:#8e8e8e;margin-left:8px;border:1px solid #e3e3e3;border-radius:9px;padding:0 7px;line-height:17px;cursor:help;white-space:nowrap}
+.sch-stage .wbno{font-weight:600;color:#3d3d3d}
+.sl-refs{flex-direction:row!important;flex-wrap:wrap;gap:6px 8px!important}
+/* --- item panel while the preview is on (owner, 2026-11-19) --- */
+/* 저장 is told from 수정 at a glance: filled */
+.sch-on .ihead .pub.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
+.sch-on .ihead .pub.save:hover{background:#2b2b2b}
+.sch-on .ihead .pub[data-ed="edit"]{color:#3f3f3f}
+/* what can be changed while editing: paler and underlined; full on the pointer */
+.sch-on .props .pr .v.pk [data-pick]:not(.pill):not(.px),.sch-on .sch-props.ed .sf-e{opacity:.6;text-decoration:underline;text-decoration-color:#9a9a9a;text-underline-offset:4px;text-decoration-thickness:1px;cursor:pointer;transition:opacity .12s}
+.sch-on .props .pr .v.pk [data-pick]:not(.pill):not(.px):hover,.sch-on .sch-props.ed .sf-e:hover{opacity:1}
+.sch-on .props .pr .v.pk [data-pick] *,.sch-on .sch-props.ed .sf-e *{text-decoration:inherit}
+.sch-on .sch-props.ed .sch-stage .sf{opacity:.6}.sch-on .sch-props.ed .sch-stage .sf:hover{opacity:1}
+.sch-on .proj-pick{display:inline-flex;align-items:center;gap:6px}
+.sch-on .proj-pick .pill{cursor:pointer;opacity:.75;box-shadow:0 1.5px 0 -0.5px #9a9a9a}
+.sch-on .proj-pick .pill:hover{opacity:1}
+.sch-on .proj-pick .px{width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#6f6f6f;background:#eeeeee}
+.sch-on .proj-pick .px:hover{background:#dcdcdc;color:#000}
+.pop.proj-menu .it{padding-top:5px;padding-bottom:5px}
+.pop.proj-menu .it .pill{pointer-events:none}
+
 .sl-map{position:relative;margin-bottom:14px}
 .sp-links .sl-wrap{overflow-x:auto;scrollbar-width:thin}
 .sl-map svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -266,8 +305,6 @@
 .sl-node.cur b{color:var(--g)}
 .sl-node .rel{flex:none;margin-left:6px;height:17px;padding:0 5px;border-radius:3px;background:#f0f0f0;font-size:10px;font-weight:600;color:#6f6f6f}
 .sl-node .rel:hover{background:#dedede;color:#000}
-.sl-add{display:flex;justify-content:space-between;margin-bottom:24px}
-.sl-add .sh-btn{height:24px;padding:0 10px;font-size:12px;color:#6f6f6f;border-radius:6px}
 .sl-items .pr{min-height:0;padding-bottom:16px}
 .sl-items .chips{flex-direction:row!important;flex-wrap:wrap;gap:6px 8px!important}
 .sl-ref{display:inline-flex;align-items:center;gap:2px}
@@ -302,7 +339,10 @@
 .cal.pv .cell.sel.sun .n{color:var(--red)!important}
 .cal.pv .cell.sel.sat .n{color:var(--sat)!important}
 .cal.pv .cell.sel:not(.today){box-shadow:inset 0 0 0 1px #ececec}
-.rlist.sch{border-top:1px solid #d9d9d9;padding-top:22px;max-height:640px}
+.rlist.sch{border-top:0;padding-top:0;max-height:640px}
+/* the two lines of the list: the calendar's own line (1px #ededed), both as wide as the text */
+.rlist.sch .rline{border-top:1px solid #ededed;margin:0 0 22px}
+#page-project .cal.pv .cell[data-date]{cursor:default}
 .rlist.sch.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
 .rlist.sch .rcap{font-size:12.5px;font-weight:600;color:#4f4f4f;margin:0 0 20px 1px;display:flex;align-items:center;gap:8px}
 .rlist.sch .rcap .n{font-size:11px;font-weight:600;color:#3d3d3d;border:1px solid #e3e3e3;border-radius:4px;padding:1px 6px;background:#fff}
@@ -310,7 +350,7 @@
 .rlist.sch .rcap .d{margin-left:auto;font-weight:400;color:#a9a9a9;display:flex;align-items:center;gap:8px}
 .rlist.sch .rcap .td{font-size:10px;font-weight:600;color:#fff;background:#0f0f0f;border-radius:9px;padding:1px 7px}
 .rlist.sch .rcap .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
-.rlist.sch .rsep{border-top:1px solid #e7e7e7;margin:22px 0 26px}
+.rlist.sch .rsep{border-top:1px solid #ededed;margin:22px 0 26px}
 .rlist.sch .ra{position:relative;display:flex;align-items:center;height:42px;margin:0 -16px;padding:0 16px;border-radius:8px;cursor:pointer;gap:10px}
 .rlist.sch .ra .sp,.sch-daypop .ra .sp{flex:1 1 0;min-width:0}
 /* notice dots at the upper left corner of a title: red = one of my actions changed, green = starts today */
@@ -322,7 +362,7 @@
 .rlist.sch .ra .tt{flex:0 1 auto;min-width:0;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rlist.sch .ra .avstack{flex:none}
 .rlist.sch .ra .sch-role{flex:none;max-width:92px;font-size:11.5px}
-.rlist.sch .ra .sch-dd{flex:none;width:72px;text-align:center;font-size:14px}
+.rlist.sch .ra .sch-dd{flex:none;width:72px;text-align:center;font-size:14px;font-weight:700}
 .rlist.sch .ra .dt{flex:none;width:56px;text-align:right;font-size:13.5px;color:#4f4f4f;font-variant-numeric:tabular-nums}
 .rlist.sch .more{font-size:12px;color:#8e8e8e;margin:8px 0 0 1px}
 
@@ -358,30 +398,27 @@
 .tbl.sch-ev .rw .nm{font-weight:500;color:var(--ink);font-size:15px}
 .tbl.sch-ev .rw .ct,.tbl.sch-ev .rw .rl,.tbl.sch-ev .rw .bd{color:#4f4f4f;overflow:hidden}
 .tbl.sch-ev .rw .bd{font-size:13px;color:#6f6f6f}
-.sch-gates{position:relative;margin-top:34px;width:calc(1337.9px + var(--d));border-top:1px solid #c9c9c9;border-bottom:1px solid #c9c9c9;padding:64px 0 34px}
-.sch-gates .gt{position:relative;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:0;padding:0 0 74px 210px;cursor:pointer;min-height:128px}
-.sch-gates .gt:last-child{padding-bottom:40px}
-.sch-gates .gt .ln{position:absolute;left:173.6px;top:-64px;bottom:-12px;width:1.6px;background:#cfcfcf}
-.sch-gates .gt.past .ln{background:#474747;width:2px;left:173.4px}
-.sch-gates .gt:not(:first-child) .ln{top:12px}
-.sch-gates .gt:first-child .ln{top:-64px}
-.sch-gates .gt .ln{bottom:auto;height:calc(100% + 0px)}
-.sch-gates .gt:first-child .ln{height:calc(100% + 64px)}
-.sch-gates .gt:last-child .ln{height:14px}
-.sch-gates .gt:first-child:last-child .ln{height:78px}
+/* as tall as fits one screen; the rest by its scroll bar */
+.sch-gates{position:relative;margin-top:34px;width:calc(1337.9px + var(--d));border-top:1px solid #c9c9c9;border-bottom:1px solid #c9c9c9;padding:40px 0 6px;max-height:596px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#bdbdbd transparent}
+.sch-gates::-webkit-scrollbar{width:8px}.sch-gates::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}.sch-gates::-webkit-scrollbar-track{background:transparent}
+.sch-gates .gt{position:relative;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:0;padding:0 0 46px 210px;cursor:pointer;min-height:112px}
+.sch-gates .gt:last-child{padding-bottom:30px}
+.sch-gates .gt .ln{position:absolute;left:173.6px;top:12px;height:100%;width:1.6px;background:#cfcfcf}   /* from this gate's dot to the next one's */
+.sch-gates .gt:last-child .ln{display:none}
+.sch-gates .gt .ln0{position:absolute;left:173.6px;top:-40px;height:52px;width:1.6px;background:#cfcfcf}   /* from the top down to the first dot */
+.sch-gates .gt.to-ok .ln,.sch-gates .gt .ln0.ok{background:#0f0f0f;width:2px;left:173.4px}
 .sch-gates .gt .date{position:absolute;left:52px;top:1px;width:104px;text-align:right;font-size:15.5px;font-weight:600;color:#000;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sch-gates .gt .date em{display:block;font-style:normal;font-size:11px;font-weight:500;color:#8e8e8e;margin-top:2px}
 .sch-gates .gt .date em.late{color:#e10000}
 .sch-gates .gt .dot{position:absolute;left:169.9px;top:7.5px;width:9px;height:9px;border-radius:50%;background:#c4c4c4;z-index:1}
-.sch-gates .gt.past .dot{background:#474747}
-.sch-gates .gt.ok .dot{background:#1acc00}
+.sch-gates .gt.ok .dot{background:#0f0f0f}
 .sch-gates .gt .hd2{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding-right:20px}
 .sch-gates .gt .cat{font-size:15px;font-weight:600;color:#3d3d3d;line-height:22px}
-.sch-gates .gt .cat small{font-size:11px;font-weight:600;color:#a9a9a9;margin-right:7px}
+.sch-gates .gt .cat small{font-size:15px;font-weight:700;color:inherit;margin-right:7px}
 .sch-gates .gt .chip{max-width:230px}
 .sch-gates .gt .sf-e{cursor:pointer;border-radius:3px;padding:1px 5px;margin:0 -5px;font-size:13px}
 .sch-gates .gt .sf-e:hover{background:#ececec}
-.sch-gates .gt dl{display:grid;grid-template-columns:100px minmax(0,1fr);row-gap:13px;font-size:15px;color:var(--t2);line-height:22px}
+.sch-gates .gt dl{display:grid;grid-template-columns:100px minmax(0,1fr);row-gap:8px;font-size:15px;color:var(--t2);line-height:22px}
 .sch-gates .gt dt{font-weight:600}
 .sch-gates .gt dd{color:#4f4f4f}
 .sch-gates .gt:hover .cat{color:#000}
@@ -394,7 +431,8 @@
 /* ----- main page: actions of every project, with the schedule tasks that are under way or due soon ----- */
 .tbl.sch-main .hd,.tbl.sch-main .rw{grid-template-columns:104px 176px calc(458px + var(--d)) 252px 104px 82px 1fr}
 .tbl.sch-main .rw .ttl .wb{font-weight:700;margin-right:5px;color:#1c1c1c;font-variant-numeric:tabular-nums}
-.tbl.sch-main .rw .ttl .gut{width:16px;flex:none;display:flex;align-items:center}
+.tbl.sch-main .rw .ttl .gut{position:relative;width:0;flex:none;height:1px}
+.tbl.sch-main .rw .ttl .gut .sch-ms{position:absolute;right:7px;top:-3.5px}
 .tbl.sch-main .rw .due{gap:12px;font-size:14px;color:#3d3d3d}
 .tbl.sch-main .rw .due .sch-dd{width:64px;flex:none;font-size:13.5px}
 .tbl.sch-main .rw .who{overflow:hidden}
@@ -444,3 +482,58 @@
 .sch-daypop .ra .dt{flex:none;width:50px;margin-left:10px;text-align:right;font-size:14.5px;color:#4f4f4f;letter-spacing:-0.045em}
 .sch-daypop .sdot{left:34.5px;top:calc(50% - 10.5px)}.sch-daypop .sdot.g.two{left:28.5px}
 .sch-daypop .dp-none{padding:0 39px;font-size:13.5px;color:#9a9a9a}
+
+/* the window that shows a change of relations before it is saved (schPropose) */
+.dlg.sch-dlg .box{width:880px;max-width:calc(100vw - 40px);max-height:calc(100vh - 60px);overflow-y:auto;padding:30px 34px 24px;background:#fff;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18);text-align:left;font-size:13.5px;color:#3d3d3d}
+.sch-dlg .pp-hd{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.sch-dlg .pp-hd b{font-size:20px;font-weight:700;color:#000;letter-spacing:-0.02em}
+.sch-dlg .pp-hd span{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:#4f4f4f;min-width:0}
+.sch-dlg .pp-hd em{font-style:normal;font-weight:600;color:#1c1c1c;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-dlg .pp-types{display:flex;gap:6px;margin-top:18px}
+.sch-dlg .pp-types button{height:30px;padding:0 12px;border:1px solid #dcdcdc;border-radius:7px;background:#fff;font-size:12.5px;color:#4f4f4f;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.sch-dlg .pp-types button b{font-weight:700;color:#1c1c1c}
+.sch-dlg .pp-types button.on{border-color:#0f0f0f;background:#0f0f0f;color:#fff}.sch-dlg .pp-types button.on b{color:#fff}
+.sch-dlg .pp-sent{margin:14px 0 0;font-size:13.5px;color:#4f4f4f;line-height:20px}
+.sch-dlg .pp-err{margin:18px 0 6px;padding:14px 16px;border-radius:8px;background:#fdf1f1;color:#b80000;font-size:13.5px}
+.sch-dlg .pp-cmp{display:flex;align-items:stretch;gap:12px;margin-top:20px}
+.sch-dlg .pp-cmp > i{display:flex;align-items:center;color:#8e8e8e;font-style:normal}
+.sch-dlg .pp-cmp .bx{flex:1 1 0;min-width:0;border:1px solid #e3e3e3;border-radius:8px;padding:11px 14px 12px;display:flex;flex-direction:column;gap:5px}
+.sch-dlg .pp-cmp .bx span{font-size:11.5px;color:#8e8e8e}
+.sch-dlg .pp-cmp .bx strong{font-size:15px;font-weight:600;color:#1c1c1c;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dlg .pp-cmp .bx.new{border-color:#1f8e00;background:#f4faf2}.sch-dlg .pp-cmp .bx.new strong{color:#1f8e00}
+.sch-dlg .pp-cmp .bx.op{flex:1.25 1 0;margin-left:10px;background:#f7f7f6;border-color:#f7f7f6}
+.sch-dlg .pp-cmp .bx.op em{font-style:normal;font-size:12px;font-weight:600;color:#8e8e8e}
+.sch-dlg .pp-cmp .bx.op.late em{color:#d30000}.sch-dlg .pp-cmp .bx.op.early em{color:#1f8e00}
+.sch-dlg .pp-chart{position:relative;margin:22px 0 0;border-top:1px solid #ededed;border-bottom:1px solid #ededed;max-width:100%;overflow:hidden}
+.sch-dlg .pp-chart .ax .mo{position:absolute;top:4px;font-style:normal;font-size:10px;color:#a9a9a9;border-left:1px solid #ededed;padding-left:4px;height:14px;line-height:12px;white-space:nowrap}
+.sch-dlg .pp-chart .lb{position:absolute;left:0;height:20px;line-height:20px;font-size:12px;color:#474747;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-dlg .pp-chart .lb b{font-weight:600;margin-right:5px}
+.sch-dlg .pp-chart .br{position:absolute;height:14px;border-radius:3.5px;box-sizing:border-box}
+.sch-dlg .pp-chart .br.same{background:#eeeeec;border:1px solid #d6d6d6}
+.sch-dlg .pp-chart .br.was{border:1px dashed #a9a9a9;background:transparent}
+.sch-dlg .pp-chart .br.now{background:#1f8e00;opacity:.9}
+.sch-dlg .pp-chart .ms{position:absolute;width:10px;height:10px;transform:rotate(45deg);box-sizing:border-box;border-radius:1.5px}
+.sch-dlg .pp-chart .ms.same{background:#eeeeec;border:1px solid #c4c4c4}.sch-dlg .pp-chart .ms.was{border:1px dashed #a9a9a9}.sch-dlg .pp-chart .ms.now{background:#1f8e00}
+.sch-dlg .pp-chart .td{position:absolute;width:1px;background:repeating-linear-gradient(to bottom,#1f8e00 0 2px,transparent 2px 5px);opacity:.7}
+.sch-dlg .pp-chart svg{position:absolute;top:0;overflow:visible;pointer-events:none}
+.sch-dlg .pp-chart svg path{fill:none;stroke:#0f0f0f;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}.sch-dlg .pp-chart svg circle{fill:#0f0f0f}
+.sch-dlg .pp-chart .lg{position:absolute;right:4px;top:3px;display:flex;gap:12px;font-size:10.5px;color:#8e8e8e;background:rgba(255,255,255,.9);padding:0 4px}
+.sch-dlg .pp-chart .lg span{display:inline-flex;align-items:center;gap:5px}.sch-dlg .pp-chart .lg .br{position:static;width:16px;height:8px;border-radius:2px}
+.sch-dlg .pp-h{margin-top:20px;font-size:13.5px;font-weight:600;color:#1c1c1c;display:flex;align-items:baseline;gap:8px}
+.sch-dlg .pp-h b{font-weight:700}.sch-dlg .pp-h small{font-size:11.5px;font-weight:400;color:#a9a9a9}
+.sch-dlg .pp-tbl{margin-top:8px;max-height:176px;overflow-y:auto;border-top:1px solid #dcdcdc;scrollbar-width:thin}
+.sch-dlg .pp-tbl .hd,.sch-dlg .pp-tbl .rw{display:grid;grid-template-columns:minmax(0,1fr) 330px 84px;align-items:center;column-gap:12px;padding:0 6px}
+.sch-dlg .pp-tbl .hd{position:sticky;top:0;height:24px;background:#f7f7f6;font-size:11px;color:#6f6f6f}
+.sch-dlg .pp-tbl .rw{min-height:34px;border-bottom:1px solid #f1f1f1;font-size:13px}
+.sch-dlg .pp-tbl .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sch-dlg .pp-tbl .nm b{font-weight:600;margin-right:6px}
+.sch-dlg .pp-tbl .rg{display:flex;gap:10px;align-items:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dlg .pp-tbl .rg s{color:#a9a9a9;text-decoration:none}.sch-dlg .pp-tbl .rg strong{font-weight:600;color:#1c1c1c}.sch-dlg .pp-tbl .rg s::after{content:"→";margin-left:10px;color:#c4c4c4}
+.sch-dlg .pp-tbl .dl{text-align:right;font-weight:600;color:#8e8e8e}.sch-dlg .pp-tbl .dl.late{color:#d30000}.sch-dlg .pp-tbl .dl.early{color:#1f8e00}
+.sch-dlg .pp-none{margin-top:8px;font-size:12.5px;color:#8e8e8e}
+.sch-dlg .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+.sch-dlg .bt button{height:34px;min-width:76px;padding:0 16px;border-radius:8px;border:1px solid #dcdcdc;background:#fff;font-size:13.5px;color:#3d3d3d;cursor:pointer}
+.sch-dlg .bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-dlg .bt button.pri:disabled{background:#c4c4c4;border-color:#c4c4c4;cursor:default}
+.sn-node.target{border-color:#1f8e00;box-shadow:0 0 0 1.5px rgba(31,142,0,.35)}
+.sn-node.linking{border-color:#474747}
+.sn-links .draft{stroke:#1f8e00;stroke-width:1.4;stroke-dasharray:4 4;fill:none}

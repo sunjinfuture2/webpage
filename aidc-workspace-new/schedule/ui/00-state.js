@@ -30,7 +30,7 @@ const schScenario=pid=>{const id=SCHU.scn;return id&&SCHED[pid]&&SCHED[pid]['sc:
 const schOv=pid=>{const root=SCHED[pid]||{};const sc=schScenario(pid);return sc?(root['sc:'+sc].ov||{}):root;};
 function schModel(pid){ if(!schReady(pid))return null; const A=AIDCSchedule, m0=SCH.memo[pid], now=performance.now();
   if(m0&&now-m0.at<40)return m0;                                    // many callers per redraw: look at the overrides once
-  const ov=schOv(pid), keys=Object.keys(ov).filter(A.isPlanKey).sort(), key=schScenario(pid)+'|'+JSON.stringify(keys.map(k=>[k,ov[k]]));
+  const ov=schOv(pid), keys=Object.keys(ov).filter(A.isPlanKey).sort(), root=SCHED[pid]||{}, phk=Object.keys(root).filter(k=>k.startsWith('ph:')).sort(), key=schScenario(pid)+'|'+JSON.stringify(keys.map(k=>[k,ov[k]]))+'|'+phk.map(k=>k+':'+((root[k]||{}).label||'')).join(',');
   if(m0&&m0.key===key){m0.at=now;return m0;}
   const base=SCH.base[pid]; let plan=A.applyOverrides(base,ov), res=null, err='';
   try{res=A.calculate(plan);}
@@ -39,6 +39,9 @@ function schModel(pid){ if(!schReady(pid))return null; const A=AIDCSchedule, m0=
     try{plan=A.applyOverrides(base,safe);res=A.calculate(plan);}catch(e2){plan=A.applyOverrides(base,{});res=A.calculate(plan);} }
   const byId=new Map(plan.tasks.map(t=>[t.id,t])), byWbs=new Map(plan.tasks.map(t=>[t.wbs,t])), phases=[], pm=new Map();
   for(const t of plan.tasks.slice().sort((a,b)=>a.phase.localeCompare(b.phase,undefined,{numeric:true})||a.order-b.order)){let g=pm.get(t.phase);if(!g){g={code:t.phase,label:t.phaseLabel,tasks:[]};pm.set(t.phase,g);phases.push(g);}g.tasks.push(t);}
+  // phases members added (records ph:<code> {label}); one that has no task yet still shows, so that tasks and actions can be put into it
+  for(const k of phk){ const code=k.slice(3); if(!pm.has(code)&&root[k]){const g={code,label:root[k].label||code,tasks:[],user:true};pm.set(code,g);phases.push(g);} }
+  phases.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const pred=new Map(plan.tasks.map(t=>[t.id,[]])), succ=new Map(plan.tasks.map(t=>[t.id,[]]));
   for(const e of plan.dependencies){if(!byId.has(e.from)||!byId.has(e.to))continue;pred.get(e.to).push(e);succ.get(e.from).push(e);}
   return SCH.memo[pid]={key,at:now,pid,plan,res,err,byId,byWbs,phases,pred,succ};
@@ -56,14 +59,14 @@ function schCommit(pid,mutate,label,quiet,noRedraw){ const m=schModel(pid); if(!
   try{draft=A.validatedPlan(m.plan,mutate);res2=A.calculate(draft);}catch(e){toast(String(e&&e.message||'변경을 적용하지 못했습니다.'),3600);return false;}
   const ov=schOv(pid), ch=A.overrideChanges(SCH.base[pid],ov,draft); if(!Object.keys(ch).length)return true;
   const before={};for(const k of Object.keys(ch))before[k]=ov[k]===undefined?null:copy(ov[k]);
-  const opBefore=m.res.operationDate; schWrite(pid,ch); SCH.undo.push({pid,sc:schScenario(pid),before,after:ch,label}); if(SCH.undo.length>100)SCH.undo.shift(); SCH.redo.length=0;
+  const opBefore=m.res.operationDate; schWrite(pid,ch); SCH.undo.push({pid,sc:schScenario(pid),before,after:ch,label,tag:SCH.tag||''}); if(SCH.undo.length>100)SCH.undo.shift(); SCH.redo.length=0;
   const d=A.dates.diffDays(res2.operationDate,opBefore);
   if(!quiet)toast((label||'일정을 변경했습니다')+(d?` · 운영개시 ${d>0?'+':''}${d}일 (${schD(res2.operationDate)})`:''),d?5200:3200,{t:'되돌리기',fn:schUndo});
   if(!noRedraw)schRedraw(true); return true; }
 // Other schedule records that are not part of the calculation (gate state, evidence state, scenarios): one field each.
 function schSet(pid,key,value,label){ const root=SCHED[pid]||(SCHED[pid]={}); const before=root[key]===undefined?null:copy(root[key]);
   if(same(before,value??null))return; if(value==null)delete root[key];else root[key]=copy(value);
-  SCH.undo.push({pid,sc:'',raw:true,before:{[key]:before},after:{[key]:value??null},label}); SCH.redo.length=0; SCH.memo[pid]=null; if(label)toast(label,3200,{t:'되돌리기',fn:schUndo}); schRedraw(true); }
+  SCH.undo.push({pid,sc:'',raw:true,before:{[key]:before},after:{[key]:value??null},label,tag:SCH.tag||''}); SCH.redo.length=0; SCH.memo[pid]=null; if(label)toast(label,3200,{t:'되돌리기',fn:schUndo}); schRedraw(true); }
 function schStep(from,to,word){ const u=from.pop(); if(!u){toast(word==='undo'?'되돌릴 변경이 없습니다.':'다시 적용할 변경이 없습니다.');return;}
   const values=word==='undo'?u.before:u.after;
   if(u.raw){const root=SCHED[u.pid]||(SCHED[u.pid]={});for(const [k,v] of Object.entries(values)){if(v===null)delete root[k];else root[k]=copy(v);}SCH.memo[u.pid]=null;}
@@ -105,12 +108,14 @@ const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
 const schDdayHtml=(finish,done)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}">${d.txt}</span>`:'';};
 const schPri=(m,t)=>t.pri||AIDCSchedule.progress.defaultPriority(m.res,t.id);
-const schPriHtml=(m,t)=>{const p=schPri(m,t);return `<span class="pri pri-${p} ${t.pri?'':'auto'}" ${t.pri?'':'title="아직 지정하지 않아 일정 여유로 정한 값입니다 (운영개시 경로와 근접 업무는 높음)"'}>${priTxt[p]}</span>`;};
+const schPriHtml=(m,t)=>{const p=schPri(m,t);return `<span class="pri pri-${p}" ${t.pri?'':'title="아직 지정하지 않아 일정 여유로 정한 값입니다 (운영개시 경로와 근접 업무는 높음)"'}>${priTxt[p]}</span>`;};
 const schPeople=t=>Array.isArray(t.people)?t.people:[];
 // Assignees: members once they are set, else the role that carries the task out in the source plan, in grey.
 const schRole=t=>((t.roles||{}).R||'').trim();
 function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==='stack'?avstack(ppl,3):ppl.map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('');
-  const r=schRole(t); return r?`<span class="sch-role" title="실행 역할 (담당 멤버 미지정)">${esc(r)}</span>`:(mode==='stack'?'':'<span class="sch-role none">미지정</span>'); }
+  return '<span class="sch-role none">미지정</span>'; }   // owner, 2026-11-19: nothing else is written where nobody is assigned
+// the whole page knows that the preview is on (styles of the item panel that only the preview changes hang on this)
+if(schPreview())document.documentElement.classList.add('sch-on');
 const schTaskTitle=t=>`${schWbs(t.wbs)}) ${t.name}`;
 const schMine=t=>!!sharedUser&&schPeople(t).includes(sharedUser);
 const schOpen=(m,t)=>!AIDCSchedule.progress.isDone(t);
