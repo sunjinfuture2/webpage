@@ -1161,6 +1161,29 @@ html{overflow:hidden}
 .arch .acard .ic .pict{width:100%;height:100%}
 .arch .acard .ic img{position:absolute;inset:0;background:white}
 .mem [data-addmember] .pict{width:13px;height:13px}
+
+/* Multiple partner categories use underlines, never boxed chips. */
+.pc-editor{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;width:100%;margin:6px 0}
+.pc-tokens{display:contents}
+.pc-token,.pc-value{display:inline-flex;align-items:center;gap:5px;border:0;border-bottom:2px solid #555;border-radius:0;background:transparent;color:#333;padding:3px 0;font:inherit;line-height:1.5;margin:0 8px 4px 0;max-width:100%;overflow-wrap:anywhere}
+.pc-token{border:0!important;border-bottom:2px solid #555!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.pc-token button{border:0!important;border-radius:0!important;background:transparent!important;color:#777;padding:0 2px;cursor:pointer;font-size:12px;line-height:1;box-shadow:none!important}
+.pc-editor input.pc-input{flex:1 1 100%;min-width:0;width:100%;box-sizing:border-box;border:1px solid #e3e3e3;border-radius:4px;padding:6px 8px;font-size:13px;background:#fff;outline:none}
+.pc-editor input.pc-input:focus{border-color:#bbb}
+.pc-menu{position:fixed;z-index:2147483000;overflow:auto;background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:8px;box-shadow:0 5px 20px #0002;font:14px/1.5 sans-serif}
+.pc-menu-title{color:#777;font-size:12px;padding:3px 7px 7px}
+.pc-menu button{display:block;width:100%;border:0;border-radius:0;background:transparent;text-align:left;padding:7px;color:#333;cursor:pointer;overflow-wrap:anywhere}
+.pc-menu button:hover,.pc-menu button:focus-visible{background:#f2f2f2;outline:2px solid #777;outline-offset:-2px}
+.pc-menu-empty{padding:8px;color:#888}
+.pc-option{display:flex;align-items:center;gap:4px}
+.pc-menu .pc-option-label{flex:1;min-width:0;width:auto}
+.pc-menu .pc-option-label:disabled{color:#999;cursor:default}
+.pc-menu .pc-history-remove{flex:0 0 22px;width:22px;padding:4px 0;text-align:center;font-size:12px;line-height:1;color:#888}
+.tbl.partners .rw:has(.cat .pc-value){height:auto;min-height:42.3px;padding-top:6px;padding-bottom:6px}
+.tbl.partners .rw .cat:has(.pc-value){display:flex;flex-wrap:wrap;gap:6px}
+.tbl.partners .rw .cat a.pc-value{display:inline-block;margin:3px 6px 3px 0;border-bottom:2px solid #555;white-space:normal;overflow-wrap:anywhere}
+.pc-value[aria-pressed="true"]{border-bottom-color:#111;font-weight:700}
+
 </style>
 <style id="sch-style">
 /* WorkSpace x Schedule: the schedule views of a project page. Built from the page's own tokens (see :root in original.html):
@@ -3202,9 +3225,117 @@ function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide
   ${dotsHtml(r)}<div class="dt">${esc(r.dateTxt||fmtDateDot(r.date))}</div>${PREVIEW_ON?resCardTitle(r):`<div class="tt">${esc(cardTitle(r.title)||'(제목 없음)')}</div>`}${ds?`<div class="ds">${esc(ds)}</div>`:''}
   ${f?`<button class="ln-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#3d3d3d')}</button>`:''}</div>`;}).join('')}</div>`;}
 const partnerMeeting=pt=>(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))?item(pt.meet):null)||liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]||null;
+
+/* Partner categories: newline-delimited legacy-compatible values, shared per-category history. */
+const partnerCategoryHistory=Object.create(null);
+const partnerCategoryHidden=Object.create(null);
+function partnerCategories(value){
+  return [...new Set((Array.isArray(value)?value:String(value||'').split(/[\n,;]+/)).map(x=>String(x).trim().replace(/\s+/g,' ')).filter(Boolean))];
+}
+function partnerCategoryOptions(){
+  return [...new Set([...Object.values(partnerCategoryHistory),...PARTNERS.flatMap(p=>partnerCategories(p.cat))])].filter(c=>!partnerCategoryHidden[encodeURIComponent(c)]).sort((a,b)=>a.localeCompare(b,'ko'));
+}
+function partnerCategoryRemember(label){
+  partnerCategoryHistory[encodeURIComponent(label)]=label;
+}
+function partnerCategoryLinks(value,filter){
+  return partnerCategories(value).map(c=>filter?'<a class="pc-value" data-cat="'+esc(c)+'">'+esc(c)+'</a>':'<span class="pc-value">'+esc(c)+'</span>').join(' ');
+}
+function partnerCategoryChips(){
+  return (S.partnerCat?'<button class="sh-btn" data-catclear>구분: '+esc(S.partnerCat)+' ×</button>':'')+
+    partnerCategoryOptions().map(c=>'<button class="pc-value" type="button" data-cat="'+esc(c)+'" aria-pressed="'+(S.partnerCat===c)+'">'+esc(c)+'</button>').join(' ');
+}
+function partnerCategoryEditor(value,create){
+  const vals=partnerCategories(value);
+  return '<span class="pc-editor" data-pc-values="'+esc(JSON.stringify(vals))+'">'+
+    '<span class="pc-tokens">'+vals.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:2px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('')+'</span>'+
+    '<input class="pc-input" type="text" autocomplete="off" placeholder="구분 입력 후 Enter" aria-label="협력업체 구분 입력" aria-expanded="false">'+
+    (create?'<input type="hidden" id="npt-cat" value="'+esc(vals.join('\n'))+'">':'')+'</span>';
+}
+function partnerCategoryRead(root,remember){
+  const vals=JSON.parse(root.dataset.pcValues||'[]'), input=root.querySelector('.pc-input');
+  const pending=partnerCategories(input?input.value:'');
+  const all=[...new Set(vals.concat(pending))];
+  if(remember)all.forEach(partnerCategoryRemember);
+  return all.join('\n');
+}
+let partnerCategoryActive=null,partnerCategoryMenu=null;
+function partnerCategoryClose(){
+  if(partnerCategoryMenu)partnerCategoryMenu.remove();
+  partnerCategoryMenu=null;
+  if(partnerCategoryActive?.isConnected)partnerCategoryActive.querySelector('.pc-input')?.setAttribute('aria-expanded','false');
+}
+function partnerCategoryShow(root){
+  partnerCategoryClose();partnerCategoryActive=root;
+  const input=root.querySelector('.pc-input'), q=input.value.trim().toLocaleLowerCase();
+  const selected=JSON.parse(root.dataset.pcValues||'[]');
+  const options=partnerCategoryOptions().filter(c=>!q||c.toLocaleLowerCase().includes(q));
+  const menu=document.createElement('div');menu.className='pc-menu';
+  menu.setAttribute('aria-label','기존 구분 선택');
+  menu.innerHTML='<div class="pc-menu-title">기존 구분</div>'+
+    (options.length?options.map(c=>'<div class="pc-option"><button type="button" class="pc-option-label" data-pc-choice="'+esc(c)+'"'+(selected.includes(c)?' disabled aria-label="'+esc(c)+' 선택됨"':'')+'>'+esc(c)+'</button><button type="button" class="pc-history-remove" data-pc-history-remove="'+esc(c)+'" aria-label="'+esc(c)+' 기존 구분 목록에서 삭제" title="목록에서 삭제">×</button></div>').join(''):'<div class="pc-menu-empty">'+(q?'Enter로 새 구분 추가':'등록된 구분이 없습니다')+'</div>');
+  document.body.appendChild(menu);partnerCategoryMenu=menu;input.setAttribute('aria-expanded','true');
+  const r=root.getBoundingClientRect(),width=Math.min(240,window.innerWidth-24);
+  menu.style.width=width+'px';
+  let left=r.right+12,top=r.top;
+  if(left+width>window.innerWidth-12){left=Math.max(12,Math.min(r.left,window.innerWidth-width-12));top=r.bottom+6;}
+  top=Math.max(12,Math.min(top,window.innerHeight-Math.min(menu.scrollHeight,280)-12));
+  menu.style.left=left+'px';menu.style.top=top+'px';
+  menu.style.maxHeight=Math.max(80,Math.min(280,window.innerHeight-top-12))+'px';
+}
+function partnerCategoryUpdate(root,values){
+  root.dataset.pcValues=JSON.stringify(values);
+  root.querySelector('.pc-tokens').innerHTML=values.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:2px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('');
+  const hidden=root.querySelector('#npt-cat');if(hidden)hidden.value=values.join('\n');
+}
+function partnerCategoryAdd(root,text){
+  const vals=JSON.parse(root.dataset.pcValues||'[]'), added=partnerCategories(text);
+  added.forEach(c=>{delete partnerCategoryHidden[encodeURIComponent(c)];partnerCategoryRemember(c);});
+  partnerCategoryUpdate(root,[...new Set(vals.concat(added))]);
+  const input=root.querySelector('.pc-input');input.value='';input.focus();partnerCategoryShow(root);
+}
+document.addEventListener('mousedown',e=>{if(e.target.closest?.('.pc-menu')){e.preventDefault();e.stopImmediatePropagation();}},true);
+document.addEventListener('mouseover',e=>{const root=e.target.closest?.('.pc-editor');if(root&&!root.contains(e.relatedTarget))partnerCategoryShow(root);});
+document.addEventListener('focusin',e=>{
+  const root=e.target.closest?.('.pc-editor');
+  if(root&&e.target.matches('.pc-input'))partnerCategoryShow(root);
+  else if(!e.target.closest?.('.pc-menu'))partnerCategoryClose();
+});
+document.addEventListener('input',e=>{
+  const root=e.target.closest?.('.pc-editor');
+  if(root&&e.target.matches('.pc-input'))partnerCategoryShow(root);
+});
+document.addEventListener('keydown',e=>{
+  const root=e.target.closest?.('.pc-editor'), choice=e.target.closest?.('[data-pc-choice]');
+  if(root&&e.target.matches('.pc-input')){
+    if(e.isComposing||e.keyCode===229)return;
+    if(e.key==='Enter'){e.preventDefault();e.stopImmediatePropagation();partnerCategoryAdd(root,e.target.value);}
+    else if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();partnerCategoryClose();}
+    else if(e.key==='ArrowDown'&&partnerCategoryMenu){e.preventDefault();e.stopImmediatePropagation();partnerCategoryMenu.querySelector('button:not(:disabled)')?.focus();}
+  }else if((choice||e.target.closest?.('.pc-menu'))&&e.key==='Escape'){
+    e.preventDefault();e.stopImmediatePropagation();
+    const input=partnerCategoryActive?.querySelector('.pc-input');input?.focus();partnerCategoryClose();
+  }
+},true);
+document.addEventListener('click',e=>{
+  const choice=e.target.closest?.('[data-pc-choice]'),remove=e.target.closest?.('[data-pc-remove]');
+  const historyRemove=e.target.closest?.('[data-pc-history-remove]');
+  if(historyRemove){e.preventDefault();e.stopImmediatePropagation();const label=historyRemove.dataset.pcHistoryRemove;partnerCategoryRemember(label);partnerCategoryHidden[encodeURIComponent(label)]=true;if(partnerCategoryActive?.isConnected)partnerCategoryShow(partnerCategoryActive);return;}
+  if(choice&&partnerCategoryActive?.isConnected){e.preventDefault();e.stopImmediatePropagation();partnerCategoryAdd(partnerCategoryActive,choice.dataset.pcChoice);return;}
+  if(remove){e.preventDefault();e.stopImmediatePropagation();const root=remove.closest('.pc-editor');partnerCategoryUpdate(root,JSON.parse(root.dataset.pcValues||'[]').filter(c=>c!==remove.dataset.pcRemove));root.querySelector('.pc-input').focus();partnerCategoryShow(root);return;}
+  if(!e.target.closest?.('.pc-editor,.pc-menu'))partnerCategoryClose();
+  // Include unconfirmed input when the user presses Add, without consuming the normal save handler.
+  if(e.target.closest?.('[data-npt="ok"]')){
+    const root=document.querySelector('.pop .pc-editor');
+    if(root){const vals=partnerCategories(partnerCategoryRead(root,true));partnerCategoryUpdate(root,vals);root.querySelector('.pc-input').value='';}
+  }
+},true);
+window.addEventListener('resize',partnerCategoryClose);
+document.addEventListener('scroll',e=>{if(!e.target.closest?.('.pc-menu'))partnerCategoryClose();},true);
+
 function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>설명</em></span><span><em>미팅</em></span></div>`;
   rows.forEach(r=>{const m=partnerMeeting(r); const u=r.site&&r.site!=='-'?urlHref(r.site):'';
-    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat"><a data-cat="${esc(r.cat)}">${esc(r.cat)}</a></div><div class="ds">${esc(r.desc)}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
+    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="ds">${esc(r.desc)}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
   if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
   h+=`<div class="ft"></div></div>`; return h;}
 // Project cards read the project overview (PHEAD), so editing the overview updates the card.
@@ -3255,7 +3386,7 @@ function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
 function researchSecHtml(pid){const found=liveItems('research',PREVIEW_ON?null:pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), per=PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
   return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
-const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||p.cat===S.partnerCat)&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.site));
+const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||(PREVIEW_ON?partnerCategories(p.cat).includes(S.partnerCat):p.cat===S.partnerCat))&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.site));
 function partnerSecHtml(){const pts=partnerRows(); const total=Math.max(1,Math.ceil(pts.length/10)); S.ptPage=Math.min(Math.max(1,S.ptPage),total);
   return `<div style="margin-top:28.5px">${partnerTable(pts.slice((S.ptPage-1)*10,S.ptPage*10))}</div>${pager(S.ptPage,total,'pg-pt').replace('class="pager','style="margin-top:50.3px" class="pager')}`;}
 function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.page.on [data-sec="${k}"]`); if(!el)return;
@@ -3564,7 +3695,7 @@ const stitle=(E,name)=>`<div class="ititle ${E?'ed':''}" ${E?'contenteditable="t
 function partnerHtml(pt,E){const ms=liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date))); if(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))&&!ms.includes(item(pt.meet)))ms.unshift(item(pt.meet)); const site=pt.site&&pt.site!=='-'?pt.site:''; const u=urlHref(site); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
   return `<div class="itype"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>협력업체</div><div class="ihead">${shead(E,'partner')}</div>${stitle(E,pt.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">홈페이지</span><span class="v">${E?sfield('site','예: vessl.ai/ko',site):(u?`<a class="url" style="margin-left:0" href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(site)}</a>`:none)}</span></div>
-  <div class="pr"><span class="k">구분</span><span class="v">${E?sfield('cat','구분',pt.cat):`<span class="plain">${esc(pt.cat)}</span>`}</span></div>
+  <div class="pr" style="height:auto;min-height:42px"><span class="k">구분</span><span class="v">${PREVIEW_ON?(E?partnerCategoryEditor(pt.cat,false):partnerCategoryLinks(pt.cat,false)):(E?sfield('cat','구분',pt.cat):`<span class="plain">${esc(pt.cat)}</span>`)}</span></div>
   <div class="pr" style="height:auto"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',pt.desc,true):(pt.desc?`<span class="plain" style="white-space:pre-line">${esc(pt.desc)}</span>`:none)}</span></div>
   <div class="pr" style="height:auto"><span class="k">관련 미팅</span><span class="v"><span class="chips">${ms.length?ms.slice(0,12).map(m=>chipFull(m)).join(''):none}</span></span></div></div></div>`;}
 function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlHref(url); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
@@ -3574,10 +3705,11 @@ function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlH
   <div class="pr" style="height:auto;min-height:42px"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',c.desc,true):(c.desc?`<span class="plain" style="white-space:pre-line">${esc(c.desc)}</span>`:none)}</span></div>
   ${E||c.note?`<div class="pr" style="height:auto;min-height:42px"><span class="k">활용 시 주의</span><span class="v">${E?sfield('note','확인하거나 활용할 때 주의할 점',c.note,true):`<span class="plain" style="white-space:pre-line">${esc(c.note)}</span>`}</span></div>`:''}</div></div>`;}
 function simpleTarget(){const e=S.editSimple; if(!e)return null; if(e.kind==='partner')return PARTNERS.find(x=>x.id===e.id&&!x.trash)||null; const [si,cid]=e.id.split(':'); return (ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash)||null;}
-function simpleValues(){const out={}; $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=(k==='desc'||k==='note')?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
+function simpleValues(){const out={}; const pc=document.querySelector('#panel-pin .pc-editor');if(pc)out.cat=partnerCategoryRead(pc,false); $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=(k==='desc'||k==='note')?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
 const simpleStored=(o,k)=>{const v=String(o[k]==null?'':o[k]).trim(); return (k==='url'&&v==='#')||(k==='site'&&v==='-')?'':v;};
 function simpleDirty(){const o=simpleTarget(); if(!o||S.panel!==S.editSimple.id)return false; const v=simpleValues(); return Object.keys(v).some(k=>v[k]!==simpleStored(o,k));}
 function saveSimple(){const e=S.editSimple, o=simpleTarget(); if(!e||!o){S.editSimple=null;return true;} const v=simpleValues(); if(!v.name){toast('이름을 입력해 주세요.');const t=$('#panel-pin [data-sk="name"]');t&&t.focus();return false;}
+  if(e.kind==='partner'&&PREVIEW_ON)partnerCategories(v.cat).forEach(partnerCategoryRemember);
   const old=o.name; Object.keys(v).forEach(k=>{if(v[k]!==simpleStored(o,k))o[k]=v[k];}); if(e.kind==='partner'&&old!==o.name)ITEMS.forEach(x=>{if(x.type==='meeting'&&x.partner===old)x.partner=o.name;}); // meetings keep pointing at the renamed partner
   S.editSimple=null; return true;}
 document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&!/^(desc|note)$/.test(t.dataset.sk)&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
@@ -3817,7 +3949,7 @@ document.addEventListener('click',async e=>{
   if(el=q('.new-action')){const it=newItem('action');openPanel(it.id);return;}
   if(el=q('.new-research')){const it=newItem('research');openPanel(it.id);return;}
   if(el=q('.new-meeting')){const it=newItem('meeting');openPanel(it.id);return;}
-  if(el=q('.new-partner')){openPop(el,`<div class="hd">협력업체 추가</div><div class="msg" style="padding-top:0"><input id="npt-name" placeholder="업체명"><input id="npt-site" placeholder="홈페이지 (예: vessl.ai/ko)" style="margin-top:6px"><input id="npt-cat" placeholder="구분" style="margin-top:6px"><input id="npt-desc" placeholder="설명" style="margin-top:6px"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-npt="cancel">취소</button><button class="it" data-npt="ok" style="background:#0f0f0f;color:#fff">추가</button></div></div>`);$('#npt-name').focus();return;}
+  if(el=q('.new-partner')){openPop(el,`<div class="hd">협력업체 추가</div><div class="msg" style="padding-top:0"><input id="npt-name" placeholder="업체명"><input id="npt-site" placeholder="홈페이지 (예: vessl.ai/ko)" style="margin-top:6px">${PREVIEW_ON?partnerCategoryEditor('',true):'<input id="npt-cat" placeholder="구분" style="margin-top:6px">'}<input id="npt-desc" placeholder="설명" style="margin-top:6px"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-npt="cancel">취소</button><button class="it" data-npt="ok" style="background:#0f0f0f;color:#fff">추가</button></div></div>`);$('#npt-name').focus();return;}
   if(el=q('[data-npt]')){if(el.dataset.npt==='ok'){const n=$('#npt-name').value.trim();if(!n){$('#npt-name').focus();return;}PARTNERS.unshift({id:'pt'+Date.now(),name:n,site:$('#npt-site').value.trim(),cat:$('#npt-cat').value.trim()||'기타',desc:$('#npt-desc').value.trim(),meet:null});closePop();S.ptPage=1;render(true);toast('협력업체를 추가했습니다.');}else closePop();return;}
   if(el=q('[data-lib]')){openLibrary(el.dataset.lib);return;}
   if(el=q('[data-libopen]')){closePop();openPanel(el.dataset.libopen);return;}
@@ -4085,6 +4217,7 @@ function sharedRecords(){
   const hold=S.editProj&&!S._projSaving?S.proj:null;                               // project overview being edited: held until saved or cancelled
   for(const [k,v] of Object.entries(PROJECTS))out['project:'+k]=(k===hold&&sharedBase['project:'+k])?copy(sharedBase['project:'+k]):copy(v);
   for(const v of PARTNERS)out['partner:'+v.id]=copy(v);
+  for(const [key,label] of Object.entries(partnerCategoryHistory))out['meta:partner-category:'+key]={label,...(partnerCategoryHidden[key]?{hidden:true}:{})};
   const head=copy(PHEAD);if(hold&&sharedBase['meta:head']&&sharedBase['meta:head'][hold])head[hold]=copy(sharedBase['meta:head'][hold]);
   Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':head,'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS),
     'meta:flags':copy(META_FLAGS),'meta:notices':copy(NOTICES),'meta:settings':copy(SETTINGS),'meta:members':copy(MEMBERS_META)});
@@ -4109,6 +4242,7 @@ function applyRecord(key,v){
   else if(key.startsWith('partner:')){const idx=PARTNERS.findIndex(x=>x.id===key.slice(8));if(idx>=0)PARTNERS.splice(idx,1,...(v?[copy(v)]:[]));else if(v)PARTNERS.push(copy(v));}
   else if(schedKey(key)){const t=metaTarget(key);for(const k of Object.keys(t))if(!v||!(k in v))delete t[k];if(v)Object.assign(t,copy(v));}
   else if(v==null)return;                                                           // a meta record missing on the server keeps the page default
+  else if(key.startsWith('meta:partner-category:')){const id=key.slice('meta:partner-category:'.length);if(v&&typeof v.label==='string'){partnerCategoryHistory[id]=v.label;if(v.hidden)partnerCategoryHidden[id]=true;else delete partnerCategoryHidden[id];}else{delete partnerCategoryHistory[id];delete partnerCategoryHidden[id];}}
   else if(key==='meta:order')PROJ_ORDER.splice(0,PROJ_ORDER.length,...v);
   else if(key==='meta:roadmap')ROADMAP.splice(0,ROADMAP.length,...copy(v));
   else if(key==='meta:head'){for(const k of Object.keys(PHEAD))if(!(k in v))delete PHEAD[k];Object.assign(PHEAD,copy(v));}
