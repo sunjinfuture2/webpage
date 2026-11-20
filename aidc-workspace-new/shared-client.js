@@ -40,6 +40,7 @@ function sharedRecords(){
   const hold=S.editProj&&!S._projSaving?S.proj:null;                               // project overview being edited: held until saved or cancelled
   for(const [k,v] of Object.entries(PROJECTS))out['project:'+k]=(k===hold&&sharedBase['project:'+k])?copy(sharedBase['project:'+k]):copy(v);
   for(const v of PARTNERS)out['partner:'+v.id]=copy(v);
+  for(const [key,label] of Object.entries(partnerCategoryHistory))out['meta:partner-category:'+key]={label,...(partnerCategoryHidden[key]?{hidden:true}:{})};
   const head=copy(PHEAD);if(hold&&sharedBase['meta:head']&&sharedBase['meta:head'][hold])head[hold]=copy(sharedBase['meta:head'][hold]);
   Object.assign(out,{'meta:order':copy(PROJ_ORDER),'meta:roadmap':copy(ROADMAP),'meta:head':head,'meta:archive':copy(ARCH_SECTIONS),'meta:tabs':copy(ARCH_TABS),'meta:rows':copy(ARCH_ROWS),
     'meta:flags':copy(META_FLAGS),'meta:notices':copy(NOTICES),'meta:settings':copy(SETTINGS),'meta:members':copy(MEMBERS_META)});
@@ -64,6 +65,7 @@ function applyRecord(key,v){
   else if(key.startsWith('partner:')){const idx=PARTNERS.findIndex(x=>x.id===key.slice(8));if(idx>=0)PARTNERS.splice(idx,1,...(v?[copy(v)]:[]));else if(v)PARTNERS.push(copy(v));}
   else if(schedKey(key)){const t=metaTarget(key);for(const k of Object.keys(t))if(!v||!(k in v))delete t[k];if(v)Object.assign(t,copy(v));}
   else if(v==null)return;                                                           // a meta record missing on the server keeps the page default
+  else if(key.startsWith('meta:partner-category:')){const id=key.slice('meta:partner-category:'.length);if(v&&typeof v.label==='string'){partnerCategoryHistory[id]=v.label;if(v.hidden)partnerCategoryHidden[id]=true;else delete partnerCategoryHidden[id];}else{delete partnerCategoryHistory[id];delete partnerCategoryHidden[id];}}
   else if(key==='meta:order')PROJ_ORDER.splice(0,PROJ_ORDER.length,...v);
   else if(key==='meta:roadmap')ROADMAP.splice(0,ROADMAP.length,...copy(v));
   else if(key==='meta:head'){for(const k of Object.keys(PHEAD))if(!(k in v))delete PHEAD[k];Object.assign(PHEAD,copy(v));}
