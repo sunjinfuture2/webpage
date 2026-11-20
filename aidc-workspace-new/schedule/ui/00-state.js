@@ -3,13 +3,19 @@
 // the preview switch, loading the source plan, the calculated model, saving a change and undoing it, and small formatters.
 // Nothing here runs for a project without a schedule, or while the preview is off.
 
-const SCH_SOURCES={pangyo:'/schedule/pangyo.json'};           // projects that have a master schedule (static source plans)
+const SCH_SOURCES={pangyo:'/schedule/pangyo.json'};           // projects whose plan came from a workbook (static source plans)
 const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{},note:{},last:{},tick:0};
 // Preview (owner, 2026-11-19): the combined page is shown only to a browser that opened the site with ?v=2 once; ?v=1 turns it off again.
 (function(){try{const v=new URLSearchParams(location.search).get('v');if(v==='2')localStorage.setItem('aidc-preview','1');else if(v==='1')localStorage.removeItem('aidc-preview');}catch(e){}})();
 const schPreview=()=>{try{return localStorage.getItem('aidc-preview')==='1';}catch(e){return false;}};
-const schHas=pid=>!!pid&&schPreview()&&!!SCH_SOURCES[pid]&&!!window.AIDCSchedule;
-const schReady=pid=>schHas(pid)&&!!SCH.base[pid];
+// Every project has the schedule sections (owner, 2026-11-20: the layout, functions and structure of 판교, without its contents).
+// A project without a workbook starts from an empty plan; what members add is stored the same way (meta:sched:<project>).
+const schHas=pid=>!!pid&&schPreview()&&!!PROJECTS[pid]&&!!window.AIDCSchedule;
+const schPids=()=>Object.keys(PROJECTS).filter(schHas);
+const schEmptySource=()=>({schemaVersion:'analysis-seed-1',sourceFile:'',statusDate:'2026-01-01',tasks:[],dependencies:[],procurementPackages:[],gates:[],responsibilityBoundaries:[],assumptionsAndReferences:[],sourceMappings:[],nvisScheduleReview:[],offtakers:[],commitmentReviews:[],sourceProjectSummary:[]});
+const schReady=pid=>schHas(pid)&&!!(SCH.base[pid]||(!SCH_SOURCES[pid]&&(schLoad(pid),SCH.base[pid])));
+// The engine wants at least one task; a plan without any has nothing to work out.
+const schCalc=plan=>plan.tasks.length?AIDCSchedule.calculate(plan):{planId:plan.id,tasks:{},order:[],operationDate:'',operationDelay:0,operationValid:true,criticalCount:0,nearCount:0,changedCount:0,deliveries:{},issues:[]};
 
 /* ---------- view state (per tab of the browser, like the other filters) ---------- */
 const SCH_UI_DEFAULT={tab:'gantt',phase:'',scope:'all',scale:'fit',ref:false,links:true,today:true,open:[],q:'',page:1,per:20,who:'',sort:'wbs',dir:1,netMode:'focus',netDepth:1,netDir:'both',sel:'',
@@ -18,12 +24,14 @@ const SCHU=(()=>{let v={};try{v=JSON.parse(sessionStorage.getItem('aidc-sch-ui')
 function schUiSave(){try{sessionStorage.setItem('aidc-sch-ui',JSON.stringify(SCHU));}catch(e){}}
 
 /* ---------- source plan and model ---------- */
-function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return; SCH.loading[pid]=true; delete SCH.failed[pid];
+function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return;
+  if(!SCH_SOURCES[pid]){ const src=schEmptySource(); SCH.src[pid]=src; SCH.base[pid]=AIDCSchedule.planFromSource(src); return; }   // no workbook: an empty plan, there at once
+  SCH.loading[pid]=true; delete SCH.failed[pid];
   fetch(SCH_SOURCES[pid]).then(r=>{if(!r.ok)throw new Error('일정 원본을 불러오지 못했습니다 ('+r.status+')');return r.json();})
     .then(src=>{SCH.src[pid]=src;SCH.base[pid]=AIDCSchedule.planFromSource(src);SCH.loading[pid]=false;schRedraw();schOpenWanted();})
     .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);schRedraw();}); }
 // An address that names a task (or a package / gate / record) of a schedule that has not arrived yet: remembered, opened after loading.
-function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; if(Object.keys(SCH_SOURCES).every(p=>SCH.base[p]))continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null; Object.keys(SCH_SOURCES).forEach(schLoad);} }
+function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schPids().every(p=>SCH.base[p]))continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
 function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady)return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }
 // The overrides in force: the shared ones, or those of the scenario this browser is looking at.
 const schScenario=pid=>{const id=SCHU.scn;return id&&SCHED[pid]&&SCHED[pid]['sc:'+id]?id:'';};
@@ -33,14 +41,15 @@ function schModel(pid){ if(!schReady(pid))return null; const A=AIDCSchedule, m0=
   const ov=schOv(pid), keys=Object.keys(ov).filter(A.isPlanKey).sort(), root=SCHED[pid]||{}, phk=Object.keys(root).filter(k=>k.startsWith('ph:')).sort(), key=schScenario(pid)+'|'+JSON.stringify(keys.map(k=>[k,ov[k]]))+'|'+phk.map(k=>k+':'+((root[k]||{}).label||'')).join(',');
   if(m0&&m0.key===key){m0.at=now;return m0;}
   const base=SCH.base[pid]; let plan=A.applyOverrides(base,ov), res=null, err='';
-  try{res=A.calculate(plan);}
+  try{res=schCalc(plan);}
   catch(e){ err=String(e&&e.message||e); // changes of two members that do not fit together (a loop): the relations added on top are left out until one is removed
     const safe={};for(const k of keys)if(!(k.startsWith('d:')&&ov[k]&&ov[k]._new))safe[k]=ov[k];
-    try{plan=A.applyOverrides(base,safe);res=A.calculate(plan);}catch(e2){plan=A.applyOverrides(base,{});res=A.calculate(plan);} }
+    try{plan=A.applyOverrides(base,safe);res=schCalc(plan);}catch(e2){plan=A.applyOverrides(base,{});res=schCalc(plan);} }
   const byId=new Map(plan.tasks.map(t=>[t.id,t])), byWbs=new Map(plan.tasks.map(t=>[t.wbs,t])), phases=[], pm=new Map();
   for(const t of plan.tasks.slice().sort((a,b)=>a.phase.localeCompare(b.phase,undefined,{numeric:true})||a.order-b.order)){let g=pm.get(t.phase);if(!g){g={code:t.phase,label:t.phaseLabel,tasks:[]};pm.set(t.phase,g);phases.push(g);}g.tasks.push(t);}
   // phases members added (records ph:<code> {label}); one that has no task yet still shows, so that tasks and actions can be put into it
-  for(const k of phk){ const code=k.slice(3); if(!pm.has(code)&&root[k]){const g={code,label:root[k].label||code,tasks:[],user:true};pm.set(code,g);phases.push(g);} }
+  for(const k of phk){ const code=k.slice(3); if(!root[k])continue; if(pm.has(code)){const g=pm.get(code); if(root[k].label)g.label=root[k].label; g.user=true; continue;}
+    const g={code,label:root[k].label||code,tasks:[],user:true};pm.set(code,g);phases.push(g); }
   phases.sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
   const pred=new Map(plan.tasks.map(t=>[t.id,[]])), succ=new Map(plan.tasks.map(t=>[t.id,[]]));
   for(const e of plan.dependencies){if(!byId.has(e.from)||!byId.has(e.to))continue;pred.get(e.to).push(e);succ.get(e.from).push(e);}
@@ -56,12 +65,12 @@ function schWrite(pid,changes){ const root=SCHED[pid]||(SCHED[pid]={}); const sc
   else for(const [k,v] of Object.entries(changes)){if(v===null)delete root[k];else root[k]=copy(v);}
   SCH.memo[pid]=null; }
 function schCommit(pid,mutate,label,quiet,noRedraw){ const m=schModel(pid); if(!m)return false; const A=AIDCSchedule; let draft,res2;
-  try{draft=A.validatedPlan(m.plan,mutate);res2=A.calculate(draft);}catch(e){toast(String(e&&e.message||'변경을 적용하지 못했습니다.'),3600);return false;}
+  try{draft=A.validatedPlan(m.plan,mutate);res2=schCalc(draft);}catch(e){toast(String(e&&e.message||'변경을 적용하지 못했습니다.'),3600);return false;}
   const ov=schOv(pid), ch=A.overrideChanges(SCH.base[pid],ov,draft); if(!Object.keys(ch).length)return true;
   const before={};for(const k of Object.keys(ch))before[k]=ov[k]===undefined?null:copy(ov[k]);
   const opBefore=m.res.operationDate; schWrite(pid,ch); SCH.undo.push({pid,sc:schScenario(pid),before,after:ch,label,tag:SCH.tag||''}); if(SCH.undo.length>100)SCH.undo.shift(); SCH.redo.length=0;
-  const d=A.dates.diffDays(res2.operationDate,opBefore);
-  if(!quiet)toast((label||'일정을 변경했습니다')+(d?` · 운영개시 ${d>0?'+':''}${d}일 (${schD(res2.operationDate)})`:''),d?5200:3200,{t:'되돌리기',fn:schUndo});
+  const d=res2.operationDate&&opBefore?A.dates.diffDays(res2.operationDate,opBefore):0;
+  if(!quiet)toast((label||'일정을 변경했습니다')+(d?` · 운영개시 ${d>0?'+':''}${d}일 (${schD(res2.operationDate)})`:''),d?5200:3200,{t:'되돌리기',fn:schUndo,keep:true});   // stays until closed
   if(!noRedraw)schRedraw(true); return true; }
 // Other schedule records that are not part of the calculation (gate state, evidence state, scenarios): one field each.
 function schSet(pid,key,value,label){ const root=SCHED[pid]||(SCHED[pid]={}); const before=root[key]===undefined?null:copy(root[key]);
@@ -132,7 +141,7 @@ const SCH_PROGRESS_TIP='진행률 = Σ(가중치 × 달성도) ÷ Σ가중치\n�
 // The schedule fields (dates, state, assignees, importance, address) are never kept in the item: they are overrides of the task.
 const schTaskIdOf=id=>typeof id==='string'&&id.startsWith('wt-')?id.slice(3):'';
 const schItemId=taskId=>'wt-'+taskId;
-function schProjOfTask(taskId){for(const pid of Object.keys(SCH_SOURCES)){const m=schModel(pid);if(m&&m.byId.has(taskId))return pid;}return null;}
+function schProjOfTask(taskId){for(const pid of schPids()){const m=schModel(pid);if(m&&m.byId.has(taskId))return pid;}return null;}
 function schVirtualItem(id){ const taskId=schTaskIdOf(id); if(!taskId)return undefined; const pid=schProjOfTask(taskId); if(!pid)return undefined; const m=schModel(pid), t=m.byId.get(taskId), r=m.res.tasks[taskId];
   const v=SCH.virt[id]||(SCH.virt[id]={id,type:'action',task:taskId,own:true,status:'published',body:'',comments:[],created:r.start});
   Object.assign(v,{proj:pid,title:t.name,date:r.start,end:r.finish,people:schPeople(t),pri:schPri(m,t),st:AIDCSchedule.progress.isDone(t)?'done':'prog',url:t.url||''}); return v; }
@@ -179,7 +188,7 @@ function schNotices(pid){ const now=Date.now(), c=SCH.note[pid]; if(c&&now-c.at<
   if(next)st.seen=next; out.sig=rel; SCH.last[pid]={tick:SCH.tick,sig:rel,red:out.red}; return out; }
 // Called by the sync code before (false) and after (true) data from the server is merged in.
 function schNoticeSettle(remote){ if(!schPreview()||!sharedUser)return; if(remote)SCH.tick++;
-  for(const pid of Object.keys(SCH_SOURCES)){ if(!SCH.base[pid])continue; if(remote&&SCH.memo[pid])SCH.memo[pid].at=-1e9;   // the model looks at the overrides again (it would trust its copy for 40 ms)
+  for(const pid of schPids()){ if(!SCH.base[pid])continue; if(remote&&SCH.memo[pid])SCH.memo[pid].at=-1e9;   // the model looks at the overrides again (it would trust its copy for 40 ms)
     SCH.note[pid]=null; schNotices(pid); } }
 // Opening an action is seeing it: its red mark goes at once (the rest of the page is redrawn later as usual).
 function schSeenOpen(id){ if(!sharedUser||!schPreview())return; const it=item(id), pid=it&&it.proj; if(!pid||!SCH.last[pid]||!SCH.last[pid].red.has(id))return;

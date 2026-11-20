@@ -853,3 +853,194 @@
 .sg-bar .pt::before{content:"";position:absolute;inset:-5px -5px -5px -3px}
 .sg-bar .pt.l::before{inset:-5px -3px -5px -5px}
 .sg-bar .pt:hover{background:#1f8e00;border-color:#1f8e00}
+/* ================= eighth round (owner, 2026-11-20) ================= */
+/* --- research cards: the tag on its own line, the title never more than two lines --- */
+.sch-on .rcard .tt.two{white-space:normal}
+.rcard .tt.two .tg{display:block}
+.rcard .tt.two .t2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+
+/* --- "n개씩 보기" where it stands alone: at the left, in the pickers' look --- */
+.sch-filters .sf.per{min-width:104px}
+.sch-filters.sch-all{margin-left:2px}
+
+/* --- the edge of the content panel: a stronger shade, darkening what is under it instead of painting over it --- */
+.sch-on #app::after{width:26px;border-left:0;border-right:1px solid rgba(150,150,150,.55);box-shadow:none;background:linear-gradient(to left,rgba(0,0,0,.13),rgba(0,0,0,.05) 38%,rgba(0,0,0,0));mix-blend-mode:multiply}
+
+/* --- calendar: the words of an entry half a point lower --- */
+.sch-on .cal .ev .lb{position:relative;top:.67px}
+/* counts of days other than today are grey; today's and the captions of the list beside it take the project's colour */
+.cal.pv .cell:not(.today) .acnt svg{color:#cfcfcf;opacity:1}
+.rlist.sch.pv .rcap svg{color:var(--pc,#3d3d3d)}
+.rlist.sch.pv .rcap .n{color:var(--pc,#3d3d3d)}
+/* the list of today's actions: a diamond for a milestone, a smaller title, a face (an empty one when nobody is assigned) */
+.rlist.sch .ra .tt{font-size:15.7px}
+.rlist.sch .ra .sch-ms,.sch-daypop .ra .sch-ms{margin:0 -3px 0 1px}
+.rlist.sch .ra .avstack .avatar,.sch-daypop .ra .avstack .avatar{width:21px;height:21px;margin-left:-9px}
+.rlist.sch .ra .avstack .avatar:first-child,.sch-daypop .ra .avstack .avatar:first-child{margin-left:0}
+.avatar.nil{background:#ececec}
+.avatar.nil::before,.avatar.nil::after{background:#f8f8f8}
+.avatar.pic{background-size:cover;background-position:center}
+
+/* --- toasts with the preview: slow to leave, can be closed, may lead somewhere --- */
+.toast.pv{display:flex;align-items:center;padding:9px 8px 9px 16px;transition:opacity 1.1s ease,transform 1.1s ease;max-width:calc(100vw - 32px)}
+.toast.pv.on{pointer-events:auto;transition:opacity .18s ease,transform .18s ease}
+.toast.pv button{flex:none}
+.toast.pv button.go{color:#fff}
+.toast.pv button.tx{margin-left:12px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;color:#9a9a9a;font-size:11px;font-weight:400;text-decoration:none}
+.toast.pv button.tx:hover{background:#3a3a3a;color:#fff}
+
+/* --- + and 라이브러리 beside a section title: one higher --- */
+.sch-on .sec-title .plus-btn,.sch-on .sec-title .lib{translate:0 -1px}
+
+/* --- an address in a list is an arrow; in the panel it keeps to one line until it is edited --- */
+.sch-ua{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:-5px;border-radius:5px;color:#8e8e8e;transition:background .12s,color .12s}
+.sch-ua:hover{background:#e9e9e9;color:#1c1c1c}
+.sch-ua svg{width:10px;height:10px}
+.sch-on .props .pr .v a.url{max-width:calc(100% - 34px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top}
+.sch-on .props .pr .v .url[contenteditable="true"]{white-space:normal;word-break:normal;overflow-wrap:anywhere;max-width:380px}
+
+/* --- sidebar: the logo and the three buttons under it stay; what scrolls ends in a soft edge below them --- */
+.sch-on .sb .top{position:sticky;top:0;z-index:6;background:var(--sb-bg)}
+.sch-on .sb .top::after{content:"";position:absolute;left:0;right:0;top:100%;height:18px;background:linear-gradient(to bottom,var(--sb-bg),rgba(255,255,255,0));pointer-events:none}
+/* name + arrow of a row are one link (underlined as a whole); the square at the right of an agent has a mark of its own */
+.sb .agent .sb-lk{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:calc(100% - 64px);line-height:17px}
+.sb .agent .sb-lk::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;opacity:0;transition:opacity .1s}
+.sb .agent .sb-lk:hover::after,.sb .agent .item[data-go]:hover .sb-lk::after,.sb .agent .item[data-ext]:hover .sb-lk::after{opacity:1}
+.sb .agent .sb-lk .ext,.sb .agent .sb-lk .service-arrow{margin-left:5.7px}
+.sb .agent .sb-lk .service-arrow .ext{margin-left:0}
+.sch-on #sb .agent a[data-service-link]:hover{text-decoration:none}
+.sch-on .sb .agent .item{gap:0}
+.sch-on .sb .agent .item[data-open] .sb-lk{color:inherit}
+.sch-on .sb .agent .cnt{cursor:pointer;border-radius:3px;transition:background .12s}
+.sch-on .sb .agent .cnt:hover{background:#cfcfcf}
+.sch-on .sb .agent .cnt:hover .pict{color:#2b2b2b}
+
+/* --- notices: closed ▶, open ▲, a little larger --- */
+.sch-on .notice .tri{transform:rotate(-90deg) scale(1.4)}
+.sch-on .notice.open .tri{transform:rotate(180deg) scale(1.4)}
+
+/* --- footer without the project and agent columns --- */
+.pfoot .fgrid{grid-template-columns:minmax(300px,1fr) 150px 150px;column-gap:64px}
+
+/* --- gantt: the points relations start from stand above the bars; the chosen task's are larger, its lines a little thicker --- */
+.sg-dots{position:absolute;left:0;top:0;z-index:3;overflow:visible;pointer-events:none}
+.sg-dots circle{fill:#afafaf;stroke:#fff;stroke-width:.7}
+.sg-dots circle.hot{fill:#474747}
+.sg-links g.hot path{stroke-width:1.5}
+.sg-links g:hover path:not(.hit){stroke-width:1.5}
+/* the shade at the table's edge: one strip over dates, rows and the scroll bar */
+.sch-on .sg-left::after{display:none}
+.sg-shade{position:absolute;top:0;bottom:0;width:16px;z-index:8;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.06),rgba(0,0,0,0));mix-blend-mode:multiply}
+
+/* --- meeting cards: smaller pictograms in front of the three lines --- */
+.sch-on .mcard .chk li .bx,.sch-on .rlist .chk li .bx{width:16px;height:16px;margin:2px 8.5px 0 2px}
+.sch-on .mcard .chk li.nil .tx::before,.sch-on .rlist .chk li.nil .tx::before{content:"—";color:#d0d0d0}
+.tbl .rw .url a.sch-ua{border-bottom:0;line-height:1}
+/* the outline of the gantt ends with a row that adds a phase */
+.sg-row.add{display:flex;align-items:center;gap:8px;padding-left:4px;color:#a6a6a6;font-size:12.5px;cursor:pointer;left:0;right:0}
+.sg-row.add:hover{color:#1c1c1c}
+.sg-row.add em{font-style:normal;color:#c4c4c4;margin-left:10px;font-size:12px}
+/* --- the way one came through panels: between the type at the top and the 수정 row, in the type's size and colour --- */
+.itrail{position:absolute;max-width:calc(100% - 60px);top:68.5px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#8e8e8e;white-space:nowrap;overflow:hidden}
+.itrail a{cursor:pointer;max-width:260px;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;border-radius:3px}
+.itrail a:hover{color:#1c1c1c;text-decoration:underline;text-underline-offset:2px}
+.itrail i{font-style:normal;color:#c4c4c4;flex:none}
+.pin:has(>.itrail) .itype{top:47px}
+/* --- a meeting's three lines as fields of its panel --- */
+.props .mt-ln{display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px 7px;min-width:0;max-width:100%}
+.props .pr:has(.mt-ln){height:auto;min-height:42px}
+.props .mt-ln .bx{width:16px;height:16px;flex:none;display:flex}
+.props .mt-ln .bx .pict{width:100%;height:100%}
+.props .mt-ln .mt-v{margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.props .mt-ln .mt-v.nil{color:#c4c4c4}
+.props .mt-ln .mt-v.nil:empty{display:none}
+.pop.mt-time{max-height:300px;overflow-y:auto}
+/* --- an ordinary action in the block of a task --- */
+.sp-links .sl-none.on{position:static;padding:30px 0 34px;color:#8e8e8e;font-size:13px}
+/* --- public holidays: red like a Sunday --- */
+.cal .cell.hol .n{color:var(--red)}
+.cal.pv .cell.sel.hol .n{color:var(--red)!important}
+/* --- gantt: a relation taken hold of; the ground can be pulled --- */
+.sg-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:4 3;stroke-width:1.5}
+.sg-links g.pull.far path:not(.hit){opacity:.5}
+.sg-right{cursor:grab}
+.sg-scroll.pan .sg-right,.sg-scroll.pan .sg-bar,.sg-scroll.pan .sg-msb{cursor:grabbing}
+/* --- relation map: lines can be chosen and pulled off; the card pressed before --- */
+.sn-links path.hit{stroke:transparent!important;stroke-width:12;fill:none;pointer-events:stroke;cursor:pointer}
+.sn-links g:hover path:not(.hit){stroke:#1f8e00}
+.sn-links g:hover circle{fill:#1f8e00}
+.sn-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:6 4}
+.sn-links g.pull.far path:not(.hit){opacity:.5}
+.sn-node.prev{outline:1.5px dashed #9a9a9a;outline-offset:3px}
+.sn-node .sn-prev{position:absolute;right:10px;top:-10px;font-style:normal;font-size:10.5px;font-weight:600;line-height:1;color:#fff;background:#8e8e8e;border-radius:9px;padding:4px 8px}
+/* --- a period of one's own: two months, first day and last day --- */
+.pop.sch-rp{padding:14px 16px 12px;max-width:none}
+.rp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rp-h button{width:26px;height:26px;border-radius:6px;font-size:16px;color:#4f4f4f}
+.rp-h button:hover{background:#f0f0f0}
+.rp-s{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#1c1c1c}
+.rp-s em{font-style:normal;min-width:70px;text-align:center;padding:3px 8px;border-bottom:1px solid #a7a7a7}
+.rp-s em.ph{color:#b5b5b5;font-weight:400}
+.rp-ms{display:flex;gap:24px}
+.rp-t{font-size:12.5px;font-weight:600;color:#4f4f4f;text-align:center;margin-bottom:6px}
+.rp-g{display:grid;grid-template-columns:repeat(7,30px);row-gap:2px}
+.rp-g span{font-size:10.5px;color:#a6a6a6;text-align:center;height:20px}
+.rp-g button{height:28px;font-size:12.5px;color:#2b2b2b;border-radius:0}
+.rp-g button:hover{background:#f0f0f0}
+.rp-g button.in{background:#eef5ec}
+.rp-g button.hv{background:#dfe9dc}
+.rp-g button.a,.rp-g button.b{background:#1c1c1c;color:#fff;border-radius:6px}
+.rp-g button.tdy{font-weight:700}
+.rp-f{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#8e8e8e}
+.rp-f span{flex:1}
+.rp-f button{height:28px;padding:0 12px;border-radius:6px;font-size:12.5px;color:#4f4f4f;border:1px solid #dcdcdc}
+.rp-f button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff}
+.rp-f button.pri:disabled{opacity:.35}
+/* --- pickers above the project cards --- */
+.projects .pfil{position:absolute;left:0;top:50px;right:0}
+.projects .pfil .sch-chiprow{min-height:20px}
+.projects .pfil .sch-filters{margin:6px 0 0 2px}
+.sch-on .projects .track{top:120px}
+.sch-on .projects .arr{top:187px}
+.sch-on .projects .fade{top:44px}
+/* --- the export pictogram of a content panel: beside the ⋯ menu, the size and colour of the trash --- */
+.ihead .iexp{flex:none;width:36px;height:36px;margin:-6px 0 0 4px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#6f6f6f;transition:background .12s,color .12s}
+.ihead .iexp:hover{background:#eee;color:#0f0f0f}
+.ihead .iexp svg{width:24px;height:24px}
+/* --- Excel export beside the filters: the look of 라이브러리, in the project's colour --- */
+.sch-filters .sch-xl{height:22.4px;padding:1px 10px 0 8px;border-radius:8px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--pjc,#4f4f4f);border-color:color-mix(in srgb,var(--pjc,#8e8e8e) 38%,#fff);margin-bottom:1px}
+.sch-filters .sch-xl:hover{background:color-mix(in srgb,var(--pjc,#8e8e8e) 9%,#fff)}
+.sch-filters .sch-xl svg{flex:none}
+/* --- a library as a wall of cards (columns of one width, cards of their own height) --- */
+.lib-view.lb{left:56px;right:56px}
+.lb-bar{display:flex;align-items:center;gap:18px;margin:-4px 0 22px}
+.lb-bar .lb-q{display:flex;align-items:center;gap:9px;width:300px;height:36px;padding:0 15px;border-radius:18px;background:#f1f1f0;flex:none;color:#8e8e8e}
+.lb-bar .lb-q input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:13.5px;color:#1c1c1c}
+.lb-kinds{display:flex;gap:6px;flex-wrap:wrap}
+.lb-kinds button{height:28px;padding:0 13px;border-radius:14px;font-size:12.5px;font-weight:500;color:#5c5c5c;background:#f1f1f0;transition:background .12s,color .12s}
+.lb-kinds button:hover{background:#e2e2e1}
+.lb-kinds button.on{background:#1c1c1c;color:#fff}
+.lb-wall{display:flex;align-items:flex-start;gap:16px}
+.lb-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:22px}
+.lb-card{min-width:0}
+.lb-media{position:relative;border-radius:16px;overflow:hidden;background:#efefee;cursor:zoom-in}
+.lb-card:not(.img) .lb-media{cursor:default}
+.lb-card.img .lb-media{min-height:120px}
+.lb-card.img.in .lb-media{min-height:0}
+.lb-media img{display:block;width:100%;height:auto;opacity:0;transition:opacity .25s}
+.lb-card.in .lb-media img{opacity:1}
+.lb-card.bad .lb-media{height:140px}
+.lb-tile{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:18px 18px 16px}
+.lb-tile b{font-size:30px;font-weight:800;letter-spacing:-0.02em;line-height:1}
+.lb-tile span{font-size:12px;font-weight:500;line-height:16px;opacity:.82;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-all}
+.lb-ov{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:12px;background:linear-gradient(to bottom,rgba(0,0,0,.05),rgba(0,0,0,.34));opacity:0;transition:opacity .14s}
+.lb-card:hover .lb-ov,.lb-ov:focus-within{opacity:1}
+.lb-bt{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:16px;background:#fff;color:#1c1c1c;font-size:12.5px;font-weight:600;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.lb-bt:hover{background:#f1f1f0}
+.lb-bt.dl{background:#1c1c1c;color:#fff}
+.lb-bt.dl:hover{background:#000}
+.lb-t{margin:9px 4px 0;font-size:13.5px;font-weight:600;color:#1c1c1c;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-all}
+.lb-s{margin:2px 4px 0;font-size:12px;color:#5c5c5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-m{margin:1px 4px 0;font-size:11.5px;color:#a6a6a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-end{display:block;height:1px}
+.lb-done{padding:34px 0 10px;text-align:center;font-size:12.5px;color:#a6a6a6}

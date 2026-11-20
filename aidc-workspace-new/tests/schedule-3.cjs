@@ -54,7 +54,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.evaluate(() => { closePanel(true); SCHU.sec = 'gate'; render(true); }); await sleep(700);
   const gate = await a.evaluate(() => { const g = document.querySelector('.sch-gates .gt .sch-st'); return g ? { cls: g.className, t: g.textContent, use: g.querySelector('use').getAttribute('href'), edit: g.dataset.schc } : null; });
   check('gates, evidence and commitments use the same marks (a gate not yet looked at: 확인 전 with the ! mark, still editable)', gate && /st-ask/.test(gate.cls) && gate.t === '확인 전' && gate.use === '#i-st-ask' && gate.edit === 'gstate', gate);
-  const itemSt = await a.evaluate(t => { const it = newItem('action', { title: t, proj: 'pangyo', status: 'published' }); render(true); openPanel(it.id); const s = document.querySelector('#panel-pin .props .st'); return { id: it.id, sch: !!s.querySelector('.sch-st.st-prog'), txt: s.textContent.trim() }; }, '알림 검사 상태 ' + sfx);
+  const itemSt = await a.evaluate(t => { const it = newItem('action', { title: t, proj: 'pangyo', status: 'published' }); render(true); openPanel(it.id); const s = [...document.querySelectorAll('#panel-pin .props .pr')].find(p => p.querySelector('.k') && p.querySelector('.k').textContent === '상태'); return { id: it.id, sch: !!s.querySelector('.sch-st.st-prog'), txt: s.querySelector('.sch-st').textContent.trim() }; }, '알림 검사 상태 ' + sfx);
   check('an ordinary action item shows its status with the same mark', itemSt.sch && itemSt.txt === '진행', itemSt);
   await a.evaluate(() => closePanel(true)); await sleep(300);
 

@@ -89,6 +89,7 @@ export class Workspace {
     // Editing an item together: the first editor holds the lock as before, the others are noted here; ydocs is the shared document of a running session.
     this.sql.exec('CREATE TABLE IF NOT EXISTS co_locks (id TEXT, token TEXT, employee TEXT, expires INTEGER, PRIMARY KEY (id, token))');
     this.sql.exec('CREATE TABLE IF NOT EXISTS ydocs (item TEXT PRIMARY KEY, state BLOB, at INTEGER)');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS holidays (year INTEGER PRIMARY KEY, days TEXT NOT NULL, at INTEGER)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
   }
 
@@ -226,6 +227,25 @@ export class Workspace {
     return { events: out, next: rows.length === limit ? rows[rows.length - 1].id : null };
   }
 
+  // Public holidays (Korea) of a year: asked from a public calendar service at most once a month and kept (dates only, no names).
+  // Nothing about the workspace or its members is sent, only the year. When the service cannot be reached the page uses its own rules.
+  async holidays(y) {
+    const row = this.sql.exec('SELECT days, at FROM holidays WHERE year=?', y).toArray()[0], now = Date.now(), kept = row ? JSON.parse(row.days) : null;
+    if (row && now - row.at < 30 * 864e5) return { year: y, days: kept, src: 'kept' };
+    const tried = (this.holTried ||= {});
+    if (tried[y] && now - tried[y] < 6 * 36e5) return { year: y, days: kept, src: kept ? 'stale' : 'none' };
+    tried[y] = now;
+    try {
+      const r = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${y}/KR`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(6000) });
+      if (!r.ok) throw new Error('status ' + r.status);
+      const list = await r.json();
+      const days = [...new Set((Array.isArray(list) ? list : []).filter(h => h && (!Array.isArray(h.types) || h.types.includes('Public'))).map(h => String(h.date || '').slice(0, 10)).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d.startsWith(y + '-')))].sort();
+      if (!days.length) throw new Error('empty');
+      this.sql.exec('INSERT INTO holidays (year, days, at) VALUES (?,?,?) ON CONFLICT(year) DO UPDATE SET days=excluded.days, at=excluded.at', y, JSON.stringify(days), now);
+      return { year: y, days, src: 'fetched' };
+    } catch (e) { return { year: y, days: kept, src: kept ? 'stale' : 'none' }; }
+  }
+
   async fetch(req) {
     try {
       const url = new URL(req.url); const path = url.pathname;
@@ -266,6 +286,10 @@ export class Workspace {
         if (log.length >= 30) return json({ error: '잠시 후 다시 시도하세요.' }, 429);
         log.push(t); this.unfurls.set(me, log);
         return json(await unfurl(url.searchParams.get('url') || ''));
+      }
+      if (path === '/api/holidays' && req.method === 'GET') { // the public holidays of one year: red dates in the calendars
+        const y = Number(url.searchParams.get('y')); if (!Number.isInteger(y) || y < 2000 || y > 2100) return json({ error: '연도를 확인해주세요.' }, 400);
+        return json(await this.holidays(y));
       }
       if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), minClient: MIN_CLIENT }); }
       if (path === '/api/state') {

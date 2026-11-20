@@ -228,9 +228,74 @@ Project page
   was drawn wrongly twice because of `.main`).
 - tests/schedule-7.cjs (35 checks; two fewer when there is an owner and the member cannot set the footer links).
 
+## Eighth round (owner, 2026-11-20, third list of the day: about 45 points and two files)
+
+Preview only unless said otherwise. Files: schedule/ui/32-fields.js (one panel for actions, the lines of a meeting), 52-holidays.js,
+70-export.js (Word / PDF), 72-library.js (the wall), and additions to the others.
+
+For everybody (data and plain bugs, not design):
+- A download button only where a file is attached (`hasFiles` no longer counts the fixtures' `file` flag; meeting cards too).
+- "n min before" beside a meeting is worked out from its date and time (meetPre), never stored words.
+- The demo action items are gone: out of the fixtures, and once per existing database the untouched copies go to the trash
+  (dropDemoActionsV1 behind META_FLAGS.demoActionsV1; one that was renamed, commented on or given a file stays).
+- A project is listed once whatever the saved order says (orderedProjects); the sidebar search shows one line per page or item.
+- A window that has nothing to hang on opens where the pointer last went down (LASTPT, anchorRect); askInput no longer follows
+  the text selection.
+- The share address carries everything that is open, a library included, plus `tab` / `view` / `sec` (shareHash, routeExtras).
+
+Every project has the schedule sections:
+- schHas(pid) is true for every project; one without a workbook starts from schEmptySource() (schLoad is immediate for it).
+  The engine wants at least one task, so schCalc() hands out an empty result for an empty plan; `m.res.operationDate` may be ''.
+- The outline of the gantt ends with a row that adds a phase (data-sch="newphase"); a phase a member made keeps the name the
+  member gave it also once it has tasks (schModel reads `ph:<code>`).
+- Research belongs to no project: every project page and every calendar shows all of it (freeResearch); its breadcrumb and its
+  group in the recent tree carry no project.
+- Projects are called by their full name everywhere (pname); the short name is neither shown nor asked for.
+
+Panels:
+- An ordinary action shows the block of a task (schActionProps): 정보 / 연결된 액션, the same rows and pickers. Its values are item
+  fields (date, end, actualStart, actualFinish, phase, task, ms, refs, people, st + stx, pri, url). `st` stays 'prog' | 'done';
+  `stx` names one of the other marks (schItemSt reads both). A new action made on the main page has no project.
+- A meeting's three card lines are fields (일자 · 장소, 주요안건, 상대 참여자) with their pictograms; meetParts / meetWrite keep
+  `checks` (what the cards read) and `time` / `place` / `agenda` / `extAtt` in step. Cards always show the three pictograms.
+- The trail (S.trail): opening a panel from a link inside the open one adds that one; a step leads back. It stands between
+  the type and the 수정 row (`.itrail`). A library is a step too.
+- Export (`.iexp` beside ⋯): schExpModel(it) is written out as a .docx (schExpDocx: the parts of the file are put into a zip
+  without compression by schZip, nothing is loaded) or as a page for the print window (schExpPrint; "PDF로 저장" there makes the
+  PDF). The sheet follows the owner's sample: grey line top right, bold title, rule, orange numbered headings in a left column,
+  grey-headed tables, logo and page numbers at the foot (public/export/sunjin-logo.png; in print through @page margin boxes).
+  Never write a literal closing body tag in schedule/ui: the build puts the later scripts in front of the first one (it now
+  refuses to build).
+
+Schedule sections:
+- Excel: a button at the right of the filters of 일정 · 리스트 · 관계도 · 외부설비 조달 · 승인게이트 · 근거 및 확약 (schXlBtn,
+  schXlsxSection). One workbook with the sheet names of the original, filled from the page as it is now (what members changed
+  and added included), opened on the section's sheet. AIDCScheduleXlsx.makeBook (schedule/xlsx.ts) writes it.
+- Gantt: the points relations start from are a layer above the bars (`.sg-dots`); the shade at the table's edge is one strip over
+  dates, rows and scroll bar (`.sg-shade`); the line being pulled follows schLinkPath towards the pointer; a relation can be
+  taken hold of and pulled off (schLinkPull asks through schPropose); the ground can be pulled (schGanttPan).
+- Relation map: lines have a hit area (click: menu, pull: take off); the card pressed before is marked (SCH.netPrev) and the
+  pressed card stays where it was on the screen (SCH.netAnchor; the sheet grows as much as that needs).
+- A change card stays until it is closed; the toast of a schedule change too (`keep`).
+
+Frame and lists:
+- Toasts with the preview stay at least 7 s, wait while the pointer rests on them, have an x and may carry a way there
+  (`go`), e.g. 열기 after saving on the way out.
+- Sidebar: the top block is sticky with a soft edge; name + arrow of a row are one link underlined as a whole (`.sb-lk`).
+- Holidays: red dates without names. schHolBuilt (fixed dates, the lunar ones of SCH_LUNAR, substitute days by rule) plus
+  what the Worker finds (/api/holidays: date.nager.at, asked at most once a month, kept in table `holidays`; only the year is
+  sent) plus SETTINGS.holidays (설정 › 워크스페이스 › 일반). The outside service cannot be reached from the build environment:
+  only the built-in part is covered by the test.
+- Research: a period of one's own on a two-month calendar (schRangePick); no sort picker; a title never takes more than two
+  lines below its tag.
+- Project cards: pickers 분류 · 담당자 · 정렬 (schProjBar); a picture's height follows its shape between 150 and 부산's 296.2
+  (`imgR`, measured at upload), without a picture 판교's 207.8.
+- Library: a wall of cards made 36 at a time (schLibDraw / schLibMore, IntersectionObserver), pictures lazy.
+- tests/schedule-8.cjs (71 checks, three members; it makes a project from nothing and removes it again).
+
 ## Not done yet (say so when asked)
 
-- Links between projects (portfolio): no second project has a schedule.
+- Links between projects (portfolio): relations between tasks of different projects.
 - Realtime co-editing of the schedule itself is field-level merging (last write wins inside one task); there is no lock on a task.
 - Working calendars, resources, cost: out of the brief's first scope.
 - Taking over the gate / evidence sheets of an imported workbook (see Excel above).

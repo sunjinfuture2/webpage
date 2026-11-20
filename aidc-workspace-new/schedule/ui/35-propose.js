@@ -9,7 +9,7 @@ function schRelGlyph(ty){ const A=ty[0]==='F'?[2,16]:[14,30], B=ty[1]==='S'?[18,
 function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if(!m)return; closePop(); const a=m.byId.get(o.from), b=m.byId.get(o.to); if(!a||!b||a===b)return; let type=o.type||'FS';
   const mut=()=>o.kind==='new'?(d=>{d.dependencies.push(A.newDependency(o.from,o.to,type,0));}):o.mutate;
   const calc=()=>{ if(o.kind==='new'&&m.plan.dependencies.some(x=>x.from===o.from&&x.to===o.to&&x.type===type))return {err:'이미 있는 관계입니다. 다른 유형을 고르거나 취소하세요.'};
-    try{const draft=A.validatedPlan(m.plan,mut());return {draft,res:A.calculate(draft)};}catch(e){return {err:String(e&&e.message||'적용할 수 없는 관계입니다.')};} };
+    try{const draft=A.validatedPlan(m.plan,mut());return {draft,res:schCalc(draft)};}catch(e){return {err:String(e&&e.message||'적용할 수 없는 관계입니다.')};} };
   let cur=calc(); if(cur.err&&o.kind!=='new'){toast(cur.err,3600);return;}
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg'; document.body.appendChild(d);
   const close=()=>{d.remove();document.removeEventListener('keydown',key,true);};

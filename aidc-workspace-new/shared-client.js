@@ -257,6 +257,18 @@ function referenceLinks(){return {tabs:{
   ['NHN Cloud GPU Instance','https://www.gov-nhncloud.com/kr/service/compute/gpu-instance','NHN Cloud의 GPU 인스턴스 서비스 안내.','NHN Cloud의 GPU 인스턴스 서비스 안내입니다.'],
   ['Runpod','https://www.runpod.io/legal/compliance','데이터센터·인프라 파트너와 지역별로 협업하는 GPU 클라우드.\n(컴플라이언스 안내)','데이터센터·인프라 파트너와 지역별로 협업하는 GPU 클라우드입니다.\n(컴플라이언스 안내)'],
   ['FriendliAI','https://friendli.ai/pricing?product=serverless-endpoints','고객 GPU에서 추론 스택을 운영하는 방식(BYOG) 제공.\n(요금 안내)','고객 GPU에서 추론 스택을 운영하는 방식(BYOG)을 제공합니다.\n(요금 안내)']]};}
+// The demo actions of the first design (owner, 2026-11-20: "only what came from the workbook stays"). A copy nobody touched (the
+// demo title, no comment, no file) goes to the trash, where it can be brought back for 30 days; one that was renamed, commented on
+// or given a file is somebody's work and stays. Links to the ones that went are taken off the meetings and partners that named them.
+function dropDemoActionsV1(){ const one=t=>String(t||'').replace(/\s+/g,' ').trim(), demo={a1:'AIDC 후보지(전기공업협동조합) 대상지 기본개요 조사',a2:'GPU임대가 비교보고서',c3:'서버 플랫폼 비교견적 보고서 작성',c5:'청라동 0-00 부지 인적성검토',c8:'NDA및 MOU 체결'};
+  const at=new Date().toISOString(), gone=new Set();
+  for(const it of ITEMS){ if(it.type!=='action'||it.status==='trash'||it.own)continue; const want=/^t\d{1,2}$/.test(it.id)?demo.a1:demo[it.id]; if(!want||one(it.title)!==want)continue;
+    if((it.comments||[]).length||String(it.body||'').includes('/api/file/')||it.task||it.phase)continue;
+    it.prevStatus=it.status==='locked'?'published':it.status; it.status='trash'; it.trashedAt=at; gone.add(it.id); }
+  if(!gone.size)return 0;
+  for(const it of ITEMS)if(Array.isArray(it.actions)&&it.actions.some(x=>gone.has(x)))it.actions=it.actions.filter(x=>!gone.has(x));
+  for(const p of PARTNERS)if(p.meet&&gone.has(p.meet))p.meet=null;
+  return gone.size; }
 function addReferenceLinksV1(){
  const L=referenceLinks(), now=Date.now(); let n=0;
  for(const [want,rows] of Object.entries(L.tabs)){const tab=ARCH_TABS.includes(want)?want:(ARCH_TABS.includes('기타')?'기타':ARCH_TABS[0]);
@@ -337,6 +349,7 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
   const short={'판교 AI 데이터센터':'판교 AIDC','부산 AI 데이터센터':'부산 AIDC','인천 청라 AI 데이터센터':'인천 청라 AIDC','인천 청라 AI 데이터센':'인천 청라 AIDC'};
   Object.values(PROJECTS).forEach(p=>{if(short[p.tag])p.tag=short[p.tag];});META_FLAGS.projectTagV1=1;}
  if(!META_FLAGS.trashStampV1){const at=new Date().toISOString();ITEMS.forEach(i=>{if(i.status==='trash'&&!i.trashedAt)i.trashedAt=at;});META_FLAGS.trashStampV1=1;} // older trash had no date: its 30 days start now
+ if(!META_FLAGS.demoActionsV1){dropDemoActionsV1();META_FLAGS.demoActionsV1=1;}
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
@@ -402,12 +415,20 @@ setInterval(()=>{if(!sharedReady||sharedBusy)return;const diff=sharedDiff(shared
 
 /* ---------- routing: the address always describes the open page, so reload, back/forward and shared links work ---------- */
 const ROUTE_KEYS=['page','proj','full','panel','my'];
-let lastHash=null,routeApplying=false;
+let lastHash=null,routeApplying=false,sharedExtras=null;
 const panelExists=id=>!!(item(id)||(typeof schPanelHtml==='function'&&/^s[pget]-/.test(id)&&schPanelHtml(id))||PARTNERS.some(p=>p.id===id&&!p.trash)||/^lib:(meeting|action|research)$/.test(id)||(/^\d+:/.test(id)&&(ARCH_SECTIONS[+id.split(':')[0]]||{cards:[]}).cards.some(c=>c.id===id.split(':')[1]&&!c.trash)));
 const routeHash=r=>{const p=new URLSearchParams();for(const k of ROUTE_KEYS)if(r[k])p.set(k,r[k]);const s=p.toString();return s?'#'+s:'';};
 function cleanRoute(r){r={...r};if(!['main','project','archive'].includes(r.page))r.page='main';if(r.page==='project'&&!PROJECTS[r.proj]){r.page='main';r.proj=null;}if(r.page!=='project')r.proj=null;
  if(typeof schDeferRoute==='function')schDeferRoute(r); // a task of a schedule that is still loading is opened once it is there
  if(r.full&&!item(r.full))r.full=null;if(r.panel&&!panelExists(r.panel))r.panel=null;return r;}
+// The address the share button hands out: everything that is open (a library too) and, beyond what the address bar carries,
+// the tab one is looking at (자료실 tab, the view of 액션, the lower section). routeExtras reads those back.
+function shareHash(){ const p=new URLSearchParams(routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel,my:typeof mpRoute==='function'?mpRoute():null}).slice(1));
+ if(S.page==='archive'&&!S.full&&S.archTab)p.set('tab',S.archTab);
+ if(S.page==='project'&&!S.full&&typeof schHas==='function'&&schHas(S.proj)){p.set('view',SCHU.tab);p.set('sec',SCHU.sec);}
+ const s=p.toString();return s?'#'+s:'';}
+function routeExtras(q){ const t=q.get('tab'); if(t&&ARCH_TABS.includes(t)){S.archTab=t;S.archPage=1;}
+ if(typeof SCHU==='undefined')return; const v=q.get('view'); if(['gantt','list','net'].includes(v))SCHU.tab=v; const s=q.get('sec'); if(['proc','gate','evid'].includes(s))SCHU.sec=s; }
 function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else openPanel(id,true);}
 function afterNav(){sharedUi();saveRoute();if(typeof schAfterNav==='function')schAfterNav();}
 function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
@@ -416,11 +437,11 @@ function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
  sessionStorage.setItem('aidc-route:'+sharedUser,JSON.stringify(route));
  const hash=routeHash(route);if(hash===lastHash)return;
  const url=location.pathname+location.search+hash;if(lastHash===null)history.replaceState({aidc:1},'',url);else history.pushState({aidc:1},'',url);lastHash=hash;}
-function restoreRoute(){let r={};try{if(navigationType==='reload')r=JSON.parse(sessionStorage.getItem('aidc-route:'+sharedUser)||'{}');const q=new URLSearchParams(location.hash.slice(1));if([...q.keys()].length){for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;}}catch{}
+function restoreRoute(){let r={};try{if(navigationType==='reload')r=JSON.parse(sessionStorage.getItem('aidc-route:'+sharedUser)||'{}');const q=new URLSearchParams(location.hash.slice(1));if([...q.keys()].length){for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;sharedExtras=q;}}catch{}
  r=cleanRoute(r);const scroll=r.scroll||0,panelScroll=r.panelScroll||0;delete r.scroll;delete r.panelScroll;
  if(r.q)r.q=Object.assign({action:'',research:'',partner:''},r.q);if(r.filters)r.filters=Object.assign({},S.filters,r.filters);
  for(const k of Object.keys(r))if(r[k]===undefined)delete r[k];
- Object.assign(S,r);S.editProj=false;sharedRestoreRoute=false;sharedJumpBlock();setTimeout(()=>{$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;saveRoute();},0);}
+ Object.assign(S,r);if(sharedExtras){routeExtras(sharedExtras);sharedExtras=null;}S.editProj=false;sharedRestoreRoute=false;sharedJumpBlock();setTimeout(()=>{$('#content').scrollTop=scroll;$('#panel').scrollTop=panelScroll;saveRoute();},0);}
 // Back / forward: show whatever the address now says. What was being edited is saved first (guardLeave); nothing is asked.
 function applyRoute(r,force){
  if(!force){let done=false;if(guardLeave(()=>{done=true;applyRoute(r,true);},'all')){if(!done)history.pushState({aidc:1},'',location.pathname+location.search+(lastHash||''));return;}}
@@ -433,7 +454,7 @@ function applyRoute(r,force){
  if(location.hash!==lastHash)history.replaceState({aidc:1},'',location.pathname+location.search+lastHash);sharedUi();}
 // An address may end in &block=<id>: once the item is open, that block is scrolled to and flashed.
 function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).get('block');if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);}
-window.addEventListener('popstate',()=>{if(!sharedReady)return;const q=new URLSearchParams(location.hash.slice(1));const r={};for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;const b=q.get('block');applyRoute(cleanRoute(r));if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);});
+window.addEventListener('popstate',()=>{if(!sharedReady)return;const q=new URLSearchParams(location.hash.slice(1));const r={};for(const k of ROUTE_KEYS)r[k]=q.get(k)||null;const b=q.get('block');routeExtras(q);applyRoute(cleanRoute(r));if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);});
 
 sharedStart().catch(()=>sharedStatus('서버 연결을 확인해주세요.'));
 

@@ -35,7 +35,12 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   const rows=[...row.values()], minR=Math.min(...rows), maxR=Math.max(...rows), px=id=>SN.pad+(lay.col.get(id)-minC)*(SN.w+SN.gx), py=id=>SN.pad+(row.get(id)-minR)*(SN.h+SN.gy);
   const LW=SN.pad*2+(keys.length-1)*(SN.w+SN.gx)+SN.w, LH=SN.pad*2+(maxR-minR)*(SN.h+SN.gy)+SN.h;
   // relations
-  const z=SCHU.netZoom||1, vw=host.clientWidth/z, vh=host.clientHeight/z, W=Math.max(LW,vw), H=Math.max(LH,vh), ox=Math.round((W-LW)/2), oy=Math.round((H-LH)/2); let sv='', hot='', hidden=0;
+  const z=SCHU.netZoom||1, vw=host.clientWidth/z, vh=host.clientHeight/z; let W=Math.max(LW,vw), H=Math.max(LH,vh), ox=Math.round((W-LW)/2), oy=Math.round((H-LH)/2); let sv='', hot='', hidden=0;
+  // Stepping through the map (a card was pressed): the pressed card stays where it was on the screen and the map is drawn around it.
+  // The sheet gets as much room on each side as that needs.
+  const anc=SCH.netAnchor&&SCH.netAnchor.id===focus?SCH.netAnchor:null; SCH.netAnchor=null; let ancScroll=null;
+  if(anc){ let sx=(ox+px(focus))*z-anc.x, sy=(oy+py(focus))*z-anc.y; if(sx<0){ox+=Math.ceil(-sx/z);W+=Math.ceil(-sx/z);sx=0;} if(sy<0){oy+=Math.ceil(-sy/z);H+=Math.ceil(-sy/z);sy=0;}
+    W=Math.max(W,Math.ceil((sx+host.clientWidth)/z)); H=Math.max(H,Math.ceil((sy+host.clientHeight)/z)); ancScroll=[sx,sy]; }
   const starts=new Map(); // one trunk per earlier card; cards of one column that all branch get trunks a little apart
   for(const k of keys){ let n=0; for(const id of lay.cols.get(k).slice().sort((a,b)=>row.get(a)-row.get(b))){ const out=lay.edges.filter(e=>e.from===id&&lay.col.get(e.to)===k+1); if(!out.length)continue; starts.set(id,px(id)+SN.w+SN.trunk+(out.length>1||n?Math.min(n,4)*7:0)); if(out.length>1)n++; } }
   const arrow=(x,y)=>`M${x-6},${y-5.2} L${x},${y} L${x-6},${y+5.2}`;
@@ -44,18 +49,19 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
     const x1=px(e.from)+SN.w, y1=py(e.from)+SN.port, x2=px(e.to)-6, same=Math.abs(py(e.to)-py(e.from))<1, y2=py(e.to)+SN.port, tx=Math.min(starts.get(e.from)||x1+SN.trunk,x2-22), s=y2>y1?1:-1, dy=Math.abs(y2-y1);
     const r1=Math.min(26,dy/2,tx-x1-4), r2=Math.min(30,dy/2,x2-tx-4);
     const d=same?`M${x1},${y1} L${x2},${y2}`:`M${x1},${y1} L${tx-r1},${y1} Q${tx},${y1} ${tx},${y1+s*r1} L${tx},${y2-s*r2} Q${tx},${y2} ${tx+r2},${y2} L${x2},${y2}`;
-    const isHot=e.from===focus||e.to===focus, g=`<g class="${isHot?'hot':''}" data-a="${e.from}" data-b="${e.to}"><path d="${d}"/><path d="${arrow(x2,y2)}"/><circle cx="${x1}" cy="${y1}" r="${isHot?3:2.4}"/>${e.type!=='FS'||e.lag?`<text x="${(tx+x2)/2+4}" y="${y2-6}" text-anchor="middle">${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''}</text>`:''}</g>`;
+    const isHot=e.from===focus||e.to===focus, g=`<g class="${isHot?'hot':''}" data-a="${e.from}" data-b="${e.to}" data-link="${e.id}"><path class="hit" d="${d}"/><path d="${d}"/><path d="${arrow(x2,y2)}"/><circle cx="${x1}" cy="${y1}" r="${isHot?3:2.4}"/>${e.type!=='FS'||e.lag?`<text x="${(tx+x2)/2+4}" y="${y2-6}" text-anchor="middle">${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''}</text>`:''}</g>`;
     if(isHot)hot+=g; else sv+=g; }
   let h='';
   for(const id of row.keys()){ const t=m.byId.get(id), x=m.res.tasks[id], done=P.isDone(t), ppl=schPeople(t);
-    h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schWbs(t.wbs)})</div><div class="nm">${esc(t.name)}</div>
-      <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who">${ppl.length?avstack(ppl,3):'<span class="sch-role none">미지정</span>'}</div><u class="sn-port" title="끌어서 다른 업무에 연결"></u></div>`; }
+    h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''} ${id===SCH.netPrev&&id!==focus?'prev':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schWbs(t.wbs)})</div><div class="nm">${esc(t.name)}</div>
+      <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who">${ppl.length?avstack(ppl,3):'<span class="sch-role none">미지정</span>'}</div>${id===SCH.netPrev&&id!==focus?'<em class="sn-prev" title="바로 전에 누른 업무">이전</em>':''}<u class="sn-port" title="끌어서 다른 업무에 연결"></u></div>`; }
   // the dots of the ground belong to the drawing: they scroll with it and grow and shrink with it
   host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z})"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
   host._lay={w:LW,h:LH};
   const info=$('#sch-net .sn-info'); if(info)info.textContent=`업무 ${row.size}${lay.total&&lay.total>row.size?' / '+lay.total:''}건 · 관계 ${lay.edges.length-hidden}건`+(hidden?` · 이웃 열이 아닌 관계 ${hidden}건은 숨김`:'');
   // keep the selected task in view
-  const key=pid+'|'+focus+'|'+SCHU.netMode+'|'+SCHU.netDepth+'|'+SCHU.netDir+'|'+SCHU.phase+'|'+z; if(host._key!==key){ host._key=key; if(SCH.ns&&SCH.ns.key===key){host.scrollLeft=SCH.ns.x;host.scrollTop=SCH.ns.y;} else{host.scrollLeft=Math.max(0,(ox+px(focus)+SN.w/2)*z-host.clientWidth/2);host.scrollTop=Math.max(0,(oy+py(focus)+SN.h/2)*z-host.clientHeight/2);} }
+  const key=pid+'|'+focus+'|'+SCHU.netMode+'|'+SCHU.netDepth+'|'+SCHU.netDir+'|'+SCHU.phase+'|'+z; if(ancScroll){ host._key=key; host.scrollLeft=ancScroll[0]; host.scrollTop=ancScroll[1]; }
+  else if(host._key!==key){ host._key=key; if(SCH.ns&&SCH.ns.key===key){host.scrollLeft=SCH.ns.x;host.scrollTop=SCH.ns.y;} else{host.scrollLeft=Math.max(0,(ox+px(focus)+SN.w/2)*z-host.clientWidth/2);host.scrollTop=Math.max(0,(oy+py(focus)+SN.h/2)*z-host.clientHeight/2);} }
   if(!host._keep){host._keep=true;host.addEventListener('scroll',()=>{if(host._key)SCH.ns={key:host._key,x:host.scrollLeft,y:host.scrollTop};},{passive:true});} }
 function schNetZoom(dir){ const host=$('#sch-net .sn-scroll'); if(!host||!host._lay)return; if(dir===0){SCHU.netZoom=Math.max(.25,Math.min(1,Math.min((host.clientWidth-8)/host._lay.w,(host.clientHeight-8)/host._lay.h)));}
   else SCHU.netZoom=Math.max(.25,Math.min(1.5,Math.round(((SCHU.netZoom||1)+dir*.15)*100)/100)); schNetBuild(S.proj); schUiSave(); }

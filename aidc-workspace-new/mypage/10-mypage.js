@@ -65,7 +65,7 @@ function mpRender(pane,moved){ if(!MP.open)return; if(pane){const r=mpParse(pane
   if(MP.hit){const n=B.querySelector(`[data-row="${MP.hit}"]`); MP.hit=''; if(n){n.classList.add('hit');n.scrollIntoView({block:'center'});setTimeout(()=>n.classList.remove('hit'),2200);}} }
 const mpHead=(t,d,extra='')=>`<div class="mp-hd"><h2>${esc(t)}</h2>${extra}</div>${d?`<div class="mp-desc">${d}</div>`:''}`;
 const mpSel=(name,val,opts,label)=>`<select class="mp-sel" data-mpc="${name}" aria-label="${esc(label)}">${opts.map(([v,t])=>`<option value="${esc(v)}" ${v===val?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
-const mpProjOpts=()=>[['','모든 프로젝트']].concat(orderedProjects().map(k=>[k,PROJECTS[k].tag]));
+const mpProjOpts=()=>[['','모든 프로젝트']].concat(orderedProjects().map(k=>[k,pname(PROJECTS[k])]));
 const mpTitle=i=>(i&&i.title||'').split('\n').join(' ').trim()||'(제목 없음)';
 const mpWhen=ts=>{const n=new Date(ts); return !ts||isNaN(n)?'':fmtStampShort(n);};
 const mpCheck=(on,act,label)=>`<button class="mp-cb ${on?'on':''}" role="checkbox" aria-checked="${on?'true':'false'}" data-mp="${act}" aria-label="${esc(label)}">${on?svg('i-check-lt',9.6,8.3):''}</button>`;
@@ -83,8 +83,9 @@ function mpFormState(form){ const box=$(`[data-mpstate="${form}"]`), btn=$(`[dat
   $$(`[data-mperr^="${form}."]`).forEach(n=>{const m=err[n.dataset.mperr.split('.')[1]]||''; n.textContent=m; const inp=$(`[data-mpf="${n.dataset.mperr}"]`); if(inp)inp.setAttribute('aria-invalid',m?'true':'false');});
   const dot=$(`#mnav [data-mp="go:${form==='ws'?'settings.general':'account.profile'}"]`); if(dot){const has=!!$('.dty',dot); if(has!==dirty)mpNav();} }
 const mpClean=v=>String(v||'').replace(/\s+/g,' ').trim();
-function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||'']))}; }
+function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||''])),holidays:(Array.isArray(SETTINGS.holidays)?SETTINGS.holidays:[]).join(', ')}; }
 // The company's places the footer links to (설정 › 워크스페이스 › 일반).
+const mpDays=v=>{ const parts=String(v||'').split(/[\s,]+/).filter(Boolean), ok=parts.filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(new Date(x+'T00:00:00'))); return {days:[...new Set(ok)].sort(),bad:ok.length!==parts.length}; };
 const MP_LINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
 function mpDraft(form){ return MP.draft[form]||(MP.draft[form]={...mpOrigin(form)}); }
 function mpDirty(form){ const d=MP.draft[form]; if(!d)return false; const o=mpOrigin(form); return Object.keys(o).some(k=>mpClean(d[k])!==mpClean(o[k])); }
@@ -94,7 +95,8 @@ function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
     const em=mpClean(d.email).toLowerCase(); if(em){ if(em.length>80||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))e.email='이메일 주소 형식이 아닙니다. (예: name@sunjin.co.kr)'; else if(Object.entries(MEMBERS_META).some(([id,m])=>id!==sharedUser&&m&&String(m.email||'').toLowerCase()===em))e.email='다른 멤버가 쓰고 있는 주소입니다.'; } }
   else { if(!mpClean(d.wsName))e.wsName='워크스페이스 이름을 입력하세요.'; else if(mpClean(d.wsName).length>30)e.wsName='30자까지 쓸 수 있습니다.'; if(mpClean(d.org).length>60)e.org='60자까지 쓸 수 있습니다.';
     const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.';
-    for(const [k] of MP_LINKS){ const v=mpClean(d['lk_'+k]); if(v&&!/^https?:\/\/[^\s]+$/.test(v))e['lk_'+k]='http:// 또는 https:// 로 시작하는 주소를 입력하세요.'; } }
+    for(const [k] of MP_LINKS){ const v=mpClean(d['lk_'+k]); if(v&&!/^https?:\/\/[^\s]+$/.test(v))e['lk_'+k]='http:// 또는 https:// 로 시작하는 주소를 입력하세요.'; }
+    if(mpDays(d.holidays).bad)e.holidays='날짜는 2026-06-03 처럼 쓰고 쉼표로 나눕니다.'; }
   return e; }
 const mpField=(form,k,label,o={})=>{ const d=mpDraft(form); return `<label class="fl" data-row="${k}"><span>${esc(label)}</span><div><input data-mpf="${form}.${k}" value="${esc(d[k])}" maxlength="${o.max||80}" ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ro?'readonly':''} ${o.type?`type="${o.type}"`:''} autocomplete="off">${o.note?`<small>${o.note}</small>`:''}<em class="err" data-mperr="${form}.${k}" role="alert"></em></div></label>`; };
 const mpFixed=(label,val,o={})=>`<div class="fl ro" ${o.row?`data-row="${o.row}"`:''}><span>${esc(label)}</span><div><span class="val">${val}</span>${o.note?`<small>${o.note}</small>`:''}</div></div>`;
@@ -105,7 +107,8 @@ async function mpSave(form){ if((MP.state[form]||{}).k==='saving'||!mpDirty(form
         if(name!==sharedName)await sharedSetName(name);                                                   // the Worker checks the name itself and answers with the stored one
         if(title!==(cur.title||'')||email!==(cur.email||'')){ const next={...cur,title,email}; if(!title)delete next.title; if(!email)delete next.email; MEMBERS_META[sharedUser]=next; } }
       else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl);
-        const links=Object.fromEntries(MP_LINKS.map(([k])=>[k,mpClean(d['lk_'+k])]).filter(([,v])=>v)); if(JSON.stringify(links)!==JSON.stringify(SETTINGS.links||{}))SETTINGS.links=links; }
+        const links=Object.fromEntries(MP_LINKS.map(([k])=>[k,mpClean(d['lk_'+k])]).filter(([,v])=>v)); if(JSON.stringify(links)!==JSON.stringify(SETTINGS.links||{}))SETTINGS.links=links;
+        const hd=mpDays(d.holidays).days; if(JSON.stringify(hd)!==JSON.stringify(SETTINGS.holidays||[]))SETTINGS.holidays=hd; }
       const why=await mpCommit(ids);
       if(why==='pending'){MP.state[form]={k:'pending'};mpWatch(form,ids);} else if(why){MP.state[form]={k:'error',m:why}; delete MP.draft[form];} else {MP.state[form]={k:'saved',at:Date.now()}; delete MP.draft[form];}
   }catch(err){ MP.state[form]={k:'error',m:(err&&err.message)||'저장하지 못했습니다. 입력한 내용은 그대로 있습니다.'}; }
@@ -160,7 +163,7 @@ function mpActList(){ const a=MP.act, all=mpActLists()[a.tab]||[], q=a.q.trim().
   const rows=all.filter(i=>(!a.type||mpGroup(i)===a.type)&&(!a.proj||(!i.arch&&i.proj===a.proj))&&(!q||mpTitle(i).toLowerCase().includes(q))).sort((x,y)=>String(y.updatedAt||y.createdAt||'').localeCompare(String(x.updatedAt||x.createdAt||''))||newestFirst(x,y));
   if(!all.length)return `<div class="mp-none">${a.tab==='drafts'?'작성 중인 초안이 없습니다.':a.tab==='assigned'?'담당자로 지정된 항목이 없습니다.':'아직 작성한 항목이 없습니다.'}</div>`;
   if(!rows.length)return '<div class="mp-none">조건에 맞는 항목이 없습니다. <button class="mp-link" data-mp="act-clear">필터 지우기</button></div>';
-  return `<div class="mp-tbl act"><div class="hd"><span>제목</span><span>구분</span><span>프로젝트</span><span>상태</span><span>마지막 수정</span></div>${rows.slice(0,a.n).map(i=>`<div class="rw"><button class="t1 lk" data-mopen="${esc(i.id)}">${esc(mpTitle(i))}</button><span class="mut">${esc(typeName(i))}</span><span class="mut">${esc(i.arch?'':proj(i.proj).tag||'')}</span><span class="mut">${i.status==='draft'?'초안':'게시됨'}</span><span class="mut">${esc(mpWhen(i.updatedAt||i.createdAt))}</span></div>`).join('')}</div>
+  return `<div class="mp-tbl act"><div class="hd"><span>제목</span><span>구분</span><span>프로젝트</span><span>상태</span><span>마지막 수정</span></div>${rows.slice(0,a.n).map(i=>`<div class="rw"><button class="t1 lk" data-mopen="${esc(i.id)}">${esc(mpTitle(i))}</button><span class="mut">${esc(typeName(i))}</span><span class="mut">${esc(i.arch?'':pname(proj(i.proj)))}</span><span class="mut">${i.status==='draft'?'초안':'게시됨'}</span><span class="mut">${esc(mpWhen(i.updatedAt||i.createdAt))}</span></div>`).join('')}</div>
   <div class="mp-more"><span>${rows.length}건 중 ${Math.min(a.n,rows.length)}건 표시</span>${rows.length>a.n?'<button class="mp-btn sec" data-mp="act-more">더 보기</button>':''}</div>`; }
 
 /* ---------- 수신함 ---------- */
@@ -213,6 +216,8 @@ function mpWs(){ const adm=canAdmin();
   <div class="mp-form">${mpField('ws','wsName','워크스페이스 이름',{max:30,note:'왼쪽 위 로고와 브라우저 탭 제목에 쓰입니다.'})}${mpField('ws','org','소속',{max:60})}${mpField('ws','dropboxUrl','부서 드롭박스 주소',{max:300,ph:'https://www.dropbox.com/...'})}</div>
   <div class="mp-sub" style="margin-top:34px"><h3>푸터 링크</h3></div><div class="mp-desc" style="font-size:12.5px;font-weight:400;color:#8e8e8e">모든 페이지 맨 아래에 표시됩니다. 비워 두면 흐리게 보이고 눌러도 열리지 않습니다.</div>
   <div class="mp-form" style="margin-top:16px">${MP_LINKS.map(([k,t])=>mpField('ws','lk_'+k,t,{max:300,ph:'https://'})).join('')}</div>
+  ${PREVIEW_ON?`<div class="mp-sub" style="margin-top:34px"><h3>캘린더 공휴일</h3></div><div class="mp-desc" style="font-size:12.5px;font-weight:400;color:#8e8e8e">법정 공휴일과 대체공휴일은 자동으로 빨간 날짜가 됩니다. 선거일·임시공휴일처럼 따로 정해지는 날만 여기에 적습니다.</div>
+  <div class="mp-form" style="margin-top:16px">${mpField('ws','holidays','추가 공휴일',{max:400,ph:'예: 2026-06-03, 2027-03-03'})}</div>`:''}
   <div class="mp-foot"><button class="mp-btn" data-mp="save:ws" disabled>변경 사항 저장</button>${mpDirty('ws')?'<button class="mp-btn sec" data-mp="undo:ws">되돌리기</button>':''}<span class="mp-state" data-mpstate="ws" role="status"></span></div>`+mpAfter('ws'); }
 
 /* ---------- 휴지통 ---------- */

@@ -127,8 +127,8 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.click('#panel-pin [data-pick="proj-x"]'); await sleep(400);
   check('the x takes the project off', await ev(i => item(i).proj === '' && !document.querySelector('#panel-pin [data-pick="proj-x"]'), iid));
   await ev(i => { item(i).proj = 'pangyo'; rerenderItem(i); }, iid); await sleep(400);
-  await a.click('#panel-pin [data-pick="st"]'); await sleep(250);
-  check('its status menu carries the same marks', await ev(() => [...document.querySelectorAll('.pop .it .sch-st use')].map(u => u.getAttribute('href')).join() === '#i-st-prog,#i-st-done'));
+  await a.click('#panel-pin [data-pick="stx"]'); await sleep(250);   // since the eighth round an ordinary action has the six marks of a task
+  check('its status menu carries the same marks', await ev(() => [...document.querySelectorAll('.pop .it .sch-st use')].map(u => u.getAttribute('href')).join() === '#i-st-plan,#i-st-ask,#i-st-prog,#i-st-done,#i-st-hold,#i-st-cond'));
   await ev(() => closePop());
   await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click('.pop .it:has-text("9) 시운전 지원")'); await sleep(400);
   await a.click('#panel-pin [data-ed="publish"]'); await sleep(1300); await ev(() => closePanel(true)); await sleep(300);

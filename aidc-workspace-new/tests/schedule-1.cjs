@@ -20,7 +20,7 @@ const sfx = Date.now().toString(36).slice(-5);
   check('without it the page is what it was (action table, roadmap, no schedule)', !pc.pv && !pc.act && pc.road && pc.old && !pc.ops, pc);
   await ev(a, () => go('project:busan')); await sleep(500);
   const pb = await ev(a, () => ({ act: !!document.querySelector('#sch-actions'), road: !!document.querySelector('.road'), old: !!document.querySelector('#page-project [data-sec="action"]') }));
-  check('a project without a schedule keeps its action table; the roadmap is gone in the preview', !pb.act && !pb.road && pb.old, pb);
+  check('a project without a workbook has the schedule sections too (eighth round); the roadmap is gone in the preview', pb.act && !pb.road && !pb.old, pb);
   await goP(a);
 
   console.log('— gantt');

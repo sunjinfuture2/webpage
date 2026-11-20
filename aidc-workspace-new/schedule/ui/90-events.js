@@ -1,10 +1,14 @@
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
   if(k==='reload'){schLoad(pid);schRefresh();return;}
+  if(k==='newphase'&&m){e.stopPropagation();schNewPhase(pid,m,code=>{if(!SCHU.open.includes(code))SCHU.open.push(code);schRefresh();});return;}
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
-  if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}
+  if(k==='xlsx'){e.stopPropagation();schXlsxSection(pid,v);return;}
+  if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v), g=m.phases.find(x=>x.code===v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);if(g&&!g.tasks.length)t.phaseLabel=g.label;if(t.order==null)t.order=Math.max(0,...d.tasks.map(x=>+x.order||0))+1;d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}
   // a task in the gantt or the relation map: the first click selects it (green, its direct relations drawn stronger), the second opens it
-  if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;} SCHU.sel=v; schUiSave(); if($('#sch-gantt'))schGanttBuild(pid); if($('#sch-net'))schNetBuild(pid); return; }
+  if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;}
+    { const card=el.closest('#sch-net .sn-node'), host=card&&$('#sch-net .sn-scroll'); if(card&&host){ const r=card.getBoundingClientRect(), hr=host.getBoundingClientRect(), kz=LAYOUT.zoom||1; SCH.netPrev=schTaskIdOf(S.panel)||SCHU.sel||''; SCH.netAnchor={id:v,x:(r.left-hr.left)/kz,y:(r.top-hr.top)/kz}; } else SCH.netPrev=''; }
+    SCHU.sel=v; schUiSave(); if($('#sch-gantt'))schGanttBuild(pid); if($('#sch-net'))schNetBuild(pid); return; }
   if(k==='tab'){if(SCHU.tab!==v){SCHU.tab=v;schRefresh();}return;}
   if(k==='col'&&m){e.stopPropagation();schColMenu(el,pid,m,v);return;}
   if(k==='chip'){ e.stopPropagation(); if(v==='procState'||v==='evState'){SCHU[v]='';SCHU.evPage=1;schLowerRefresh();return;} if(v==='phase')SCHU.phase=''; else if(v==='scope')SCHU.scope='all'; else if(v==='who')SCHU.who=''; else if(v.startsWith('cf:'))delete schCf()[v.slice(3)]; SCHU.page=1; schRefresh(); return; }
@@ -21,7 +25,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='ops'){SCHU.tab='gantt';const t=m&&m.byWbs.get('W8.6');if(t){SCHU.sel=t.id;if(!SCHU.open.includes(t.phase))SCHU.open.push(t.phase);}schRefresh();const top=$('#sch-actions');if(top)top.scrollIntoView({block:'start',behavior:'smooth'});return;}
   if(k==='pick'&&m&&['procState','evKind','evState'].includes(v)){ const setL=(key,val)=>()=>{SCHU[key]=val;SCHU.evPage=1;if(key==='evKind')SCHU.evState='';schLowerRefresh();}; let items;
     if(v==='procState')items=[{t:'전체 상태',sel:!SCHU.procState,fn:setL('procState','')}].concat(SCH_COMMIT.map(x=>({t:x,sel:SCHU.procState===x,fn:setL('procState',x)})));
-    else if(v==='evKind')items=SCH_EV.map(([key,t])=>({t:`${t} (${((SCH.src[pid]||{})[key]||[]).length})`,sel:SCHU.evKind===key,fn:setL('evKind',key)}));
+    else if(v==='evKind')items=SCH_EV.map(([key,t])=>({t:`${t} (${schEvRows(pid,key).length})`,sel:SCHU.evKind===key,fn:setL('evKind',key)}));
     else items=[{t:'전체 상태',sel:!SCHU.evState,fn:setL('evState','')}].concat([...new Set(schEvRows(pid,SCHU.evKind).map(r=>r.st).filter(Boolean))].map(x=>({t:x,sel:SCHU.evState===x,fn:setL('evState',x)})));
     e.stopPropagation(); menuPop(el,items.map((x,i)=>({...x,k:String(i)}))); return; }
   if(k==='pick'&&m){ const set=(key,val,extra)=>()=>{SCHU[key]=val;SCHU.page=1;if(extra)extra();schRefresh();}; let items=[];
@@ -34,7 +38,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
     else if(v==='netDir')items=[['both','선행+후행'],['before','선행만'],['after','후행만']].map(([key,t])=>({t,sel:SCHU.netDir===key,fn:set('netDir',key)}));
     else if(v==='who'){ const ppl=[...new Set(m.plan.tasks.flatMap(schPeople))], roles=[...new Set(m.plan.tasks.filter(t=>!schPeople(t).length).map(schRole).filter(Boolean))].sort();
       items=[{t:'전체 담당자',sel:!SCHU.who,fn:set('who','')},...(ppl.length?['-',{hd:'멤버'},...ppl.map(x=>({t:userName(x),sel:SCHU.who===x,fn:set('who',x)}))]:[]),...(roles.length?['-',{hd:'실행 역할 (멤버 미지정)'},...roles.map(x=>({t:x,sel:SCHU.who==='r:'+x,fn:set('who','r:'+x)}))]:[])]; }
-    e.stopPropagation(); menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{right:v==='per'}); return; }
+    e.stopPropagation(); menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)})); return; }
 });
 let schQT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!(t.matches&&t.matches('input[data-schq]')))return; const key=t.dataset.schq; SCHU[key]=t.value; SCHU.page=1; SCHU.upage=1; SCHU.evPage=1; clearTimeout(schQT); schQT=setTimeout(key==='lq'?schLowerRefresh:schRefresh,140); });
@@ -45,7 +49,7 @@ window.addEventListener('resize',()=>{ clearTimeout(schQT); schQT=setTimeout(()=
 // Dragging a bar of the gantt moves the task's managed dates by whole days (not for a task that has started or whose length is a rule).
 // What is drawn is the forecast, so the new managed start is "forecast start + the days dragged"; if a predecessor still holds the task, the toast says so.
 // A line of the gantt can be clicked: the menu of that relation opens where the pointer is.
-document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt g[data-link]'); if(!g||!schReady(S.proj))return; e.stopPropagation(); const a=document.createElement('i'); a.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY-6}px;width:1px;height:1px`; document.body.appendChild(a); schRelMenu(a,S.proj,g.dataset.link); a.remove(); },true);
+document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt g[data-link],#sch-net g[data-link]'); if(!g||!schReady(S.proj))return; e.stopPropagation(); const a=document.createElement('i'); a.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY-6}px;width:1px;height:1px`; document.body.appendChild(a); schRelMenu(a,S.proj,g.dataset.link); a.remove(); },true);
 // (Moving a bar, pulling its ends and pulling a relation: schBarDrag / schLinkDrag in 68-feedback.js.)
 // Preview marker in the top bar (and the way back to the page everybody else sees).
 function schPreviewBadge(){ if(!schPreview()||$('#sch-pv'))return; const host=$('#tb-user'); if(!host)return; /* inside the user block: the top bar places its parts absolutely */ const b=document.createElement('button'); b.id='sch-pv'; b.className='sch-pv'; b.type='button'; b.textContent='미리보기'; b.title='일정 통합 화면 미리보기 중입니다';

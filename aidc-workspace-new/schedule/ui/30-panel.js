@@ -101,7 +101,9 @@ function schRefMenu(el,it,pid,t){ const cur=((SCHED[pid]||{})['c:'+t.id]||{}).id
   const p=openPop(el,`<div style="padding:6px 6px 4px"><input id="sch-rf-q" placeholder="미팅 · 리서치 검색"></div><div class="hd">미팅 · 리서치 연결</div><div class="sch-tm"></div>`,{cls:'link'}), box=p.querySelector('.sch-tm'), inp=p.querySelector('#sch-rf-q');
   const draw=()=>{const q=inp.value.trim();box.innerHTML=all.filter(i=>!q||matchQ(q,i.title,proj(i.proj).tag)).slice(0,60).map(i=>`<div class="it" data-r="${esc(i.id)}"><b style="font-weight:600;min-width:46px;color:#8e8e8e">${i.type==='meeting'?'미팅':'리서치'}</b>${esc(short(i.title))}</div>`).join('')||'<div class="msg">맞는 자료가 없습니다.</div>';};
   draw(); inp.oninput=draw; inp.focus(); p.addEventListener('click',e=>{const x=e.target.closest('.it[data-r]');if(!x)return;e.stopPropagation();closePop();schTagged(it,()=>schSet(pid,'c:'+t.id,{ids:cur.concat(x.dataset.r)},'참고 자료를 연결했습니다'));}); }
-document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-schp]'); if(!el)return; const it=curItem(); if(!it||!schReady(it.proj))return; const k=el.dataset.schp, pid=it.proj, m=schModel(pid), A=AIDCSchedule;
+document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-schp]'); if(!el)return; const it=curItem(); if(!it)return;
+  if(el.dataset.schp==='atab'){ SCHP.tab=el.dataset.k; rerenderItem(it.id); return; }   // the tabs of an ordinary action (it may have no project yet)
+  if(!schReady(it.proj))return; const k=el.dataset.schp, pid=it.proj, m=schModel(pid), A=AIDCSchedule;
   if(k==='tab'){SCHP.tab=el.dataset.k;if(it.editing)schPropsRefresh(it);else rerenderItem(it.id);return;}
   if(k==='more'){SCHP.more=!SCHP.more;if(it.editing)schPropsRefresh(it);else rerenderItem(it.id);return;}
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.

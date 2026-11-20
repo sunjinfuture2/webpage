@@ -35,7 +35,7 @@ const sfx = Date.now().toString(36).slice(-5);
   const d1 = await api(q, '/api/versions?item=' + dr), d2 = await api(p, '/api/versions?item=' + dr);
   check('HIST a draft has no history and another member cannot ask for it', d1.status === 404 && d2.status === 200 && d2.body.versions.length === 0, [d1, d2]);
   // an item of the first editor that has no history yet (earlier runs against the same database may have used some)
-  const seedId = await ev(async () => { for (const x of ITEMS.filter(y => y.status === 'published' && y.type === 'action' && !y.arch && y.body && !y.ed && !/검수|버전/.test(y.title || '') && !otherLock('item:' + y.id))) { const d = await (await apiFetch('/api/versions?item=' + x.id)).json(); if (d.versions && !d.versions.length) return x.id; } return null; });
+  const seedId = await ev(async () => { for (const x of ITEMS.filter(y => y.status === 'published' && y.type === 'research' && !y.agent && !y.arch && y.body && !y.ed && !/검수|버전/.test(y.title || '') && !otherLock('item:' + y.id))) { const d = await (await apiFetch('/api/versions?item=' + x.id)).json(); if (d.versions && !d.versions.length) return x.id; } return null; });
   const seedBody = await ev(i => item(i).body, seedId); await editSave(p, seedId, ' (검수 중 덧붙임)');
   vs = (await api(p, '/api/versions?item=' + seedId)).body.versions;
   check('HIST the first change of an item written earlier also keeps what was there before', vs.length === 2 && vs[1].kind === 'base' && vs[0].kind === 'save', vs);
@@ -90,6 +90,7 @@ const sfx = Date.now().toString(36).slice(-5);
   check('SYNC when the source is gone the block says so instead of showing stale content', await ev(() => /원본 블록을 찾을 수 없습니다/.test(document.querySelector('#panel-pin .ibody[data-nb="read"] .nb-synced').textContent)));
 
   console.log('— item list');
+  await ev(t => { newItem('action', { title: t, proj: 'pangyo', status: 'published' }); }, '목록 액션 ' + sfx); await ev(() => sharedFlush(true)); await sleep(300);   // the demo actions are gone (2026-11-20): one of our own to list and open
   await ev(t => { const it = newItem('research'); it.title = t; openPanel(it.id); }, '목록 ' + sfx); await sleep(350); await p.click('#panel-pin .ProseMirror'); await kb.type('/'); await sleep(120); await kb.type('항목'); await sleep(250); await menuPick('항목 목록'); await sleep(300);
   const want = await ev(() => ({ all: ITEMS.filter(x => x.status !== 'trash' && x.status !== 'new' && isPub(x) && !x.arch).length, action: ITEMS.filter(x => isPub(x) && !x.arch && x.type === 'action').length }));
   check('LIST "/항목 목록" shows the items of the workspace', /itemList/.test(await doc()) && await ev(w => { const d = document.querySelector('#panel-pin .ProseMirror .nb-itemlist'); return !!d && d.querySelector('.nb-il-n').textContent === w.all + '건' && d.querySelectorAll('.nb-il-r').length === Math.min(10, w.all); }, want), want);

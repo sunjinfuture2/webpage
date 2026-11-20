@@ -60,6 +60,7 @@ const myCss=await fs.readFile(new URL('mypage/mypage.css',root),'utf8');
 let schedUi='';
 for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.endsWith('.js')).sort())schedUi+='\n/* ---- schedule/ui/'+f+' ---- */\n'+await fs.readFile(new URL('schedule/ui/'+f,root),'utf8');
 if(/<\/script/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing script tag');
+if(/<\/body>/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing body tag (write <\\/body>): the scripts that follow are put in front of the first one');
 schedUi=schedUi.replace('__SCH_XLSX_V__',xlsxV);
 if(!html.includes('<style id="nb-style">'))throw new Error('build-shared: editor stylesheet anchor missing');
 html=html.replace('<style id="nb-style">',()=>'<style id="sch-style">\n'+schedCss+'</style>\n<script src="/schedule.js?v='+createHash('sha256').update(schedJs).digest('hex').slice(0,12)+'"></script>\n<style id="nb-style">');

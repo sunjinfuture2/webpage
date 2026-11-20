@@ -35,7 +35,7 @@ const { chromium, sleep, check, newUser, done } = require('./h.cjs');
 
   console.log('— moving elsewhere');
   await ev(i => openPanel(i), id); await sleep(300); await p.click('#panel-pin [data-ed="edit"]'); await sleep(400); await p.click('#panel-pin .ProseMirror'); await kb.press('Control+End'); await kb.type(' 이동'); await sleep(120);
-  const other = await ev(i => { const x = ITEMS.find(y => y.id !== i && y.status === 'published' && y.type === 'action' && !y.arch); return x && x.id; }, id);
+  const other = await ev(i => { const x = ITEMS.find(y => y.id !== i && y.status === 'published' && (y.type === 'action' || y.type === 'research') && !y.agent && !y.arch); return x && x.id; }, id);
   await ev(i => openPanel(i), other); await sleep(350);
   check('opening another item saves the first one without a question', !(await dlg()) && await ev(([i, o]) => S.panel === o && /이동/.test(item(i).body) && !item(i).editing, [id, other]));
   await ev(i => openPanel(i), id); await sleep(300); await p.click('#panel-pin [data-ed="edit"]'); await sleep(400); await p.click('#panel-pin .ProseMirror'); await kb.press('Control+End'); await kb.type(' 메뉴'); await sleep(120);
