@@ -69,7 +69,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   console.log('— footer');
   const foot = async () => ev(() => { const f = document.querySelector('.page.on .pfoot'); if (!f) return null; const prev = f.previousElementSibling; return { gap: Math.round(f.getBoundingClientRect().top - prev.getBoundingClientRect().bottom), cols: f.querySelectorAll('.fc').length, logo: f.querySelector('.flogo').textContent, last: f.parentElement.lastElementChild === f }; });
   const f1 = await foot(); await goP(); const f2 = await foot(); await ev(() => go('archive')); await sleep(500); const f3 = await foot();
-  check('one footer below every page, after the same room', f1 && f2 && f3 && f1.gap === 120 && f2.gap === 120 && f3.gap === 120 && f1.cols === 4 && f1.last && f2.last && f3.last, { f1, f2, f3 });
+  check('one footer below every page, after the same room', f1 && f2 && f3 && f1.gap === 240 && f2.gap === 240 && f3.gap === 240 && f1.cols === 4 && f1.last && f2.last && f3.last, { f1, f2, f3 });
   await a.click('.page.on .pfoot [data-foot="trash"]'); await sleep(400);
   check('its links work (휴지통 opens the my page there)', await ev(() => MP.open && mpKey() === 'trash')); await ev(() => closeModal());
   await a.click('.page.on .pfoot [data-go="main"]'); await sleep(500);

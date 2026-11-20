@@ -1887,6 +1887,137 @@ html{overflow:hidden}
 .pop.sch-at .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pop.sch-at .it .m{font-size:11px;color:#a6a6a6;flex:none}
 .pop.sch-at .it.sel{background:#f0f0f0}
+
+/* ===== seventh round (owner, 2026-11-20) ===== */
+/* calendar: the count of actions carries the project's colour (pale on other days, full today) */
+.cal.pv .cell .acnt svg{color:var(--pc,#4f4f4f);opacity:.3}
+.cal.pv .cell.today .acnt svg{color:var(--pc,#4f4f4f);opacity:1}
+/* the list beside the calendar and the day window: a soft upper edge once scrolled */
+.rlist.sch .rcap::after{content:"";position:absolute;left:0;right:0;top:100%;height:20px;background:linear-gradient(to bottom,#fff,rgba(255,255,255,0));pointer-events:none;opacity:0;transition:opacity .15s}
+.rlist.sch .rcap.stuck::after{opacity:1}
+.sch-daypop .dp-in.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px);mask-image:linear-gradient(to bottom,transparent,#000 22px)}
+.sch-daypop .dp-in.cut.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+/* sidebar: only what is open is dark */
+.sch-on .sb .recent .r0{color:#8e8e8e}
+.sch-on .sb .recent .r3{color:#8e8e8e}
+.sch-on .sb .recent .item.on,.sch-on .sb .recent .r0.on{color:#2b2b2b}
+/* the way to the open page: only its last part at full strength */
+.sch-on #crumbs > :not(:last-child){opacity:.5}
+.sch-on #crumbs > [data-go]:not(:last-child):hover{opacity:.85}
+/* footer */
+.pfoot{margin-top:240px}
+.pfoot .fline{position:relative;left:calc(-1 * var(--L));width:calc(100% + var(--L) * 2)}
+.pfoot .flogo{color:#0f0f0f}
+.pfoot .fout{display:flex;align-items:center;gap:14px;margin-top:16px}
+.pfoot .fout .fx{font-size:12.5px;color:#4f4f4f;cursor:pointer}
+.pfoot .fout .fx:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fout .fsns{display:inline-flex;align-items:center;gap:8px;margin-left:6px}
+.pfoot .fout .fx.ic{width:20px;height:20px;display:inline-flex;color:#9a9a9a}
+.pfoot .fout .fx.ic svg{width:20px;height:20px;display:block}
+.pfoot .fout .fx.ic:hover{color:#4f4f4f;text-decoration:none}
+.pfoot .fout .fx.off{opacity:.45}
+/* research cards share the width: never narrower than 210.3, as many in a row as fit */
+.sch-on .rgrid{grid-template-columns:repeat(auto-fill,minmax(210.3px,1fr))}
+/* tags of filters: the word 1 lower; on a project page in the project's colour, like a picker that is set */
+.sch-chip{padding-top:2px}
+#page-project .sch-chip{color:var(--pjc,#5c5c5c)}
+#page-project .sch-chip i{color:var(--pjc,#9a9a9a);opacity:.6}
+#page-project .sch-chip:hover{color:var(--pjc,#0f0f0f)}
+#page-project .sch-filters .sf.set span{color:var(--pjc,#000)}
+
+/* --- seventh round, project page --- */
+/* the + of the lower section a little higher */
+.sch-title .sch-evadd.up{top:-40px}
+/* gantt: scroll bar below; nothing of a phase row is cut at the left; the shade of the table's edge darkens what is under it (it used to lighten dark bars) */
+.sg-topbar{border-bottom:0;border-top:1px solid #f1f1f1}
+.sg-row.ph .tw{margin:0 5.6px 0 .5px;width:10px;overflow:visible}
+.sg-left::after{background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,0));mix-blend-mode:multiply}
+/* the % tags: one closed shape, its tip on the chart's edge, its middle on the dashed line */
+.sg-tags b{left:-41px;margin-top:-7.5px;height:15px;width:40px;padding:0;border:0;background:none;border-radius:0;line-height:15px}
+.sg-tags b::after{display:none}
+.sg-tags b svg{position:absolute;left:0;top:0;display:block}
+.sg-tags b span{position:absolute;left:0;top:0;width:31px;text-align:center;font-size:9px;font-weight:500;color:#8e8e8e;line-height:15px}
+/* a bar's ends: pulled to change the start or the finish */
+.sg-bar .rz{position:absolute;top:-1px;bottom:-1px;width:7px;cursor:ew-resize;z-index:3}
+.sg-bar .rz.l{left:-1px}.sg-bar .rz.r{right:-1px}
+.sg-bar .rz::after{content:"";position:absolute;top:5px;bottom:5px;width:2px;border-radius:1px;background:#8e8e8e;opacity:0;transition:opacity .12s}
+.sg-bar .rz.l::after{left:2px}.sg-bar .rz.r::after{right:2px}
+.sg-bar:hover .rz::after{opacity:.55}
+.sg-bar .rz:hover::after{opacity:1;background:#1f8e00}
+.sg-bar{cursor:grab}
+.sg-bar.drag{cursor:grabbing;background:#eef6ec;border-color:#1f8e00;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+/* where a bar stood: a dashed outline (while it is pulled, and for a moment after a change) */
+.sg-ghost{position:absolute;height:22px;border:1px dashed #9a9a9a;border-radius:4.5px;background:rgba(0,0,0,.025);z-index:1;pointer-events:none;transition:opacity .6s}
+.sg-ghost.ms{width:14px;height:14px;border-radius:2px;transform:rotate(45deg)}
+.sg-ghost.out{opacity:0}
+/* the dates above the ends of a bar that is pulled */
+.sg-dlab{position:absolute;z-index:6;height:15px;padding:0 5px;border-radius:3px;background:#fff;border:1px solid #d9d9d9;font-style:normal;font-size:10.5px;line-height:13px;color:#6f6f6f;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+.sg-dlab.l{transform:translateX(-100%)}.sg-dlab.c{transform:translateX(-50%)}
+.sg-dlab.on{background:#1f8e00;border-color:#1f8e00;color:#fff;font-weight:600}
+.sg-tip b{margin-right:7px;color:#9be58b;font-weight:700}
+/* bars that moved */
+@keyframes sgChg{0%,60%{box-shadow:0 0 0 2px rgba(31,142,0,.55)}100%{box-shadow:0 0 0 2px rgba(31,142,0,0)}}
+.sg-bar.chg,.sg-msb.chg{animation:sgChg 3.4s ease-out}
+/* pulling a relation: the line as it will be drawn, the end of the target that is meant */
+.sg-links .draft{stroke:#1f8e00;stroke-width:1.5;stroke-dasharray:4 3;fill:none}
+.sg-links .draft.head{stroke-dasharray:none}
+.sg-scroll.linking .sg-bar .pt{display:block;opacity:.5}
+.sg-bar.target.ts{box-shadow:-3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+.sg-bar.target.tf{box-shadow:3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+/* the card that says what a change did */
+@keyframes schCardIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.sch-card{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:350;width:520px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #d9d9d9;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.18);padding:14px 16px 12px;font-size:13px;color:#1c1c1c;letter-spacing:-0.012em;animation:schCardIn .18s ease-out}
+.sch-card .c-hd{display:flex;align-items:center;gap:8px}
+.sch-card .c-hd b{flex:1;font-size:14px;font-weight:700}
+.sch-card .c-x{width:22px;height:22px;border-radius:4px;font-size:16px;line-height:20px;color:#8e8e8e}
+.sch-card .c-x:hover{background:#f0f0f0;color:#0f0f0f}
+.sch-card .c-ln{display:flex;align-items:center;gap:10px;min-height:26px}
+.sch-card .c-ln.c-first{margin-top:8px;padding:8px 10px;border-radius:6px;background:#f7f7f6}
+.sch-card .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-card .nm b{font-weight:600;margin-right:5px}
+.sch-card .rg{flex:none;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:12.5px}
+.sch-card .rg s{color:#a6a6a6;text-decoration:line-through}
+.sch-card .rg strong{font-weight:600}
+.sch-card .rg svg{color:#a6a6a6}
+.sch-card .mut{color:#8e8e8e}
+.sch-card .c-note{margin-top:6px;font-size:12px;color:#b76b00}
+.sch-card .c-facts{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:#6f6f6f}
+.sch-card .c-facts b{color:#1c1c1c;font-weight:600}
+.sch-card .c-facts .late,.sch-card .c-facts .late b,.sch-card em.late{color:#e02020}
+.sch-card .c-facts .early,.sch-card .c-facts .early b,.sch-card em.early{color:#1f8e00}
+.sch-card .c-more{margin-top:8px;max-height:176px;overflow-y:auto;border-top:1px solid #ededed;padding-top:4px;scrollbar-width:thin}
+.sch-card .c-more em{flex:none;width:44px;text-align:right;font-style:normal;font-size:12px;font-variant-numeric:tabular-nums}
+.sch-card .c-bt{display:flex;align-items:center;gap:8px;margin-top:12px}
+.sch-card .c-bt .sp{flex:1}
+.sch-card .c-bt button{height:28px;padding:0 12px;border-radius:5px;border:1px solid #d9d9d9;background:#fff;font-size:12.5px;color:#1c1c1c}
+.sch-card .c-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-card .c-bt button:hover{filter:brightness(.96)}
+/* the relation window: the kinds as small pictures, the outcome in one line */
+.dlg.sch-dlg .pp-types button{display:inline-flex;align-items:center;gap:7px}
+.dlg.sch-dlg .pp-types button .rg{flex:none;color:#6f6f6f}
+.dlg.sch-dlg .pp-types button.on .rg{color:#fff}
+.dlg.sch-dlg .pp-sum{display:flex;align-items:center;flex-wrap:wrap;gap:0 2px;margin:0 0 14px;padding:10px 14px;border-radius:7px;background:#f4f4f3;font-size:14px;color:#3d3d3d}
+.dlg.sch-dlg .pp-sum b{font-weight:700;margin:0 3px}
+.dlg.sch-dlg .pp-sum i{width:1px;height:12px;background:#cfcfcf;margin:0 12px}
+.dlg.sch-dlg .pp-sum.late{background:#fdf1f0;color:#b3261e}
+.dlg.sch-dlg .pp-sum.early{background:#eef6ec;color:#1a6e05}
+/* relation map: the ground is pulled, the wheel changes the size, a relation is pulled from the circle at a card's right edge */
+.sch-net .sn-scroll{cursor:grab;scrollbar-width:none}
+.sch-net .sn-scroll::-webkit-scrollbar{display:none}
+.sch-net.pan .sn-scroll,.sch-net.pan .sn-node{cursor:grabbing}
+.sn-node .sn-port{position:absolute;right:-7px;top:17px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #474747;cursor:crosshair;opacity:0;transition:opacity .12s;z-index:3}
+.sn-node:hover .sn-port,.sn-node.linking .sn-port{opacity:1}
+.sn-node .sn-port:hover{background:#1f8e00;border-color:#1f8e00}
+/* gates that are not approved yet: everything but the state is paler */
+.sch-gates .gt.wait .date,.sch-gates .gt.wait .cat,.sch-gates .gt.wait .chip,.sch-gates .gt.wait dl{opacity:.5}
+.sch-gates .gt.wait:hover .date,.sch-gates .gt.wait:hover .cat,.sch-gates .gt.wait:hover .chip,.sch-gates .gt.wait:hover dl,.sch-gates .gt.wait.sel .date,.sch-gates .gt.wait.sel .cat,.sch-gates .gt.wait.sel dl{opacity:.8}
+.dlg.sch-dlg .pp-types{flex-wrap:wrap}
+.dlg.sch-dlg .pp-types button{white-space:nowrap}
+/* the circles a relation is pulled from stand clear of the bar's ends (which are pulled to change its dates) */
+.sg-bar .pt.l{left:-13px}.sg-bar .pt.r{right:-13px}
+.sg-bar .pt::before{content:"";position:absolute;inset:-5px -5px -5px -3px}
+.sg-bar .pt.l::before{inset:-5px -3px -5px -5px}
+.sg-bar .pt:hover{background:#1f8e00;border-color:#1f8e00}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -2818,12 +2949,12 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=(opts.proj&&schPreview())?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
-  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}">
+  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
     <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
   if(!opts.proj) h+=`<div class="filters">${orderedProjects().map(k=>pill(PROJECTS[k],(S.filters[k]!==false?'':'off')+' flt nosq').replace('class="pill','data-flt="'+k+'" title="이 프로젝트의 일정 보기/숨기기" class="pill')).join('')}</div>`;
-  h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
+  h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${PV?schCalPict(t,opts.proj?proj(opts.proj).color:''):pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
   h+=`<div class="grid"><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="rows">`;
   for(let w=0;w<weeks;w++){
     const ws=w*7-startDow+1, we=ws+6; let cells='';
@@ -2839,7 +2970,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     wk.forEach(x=>{const e=x.e; if(x.lane>=CAL_LANES){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
       const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:9.5); const right=COLX[ec]+COLW[ec]-(x.contR?0:(ec===6?0:8));
       const p=proj(e.proj); const rs=e.type==='research'; const first=e.date<mStart?x.s===1:x.s===+e.date.slice(8); const full=(e.title||'').split('\n').join(' ')||'(제목 없음)'; const label=first?esc(full):'';
-      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
+      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
       maxLane=Math.max(maxLane,x.lane);});
     Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+9.5}px;top:${CAL_LANES*21.1}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
     const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?29+used*21.1+7.7:0;
@@ -2910,7 +3041,7 @@ function carouselInfo(k){const inner=$(k==='proj'?'#proj-inner':'#meet-inner');i
   const step=cards.length>1?cards[1].offsetLeft-x0:(last?last.offsetWidth:0);return {inner,cards,view,x0,step,max:Math.max(0,Math.ceil(total-view))};}
 function applyCarousel(k){const c=carouselInfo(k);if(!c)return;const off=Math.min(Math.max(0,S.car[k]||0),c.max);S.car[k]=off;c.inner.style.transform=off?`translateX(${-off}px)`:'';
   const box=c.inner.closest('.projects,.meet');if(box){box.classList.toggle('at-start',off<=0);box.classList.toggle('at-end',off>=c.max);}
-  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=PREVIEW_ON&&k==='proj'?'':c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
+  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=PREVIEW_ON?'':c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
 function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car[k]||0)+dir*c.step;if(dir>0&&off>c.max-8)off=c.max;if(off<8)off=0;S.car[k]=off;applyCarousel(k);}
 
 
@@ -3454,7 +3585,7 @@ document.addEventListener('click',async e=>{
     if(a==='open'||a==='partner'){openPanel(id);} else if(a==='dl'){downloadFiles(itemFiles(item(id)),el);}
     else if(a==='dlroad'){const r=ROADMAP[id];const fs=[],seen=new Set();((r&&r.items)||[]).forEach(x=>itemFiles(item(x)).forEach(f=>{if(!seen.has(f.id)){seen.add(f.id);fs.push(f);}}));downloadFiles(fs,el);} return;}
   if(el=q('[data-cat]')){S.partnerCat=S.partnerCat===el.dataset.cat?null:el.dataset.cat;S.ptPage=1;render(true);const s=$('.page.on #sec-partners');s&&s.scrollIntoView({block:'start'});return;}
-  if(el=q('[data-catclear]')){S.partnerCat=null;render();return;}
+  if(el=q('[data-catclear]')){S.partnerCat=null;render(true);return;}
   if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-open]')){e.stopPropagation();openPanel(el.dataset.open);return;}
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
@@ -3798,7 +3929,7 @@ function sharedApplyRecords(records){
 const openItems=()=>[S.panel,S.full].map(id=>id&&ITEMS.find(x=>x.id===id)).filter(Boolean);
 // Redraw after a change from the server, but never while this person is typing, choosing from a menu or editing something.
 function sharedRedraw(){if(!sharedReady)return;sharedUi();const active=document.activeElement;
- if(active?.matches('input,textarea,select,[contenteditable="true"]')||popEl||$('#dlg')||S.editProj||S.editSimple||openItems().some(x=>x.editing||x.status==='new'||(x.status==='draft'&&canEditItem(x)))){sharedPendingRedraw=true;return;}
+ if(active?.matches('input,textarea,select,[contenteditable="true"]')||popEl||$('#dlg')||S.editProj||S.editSimple||(typeof SCH!=='undefined'&&SCH.drag)||openItems().some(x=>x.editing||x.status==='new'||(x.status==='draft'&&canEditItem(x)))){sharedPendingRedraw=true;return;}
  sharedPendingRedraw=false;
  if(S.full&&!item(S.full)){S.full=null;toast('해당 게시물이 삭제되었습니다.');}
  if(S.panel&&!panelExists(S.panel))closePanel(true);
@@ -4617,7 +4748,7 @@ function schActionBody(pid){ const m=schModel(pid);
   const sf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
   const ck=(k,label)=>`<span class="ck ${(k==='refm'?SCHU.refm!==false:SCHU[k])?'on':''}" data-sch="toggle" data-k="${k}"><i>${svg('i-sch-ck',8,6.4)}</i>${label}</span>`;
   if(SCHU.phase==='none'&&SCHU.tab!=='list')SCHU.phase='';   // actions outside the schedule have no bar and no relations: they are a choice of the list only
-  const g=SCHU.phase&&m.phases.find(x=>x.code===SCHU.phase), none=SCHU.phase==='none'; let f=sf('phase',none?'일정 미연결':g?schPhaseLabel(g):'전체 단계',!!g||none)+sf('scope',schScopeName(),SCHU.scope!=='all');
+  const g=SCHU.phase&&m.phases.find(x=>x.code===SCHU.phase), none=SCHU.phase==='none'; let f=SCHU.tab==='list'?'':sf('phase',none?'일정 미연결':g?schPhaseLabel(g):'전체 단계',!!g||none)+sf('scope',schScopeName(),SCHU.scope!=='all');
   if(SCHU.tab==='gantt')f+=sf('scale',(SCH_SCALES.find(x=>x[0]===SCHU.scale)||SCH_SCALES[0])[1],false,'narrow')+`<div class="cks">${ck('refm','참조계획')}${ck('links','연결선')}${ck('today','오늘')}</div>`;
   else if(SCHU.tab==='list')f+=`<div class="right"><div class="tbl-tools" data-sch="pick" data-k="per">${SCHU.per}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div></div>`;
   else f=`<div class="seg"><button class="${SCHU.netMode==='all'?'on':''}" data-sch="netmode" data-k="all">${g?esc(schPhaseLabel(g)):'전체 단계'}</button><button class="${SCHU.netMode==='focus'?'on':''}" data-sch="netmode" data-k="focus">선택 업무 중심</button></div>`
@@ -4707,7 +4838,7 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   const all=m.plan.tasks; let o=Infinity, mx=-Infinity; for(const t of all){const r=m.res.tasks[t.id];o=Math.min(o,D.dayNumber(t.referenceStart),D.dayNumber(r.start));mx=Math.max(mx,D.dayNumber(r.finish));}
   const origin=o-7, end=Math.min(mx,D.dayNumber(D.addMonths(m.res.operationDate,7)))+14, days=end-origin+1;
   const viewW=Math.max(300,host.clientWidth-SG.left-1), px=SCHU.scale==='day'?SG.day:SCHU.scale==='week'?5:SCHU.scale==='month'?1.7:Math.max(.05,viewW/days), TW=Math.round(days*px);
-  const X=d=>(D.dayNumber(d)-origin)*px; host._px=px;
+  const X=d=>(D.dayNumber(d)-origin)*px; host._px=px; host._o=origin;
   // rows
   const rows=[]; let y=SG.padTop;
   for(const g of m.phases){ if(SCHU.phase&&g.code!==SCHU.phase)continue; const ts=g.tasks.filter(t=>shownIds.has(t.id)); if(force&&!ts.length)continue;
@@ -4750,7 +4881,7 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
     // longer than the reference plan; a dashed outline after the bar: it now ends earlier (the schedule shrank).
     let mark=''; if(SCHU.refm!==false&&x.finish!==t.referenceFinish){ const pf=X(t.referenceFinish)+px, dl=D.diffDays(x.finish,t.referenceFinish), tp=`참조계획 완료 ${schD(t.referenceFinish)} · 참조계획보다 ${Math.abs(dl)}일 ${dl>0?'늘어남':'줄어듦'}`;
       if(pf>x1+8&&pf<x1+w-4)mark=`<i class="pl in" style="width:${pf-x1}px" title="${tp}"></i>`; else if(pf>x1+w+3)mark=`<i class="pl out" style="left:${w-1}px;width:${pf-x1-w}px" title="${tp}"></i>`; }
-    R+=`<div class="sg-bar ${cls} ${late?'late':''}" style="left:${x1}px;top:${top}px;width:${w}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}">${inside?`<span class="lb">${label}</span>`:''}${mark}${prog?`<i class="pc" style="width:${Math.round(prog*100)}%"></i>`:''}<u class="pt l" data-port="s"></u><u class="pt r" data-port="f"></u></div>`;
+    R+=`<div class="sg-bar ${cls} ${late?'late':''}" style="left:${x1}px;top:${top}px;width:${w}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}">${inside?`<span class="lb">${label}</span>`:''}${mark}${prog?`<i class="pc" style="width:${Math.round(prog*100)}%"></i>`:''}${w>=18?'<s class="rz l" title="끌어서 시작일 변경"></s><s class="rz r" title="끌어서 종료일 변경"></s>':''}<u class="pt l" data-port="s" title="끌어서 다른 업무에 연결 (이 업무의 시작)"></u><u class="pt r" data-port="f" title="끌어서 다른 업무에 연결 (이 업무의 끝)"></u></div>`;
     if(!inside)R+=`<span class="sg-tx ${isSel?'sel':''}" style="left:${x1+w+6}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}">${label}</span>`; }
   { // where a task's relations start: 21.5 from its left edge; tasks whose points would fall on one vertical line are set 5 apart
     const used=[]; for(const r of rows){ if(r.k!=='tk'||r.x1===undefined)continue; if(r.ms){r.port=r.cx;continue;} const w=r.x2-r.x1; let x=w<SG.port*2?r.x1+w/2:r.x1+SG.port;
@@ -4769,9 +4900,9 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   host.innerHTML=`<div class="sg-inner" style="width:${SG.left+TW+1}px"><div class="sg-head"><div class="sg-corner" style="width:${SG.left}px"><span>운영개시 예상 <b>${schD(m.res.operationDate)}</b>${m.res.operationDelay?`<em>(목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)</em>`:''}</span><span>운영개시 경로 <b>${crit}</b>건</span><span>상태일 <b>${schD(m.plan.statusDate)}</b></span></div><div class="sg-axis" style="left:${SG.left+1}px;width:${TW}px">${ax}${hotMonths}</div></div>
     <div class="sg-body" style="height:${H}px"><i class="sg-band" hidden></i><div class="sg-left" style="width:${SG.left}px;height:${H}px">${L}<i class="sg-split" title="끌어서 표의 폭 조절 · 두 번 누르면 처음 폭"></i></div>
     <div class="sg-right" style="left:${SG.left+1}px;width:${TW}px;height:${H}px">${R}${SCHU.today&&nowX>=0?`<i class="now" style="left:${nowX}px"></i>`:''}<svg class="sg-links" width="${TW}" height="${H}">${links}</svg></div>${marks}</div></div>`;
-  // the horizontal scroll bar sits above the chart (owner, 2026-11-19): a bar of its own, kept in step with the chart; the chart itself shows none
+  // the horizontal scroll bar: a bar of its own below the chart, kept in step with it; the chart itself shows none
   { const box=host.parentElement; const old=box.querySelector('.sg-foot'); if(old)old.remove(); let tb=box.querySelector('.sg-topbar');
-    if(!tb){ tb=document.createElement('div'); tb.className='sg-topbar'; tb.innerHTML='<i></i>'; box.insertBefore(tb,host);
+    if(!tb){ tb=document.createElement('div'); tb.className='sg-topbar'; tb.innerHTML='<i></i>'; box.insertBefore(tb,host.nextSibling);
       tb.addEventListener('scroll',()=>{ if(Math.abs(host.scrollLeft-tb.scrollLeft)>.5)host.scrollLeft=tb.scrollLeft; },{passive:true});
       host.addEventListener('scroll',()=>{ if(Math.abs(tb.scrollLeft-host.scrollLeft)>.5)tb.scrollLeft=host.scrollLeft; if(host._key)SCH.gs={key:host._key,x:host.scrollLeft,y:host.scrollTop}; },{passive:true});
       host.addEventListener('wheel',e=>{ const dx=e.shiftKey&&!e.deltaX?e.deltaY:e.deltaX; if(dx&&(e.shiftKey||Math.abs(dx)>Math.abs(e.deltaY))){host.scrollLeft+=dx;e.preventDefault();} },{passive:false}); }
@@ -4780,10 +4911,10 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   // where the view stands: the selected task, else today
   const key=pid+'|'+SCHU.scale+'|'+SCHU.phase; if(host._key!==key){ host._key=key;   // a fresh chart: where it stood before a redraw of the page (SCH.gs), else at the selected task or today
     if(SCH.gs&&SCH.gs.key===key){host.scrollLeft=SCH.gs.x;host.scrollTop=SCH.gs.y;} else{ const target=sel&&rowOf.get(sel)?rowOf.get(sel).x1:nowX; if(px>1.2&&target>=0)host.scrollLeft=Math.max(0,target-viewW*0.3); } }
-  const tb=host.parentElement.querySelector('.sg-topbar'); if(tb)tb.scrollLeft=host.scrollLeft; }
+  const tb=host.parentElement.querySelector('.sg-topbar'); if(tb)tb.scrollLeft=host.scrollLeft; if(typeof schGhostsDraw==='function')schGhostsDraw(); }
 // The 30 / 60 / 90 % tags stand in the page margin left of the chart (outside the scrolling part), level with their lines.
 function schMarkTags(host){ const box=host.parentElement; let layer=box.querySelector('.sg-tags'); if(!layer){layer=document.createElement('div');layer.className='sg-tags';box.appendChild(layer);}
-  const view=host.clientHeight; layer.innerHTML=$$('.sg-mark',host).map(el=>{const y=SG.head+parseFloat(el.style.top)-host.scrollTop;return y<SG.head+2||y>view-2?'':`<b style="top:${y}px" title="여기까지 끝나면 전체 일정의 ${el.dataset.pc}%가 끝납니다 (기간·중요도·마일스톤 가중치 기준)">${el.dataset.pc}%</b>`;}).join('');
+  const view=host.clientHeight, off=host.offsetTop; layer.innerHTML=$$('.sg-mark',host).map(el=>{const y=SG.head+parseFloat(el.style.top)-host.scrollTop;return y<SG.head+2||y>view-2?'':`<b style="top:${off+y}px" title="여기까지 끝나면 전체 일정의 ${el.dataset.pc}%가 끝납니다 (기간·중요도·마일스톤 가중치 기준)"><svg width="40" height="15" viewBox="0 0 40 15" aria-hidden="true"><path d="M2.5 .5H30.6L39.2 7.5 30.6 14.5H2.5a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2z" fill="#fff" stroke="#cfcfcf"/></svg><span>${el.dataset.pc}%</span></b>`;}).join('');
   if(!host._markScroll){host._markScroll=true;host.addEventListener('scroll',()=>schMarkTags(host),{passive:true});} }
 function schMount(){ if(S.page!=='project'||!schHas(S.proj)||S.full)return; if($('#sch-gantt'))schGanttBuild(S.proj); if($('#sch-net'))schNetBuild(S.proj); if(typeof schLowAddPlace==='function')schLowAddPlace(); }
 function schRefresh(){ const el=$('[data-sec="sch-act"]'); if(!el||!schHas(S.proj))return; const keep=schKeepScroll(); el.innerHTML=schActionBody(S.proj); $$('#sch-actions .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.tab)); { const ch=$('#sch-actions [data-chips]'); if(ch)ch.innerHTML=schChips(S.proj); } schMount(); schRestoreScroll(keep); schUiSave(); afterNav(); }
@@ -4796,7 +4927,7 @@ function schRefresh(){ const el=$('[data-sec="sch-act"]'); if(!el||!schHas(S.pro
 // share their start, so several later tasks read as one branching line. Only relations between neighbouring columns are
 // drawn in the "selected task" view; whatever else connects the shown tasks is counted below the map.
 const SN={w:271,h:128.5,gx:89,gy:33.5,trunk:38,pad:60,port:24};
-function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools"><button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (Ctrl + 휠로 확대·축소)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
+function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools"><button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (휠: 확대·축소, 끌기: 이동)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
 function schNetFocus(m){ const sel=schTaskIdOf(S.panel)||SCHU.sel; if(sel&&m.byId.has(sel)&&(!SCHU.phase||SCHU.netMode==='focus'||m.byId.get(sel).phase===SCHU.phase))return sel;
   const list=schFiltered(m); const today=schToday(); const cur=list.find(t=>!AIDCSchedule.progress.isDone(t)&&m.res.tasks[t.id].finish>=today)||list[0]||m.plan.tasks[0]; return cur?cur.id:''; }
 // Columns for the "selected task" view: the task in the middle, what must come before it to the left, what follows to the right.
@@ -4840,7 +4971,7 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   let h='';
   for(const id of row.keys()){ const t=m.byId.get(id), x=m.res.tasks[id], done=P.isDone(t), ppl=schPeople(t);
     h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schWbs(t.wbs)})</div><div class="nm">${esc(t.name)}</div>
-      <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who">${ppl.length?avstack(ppl,3):'<span class="sch-role none">미지정</span>'}</div></div>`; }
+      <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who">${ppl.length?avstack(ppl,3):'<span class="sch-role none">미지정</span>'}</div><u class="sn-port" title="끌어서 다른 업무에 연결"></u></div>`; }
   // the dots of the ground belong to the drawing: they scroll with it and grow and shrink with it
   host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z})"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
   host._lay={w:LW,h:LH};
@@ -4988,6 +5119,9 @@ function schAfterSave(it){ schEditKeep(it); if(!schOwn(it))return; const m=schMo
 // the list of them. 확인 saves at once (schCommit, with 되돌리기 in the toast as for every schedule change); 취소 changes nothing.
 // o: { kind:'new', from, to, type }  a relation pulled in the gantt or the relation map (its kind can still be changed here)
 //    { kind:'change', from, to, title, note, mutate(draft), label }  a change of an existing relation (kind, gap, in / out, delete)
+// A relation kind as a small picture: the earlier task above, the later one below, the line from the end (or start) that decides to the end (or start) it decides.
+function schRelGlyph(ty){ const A=ty[0]==='F'?[2,16]:[14,30], B=ty[1]==='S'?[18,32]:[4,18], ax=ty[0]==='F'?A[1]:A[0], bx=ty[1]==='S'?B[0]:B[1], out=ty[0]==='F'?3:-3, inn=ty[1]==='S'?-3:3;
+  return `<svg class="rg" width="34" height="18" viewBox="0 0 34 18" aria-hidden="true"><rect x="${A[0]}" y="2" width="${A[1]-A[0]}" height="4.5" rx="1.2" fill="currentColor" opacity=".45"/><rect x="${B[0]}" y="11.5" width="${B[1]-B[0]}" height="4.5" rx="1.2" fill="currentColor"/><path d="M${ax},4.2 H${ax+out} V13.7 H${bx+inn}" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="${bx+inn}" cy="13.7" r="1.4" fill="currentColor"/></svg>`; }
 function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if(!m)return; closePop(); const a=m.byId.get(o.from), b=m.byId.get(o.to); if(!a||!b||a===b)return; let type=o.type||'FS';
   const mut=()=>o.kind==='new'?(d=>{d.dependencies.push(A.newDependency(o.from,o.to,type,0));}):o.mutate;
   const calc=()=>{ if(o.kind==='new'&&m.plan.dependencies.some(x=>x.from===o.from&&x.to===o.to&&x.type===type))return {err:'이미 있는 관계입니다. 다른 유형을 고르거나 취소하세요.'};
@@ -5002,7 +5136,10 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
     if(err)body=`<div class="pp-err">${esc(err)}</div>`;
     else{ const plan=cur.draft, moved=plan.tasks.filter(t=>r0.tasks[t.id]&&(res.tasks[t.id].start!==r0.tasks[t.id].start||res.tasks[t.id].finish!==r0.tasks[t.id].finish)), opD=D.diffDays(res.operationDate,r0.operationDate), b0=r0.tasks[b.id], b1=res.tasks[b.id];
       const shown=[a,b].concat(moved.filter(t=>t.id!==a.id&&t.id!==b.id)).slice(0,10);
-      body=`<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(b.wbs))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
+      // the outcome in one line, before the figures
+      const ds=D.diffDays(b1.start,b0.start), df=D.diffDays(b1.finish,b0.finish), dm=ds||df, sum=!moved.length&&!opD?`<div class="pp-sum">일정은 바뀌지 않습니다. 관계만 ${o.gone?'지워집니다':'기록됩니다'}.</div>`
+        :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schWbs(b.wbs))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
+      body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(b.wbs))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
         <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${schD(r0.operationDate)}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?(opD>0?'+':'')+opD+'일':'변화 없음'}</em></div></div>
         ${schProposeChart(m,cur,shown,o.kind==='new'||!o.gone?[a.id,b.id]:null)}
         <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
@@ -5010,7 +5147,7 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
           return `<div class="rw"><span class="nm"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
           :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 다른 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}`; }
     d.innerHTML=`<div class="box" role="dialog" aria-label="${esc(o.kind==='new'?'관계 연결':o.title)}"><div class="pp-hd"><b>${esc(o.kind==='new'?'관계 연결':o.title)}</b><span><em>${esc(schTaskTitle(a))}</em>${svg('i-sch-arr',13,9)}<em>${esc(schTaskTitle(b))}</em></span></div>
-      ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}"><b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
+      ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}">${schRelGlyph(ty)}<b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
       <p class="pp-sent">${esc(o.kind==='new'?A.relationshipSentence(type,a.name,b.name):(o.note||''))}</p>${body}
       <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri" ${err?'disabled':''}>확인</button></div></div>`; const p=d.querySelector('button.pri'); if(p&&!err)p.focus(); };
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; const k=bt.dataset.pp; if(k==='x')close(); else if(k==='ok')ok(); else if(k==='ty'){type=bt.dataset.k;cur=calc();draw();} });
@@ -5096,7 +5233,7 @@ function schGatesHtml(pid,m){ const q=(SCHU.lq||'').trim(), today=schToday(), D=
   let h=`<div class="sch-filters"><div class="right" style="margin-left:0;font-size:12.5px;color:#8e8e8e">날짜는 연결된 업무의 예상 완료일입니다. 날짜가 지나도 자동으로 승인되지 않습니다.</div></div><div class="sch-gates">`;
   // the line is black only where it leads into an approved gate, and only as far as that gate's dot (owner, 2026-11-19)
   list.forEach((g,i)=>{ const ok=g.st==='승인', nextOk=!!list[i+1]&&list[i+1].st==='승인', slip=g.plan&&g.date?D.diffDays(g.date,g.plan):0;
-    h+=`<div class="gt ${ok?'ok':''} ${nextOk?'to-ok':''} ${S.panel===`sg-${pid}-${g.code}`?'sel':''}" data-open="sg-${pid}-${esc(g.code)}">${i?'':`<i class="ln0 ${ok?'ok':''}"></i>`}<i class="ln"></i><div class="date">${g.date?schD(g.date):'<span style="color:#c4c4c4;font-weight:500">업무 미연결</span>'}${slip?`<em class="${slip>0?'late':''}">${slip>0?'+':''}${slip}일</em>`:''}</div><i class="dot"></i>
+    h+=`<div class="gt ${ok?'ok':'wait'} ${nextOk?'to-ok':''} ${S.panel===`sg-${pid}-${g.code}`?'sel':''}" data-open="sg-${pid}-${esc(g.code)}">${i?'':`<i class="ln0 ${ok?'ok':''}"></i>`}<i class="ln"></i><div class="date">${g.date?schD(g.date):'<span style="color:#c4c4c4;font-weight:500">업무 미연결</span>'}${slip?`<em class="${slip>0?'late':''}">${slip>0?'+':''}${slip}일</em>`:''}</div><i class="dot"></i>
       <div class="hd2"><div class="cat"><small>${g.user?'추가':esc(g.code)}</small>${esc(g.title)}</div>${g.t?`<span class="chip pj-g" data-open="${schItemId(g.t.id)}" title="${esc(schTaskTitle(g.t))}"><span class="t">${esc(schTaskTitle(g.t))}</span></span>`:''}${schStateMark(g.st,'sf-e',`data-schc="gstate" data-k="${esc(g.code)}" title="승인 상태 변경"`)}</div>
       <dl><dt>승인 역할</dt><dd>${esc(g.f['승인 역할']||'-')}</dd><dt>통과 증빙</dt><dd>${esc(g.f['통과 증빙']||'-')}</dd><dt>미충족 처리</dt><dd>${esc(g.f['미충족 처리']||'-')}</dd></dl></div>`; });
   if(!list.length)h+=`<div class="sch-empty">조건에 맞는 승인게이트가 없습니다.</div>`;
@@ -5254,7 +5391,9 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(
 
 // The list beside the calendar ends where the calendar ends (owner, 2026-11-19: "do not show all of today's actions, cut it at the end
 // of the calendar"). What does not fit is reached by scrolling inside the list; a soft edge shows that there is more.
-const schFitMark=el=>el.classList.toggle('cut',el.scrollHeight-el.clientHeight-el.scrollTop>2);
+// More below: a soft lower edge (cut). Scrolled: a soft upper edge too (cut-t, and below a caption that stands still: stuck).
+const schFitMark=el=>{ el.classList.toggle('cut',el.scrollHeight-el.clientHeight-el.scrollTop>2); el.classList.toggle('cut-t',el.scrollTop>2); const top=el.getBoundingClientRect().top;
+  el.querySelectorAll('.rcap').forEach(c=>c.classList.toggle('stuck',el.scrollTop>2&&c.getBoundingClientRect().top-top<1.5)); };
 function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'), box=el.querySelector('.rscroll'); if(!grid||!box||!el.offsetParent)return;
     // its upper line stands level with the calendar's line under the weekdays, its lower line with the calendar's lower edge: neither moves
     const rows=grid.querySelector('.rows'), line=el.querySelector('.rline'); if(rows&&line){ const d=(rows.getBoundingClientRect().top-line.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
@@ -5298,8 +5437,8 @@ function schMainTest(r){ const c=schMf();
   return schSpanTest(c,r.ps||'',r.pf||r.ps||'')&&schDueTest(c,r.end,r.done); }
 const SCH_MSORT={proj:r=>proj(r.proj).tag||'',wbs:r=>r.order,name:r=>norm(r.title),plan:r=>(r.ps||'')+(r.pf||''),pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>SCH_STATUSES.indexOf(r.st),who:r=>userName(r.ppl[0])||'~',due:r=>r.end||'9'};
 const SCH_MF_NAMES={...SCH_CF_NAMES};
-function schMainChips(){ const c=schMf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-mchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
-  if(c.proj)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
+function schMainChips(){ const c=schMf(), out=[], chip=(k,label,col)=>out.push(`<button class="sch-chip" data-mchip="${k}" title="이 조건 지우기" ${col?`style="color:${esc(col)}"`:''}>${esc(label)}<i>✕</i></button>`);
+  if(c.proj)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj),proj(c.proj).color); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
   for(const k of ['kind','plan','pri','st','due','url']){ if(!c[k])continue; const d=SCH_MF_NAMES[k]; chip(k,d[0]+': '+(d[1]?d[1][c[k]]||c[k]:c[k])); }
   return out.join(''); }
 function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest), c=schMf(), k=S.sort.k, dir=S.sort.dir||1, notes={};
@@ -5312,7 +5451,7 @@ function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest)
   const th=(kk,t)=>`<span data-mcol="${kk}" class="${k===kk?'sorted':''} ${k===kk&&dir<0?'up':''} ${on[kk]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
   const urlCell=u=>{const h=urlHref(u);return h?`<a href="${esc(h)}" target="_blank" rel="noopener" data-stop>${esc(u)}</a>`:'<span style="color:#c4c4c4">-</span>';};
   let h=`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="main">${schMainChips()}</div></div>
-    <div class="sch-filters sch-all">${schSf2('mpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('mpick','who',c.who?(c.who==='none'?'미지정':userName(c.who)):'전체 담당자',!!c.who)}<div class="right">${perBox()}</div></div>
+    <div class="sch-filters sch-all"><div class="right">${perBox()}</div></div>
     <div class="tbl sch-list sch-all"><div class="hd">${th('proj','프로젝트')}${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   for(const r of page){ const p=proj(r.proj);
     h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="pj">${pill(p,'nosq')}</div><div class="w">${esc(r.wbs||'-')}</div><div class="nm"><span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${r.dots}${esc(r.title)}</span></div>
@@ -5457,7 +5596,7 @@ function schRecentHtml(){ const G=new Map(), off=schRecOff();
   let h='';
   for(const [key,g] of G){ h+=`<div class="item r0" ${g.go?`data-go="${esc(g.go)}"`:''}><span class="tx">${esc(g.label)}</span></div>`;
     for(const [kind,list] of g.kinds){ const rk=key+'|'+kind, shut=off.has(rk);
-      h+=`<div class="item ${shut?'r3':'r1'}" data-rec="${esc(rk)}" role="button" aria-expanded="${!shut}" title="${shut?'펼치기':'접기'}">${shut?svg('i-chev-r',3.6,6.3,'color:#8e8e8e'):svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}<span class="tx">${esc(kind)}</span><span class="rn">${list.length}</span></div>`;
+      h+=`<div class="item ${shut?'r3':'r1'}" data-rec="${esc(rk)}" role="button" aria-expanded="${!shut}" title="${shut?'펼치기':'접기'}">${shut?svg('i-chev-r',3.6,6.3,'color:#8e8e8e'):svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}<span class="tx">${esc(kind)}</span></div>`;
       if(!shut)h+=list.map(x=>`<div class="item r2" data-open="${esc(x.id)}"><i class="dot"></i><span class="tx">${esc(x.title)}</span></div>`).join(''); } }
   return h||'<div class="item none"><span class="tx">최근 연 항목이 여기에 표시됩니다</span></div>'; }
 
@@ -5483,23 +5622,35 @@ function schNoticeSave(){ const t=$('#nt-title'), b=$('#nt-body'), title=(t.valu
   SCH.nt={open:id}; t.blur(); schNoticeDraw(); toast('공지사항을 등록했습니다.'); }
 
 /* ---------- footer: the same on every page, below the same amount of room ---------- */
-function schFooterHtml(){ const ws=SETTINGS.wsName||'AIDC WorkSpace', projs=orderedProjects().slice(0,6), y=TODAY.slice(0,4);
+// The company's places outside the workspace. Their addresses are a workspace setting (설정 › 워크스페이스 › 일반): the three
+// social ones are small grey marks, the two others words. One without an address is pale and says so.
+const SCH_FLINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
+const SCH_FICON={youtube:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.800 19 12 19 12 19s6.2 0 7.8-.4a2.500 2.500 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.200 3z"/></svg>',
+  instagram:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7.500 3h9A4.500 4.500 0 0 1 21 7.500v9a4.500 4.500 0 0 1-4.500 4.500h-9A4.500 4.500 0 0 1 3 16.500v-9A4.500 4.500 0 0 1 7.500 3zm0 1.800A2.700 2.700 0 0 0 4.800 7.500v9a2.700 2.700 0 0 0 2.700 2.700h9a2.700 2.700 0 0 0 2.700-2.700v-9a2.700 2.700 0 0 0-2.700-2.700zM12 7.600a4.400 4.400 0 1 1 0 8.800 4.400 4.400 0 0 1 0-8.800zm0 1.800a2.600 2.600 0 1 0 0 5.200 2.600 2.600 0 0 0 0-5.200zm4.700-3.200a1.050 1.050 0 1 1 0 2.100 1.050 1.050 0 0 1 0-2.100z"/></svg>',
+  facebook:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-1.560 19.880v-6.990H7.900V12h2.540V9.800c0-2.510 1.490-3.890 3.780-3.890 1.090 0 2.240.190 2.240.190v2.460h-1.260c-1.240 0-1.630.770-1.630 1.560V12h2.770l-.440 2.890h-2.330v6.990A10 10 0 0 0 12 2z"/></svg>'};
+function schFooterHtml(){ const ws=SETTINGS.wsName||'AIDC WorkSpace', projs=orderedProjects().slice(0,6), y=TODAY.slice(0,4), L=SETTINGS.links||{};
   const col=(t,rows)=>`<div class="fc"><b>${t}</b>${rows.join('')}</div>`, a=(attr,t)=>`<a ${attr}>${esc(t)}</a>`;
+  const out=(k,t)=>{ const u=urlHref(L[k]||''), ic=SCH_FICON[k]||''; return u?`<a class="fx ${ic?'ic':''}" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="${esc(t)}" aria-label="${esc(t)}">${ic||esc(t)}</a>`:`<a class="fx off ${ic?'ic':''}" data-foot="nolink" data-k="${k}" title="${esc(t)} · 주소가 아직 등록되지 않았습니다" aria-label="${esc(t)}">${ic||esc(t)}</a>`; };
   return `<footer class="pfoot" id="pfoot"><div class="fline"></div><div class="fgrid">
-    <div class="fb"><div class="flogo" data-go="main">${esc(ws)}</div><p>${esc(SETTINGS.org||'')}</p><p class="mut">프로젝트의 미팅 · 액션 · 리서치와 일정을 한곳에서 보는 업무 공간.</p></div>
+    <div class="fb"><div class="flogo" data-go="main">${esc(ws)}</div><p>${esc(SETTINGS.org||'')}</p><p class="mut">프로젝트의 미팅 · 액션 · 리서치와 일정을 한곳에서 보는 업무 공간.</p><div class="fout">${SCH_FLINKS.filter(x=>!SCH_FICON[x[0]]).map(x=>out(...x)).join('')}<span class="fsns">${SCH_FLINKS.filter(x=>SCH_FICON[x[0]]).map(x=>out(...x)).join('')}</span></div></div>
     ${col('바로가기',[a('data-go="main"','메인 페이지'),a('data-go="archive"','자료실'),a('data-ext="dropbox"','부서 드롭박스'),a('data-foot="search"','검색')])}
     ${col('프로젝트',projs.map(k=>a(`data-go="project:${esc(k)}"`,PROJECTS[k].tag||PROJECTS[k].full)))}
     ${col('에이전트',[a('data-open="ag_daily"','기관 및 업체별 일일동향'),a('data-open="ag_sim"','수익구조 시뮬레이터'),a('data-open="ag_glossary"','인터렉션 용어사전')])}
     ${col('내 계정',[a('data-foot="account"','계정'),a('data-foot="inbox"','수신함'),a('data-foot="settings"','설정'),a('data-foot="trash"','휴지통')])}
    </div><div class="fend"><span>© ${y} 선진엔지니어링 · ${esc(SETTINGS.org||ws)}</span><span class="sp"></span><span class="mut">사내 업무용 · 외부 공유 금지</span><button class="ftop" data-foot="top" title="맨 위로">맨 위로 ${svg('i-chev-d',8,4,'transform:rotate(180deg)')}</button></div></footer>`; }
+// The pictogram of a kind in the calendar, in a colour (the copies made for the section titles take the text colour).
+const schCalPict=(type,color)=>`<svg class="pict" aria-hidden="true" style="color:${type==='research'?'#c6c6c6':esc(color||'#6f6f6f')}"><use href="#${type==='action'?'i-sch-tag':'i-sch-'+type}"/></svg>`;
 // Called after every draw of a page: the footer goes below the page's last section, which ends with the same room everywhere.
 function schFooter(){ if(!PREVIEW_ON)return; for(const pw of $$('#main-pw,#proj-pw,#arch-pw')){ const old=$('.pfoot',pw); if(old)old.remove(); if(!pw.closest('.page.on')||!pw.children.length)continue;
-    const last=pw.lastElementChild; if(last){last.style.paddingBottom='0px';} pw.insertAdjacentHTML('beforeend',schFooterHtml()); } }
+    const last=pw.lastElementChild; if(last){last.style.paddingBottom='0px';} pw.insertAdjacentHTML('beforeend',schFooterHtml()); }
+  // the colour of the open project, for what is tinted with it on its page (tags of filters, pickers that are set)
+  const pg=$('#page-project'); if(pg)pg.style.setProperty('--pjc',S.page==='project'&&PROJECTS[S.proj]?PROJECTS[S.proj].color:'#5c5c5c'); }
 
 /* ---------- clicks of this file ---------- */
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el;
   if(el=T.closest('[data-rec]')){ const off=schRecOff(), k=el.dataset.rec; if(off.has(k))off.delete(k); else off.add(k); try{localStorage.setItem('aidc-recoff',JSON.stringify([...off].slice(-60)));}catch{} sbState(); return; }
-  if(el=T.closest('[data-foot]')){ const k=el.dataset.foot; if(k==='top')$('#content').scrollTo({top:0,behavior:myPref('calm')?'auto':'smooth'}); else if(k==='search'){const b=$('#sb-search'); if(b){ if($('#app').classList.contains('sb-off')){$('#app').classList.remove('sb-off');render(true);} setTimeout(()=>b.click(),0);} } else openModal(k); return; }
+  if(el=T.closest('[data-foot]')){ const k=el.dataset.foot; if(k==='top')$('#content').scrollTo({top:0,behavior:myPref('calm')?'auto':'smooth'}); else if(k==='nolink'){ if(canAdmin()){openModal('settings.general'); toast('설정 › 워크스페이스 › 일반에서 주소를 등록하세요.',3200);} else toast('주소가 아직 등록되지 않았습니다. 소유자·관리자가 설정에서 등록합니다.',3200); }
+    else if(k==='search'){const b=$('#sb-search'); if(b){ if($('#app').classList.contains('sb-off')){$('#app').classList.remove('sb-off');render(true);} setTimeout(()=>b.click(),0);} } else openModal(k); return; }
   const n=$('#notice'); if(!n)return;
   if(el=T.closest('#notice [data-nt]')){ const k=el.dataset.nt, ui=SCH.nt||(SCH.nt={});
     if(k==='add'){ ui.form=true; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
@@ -5524,9 +5675,12 @@ document.addEventListener('keydown',e=>{ if(!PREVIEW_ON)return; const t=e.target
 /* ---------- research: a row of pickers above the cards ---------- */
 const schRf=()=>S.rf||(S.rf={});
 const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올해',old:'30일보다 이전'}],file:['첨부',{y:'첨부 있음',n:'첨부 없음'}],sort:['정렬',{new:'최신순',old:'오래된순',title:'제목순'}]};
+// The tags members write in square brackets in front of a title, most used first (a tag used once is not offered).
+const schResTagsOf=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>m[1].trim().toUpperCase()).filter(Boolean);
+function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of new Set(schResTagsOf(i)))n.set(t,(n.get(t)||0)+1); return [...n].filter(([,k])=>k>1).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,12); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
   list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
-    if(c.proj&&i.proj!==c.proj)return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
+    if(c.tag&&!(c.tag==='-'?!schResTagsOf(i).length:schResTagsOf(i).includes(c.tag)))return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
     if(c.when==='30'&&!(d>=d30))return false; if(c.when==='month'&&d.slice(0,7)!==today.slice(0,7))return false; if(c.when==='year'&&d.slice(0,4)!==today.slice(0,4))return false; if(c.when==='old'&&!(d<d30))return false;
     return true; });
   if(c.sort==='new')return list.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||newestFirst(a,b));
@@ -5534,16 +5688,16 @@ function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Dat
   if(c.sort==='title')return list.slice().sort((a,b)=>norm(a.title).localeCompare(norm(b.title),'ko'));
   return sortResearch(list); }
 function schResChips(pid){ const c=schRf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-rchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
-  if(c.proj&&!pid)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','작성자: '+userName(c.who));
+  if(c.tag)chip('tag','태그: '+(c.tag==='-'?'태그 없음':'['+c.tag+']')); if(c.who)chip('who','작성자: '+userName(c.who));
   for(const k of ['when','file','sort']){ if(c[k])chip(k,SCH_RF[k][0]+': '+(SCH_RF[k][1][c[k]]||c[k])); }
   return out.join(''); }
 function schResBar(pid){ const c=schRf();
   return `<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="res">${schResChips(pid)}</div></div>
-    <div class="sch-filters res">${pid?'':schSf2('rpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('rpick','when',c.when?SCH_RF.when[1][c.when]:'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}<div class="right">${schSf2('rpick','sort',c.sort?SCH_RF.sort[1][c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
+    <div class="sch-filters res">${schSf2('rpick','tag',c.tag?(c.tag==='-'?'태그 없음':'['+c.tag+']'):'전체 태그',!!c.tag)}${schSf2('rpick','when',c.when?SCH_RF.when[1][c.when]:'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}<div class="right">${schSf2('rpick','sort',c.sort?SCH_RF.sort[1][c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
 function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
   const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
   const pool=liveItems('research',pid); let items=[];
-  if(k==='proj')items=[fl('',{t:'전체 프로젝트'}),...orderedProjects().filter(p=>pool.some(i=>i.proj===p)).map(p=>fl(p,{t:proj(p).tag,html:pill(proj(p),'nosq')}))];
+  if(k==='tag')items=[fl('',{t:'전체 태그'}),...schResTags(pool).map(([t,n])=>fl(t,{t:`[${t}]`,html:`<b style="font-weight:600">[${esc(t)}]</b><span style="margin-left:8px;color:#a6a6a6;font-size:11px">${n}</span>`})),fl('-',{t:'태그 없음'})];
   else if(k==='who')items=[fl('',{t:'전체 작성자'}),...[...new Set(pool.map(i=>i.authorId).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
   else items=[fl('',{t:k==='when'?'전체 기간':k==='file'?'첨부 전체':'기본 순서'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu',right:k==='sort'}); }
@@ -5612,6 +5766,113 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   if(el=T.closest('[data-rchip]')){delete schRf()[el.dataset.rchip];S.resPage=1;refreshSec('research');return;}
 },true);
 
+/* ---- schedule/ui/68-feedback.js ---- */
+// Seventh round (owner, 2026-11-20): what a change of the schedule looks like while it is made and right after.
+// - A bar of the gantt is moved by its middle and made longer or shorter by its ends. While it is pulled, where it stood stays as a
+//   dashed outline, both dates stand above its ends and a tag at the pointer says by how much.
+// - After the change a card at the foot of the window says what happened in plain words (which task, from when to when, how many
+//   others moved with it, what it did to the operation date) with 되돌리기; the bars that moved flash and keep the outline of
+//   where they stood for a few seconds.
+// - The relation map is moved by pulling its ground (or a card) and made larger and smaller with the wheel; a relation is pulled
+//   from the small circle at a card's right edge.
+
+/* ---------- before / after ---------- */
+function schSnap(pid){ const m=schModel(pid), out={op:m.res.operationDate,t:{}}; for(const t of m.plan.tasks){const r=m.res.tasks[t.id]; out.t[t.id]=[r.start,r.finish];} return out; }
+let schCardT=0;
+function schCardHide(){ clearTimeout(schCardT); const c=$('#sch-card'); if(c)c.remove(); }
+// o: {title, focus (task id), want (the start that was asked for, to say when a predecessor holds the task)}
+function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D=AIDCSchedule.dates, moved=[];
+  for(const t of m.plan.tasks){ const a=snap.t[t.id], r=m.res.tasks[t.id]; if(a&&(a[0]!==r.start||a[1]!==r.finish))moved.push({t,a,b:[r.start,r.finish],dl:D.diffDays(r.finish,a[1])}); }
+  const f=o.focus&&m.byId.get(o.focus), fm=moved.find(x=>x.t.id===o.focus), others=moved.filter(x=>x.t.id!==o.focus), opD=D.diffDays(m.res.operationDate,snap.op), rg=(x,t)=>t.kind==='milestone'?schD(x[0]):`${schD(x[0])} → ${schD(x[1])}`;
+  const held=f&&o.want&&m.res.tasks[f.id].start!==o.want;
+  schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.setAttribute('role','status');
+  c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>
+    ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schWbs(f.wbs))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
+    ${held?`<div class="c-note">선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(m.res.tasks[f.id].start)}입니다.</div>`:''}
+    <div class="c-facts"><span class="${others.length?'on':''}">함께 바뀐 업무 <b>${others.length}</b>건</span><span class="${opD>0?'late':opD<0?'early':''}">운영개시 예상 <b>${schD(m.res.operationDate)}</b>${opD?` (${opD>0?'+':''}${opD}일)`:' · 변화 없음'}</span></div>
+    ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schWbs(x.t.wbs))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
+    <div class="c-bt">${others.length?'<button data-card="more">바뀐 업무 보기</button>':''}<span class="sp"></span><button class="pri" data-card="undo">되돌리기</button></div>`;
+  document.body.appendChild(c);
+  const arm=ms=>{clearTimeout(schCardT);schCardT=setTimeout(schCardHide,ms);}; arm(9000);
+  c.addEventListener('mouseenter',()=>clearTimeout(schCardT)); c.addEventListener('mouseleave',()=>arm(4000));
+  c.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-card]'); if(!b)return; const k=b.dataset.card;
+    if(k==='x')schCardHide(); else if(k==='undo'){schCardHide();schUndo();} else if(k==='more'){const box=c.querySelector('.c-more'); box.hidden=!box.hidden; b.textContent=box.hidden?'바뀐 업무 보기':'접기'; clearTimeout(schCardT);} });
+  schGhosts(pid,moved); }
+// In the gantt: the bars that moved flash, and where they stood stays as a dashed outline for a few seconds.
+// (The page is drawn again when the change has been saved, so the marks are kept as data and put back by every draw until their time is up.)
+function schGhosts(pid,moved){ SCH.ghost={pid,at:Date.now(),list:moved.map(x=>({id:x.t.id,a:x.a}))}; schGhostsDraw(); clearTimeout(schGhosts.t);
+  schGhosts.t=setTimeout(()=>{ $$('#sch-gantt .sg-ghost.keep').forEach(g=>{g.classList.add('out');setTimeout(()=>g.parentNode&&g.parentNode.removeChild(g),700);}); SCH.ghost=null; },3600); }
+function schGhostsDraw(){ const G=SCH.ghost, host=$('#sch-gantt .sg-scroll'), right=host&&host.querySelector('.sg-right'); if(!G||G.pid!==S.proj||!right||!host._rows||host._o===undefined)return; const age=Date.now()-G.at; if(age>3600){SCH.ghost=null;return;}
+  const D=AIDCSchedule.dates, px=host._px, X=d=>(D.dayNumber(d)-host._o)*px; right.querySelectorAll('.sg-ghost.keep').forEach(g=>right.removeChild(g));
+  for(const x of G.list){ const r=host._rows.get(x.id); if(!r||r.top===undefined)continue; const bar=right.querySelector(`[data-bar="${x.id}"]`); if(bar){bar.classList.add('chg');bar.style.animationDelay=(-age)+'ms';}
+    const g=document.createElement('i'); g.className='sg-ghost keep'+(r.ms?' ms':''); const x1=X(x.a[0]), w=Math.max(4,X(x.a[1])+px-x1);
+    g.style.cssText=r.ms?`left:${x1-7}px;top:${r.cy-7}px`:`left:${x1}px;top:${r.top}px;width:${w}px`; right.appendChild(g); } }
+
+/* ---------- gantt: moving a bar, pulling its ends ---------- */
+function schBarDrag(e,bar){ const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'); if(!m||!host||!host._px)return; const t=m.byId.get(bar.dataset.bar); if(!t)return;
+  const D=AIDCSchedule.dates, r=m.res.tasks[t.id], px=host._px, z=LAYOUT.zoom||1, x0=e.clientX, ms=t.kind==='milestone', left0=parseFloat(bar.style.left)||0, w0=parseFloat(bar.style.width)||0, right=bar.parentElement;
+  const rz=e.target.closest&&e.target.closest('.rz'), mode=rz&&!ms?(rz.classList.contains('l')?'start':'end'):'move', span=D.diffDays(r.finish,r.start);
+  const lock=t.actualStart?'착수한 업무는 실제 시작일로 고정됩니다. 상세창에서 날짜를 바꾸세요.':t.finishRule?'검수 완료 후 개월 수로 정해지는 업무입니다.':''; let moved=false, days=0, tip=null, ghost=null, la=null, lb=null;
+  const lab=()=>{const i=document.createElement('i');i.className='sg-dlab';right.appendChild(i);return i;};
+  const move=ev=>{ const dx=(ev.clientX-x0)/z; if(!moved&&Math.abs(dx)<4)return;
+    if(!moved){ moved=true; SCH.drag=true; document.body.style.userSelect='none'; schCardHide(); if(lock){toast(lock,3200);} else{ document.body.style.cursor=mode==='move'?'grabbing':'ew-resize'; tip=document.createElement('div'); tip.className='sg-tip'; document.body.appendChild(tip);
+        ghost=document.createElement('i'); ghost.className='sg-ghost'+(ms?' ms':''); ghost.style.cssText=ms?`left:${left0+2.35}px;top:${parseFloat(bar.style.top)+2.35}px`:`left:${left0}px;top:${bar.style.top};width:${w0}px`; right.appendChild(ghost); la=lab(); if(!ms)lb=lab(); bar.classList.add('drag'); } }
+    if(lock)return; days=Math.round(dx/px); let a=r.start, b=r.finish;
+    if(mode==='move'){ a=D.addDays(r.start,days); b=D.addDays(r.finish,days); bar.style.left=(left0+days*px)+'px'; }
+    else if(mode==='start'){ days=Math.min(days,span); a=D.addDays(r.start,days); bar.style.left=(left0+days*px)+'px'; bar.style.width=Math.max(4,w0-days*px)+'px'; }
+    else { days=Math.max(days,-span); b=D.addDays(r.finish,days); bar.style.width=Math.max(4,w0+days*px)+'px'; }
+    const L=parseFloat(bar.style.left), W=ms?0:parseFloat(bar.style.width), top=parseFloat(bar.style.top)-17;
+    la.textContent=schD(a); la.style.cssText=`left:${ms?L+9.35:L}px;top:${top}px`; la.className='sg-dlab '+(ms?'c':'l')+(mode!=='end'&&days?' on':''); if(lb){ lb.textContent=schD(b); lb.style.cssText=`left:${L+W}px;top:${top}px`; lb.className='sg-dlab r'+(mode!=='start'&&days?' on':''); }
+    tip.innerHTML=`<b>${days>0?'+':''}${days}일</b>${mode==='move'?'기간 이동':mode==='start'?'시작일 변경':'종료일 변경'}${ms?'':` · ${D.diffDays(b,a)+1}일간`}`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; SCH.drag=false; for(const n of [tip,ghost,la,lb])if(n)n.remove(); if(!moved)return; swallowClick(); bar.classList.remove('drag'); bar.style.left=left0+'px'; if(!ms)bar.style.width=w0+'px'; if(lock||!days)return;
+    const snap=schSnap(pid), len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schWbs(t.wbs); let label, want=null, fn;
+    if(mode==='move'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 기간 이동 ${sign}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);}; }
+    else if(mode==='start'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 시작일 ${sign}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=D.addDays(ns,Math.max(0,span-days));}; }
+    else { label=`${w} 종료일 ${sign}`; fn=x=>{x.plannedFinish=D.addDays(x.plannedFinish,days);}; }
+    if(schEditTask(pid,t.id,label,fn,true))schChangeCard(pid,snap,{title:label,focus:t.id,want}); };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
+
+/* ---------- gantt: pulling a relation ---------- */
+// The line is drawn the way the chart will draw it (schLinkPath) as soon as the pointer is on a bar; until then it follows the pointer.
+function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'), svgEl=$('#sch-gantt .sg-links'), bar=port.closest('[data-bar]'); if(!m||!svgEl||!bar||!host._rows)return; e.preventDefault(); schCardHide(); const from=bar.dataset.bar, fromEnd=port.dataset.port, z=LAYOUT.zoom||1;
+  const box=()=>svgEl.getBoundingClientRect(), r0=port.getBoundingClientRect(), b0=box(), x0=(r0.left+r0.width/2-b0.left)/z, y0=(r0.top+r0.height/2-b0.top)/z, NS='http://www.w3.org/2000/svg';
+  const line=document.createElementNS(NS,'path'), head=document.createElementNS(NS,'path'); line.setAttribute('class','draft'); head.setAttribute('class','draft head'); svgEl.appendChild(line); svgEl.appendChild(head); SCH.drag=true; bar.classList.add('linking'); host.classList.add('linking'); document.body.style.userSelect='none'; let target=null, toEnd='s', tip=null;
+  const kind=()=>fromEnd==='f'?(toEnd==='s'?'FS':'FF'):(toEnd==='s'?'SS':'SF'), A=AIDCSchedule;
+  const move=ev=>{ const b=box(), mx=(ev.clientX-b.left)/z, my=(ev.clientY-b.top)/z, el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-gantt [data-bar]');
+    if(target&&target!==hit)target.classList.remove('target','ts','tf'); target=hit&&hit.dataset.bar!==from?hit:null;
+    if(!tip){tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);} tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px';
+    if(target){ const r=target.getBoundingClientRect(), ta=m.byId.get(from), tb=m.byId.get(target.dataset.bar); toEnd=target.classList.contains('sg-msb')||ev.clientX<=r.left+r.width/2?'s':'f'; target.classList.add('target'); target.classList.toggle('ts',toEnd==='s'); target.classList.toggle('tf',toEnd==='f');
+      const ga=host._rows.get(from), gb=host._rows.get(target.dataset.bar), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined&&kind()==='FS'?schLinkPath(ga,gb):null;
+      if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else { const tx=(toEnd==='s'?r.left:r.right)-b.left, ty=r.top+r.height/2-b.top; line.setAttribute('d',`M${x0},${y0} L${tx/z},${ty/z}`); head.setAttribute('d',''); }
+      tip.innerHTML=`<b>${kind()}</b>${esc(schWbs(ta.wbs))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schWbs(tb.wbs))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
+    else { line.setAttribute('d',`M${x0},${y0} L${mx},${my}`); head.setAttribute('d',''); tip.textContent='연결할 업무의 막대에 놓으세요 (왼쪽 반 = 시작에, 오른쪽 반 = 끝에)'; } };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; line.remove(); head.remove(); if(tip)tip.remove(); bar.classList.remove('linking'); host.classList.remove('linking'); swallowClick(); if(!target)return; target.classList.remove('target','ts','tf');
+    schPropose(pid,{kind:'new',from,to:target.dataset.bar,type:kind()}); };   // shown with its effect first; 확인 saves
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
+document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const port=e.target.closest&&e.target.closest('#sch-gantt [data-port]'); if(port){schLinkDrag(e,port);return;} const bar=e.target.closest&&e.target.closest('#sch-gantt [data-bar]'); if(bar)schBarDrag(e,bar); });
+
+/* ---------- relation map: pull to move, wheel to make larger and smaller, a circle to pull a relation from ---------- */
+// keeps the point under the pointer where it is while the size changes
+function schNetZoomAt(dir,cx,cy){ const host=$('#sch-net .sn-scroll'); if(!host||!host._lay)return; const z0=SCHU.netZoom||1, r=host.getBoundingClientRect(), k=LAYOUT.zoom||1, mx=(cx-r.left)/k, my=(cy-r.top)/k, ax=(host.scrollLeft+mx)/z0, ay=(host.scrollTop+my)/z0;
+  const z1=Math.max(.25,Math.min(1.5,Math.round(z0*(dir>0?1.12:1/1.12)*100)/100)); if(z1===z0)return; SCHU.netFit=false; SCHU.netZoom=z1; schNetBuild(S.proj); host.scrollLeft=ax*z1-mx; host.scrollTop=ay*z1-my; clearTimeout(schNetZoomAt.t); schNetZoomAt.t=setTimeout(schUiSave,400); }
+document.addEventListener('wheel',e=>{ const host=e.target.closest&&e.target.closest('#sch-net'); if(!host||e.target.closest('.sn-tools'))return; e.preventDefault(); if(e.deltaY)schNetZoomAt(e.deltaY<0?1:-1,e.clientX,e.clientY); },{passive:false});
+document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const net=e.target.closest&&e.target.closest('#sch-net'); if(!net||e.target.closest('.sn-tools')||!schReady(S.proj))return; const host=net.querySelector('.sn-scroll'), port=e.target.closest('.sn-port');
+  if(port){ schNetLink(e,port.closest('.sn-node')); return; }
+  const x0=e.clientX, y0=e.clientY, sl=host.scrollLeft, st=host.scrollTop, z=LAYOUT.zoom||1; let on=false;
+  const move=ev=>{ const dx=ev.clientX-x0, dy=ev.clientY-y0; if(!on){ if(Math.hypot(dx,dy)<5)return; on=true; net.classList.add('pan'); document.body.style.userSelect='none'; } host.scrollLeft=sl-dx/z; host.scrollTop=st-dy/z; };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; net.classList.remove('pan'); document.body.style.userSelect=''; swallowClick(); };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); });
+function schNetLink(e,card){ const pid=S.proj, m=schModel(pid), from=card&&card.dataset.k, svgEl=$('#sch-net .sn-links'); if(!m||!from||!m.byId.has(from)||!svgEl)return; e.preventDefault(); e.stopPropagation();
+  let line=null, tip=null, target=null; const pt=(x,y)=>{const M=svgEl.getScreenCTM();return M?[(x-M.e)/M.a,(y-M.f)/M.d]:[0,0];};
+  SCH.drag=true; document.body.style.userSelect='none'; card.classList.add('linking'); line=document.createElementNS('http://www.w3.org/2000/svg','path'); line.setAttribute('class','draft'); svgEl.appendChild(line); tip=document.createElement('div'); tip.className='sg-tip'; document.body.appendChild(tip);
+  const move=ev=>{ const r=card.getBoundingClientRect(), a=pt(r.right,r.top+r.height*SN.port/SN.h), el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-net .sn-node'); if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.k!==from?hit:null;
+    let b=pt(ev.clientX,ev.clientY); if(target){ target.classList.add('target'); const q=target.getBoundingClientRect(); b=pt(q.left,q.top+q.height*SN.port/SN.h); }
+    const mid=(a[0]+b[0])/2; line.setAttribute('d',`M${a[0]},${a[1]} C${mid},${a[1]} ${mid},${b[1]} ${b[0]},${b[1]}`);
+    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=target?`<b>FS</b>${esc(schWbs(m.byId.get(from).wbs))} 끝나면 → ${esc(schWbs(m.byId.get(target.dataset.k).wbs))} 시작 · 놓으면 결과를 먼저 보여 줍니다`:'연결할 업무 카드에 놓으세요'; };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; card.classList.remove('linking'); if(line)line.remove(); if(tip)tip.remove(); swallowClick(); if(!target)return; target.classList.remove('target');
+    schPropose(pid,{kind:'new',from,to:target.dataset.k,type:'FS'}); };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
+
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
@@ -5661,27 +5922,7 @@ window.addEventListener('resize',()=>{ clearTimeout(schQT); schQT=setTimeout(()=
 // What is drawn is the forecast, so the new managed start is "forecast start + the days dragged"; if a predecessor still holds the task, the toast says so.
 // A line of the gantt can be clicked: the menu of that relation opens where the pointer is.
 document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt g[data-link]'); if(!g||!schReady(S.proj))return; e.stopPropagation(); const a=document.createElement('i'); a.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY-6}px;width:1px;height:1px`; document.body.appendChild(a); schRelMenu(a,S.proj,g.dataset.link); a.remove(); },true);
-// Pulling from the small circle at the start or the end of a bar to another bar makes a relation. The ends decide its kind:
-// end -> start is FS (the usual "after"), start -> start SS, end -> end FF, start -> end SF.
-function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), svgEl=$('#sch-gantt .sg-links'), bar=port.closest('[data-bar]'); if(!m||!svgEl||!bar)return; e.preventDefault(); const from=bar.dataset.bar, fromEnd=port.dataset.port, z=LAYOUT.zoom||1;
-  const box=()=>svgEl.getBoundingClientRect(), r0=port.getBoundingClientRect(), b0=box(), x0=(r0.left+r0.width/2-b0.left)/z, y0=(r0.top+r0.height/2-b0.top)/z;
-  const line=document.createElementNS('http://www.w3.org/2000/svg','path'); line.setAttribute('class','draft'); svgEl.appendChild(line); bar.classList.add('linking'); document.body.style.userSelect='none'; let target=null, toEnd='s', tip=null;
-  const kind=()=>fromEnd==='f'?(toEnd==='s'?'FS':'FF'):(toEnd==='s'?'SS':'SF');
-  const move=ev=>{ const b=box(); line.setAttribute('d',`M${x0},${y0} L${(ev.clientX-b.left)/z},${(ev.clientY-b.top)/z}`); const el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-gantt [data-bar]');
-    if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.bar!==from?hit:null;
-    if(!tip){tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);} tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+16)+'px';
-    if(target){target.classList.add('target');const r=target.getBoundingClientRect();toEnd=target.classList.contains('sg-msb')||ev.clientX<=r.left+r.width/2?'s':'f';tip.textContent=`${schWbs(m.byId.get(from).wbs)} → ${schWbs(m.byId.get(target.dataset.bar).wbs)} · ${kind()} ${AIDCSchedule.relationshipNames[kind()]}`;}else tip.textContent='연결할 업무의 막대에 놓으세요'; };
-  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; line.remove(); if(tip)tip.remove(); bar.classList.remove('linking'); swallowClick(); if(!target)return; target.classList.remove('target');
-    schPropose(pid,{kind:'new',from,to:target.dataset.bar,type:kind()}); };   // shown with its effect first; 확인 saves
-  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
-document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const port=e.target.closest&&e.target.closest('#sch-gantt [data-port]'); if(port){schLinkDrag(e,port);return;} const bar=e.target.closest&&e.target.closest('#sch-gantt [data-bar]'); if(!bar)return; const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'); if(!m||!host||!host._px)return;
-  const t=m.byId.get(bar.dataset.bar); if(!t)return; const D=AIDCSchedule.dates, r=m.res.tasks[t.id], px=host._px, x0=e.clientX, left0=parseFloat(bar.style.left)||0, lock=t.actualStart?'착수한 업무는 실제 시작일로 고정됩니다. 상세창에서 날짜를 바꾸세요.':t.finishRule?'검수 완료 후 개월 수로 정해지는 업무입니다.':''; let moved=false, days=0, tip=null;
-  const move=ev=>{ const dx=(ev.clientX-x0)/(LAYOUT.zoom||1); if(!moved&&Math.abs(dx)<4)return; if(!moved){moved=true;document.body.style.userSelect='none';if(lock){toast(lock,3200);}else{tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);}}
-    if(lock)return; days=Math.round(dx/px); bar.style.left=(left0+days*px)+'px'; bar.classList.add('drag'); const a=D.addDays(r.start,days), b=D.addDays(r.finish,days); tip.textContent=`${schD(a)}${t.kind==='milestone'?'':' → '+schD(b)} (${days>0?'+':''}${days}일)`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+16)+'px'; };
-  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; if(tip)tip.remove(); if(!moved)return; swallowClick(); bar.classList.remove('drag'); bar.style.left=left0+'px'; if(lock||!days)return;
-    const len=D.diffDays(t.plannedFinish,t.plannedStart), ns=D.addDays(r.start,days);
-    if(schEditTask(pid,t.id,`${schWbs(t.wbs)} 관리일정 ${days>0?'+':''}${days}일`,x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);})){const r2=schModel(pid).res.tasks[t.id];if(r2&&r2.start!==ns)toast(`${schWbs(t.wbs)} 관리일정을 옮겼지만 선행 업무 때문에 예상 시작은 ${schD(r2.start)}입니다.`,4600,{t:'되돌리기',fn:schUndo});} };
-  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); });
+// (Moving a bar, pulling its ends and pulling a relation: schBarDrag / schLinkDrag in 68-feedback.js.)
 // Preview marker in the top bar (and the way back to the page everybody else sees).
 function schPreviewBadge(){ if(!schPreview()||$('#sch-pv'))return; const host=$('#tb-user'); if(!host)return; /* inside the user block: the top bar places its parts absolutely */ const b=document.createElement('button'); b.id='sch-pv'; b.className='sch-pv'; b.type='button'; b.textContent='미리보기'; b.title='일정 통합 화면 미리보기 중입니다';
   b.addEventListener('click',e=>{e.stopPropagation();menuPop(b,[{hd:'일정 통합 화면 미리보기'},{t:'기존 화면으로 돌아가기',k:'off',fn:()=>{try{localStorage.removeItem('aidc-preview');}catch(x){}location.href=location.pathname+'?v=1'+location.hash;}},{t:'미리보기 주소 복사',k:'cp',fn:()=>{const u=location.origin+location.pathname+'?v=2'+location.hash;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('미리보기 주소를 복사했습니다.'),()=>toast(u,6000));}}],{right:true});});
@@ -5701,22 +5942,9 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&schPop)schDayPopHi
 document.addEventListener('scroll',e=>{ if(schPop&&!(e.target instanceof Node&&schPop.contains(e.target)))schDayPopHide(true); },true);
 window.addEventListener('resize',()=>{ if(schPop)schDayPopHide(true); if(schPreview())setTimeout(schFitRight,60); });
 
-// relation map: Ctrl (or ⌘) + wheel makes it larger and smaller; the cards a card is related to show on their lines while the pointer is on it
-document.addEventListener('wheel',e=>{ if(!(e.ctrlKey||e.metaKey))return; const host=e.target.closest&&e.target.closest('#sch-net'); if(!host)return; e.preventDefault(); SCHU.netFit=false; schNetZoom(e.deltaY<0?1:-1); },{passive:false});
+// relation map (the wheel, pulling the ground and pulling a relation are in 68-feedback.js): the cards a card is related to show on their lines while the pointer is on it
 document.addEventListener('mouseover',e=>{ const net=$('#sch-net'); if(!net)return; const card=e.target.closest&&e.target.closest('#sch-net .sn-node'), id=card?card.dataset.k:''; if(net._hov===id)return; net._hov=id;
   net.querySelectorAll('.sn-links g').forEach(g=>g.classList.toggle('hov',!!id&&(g.dataset.a===id||g.dataset.b===id))); });
-
-// Relation map: pulling a card onto another card proposes "when the first is finished the second starts" (the kind can be changed in the window that follows).
-document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const card=e.target.closest&&e.target.closest('#sch-net .sn-node'); if(!card||!schReady(S.proj))return; const pid=S.proj, m=schModel(pid), from=card.dataset.k, svgEl=$('#sch-net .sn-links'); if(!m||!m.byId.has(from)||!svgEl)return;
-  const x0=e.clientX, y0=e.clientY; let on=false, line=null, tip=null, target=null;
-  const pt=(x,y)=>{const M=svgEl.getScreenCTM();return M?[(x-M.e)/M.a,(y-M.f)/M.d]:[0,0];};
-  const move=ev=>{ if(!on){ if(Math.hypot(ev.clientX-x0,ev.clientY-y0)<7)return; on=true; document.body.style.userSelect='none'; card.classList.add('linking'); line=document.createElementNS('http://www.w3.org/2000/svg','path'); line.setAttribute('class','draft'); svgEl.appendChild(line); tip=document.createElement('div'); tip.className='sg-tip'; document.body.appendChild(tip); }
-    const r=card.getBoundingClientRect(), a=pt(r.right,r.top+r.height*SN.port/SN.h), b=pt(ev.clientX,ev.clientY); line.setAttribute('d',`M${a[0]},${a[1]} L${b[0]},${b[1]}`);
-    const el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-net .sn-node'); if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.k!==from?hit:null; if(target)target.classList.add('target');
-    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+16)+'px'; tip.textContent=target?`${schWbs(m.byId.get(from).wbs)} → ${schWbs(m.byId.get(target.dataset.k).wbs)} · 놓으면 연결 내용을 보여줍니다`:'연결할 업무 카드에 놓으세요'; };
-  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; document.body.style.userSelect=''; card.classList.remove('linking'); if(line)line.remove(); if(tip)tip.remove(); swallowClick(); if(!target)return; target.classList.remove('target');
-    schPropose(pid,{kind:'new',from,to:target.dataset.k,type:'FS'}); };
-  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); });
 
 // the edge between the outline and the chart can be pulled to make the table narrower or wider (double click: the design's width)
 document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const sp=e.target.closest&&e.target.closest('#sch-gantt .sg-split'); if(!sp)return; e.preventDefault(); e.stopPropagation(); const z=LAYOUT.zoom||1, x0=e.clientX, w0=SG.left; let raf=0, moved=false; document.body.style.userSelect='none'; document.body.style.cursor='col-resize';
@@ -5749,7 +5977,7 @@ const MP_OLD={mine:'account.activity',drafts:'account.activity',general:'setting
 const MP_INDEX=[
   ['댓글 입력 방식','settings.prefs','cmtEnter','enter 엔터 ctrl 등록 전송'],['화면 움직임 줄이기','settings.prefs','calm','애니메이션 접근성 모션'],['테마','settings.prefs','theme','다크 라이트 색'],['언어 · 날짜 · 시간대','settings.prefs','locale','한국어 형식'],['개인 설정 초기화','settings.prefs','reset','되돌리기 기본값'],
   ['멘션 알림','settings.notif','nMention','@ 수신함'],['댓글 알림','settings.notif','nComment','수신함'],['날짜 알림 (리마인더)','settings.notif','nRemind','기한 수신함'],['이메일 · 브라우저 알림','settings.notif','channels','메일 푸시'],
-  ['워크스페이스 이름','settings.general','wsName','브랜드 로고'],['소속','settings.general','org','부서'],['부서 드롭박스 주소','settings.general','dropboxUrl','dropbox 링크'],
+  ['워크스페이스 이름','settings.general','wsName','브랜드 로고'],['소속','settings.general','org','부서'],['부서 드롭박스 주소','settings.general','dropboxUrl','dropbox 링크'],['푸터 링크 (그룹웨어 · 홈페이지 · SNS)','settings.general','lk_groupware','footer 유튜브 인스타 페이스북 youtube instagram facebook',1],
   ['멤버 · 역할','settings.members','','소유자 관리자 추가 사번'],['팀스페이스','settings.teamspace','','팀 접근'],['업데이트','settings.updates','','최근 변경'],
   ['로그인 유지 기간','settings.security','','세션 보안',1],['감사 로그','settings.audit','','활동 기록',1],['사용 현황','settings.analytics','','통계 애널리틱스',1],
   ['프로필 (이름 · 사진 · 이메일)','account.profile','','계정 직책'],['로그인 기기','account.logins','','세션 로그아웃'],['내 활동','account.activity','','작성 담당 초안'],['수신함','inbox','','알림'],['휴지통','trash','','복원 삭제']];
@@ -5811,7 +6039,9 @@ function mpFormState(form){ const box=$(`[data-mpstate="${form}"]`), btn=$(`[dat
   $$(`[data-mperr^="${form}."]`).forEach(n=>{const m=err[n.dataset.mperr.split('.')[1]]||''; n.textContent=m; const inp=$(`[data-mpf="${n.dataset.mperr}"]`); if(inp)inp.setAttribute('aria-invalid',m?'true':'false');});
   const dot=$(`#mnav [data-mp="go:${form==='ws'?'settings.general':'account.profile'}"]`); if(dot){const has=!!$('.dty',dot); if(has!==dirty)mpNav();} }
 const mpClean=v=>String(v||'').replace(/\s+/g,' ').trim();
-function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||''}; }
+function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||'']))}; }
+// The company's places the footer links to (설정 › 워크스페이스 › 일반).
+const MP_LINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
 function mpDraft(form){ return MP.draft[form]||(MP.draft[form]={...mpOrigin(form)}); }
 function mpDirty(form){ const d=MP.draft[form]; if(!d)return false; const o=mpOrigin(form); return Object.keys(o).some(k=>mpClean(d[k])!==mpClean(o[k])); }
 function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
@@ -5819,7 +6049,8 @@ function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
     if(mpClean(d.title).length>40)e.title='직책은 40자까지 쓸 수 있습니다.';
     const em=mpClean(d.email).toLowerCase(); if(em){ if(em.length>80||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))e.email='이메일 주소 형식이 아닙니다. (예: name@sunjin.co.kr)'; else if(Object.entries(MEMBERS_META).some(([id,m])=>id!==sharedUser&&m&&String(m.email||'').toLowerCase()===em))e.email='다른 멤버가 쓰고 있는 주소입니다.'; } }
   else { if(!mpClean(d.wsName))e.wsName='워크스페이스 이름을 입력하세요.'; else if(mpClean(d.wsName).length>30)e.wsName='30자까지 쓸 수 있습니다.'; if(mpClean(d.org).length>60)e.org='60자까지 쓸 수 있습니다.';
-    const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.'; }
+    const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.';
+    for(const [k] of MP_LINKS){ const v=mpClean(d['lk_'+k]); if(v&&!/^https?:\/\/[^\s]+$/.test(v))e['lk_'+k]='http:// 또는 https:// 로 시작하는 주소를 입력하세요.'; } }
   return e; }
 const mpField=(form,k,label,o={})=>{ const d=mpDraft(form); return `<label class="fl" data-row="${k}"><span>${esc(label)}</span><div><input data-mpf="${form}.${k}" value="${esc(d[k])}" maxlength="${o.max||80}" ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ro?'readonly':''} ${o.type?`type="${o.type}"`:''} autocomplete="off">${o.note?`<small>${o.note}</small>`:''}<em class="err" data-mperr="${form}.${k}" role="alert"></em></div></label>`; };
 const mpFixed=(label,val,o={})=>`<div class="fl ro" ${o.row?`data-row="${o.row}"`:''}><span>${esc(label)}</span><div><span class="val">${val}</span>${o.note?`<small>${o.note}</small>`:''}</div></div>`;
@@ -5829,7 +6060,8 @@ async function mpSave(form){ if((MP.state[form]||{}).k==='saving'||!mpDirty(form
   try{ if(form==='profile'){ const name=mpClean(d.name), title=mpClean(d.title), email=mpClean(d.email).toLowerCase(), cur=MEMBERS_META[sharedUser]||{};
         if(name!==sharedName)await sharedSetName(name);                                                   // the Worker checks the name itself and answers with the stored one
         if(title!==(cur.title||'')||email!==(cur.email||'')){ const next={...cur,title,email}; if(!title)delete next.title; if(!email)delete next.email; MEMBERS_META[sharedUser]=next; } }
-      else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl); }
+      else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl);
+        const links=Object.fromEntries(MP_LINKS.map(([k])=>[k,mpClean(d['lk_'+k])]).filter(([,v])=>v)); if(JSON.stringify(links)!==JSON.stringify(SETTINGS.links||{}))SETTINGS.links=links; }
       const why=await mpCommit(ids);
       if(why==='pending'){MP.state[form]={k:'pending'};mpWatch(form,ids);} else if(why){MP.state[form]={k:'error',m:why}; delete MP.draft[form];} else {MP.state[form]={k:'saved',at:Date.now()}; delete MP.draft[form];}
   }catch(err){ MP.state[form]={k:'error',m:(err&&err.message)||'저장하지 못했습니다. 입력한 내용은 그대로 있습니다.'}; }
@@ -5935,6 +6167,8 @@ function mpWs(){ const adm=canAdmin();
   if(!adm)return mpHead('일반','워크스페이스 기본 정보입니다. 소유자·관리자만 바꿀 수 있습니다.')+`<div class="mp-form">${mpFixed('워크스페이스 이름',esc(SETTINGS.wsName||'AIDC WorkSpace'),{row:'wsName'})}${mpFixed('소속',esc(SETTINGS.org||'—'),{row:'org'})}${mpFixed('부서 드롭박스 주소',SETTINGS.dropboxUrl?esc(SETTINGS.dropboxUrl):'—',{row:'dropboxUrl'})}</div>`;
   return mpHead('일반','워크스페이스 기본 정보입니다. 모든 멤버의 화면에 적용됩니다.')+`
   <div class="mp-form">${mpField('ws','wsName','워크스페이스 이름',{max:30,note:'왼쪽 위 로고와 브라우저 탭 제목에 쓰입니다.'})}${mpField('ws','org','소속',{max:60})}${mpField('ws','dropboxUrl','부서 드롭박스 주소',{max:300,ph:'https://www.dropbox.com/...'})}</div>
+  <div class="mp-sub" style="margin-top:34px"><h3>푸터 링크</h3></div><div class="mp-desc" style="font-size:12.5px;font-weight:400;color:#8e8e8e">모든 페이지 맨 아래에 표시됩니다. 비워 두면 흐리게 보이고 눌러도 열리지 않습니다.</div>
+  <div class="mp-form" style="margin-top:16px">${MP_LINKS.map(([k,t])=>mpField('ws','lk_'+k,t,{max:300,ph:'https://'})).join('')}</div>
   <div class="mp-foot"><button class="mp-btn" data-mp="save:ws" disabled>변경 사항 저장</button>${mpDirty('ws')?'<button class="mp-btn sec" data-mp="undo:ws">되돌리기</button>':''}<span class="mp-state" data-mpstate="ws" role="status"></span></div>`+mpAfter('ws'); }
 
 /* ---------- 휴지통 ---------- */

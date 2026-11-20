@@ -5,9 +5,12 @@
 /* ---------- research: a row of pickers above the cards ---------- */
 const schRf=()=>S.rf||(S.rf={});
 const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올해',old:'30일보다 이전'}],file:['첨부',{y:'첨부 있음',n:'첨부 없음'}],sort:['정렬',{new:'최신순',old:'오래된순',title:'제목순'}]};
+// The tags members write in square brackets in front of a title, most used first (a tag used once is not offered).
+const schResTagsOf=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>m[1].trim().toUpperCase()).filter(Boolean);
+function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of new Set(schResTagsOf(i)))n.set(t,(n.get(t)||0)+1); return [...n].filter(([,k])=>k>1).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,12); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
   list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
-    if(c.proj&&i.proj!==c.proj)return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
+    if(c.tag&&!(c.tag==='-'?!schResTagsOf(i).length:schResTagsOf(i).includes(c.tag)))return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
     if(c.when==='30'&&!(d>=d30))return false; if(c.when==='month'&&d.slice(0,7)!==today.slice(0,7))return false; if(c.when==='year'&&d.slice(0,4)!==today.slice(0,4))return false; if(c.when==='old'&&!(d<d30))return false;
     return true; });
   if(c.sort==='new')return list.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||newestFirst(a,b));
@@ -15,16 +18,16 @@ function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Dat
   if(c.sort==='title')return list.slice().sort((a,b)=>norm(a.title).localeCompare(norm(b.title),'ko'));
   return sortResearch(list); }
 function schResChips(pid){ const c=schRf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-rchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
-  if(c.proj&&!pid)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','작성자: '+userName(c.who));
+  if(c.tag)chip('tag','태그: '+(c.tag==='-'?'태그 없음':'['+c.tag+']')); if(c.who)chip('who','작성자: '+userName(c.who));
   for(const k of ['when','file','sort']){ if(c[k])chip(k,SCH_RF[k][0]+': '+(SCH_RF[k][1][c[k]]||c[k])); }
   return out.join(''); }
 function schResBar(pid){ const c=schRf();
   return `<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="res">${schResChips(pid)}</div></div>
-    <div class="sch-filters res">${pid?'':schSf2('rpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('rpick','when',c.when?SCH_RF.when[1][c.when]:'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}<div class="right">${schSf2('rpick','sort',c.sort?SCH_RF.sort[1][c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
+    <div class="sch-filters res">${schSf2('rpick','tag',c.tag?(c.tag==='-'?'태그 없음':'['+c.tag+']'):'전체 태그',!!c.tag)}${schSf2('rpick','when',c.when?SCH_RF.when[1][c.when]:'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}<div class="right">${schSf2('rpick','sort',c.sort?SCH_RF.sort[1][c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
 function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
   const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
   const pool=liveItems('research',pid); let items=[];
-  if(k==='proj')items=[fl('',{t:'전체 프로젝트'}),...orderedProjects().filter(p=>pool.some(i=>i.proj===p)).map(p=>fl(p,{t:proj(p).tag,html:pill(proj(p),'nosq')}))];
+  if(k==='tag')items=[fl('',{t:'전체 태그'}),...schResTags(pool).map(([t,n])=>fl(t,{t:`[${t}]`,html:`<b style="font-weight:600">[${esc(t)}]</b><span style="margin-left:8px;color:#a6a6a6;font-size:11px">${n}</span>`})),fl('-',{t:'태그 없음'})];
   else if(k==='who')items=[fl('',{t:'전체 작성자'}),...[...new Set(pool.map(i=>i.authorId).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
   else items=[fl('',{t:k==='when'?'전체 기간':k==='file'?'첨부 전체':'기본 순서'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu',right:k==='sort'}); }

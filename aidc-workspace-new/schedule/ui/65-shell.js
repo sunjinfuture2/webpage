@@ -17,7 +17,7 @@ function schRecentHtml(){ const G=new Map(), off=schRecOff();
   let h='';
   for(const [key,g] of G){ h+=`<div class="item r0" ${g.go?`data-go="${esc(g.go)}"`:''}><span class="tx">${esc(g.label)}</span></div>`;
     for(const [kind,list] of g.kinds){ const rk=key+'|'+kind, shut=off.has(rk);
-      h+=`<div class="item ${shut?'r3':'r1'}" data-rec="${esc(rk)}" role="button" aria-expanded="${!shut}" title="${shut?'펼치기':'접기'}">${shut?svg('i-chev-r',3.6,6.3,'color:#8e8e8e'):svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}<span class="tx">${esc(kind)}</span><span class="rn">${list.length}</span></div>`;
+      h+=`<div class="item ${shut?'r3':'r1'}" data-rec="${esc(rk)}" role="button" aria-expanded="${!shut}" title="${shut?'펼치기':'접기'}">${shut?svg('i-chev-r',3.6,6.3,'color:#8e8e8e'):svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}<span class="tx">${esc(kind)}</span></div>`;
       if(!shut)h+=list.map(x=>`<div class="item r2" data-open="${esc(x.id)}"><i class="dot"></i><span class="tx">${esc(x.title)}</span></div>`).join(''); } }
   return h||'<div class="item none"><span class="tx">최근 연 항목이 여기에 표시됩니다</span></div>'; }
 
@@ -43,23 +43,35 @@ function schNoticeSave(){ const t=$('#nt-title'), b=$('#nt-body'), title=(t.valu
   SCH.nt={open:id}; t.blur(); schNoticeDraw(); toast('공지사항을 등록했습니다.'); }
 
 /* ---------- footer: the same on every page, below the same amount of room ---------- */
-function schFooterHtml(){ const ws=SETTINGS.wsName||'AIDC WorkSpace', projs=orderedProjects().slice(0,6), y=TODAY.slice(0,4);
+// The company's places outside the workspace. Their addresses are a workspace setting (설정 › 워크스페이스 › 일반): the three
+// social ones are small grey marks, the two others words. One without an address is pale and says so.
+const SCH_FLINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
+const SCH_FICON={youtube:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.800 19 12 19 12 19s6.2 0 7.8-.4a2.500 2.500 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.200 3z"/></svg>',
+  instagram:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7.500 3h9A4.500 4.500 0 0 1 21 7.500v9a4.500 4.500 0 0 1-4.500 4.500h-9A4.500 4.500 0 0 1 3 16.500v-9A4.500 4.500 0 0 1 7.500 3zm0 1.800A2.700 2.700 0 0 0 4.800 7.500v9a2.700 2.700 0 0 0 2.700 2.700h9a2.700 2.700 0 0 0 2.700-2.700v-9a2.700 2.700 0 0 0-2.700-2.700zM12 7.600a4.400 4.400 0 1 1 0 8.800 4.400 4.400 0 0 1 0-8.800zm0 1.800a2.600 2.600 0 1 0 0 5.200 2.600 2.600 0 0 0 0-5.200zm4.700-3.200a1.050 1.050 0 1 1 0 2.100 1.050 1.050 0 0 1 0-2.100z"/></svg>',
+  facebook:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-1.560 19.880v-6.990H7.900V12h2.540V9.800c0-2.510 1.490-3.890 3.780-3.890 1.090 0 2.240.190 2.240.190v2.460h-1.260c-1.240 0-1.630.770-1.630 1.560V12h2.770l-.440 2.890h-2.330v6.990A10 10 0 0 0 12 2z"/></svg>'};
+function schFooterHtml(){ const ws=SETTINGS.wsName||'AIDC WorkSpace', projs=orderedProjects().slice(0,6), y=TODAY.slice(0,4), L=SETTINGS.links||{};
   const col=(t,rows)=>`<div class="fc"><b>${t}</b>${rows.join('')}</div>`, a=(attr,t)=>`<a ${attr}>${esc(t)}</a>`;
+  const out=(k,t)=>{ const u=urlHref(L[k]||''), ic=SCH_FICON[k]||''; return u?`<a class="fx ${ic?'ic':''}" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="${esc(t)}" aria-label="${esc(t)}">${ic||esc(t)}</a>`:`<a class="fx off ${ic?'ic':''}" data-foot="nolink" data-k="${k}" title="${esc(t)} · 주소가 아직 등록되지 않았습니다" aria-label="${esc(t)}">${ic||esc(t)}</a>`; };
   return `<footer class="pfoot" id="pfoot"><div class="fline"></div><div class="fgrid">
-    <div class="fb"><div class="flogo" data-go="main">${esc(ws)}</div><p>${esc(SETTINGS.org||'')}</p><p class="mut">프로젝트의 미팅 · 액션 · 리서치와 일정을 한곳에서 보는 업무 공간.</p></div>
+    <div class="fb"><div class="flogo" data-go="main">${esc(ws)}</div><p>${esc(SETTINGS.org||'')}</p><p class="mut">프로젝트의 미팅 · 액션 · 리서치와 일정을 한곳에서 보는 업무 공간.</p><div class="fout">${SCH_FLINKS.filter(x=>!SCH_FICON[x[0]]).map(x=>out(...x)).join('')}<span class="fsns">${SCH_FLINKS.filter(x=>SCH_FICON[x[0]]).map(x=>out(...x)).join('')}</span></div></div>
     ${col('바로가기',[a('data-go="main"','메인 페이지'),a('data-go="archive"','자료실'),a('data-ext="dropbox"','부서 드롭박스'),a('data-foot="search"','검색')])}
     ${col('프로젝트',projs.map(k=>a(`data-go="project:${esc(k)}"`,PROJECTS[k].tag||PROJECTS[k].full)))}
     ${col('에이전트',[a('data-open="ag_daily"','기관 및 업체별 일일동향'),a('data-open="ag_sim"','수익구조 시뮬레이터'),a('data-open="ag_glossary"','인터렉션 용어사전')])}
     ${col('내 계정',[a('data-foot="account"','계정'),a('data-foot="inbox"','수신함'),a('data-foot="settings"','설정'),a('data-foot="trash"','휴지통')])}
    </div><div class="fend"><span>© ${y} 선진엔지니어링 · ${esc(SETTINGS.org||ws)}</span><span class="sp"></span><span class="mut">사내 업무용 · 외부 공유 금지</span><button class="ftop" data-foot="top" title="맨 위로">맨 위로 ${svg('i-chev-d',8,4,'transform:rotate(180deg)')}</button></div></footer>`; }
+// The pictogram of a kind in the calendar, in a colour (the copies made for the section titles take the text colour).
+const schCalPict=(type,color)=>`<svg class="pict" aria-hidden="true" style="color:${type==='research'?'#c6c6c6':esc(color||'#6f6f6f')}"><use href="#${type==='action'?'i-sch-tag':'i-sch-'+type}"/></svg>`;
 // Called after every draw of a page: the footer goes below the page's last section, which ends with the same room everywhere.
 function schFooter(){ if(!PREVIEW_ON)return; for(const pw of $$('#main-pw,#proj-pw,#arch-pw')){ const old=$('.pfoot',pw); if(old)old.remove(); if(!pw.closest('.page.on')||!pw.children.length)continue;
-    const last=pw.lastElementChild; if(last){last.style.paddingBottom='0px';} pw.insertAdjacentHTML('beforeend',schFooterHtml()); } }
+    const last=pw.lastElementChild; if(last){last.style.paddingBottom='0px';} pw.insertAdjacentHTML('beforeend',schFooterHtml()); }
+  // the colour of the open project, for what is tinted with it on its page (tags of filters, pickers that are set)
+  const pg=$('#page-project'); if(pg)pg.style.setProperty('--pjc',S.page==='project'&&PROJECTS[S.proj]?PROJECTS[S.proj].color:'#5c5c5c'); }
 
 /* ---------- clicks of this file ---------- */
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el;
   if(el=T.closest('[data-rec]')){ const off=schRecOff(), k=el.dataset.rec; if(off.has(k))off.delete(k); else off.add(k); try{localStorage.setItem('aidc-recoff',JSON.stringify([...off].slice(-60)));}catch{} sbState(); return; }
-  if(el=T.closest('[data-foot]')){ const k=el.dataset.foot; if(k==='top')$('#content').scrollTo({top:0,behavior:myPref('calm')?'auto':'smooth'}); else if(k==='search'){const b=$('#sb-search'); if(b){ if($('#app').classList.contains('sb-off')){$('#app').classList.remove('sb-off');render(true);} setTimeout(()=>b.click(),0);} } else openModal(k); return; }
+  if(el=T.closest('[data-foot]')){ const k=el.dataset.foot; if(k==='top')$('#content').scrollTo({top:0,behavior:myPref('calm')?'auto':'smooth'}); else if(k==='nolink'){ if(canAdmin()){openModal('settings.general'); toast('설정 › 워크스페이스 › 일반에서 주소를 등록하세요.',3200);} else toast('주소가 아직 등록되지 않았습니다. 소유자·관리자가 설정에서 등록합니다.',3200); }
+    else if(k==='search'){const b=$('#sb-search'); if(b){ if($('#app').classList.contains('sb-off')){$('#app').classList.remove('sb-off');render(true);} setTimeout(()=>b.click(),0);} } else openModal(k); return; }
   const n=$('#notice'); if(!n)return;
   if(el=T.closest('#notice [data-nt]')){ const k=el.dataset.nt, ui=SCH.nt||(SCH.nt={});
     if(k==='add'){ ui.form=true; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }

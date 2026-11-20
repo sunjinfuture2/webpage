@@ -1561,12 +1561,12 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=(opts.proj&&schPreview())?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
-  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}">
+  let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
     <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
   if(!opts.proj) h+=`<div class="filters">${orderedProjects().map(k=>pill(PROJECTS[k],(S.filters[k]!==false?'':'off')+' flt nosq').replace('class="pill','data-flt="'+k+'" title="이 프로젝트의 일정 보기/숨기기" class="pill')).join('')}</div>`;
-  h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
+  h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${PV?schCalPict(t,opts.proj?proj(opts.proj).color:''):pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
   h+=`<div class="grid"><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="rows">`;
   for(let w=0;w<weeks;w++){
     const ws=w*7-startDow+1, we=ws+6; let cells='';
@@ -1582,7 +1582,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     wk.forEach(x=>{const e=x.e; if(x.lane>=CAL_LANES){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
       const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:9.5); const right=COLX[ec]+COLW[ec]-(x.contR?0:(ec===6?0:8));
       const p=proj(e.proj); const rs=e.type==='research'; const first=e.date<mStart?x.s===1:x.s===+e.date.slice(8); const full=(e.title||'').split('\n').join(' ')||'(제목 없음)'; const label=first?esc(full):'';
-      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
+      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
       maxLane=Math.max(maxLane,x.lane);});
     Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+9.5}px;top:${CAL_LANES*21.1}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
     const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?29+used*21.1+7.7:0;
@@ -1653,7 +1653,7 @@ function carouselInfo(k){const inner=$(k==='proj'?'#proj-inner':'#meet-inner');i
   const step=cards.length>1?cards[1].offsetLeft-x0:(last?last.offsetWidth:0);return {inner,cards,view,x0,step,max:Math.max(0,Math.ceil(total-view))};}
 function applyCarousel(k){const c=carouselInfo(k);if(!c)return;const off=Math.min(Math.max(0,S.car[k]||0),c.max);S.car[k]=off;c.inner.style.transform=off?`translateX(${-off}px)`:'';
   const box=c.inner.closest('.projects,.meet');if(box){box.classList.toggle('at-start',off<=0);box.classList.toggle('at-end',off>=c.max);}
-  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=PREVIEW_ON&&k==='proj'?'':c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
+  const vis=c.cards.filter(el=>el.offsetLeft-c.x0-off>=-1&&el.offsetLeft-c.x0+el.offsetWidth-off<=c.view+1).length;const cnt=$(k==='proj'?'#proj-cnt':'#meet-cnt');if(cnt)cnt.textContent=PREVIEW_ON?'':c.cards.length?`${c.cards.length}개 중 ${Math.max(1,vis)}개 표시`:'';}
 function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car[k]||0)+dir*c.step;if(dir>0&&off>c.max-8)off=c.max;if(off<8)off=0;S.car[k]=off;applyCarousel(k);}
 
 
@@ -2197,7 +2197,7 @@ document.addEventListener('click',async e=>{
     if(a==='open'||a==='partner'){openPanel(id);} else if(a==='dl'){downloadFiles(itemFiles(item(id)),el);}
     else if(a==='dlroad'){const r=ROADMAP[id];const fs=[],seen=new Set();((r&&r.items)||[]).forEach(x=>itemFiles(item(x)).forEach(f=>{if(!seen.has(f.id)){seen.add(f.id);fs.push(f);}}));downloadFiles(fs,el);} return;}
   if(el=q('[data-cat]')){S.partnerCat=S.partnerCat===el.dataset.cat?null:el.dataset.cat;S.ptPage=1;render(true);const s=$('.page.on #sec-partners');s&&s.scrollIntoView({block:'start'});return;}
-  if(el=q('[data-catclear]')){S.partnerCat=null;render();return;}
+  if(el=q('[data-catclear]')){S.partnerCat=null;render(true);return;}
   if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-open]')){e.stopPropagation();openPanel(el.dataset.open);return;}
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}

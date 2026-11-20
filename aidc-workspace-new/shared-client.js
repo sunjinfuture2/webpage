@@ -104,7 +104,7 @@ function sharedApplyRecords(records){
 const openItems=()=>[S.panel,S.full].map(id=>id&&ITEMS.find(x=>x.id===id)).filter(Boolean);
 // Redraw after a change from the server, but never while this person is typing, choosing from a menu or editing something.
 function sharedRedraw(){if(!sharedReady)return;sharedUi();const active=document.activeElement;
- if(active?.matches('input,textarea,select,[contenteditable="true"]')||popEl||$('#dlg')||S.editProj||S.editSimple||openItems().some(x=>x.editing||x.status==='new'||(x.status==='draft'&&canEditItem(x)))){sharedPendingRedraw=true;return;}
+ if(active?.matches('input,textarea,select,[contenteditable="true"]')||popEl||$('#dlg')||S.editProj||S.editSimple||(typeof SCH!=='undefined'&&SCH.drag)||openItems().some(x=>x.editing||x.status==='new'||(x.status==='draft'&&canEditItem(x)))){sharedPendingRedraw=true;return;}
  sharedPendingRedraw=false;
  if(S.full&&!item(S.full)){S.full=null;toast('해당 게시물이 삭제되었습니다.');}
  if(S.panel&&!panelExists(S.panel))closePanel(true);

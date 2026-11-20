@@ -21,7 +21,7 @@ const MP_OLD={mine:'account.activity',drafts:'account.activity',general:'setting
 const MP_INDEX=[
   ['댓글 입력 방식','settings.prefs','cmtEnter','enter 엔터 ctrl 등록 전송'],['화면 움직임 줄이기','settings.prefs','calm','애니메이션 접근성 모션'],['테마','settings.prefs','theme','다크 라이트 색'],['언어 · 날짜 · 시간대','settings.prefs','locale','한국어 형식'],['개인 설정 초기화','settings.prefs','reset','되돌리기 기본값'],
   ['멘션 알림','settings.notif','nMention','@ 수신함'],['댓글 알림','settings.notif','nComment','수신함'],['날짜 알림 (리마인더)','settings.notif','nRemind','기한 수신함'],['이메일 · 브라우저 알림','settings.notif','channels','메일 푸시'],
-  ['워크스페이스 이름','settings.general','wsName','브랜드 로고'],['소속','settings.general','org','부서'],['부서 드롭박스 주소','settings.general','dropboxUrl','dropbox 링크'],
+  ['워크스페이스 이름','settings.general','wsName','브랜드 로고'],['소속','settings.general','org','부서'],['부서 드롭박스 주소','settings.general','dropboxUrl','dropbox 링크'],['푸터 링크 (그룹웨어 · 홈페이지 · SNS)','settings.general','lk_groupware','footer 유튜브 인스타 페이스북 youtube instagram facebook',1],
   ['멤버 · 역할','settings.members','','소유자 관리자 추가 사번'],['팀스페이스','settings.teamspace','','팀 접근'],['업데이트','settings.updates','','최근 변경'],
   ['로그인 유지 기간','settings.security','','세션 보안',1],['감사 로그','settings.audit','','활동 기록',1],['사용 현황','settings.analytics','','통계 애널리틱스',1],
   ['프로필 (이름 · 사진 · 이메일)','account.profile','','계정 직책'],['로그인 기기','account.logins','','세션 로그아웃'],['내 활동','account.activity','','작성 담당 초안'],['수신함','inbox','','알림'],['휴지통','trash','','복원 삭제']];
@@ -83,7 +83,9 @@ function mpFormState(form){ const box=$(`[data-mpstate="${form}"]`), btn=$(`[dat
   $$(`[data-mperr^="${form}."]`).forEach(n=>{const m=err[n.dataset.mperr.split('.')[1]]||''; n.textContent=m; const inp=$(`[data-mpf="${n.dataset.mperr}"]`); if(inp)inp.setAttribute('aria-invalid',m?'true':'false');});
   const dot=$(`#mnav [data-mp="go:${form==='ws'?'settings.general':'account.profile'}"]`); if(dot){const has=!!$('.dty',dot); if(has!==dirty)mpNav();} }
 const mpClean=v=>String(v||'').replace(/\s+/g,' ').trim();
-function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||''}; }
+function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||'']))}; }
+// The company's places the footer links to (설정 › 워크스페이스 › 일반).
+const MP_LINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
 function mpDraft(form){ return MP.draft[form]||(MP.draft[form]={...mpOrigin(form)}); }
 function mpDirty(form){ const d=MP.draft[form]; if(!d)return false; const o=mpOrigin(form); return Object.keys(o).some(k=>mpClean(d[k])!==mpClean(o[k])); }
 function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
@@ -91,7 +93,8 @@ function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
     if(mpClean(d.title).length>40)e.title='직책은 40자까지 쓸 수 있습니다.';
     const em=mpClean(d.email).toLowerCase(); if(em){ if(em.length>80||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))e.email='이메일 주소 형식이 아닙니다. (예: name@sunjin.co.kr)'; else if(Object.entries(MEMBERS_META).some(([id,m])=>id!==sharedUser&&m&&String(m.email||'').toLowerCase()===em))e.email='다른 멤버가 쓰고 있는 주소입니다.'; } }
   else { if(!mpClean(d.wsName))e.wsName='워크스페이스 이름을 입력하세요.'; else if(mpClean(d.wsName).length>30)e.wsName='30자까지 쓸 수 있습니다.'; if(mpClean(d.org).length>60)e.org='60자까지 쓸 수 있습니다.';
-    const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.'; }
+    const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.';
+    for(const [k] of MP_LINKS){ const v=mpClean(d['lk_'+k]); if(v&&!/^https?:\/\/[^\s]+$/.test(v))e['lk_'+k]='http:// 또는 https:// 로 시작하는 주소를 입력하세요.'; } }
   return e; }
 const mpField=(form,k,label,o={})=>{ const d=mpDraft(form); return `<label class="fl" data-row="${k}"><span>${esc(label)}</span><div><input data-mpf="${form}.${k}" value="${esc(d[k])}" maxlength="${o.max||80}" ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.ro?'readonly':''} ${o.type?`type="${o.type}"`:''} autocomplete="off">${o.note?`<small>${o.note}</small>`:''}<em class="err" data-mperr="${form}.${k}" role="alert"></em></div></label>`; };
 const mpFixed=(label,val,o={})=>`<div class="fl ro" ${o.row?`data-row="${o.row}"`:''}><span>${esc(label)}</span><div><span class="val">${val}</span>${o.note?`<small>${o.note}</small>`:''}</div></div>`;
@@ -101,7 +104,8 @@ async function mpSave(form){ if((MP.state[form]||{}).k==='saving'||!mpDirty(form
   try{ if(form==='profile'){ const name=mpClean(d.name), title=mpClean(d.title), email=mpClean(d.email).toLowerCase(), cur=MEMBERS_META[sharedUser]||{};
         if(name!==sharedName)await sharedSetName(name);                                                   // the Worker checks the name itself and answers with the stored one
         if(title!==(cur.title||'')||email!==(cur.email||'')){ const next={...cur,title,email}; if(!title)delete next.title; if(!email)delete next.email; MEMBERS_META[sharedUser]=next; } }
-      else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl); }
+      else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl);
+        const links=Object.fromEntries(MP_LINKS.map(([k])=>[k,mpClean(d['lk_'+k])]).filter(([,v])=>v)); if(JSON.stringify(links)!==JSON.stringify(SETTINGS.links||{}))SETTINGS.links=links; }
       const why=await mpCommit(ids);
       if(why==='pending'){MP.state[form]={k:'pending'};mpWatch(form,ids);} else if(why){MP.state[form]={k:'error',m:why}; delete MP.draft[form];} else {MP.state[form]={k:'saved',at:Date.now()}; delete MP.draft[form];}
   }catch(err){ MP.state[form]={k:'error',m:(err&&err.message)||'저장하지 못했습니다. 입력한 내용은 그대로 있습니다.'}; }
@@ -207,6 +211,8 @@ function mpWs(){ const adm=canAdmin();
   if(!adm)return mpHead('일반','워크스페이스 기본 정보입니다. 소유자·관리자만 바꿀 수 있습니다.')+`<div class="mp-form">${mpFixed('워크스페이스 이름',esc(SETTINGS.wsName||'AIDC WorkSpace'),{row:'wsName'})}${mpFixed('소속',esc(SETTINGS.org||'—'),{row:'org'})}${mpFixed('부서 드롭박스 주소',SETTINGS.dropboxUrl?esc(SETTINGS.dropboxUrl):'—',{row:'dropboxUrl'})}</div>`;
   return mpHead('일반','워크스페이스 기본 정보입니다. 모든 멤버의 화면에 적용됩니다.')+`
   <div class="mp-form">${mpField('ws','wsName','워크스페이스 이름',{max:30,note:'왼쪽 위 로고와 브라우저 탭 제목에 쓰입니다.'})}${mpField('ws','org','소속',{max:60})}${mpField('ws','dropboxUrl','부서 드롭박스 주소',{max:300,ph:'https://www.dropbox.com/...'})}</div>
+  <div class="mp-sub" style="margin-top:34px"><h3>푸터 링크</h3></div><div class="mp-desc" style="font-size:12.5px;font-weight:400;color:#8e8e8e">모든 페이지 맨 아래에 표시됩니다. 비워 두면 흐리게 보이고 눌러도 열리지 않습니다.</div>
+  <div class="mp-form" style="margin-top:16px">${MP_LINKS.map(([k,t])=>mpField('ws','lk_'+k,t,{max:300,ph:'https://'})).join('')}</div>
   <div class="mp-foot"><button class="mp-btn" data-mp="save:ws" disabled>변경 사항 저장</button>${mpDirty('ws')?'<button class="mp-btn sec" data-mp="undo:ws">되돌리기</button>':''}<span class="mp-state" data-mpstate="ws" role="status"></span></div>`+mpAfter('ws'); }
 
 /* ---------- 휴지통 ---------- */

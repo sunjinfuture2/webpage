@@ -722,3 +722,134 @@
 .pop.sch-at .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pop.sch-at .it .m{font-size:11px;color:#a6a6a6;flex:none}
 .pop.sch-at .it.sel{background:#f0f0f0}
+
+/* ===== seventh round (owner, 2026-11-20) ===== */
+/* calendar: the count of actions carries the project's colour (pale on other days, full today) */
+.cal.pv .cell .acnt svg{color:var(--pc,#4f4f4f);opacity:.3}
+.cal.pv .cell.today .acnt svg{color:var(--pc,#4f4f4f);opacity:1}
+/* the list beside the calendar and the day window: a soft upper edge once scrolled */
+.rlist.sch .rcap::after{content:"";position:absolute;left:0;right:0;top:100%;height:20px;background:linear-gradient(to bottom,#fff,rgba(255,255,255,0));pointer-events:none;opacity:0;transition:opacity .15s}
+.rlist.sch .rcap.stuck::after{opacity:1}
+.sch-daypop .dp-in.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px);mask-image:linear-gradient(to bottom,transparent,#000 22px)}
+.sch-daypop .dp-in.cut.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+/* sidebar: only what is open is dark */
+.sch-on .sb .recent .r0{color:#8e8e8e}
+.sch-on .sb .recent .r3{color:#8e8e8e}
+.sch-on .sb .recent .item.on,.sch-on .sb .recent .r0.on{color:#2b2b2b}
+/* the way to the open page: only its last part at full strength */
+.sch-on #crumbs > :not(:last-child){opacity:.5}
+.sch-on #crumbs > [data-go]:not(:last-child):hover{opacity:.85}
+/* footer */
+.pfoot{margin-top:240px}
+.pfoot .fline{position:relative;left:calc(-1 * var(--L));width:calc(100% + var(--L) * 2)}
+.pfoot .flogo{color:#0f0f0f}
+.pfoot .fout{display:flex;align-items:center;gap:14px;margin-top:16px}
+.pfoot .fout .fx{font-size:12.5px;color:#4f4f4f;cursor:pointer}
+.pfoot .fout .fx:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fout .fsns{display:inline-flex;align-items:center;gap:8px;margin-left:6px}
+.pfoot .fout .fx.ic{width:20px;height:20px;display:inline-flex;color:#9a9a9a}
+.pfoot .fout .fx.ic svg{width:20px;height:20px;display:block}
+.pfoot .fout .fx.ic:hover{color:#4f4f4f;text-decoration:none}
+.pfoot .fout .fx.off{opacity:.45}
+/* research cards share the width: never narrower than 210.3, as many in a row as fit */
+.sch-on .rgrid{grid-template-columns:repeat(auto-fill,minmax(210.3px,1fr))}
+/* tags of filters: the word 1 lower; on a project page in the project's colour, like a picker that is set */
+.sch-chip{padding-top:2px}
+#page-project .sch-chip{color:var(--pjc,#5c5c5c)}
+#page-project .sch-chip i{color:var(--pjc,#9a9a9a);opacity:.6}
+#page-project .sch-chip:hover{color:var(--pjc,#0f0f0f)}
+#page-project .sch-filters .sf.set span{color:var(--pjc,#000)}
+
+/* --- seventh round, project page --- */
+/* the + of the lower section a little higher */
+.sch-title .sch-evadd.up{top:-40px}
+/* gantt: scroll bar below; nothing of a phase row is cut at the left; the shade of the table's edge darkens what is under it (it used to lighten dark bars) */
+.sg-topbar{border-bottom:0;border-top:1px solid #f1f1f1}
+.sg-row.ph .tw{margin:0 5.6px 0 .5px;width:10px;overflow:visible}
+.sg-left::after{background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,0));mix-blend-mode:multiply}
+/* the % tags: one closed shape, its tip on the chart's edge, its middle on the dashed line */
+.sg-tags b{left:-41px;margin-top:-7.5px;height:15px;width:40px;padding:0;border:0;background:none;border-radius:0;line-height:15px}
+.sg-tags b::after{display:none}
+.sg-tags b svg{position:absolute;left:0;top:0;display:block}
+.sg-tags b span{position:absolute;left:0;top:0;width:31px;text-align:center;font-size:9px;font-weight:500;color:#8e8e8e;line-height:15px}
+/* a bar's ends: pulled to change the start or the finish */
+.sg-bar .rz{position:absolute;top:-1px;bottom:-1px;width:7px;cursor:ew-resize;z-index:3}
+.sg-bar .rz.l{left:-1px}.sg-bar .rz.r{right:-1px}
+.sg-bar .rz::after{content:"";position:absolute;top:5px;bottom:5px;width:2px;border-radius:1px;background:#8e8e8e;opacity:0;transition:opacity .12s}
+.sg-bar .rz.l::after{left:2px}.sg-bar .rz.r::after{right:2px}
+.sg-bar:hover .rz::after{opacity:.55}
+.sg-bar .rz:hover::after{opacity:1;background:#1f8e00}
+.sg-bar{cursor:grab}
+.sg-bar.drag{cursor:grabbing;background:#eef6ec;border-color:#1f8e00;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+/* where a bar stood: a dashed outline (while it is pulled, and for a moment after a change) */
+.sg-ghost{position:absolute;height:22px;border:1px dashed #9a9a9a;border-radius:4.5px;background:rgba(0,0,0,.025);z-index:1;pointer-events:none;transition:opacity .6s}
+.sg-ghost.ms{width:14px;height:14px;border-radius:2px;transform:rotate(45deg)}
+.sg-ghost.out{opacity:0}
+/* the dates above the ends of a bar that is pulled */
+.sg-dlab{position:absolute;z-index:6;height:15px;padding:0 5px;border-radius:3px;background:#fff;border:1px solid #d9d9d9;font-style:normal;font-size:10.5px;line-height:13px;color:#6f6f6f;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+.sg-dlab.l{transform:translateX(-100%)}.sg-dlab.c{transform:translateX(-50%)}
+.sg-dlab.on{background:#1f8e00;border-color:#1f8e00;color:#fff;font-weight:600}
+.sg-tip b{margin-right:7px;color:#9be58b;font-weight:700}
+/* bars that moved */
+@keyframes sgChg{0%,60%{box-shadow:0 0 0 2px rgba(31,142,0,.55)}100%{box-shadow:0 0 0 2px rgba(31,142,0,0)}}
+.sg-bar.chg,.sg-msb.chg{animation:sgChg 3.4s ease-out}
+/* pulling a relation: the line as it will be drawn, the end of the target that is meant */
+.sg-links .draft{stroke:#1f8e00;stroke-width:1.5;stroke-dasharray:4 3;fill:none}
+.sg-links .draft.head{stroke-dasharray:none}
+.sg-scroll.linking .sg-bar .pt{display:block;opacity:.5}
+.sg-bar.target.ts{box-shadow:-3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+.sg-bar.target.tf{box-shadow:3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+/* the card that says what a change did */
+@keyframes schCardIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.sch-card{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:350;width:520px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #d9d9d9;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.18);padding:14px 16px 12px;font-size:13px;color:#1c1c1c;letter-spacing:-0.012em;animation:schCardIn .18s ease-out}
+.sch-card .c-hd{display:flex;align-items:center;gap:8px}
+.sch-card .c-hd b{flex:1;font-size:14px;font-weight:700}
+.sch-card .c-x{width:22px;height:22px;border-radius:4px;font-size:16px;line-height:20px;color:#8e8e8e}
+.sch-card .c-x:hover{background:#f0f0f0;color:#0f0f0f}
+.sch-card .c-ln{display:flex;align-items:center;gap:10px;min-height:26px}
+.sch-card .c-ln.c-first{margin-top:8px;padding:8px 10px;border-radius:6px;background:#f7f7f6}
+.sch-card .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-card .nm b{font-weight:600;margin-right:5px}
+.sch-card .rg{flex:none;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:12.5px}
+.sch-card .rg s{color:#a6a6a6;text-decoration:line-through}
+.sch-card .rg strong{font-weight:600}
+.sch-card .rg svg{color:#a6a6a6}
+.sch-card .mut{color:#8e8e8e}
+.sch-card .c-note{margin-top:6px;font-size:12px;color:#b76b00}
+.sch-card .c-facts{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:#6f6f6f}
+.sch-card .c-facts b{color:#1c1c1c;font-weight:600}
+.sch-card .c-facts .late,.sch-card .c-facts .late b,.sch-card em.late{color:#e02020}
+.sch-card .c-facts .early,.sch-card .c-facts .early b,.sch-card em.early{color:#1f8e00}
+.sch-card .c-more{margin-top:8px;max-height:176px;overflow-y:auto;border-top:1px solid #ededed;padding-top:4px;scrollbar-width:thin}
+.sch-card .c-more em{flex:none;width:44px;text-align:right;font-style:normal;font-size:12px;font-variant-numeric:tabular-nums}
+.sch-card .c-bt{display:flex;align-items:center;gap:8px;margin-top:12px}
+.sch-card .c-bt .sp{flex:1}
+.sch-card .c-bt button{height:28px;padding:0 12px;border-radius:5px;border:1px solid #d9d9d9;background:#fff;font-size:12.5px;color:#1c1c1c}
+.sch-card .c-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-card .c-bt button:hover{filter:brightness(.96)}
+/* the relation window: the kinds as small pictures, the outcome in one line */
+.dlg.sch-dlg .pp-types button{display:inline-flex;align-items:center;gap:7px}
+.dlg.sch-dlg .pp-types button .rg{flex:none;color:#6f6f6f}
+.dlg.sch-dlg .pp-types button.on .rg{color:#fff}
+.dlg.sch-dlg .pp-sum{display:flex;align-items:center;flex-wrap:wrap;gap:0 2px;margin:0 0 14px;padding:10px 14px;border-radius:7px;background:#f4f4f3;font-size:14px;color:#3d3d3d}
+.dlg.sch-dlg .pp-sum b{font-weight:700;margin:0 3px}
+.dlg.sch-dlg .pp-sum i{width:1px;height:12px;background:#cfcfcf;margin:0 12px}
+.dlg.sch-dlg .pp-sum.late{background:#fdf1f0;color:#b3261e}
+.dlg.sch-dlg .pp-sum.early{background:#eef6ec;color:#1a6e05}
+/* relation map: the ground is pulled, the wheel changes the size, a relation is pulled from the circle at a card's right edge */
+.sch-net .sn-scroll{cursor:grab;scrollbar-width:none}
+.sch-net .sn-scroll::-webkit-scrollbar{display:none}
+.sch-net.pan .sn-scroll,.sch-net.pan .sn-node{cursor:grabbing}
+.sn-node .sn-port{position:absolute;right:-7px;top:17px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #474747;cursor:crosshair;opacity:0;transition:opacity .12s;z-index:3}
+.sn-node:hover .sn-port,.sn-node.linking .sn-port{opacity:1}
+.sn-node .sn-port:hover{background:#1f8e00;border-color:#1f8e00}
+/* gates that are not approved yet: everything but the state is paler */
+.sch-gates .gt.wait .date,.sch-gates .gt.wait .cat,.sch-gates .gt.wait .chip,.sch-gates .gt.wait dl{opacity:.5}
+.sch-gates .gt.wait:hover .date,.sch-gates .gt.wait:hover .cat,.sch-gates .gt.wait:hover .chip,.sch-gates .gt.wait:hover dl,.sch-gates .gt.wait.sel .date,.sch-gates .gt.wait.sel .cat,.sch-gates .gt.wait.sel dl{opacity:.8}
+.dlg.sch-dlg .pp-types{flex-wrap:wrap}
+.dlg.sch-dlg .pp-types button{white-space:nowrap}
+/* the circles a relation is pulled from stand clear of the bar's ends (which are pulled to change its dates) */
+.sg-bar .pt.l{left:-13px}.sg-bar .pt.r{right:-13px}
+.sg-bar .pt::before{content:"";position:absolute;inset:-5px -5px -5px -3px}
+.sg-bar .pt.l::before{inset:-5px -3px -5px -5px}
+.sg-bar .pt:hover{background:#1f8e00;border-color:#1f8e00}

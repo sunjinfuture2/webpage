@@ -188,6 +188,46 @@ Project page
 - The day window is drawn at 0.7 of its size.
 - tests/schedule-6.cjs (49 checks).
 
+## Seventh round (owner, 2026-11-20, second list of the day)
+
+Preview only. New file: schedule/ui/68-feedback.js (what a change looks like, relation map handling).
+
+Frame and main page
+- Calendar pictograms take the project's colour (schCalPict; `--pc` on `.cal` for the counts of actions, pale on other days); research,
+  which belongs to no project, is a light grey (#c6c6c6).
+- The list beside the calendar has a soft upper edge once scrolled: a gradient below the caption that stands still (`.rcap.stuck`,
+  set by schFitMark); the day window uses a mask (`cut-t`).
+- Sidebar: only the open entry is dark; no counts beside the kinds of the recent tree. Breadcrumb: all but the last part at 50%.
+- Footer: 240 above it, the line runs across the whole page, the logo is black, and a row of the company's places: 그룹웨어, 회사 홈페이지
+  as words, YouTube / Instagram / Facebook as grey marks. Their addresses are `SETTINGS.links` (설정 › 워크스페이스 › 일반, owner /
+  manager); one without an address is pale, says so, and leads an owner / manager to the settings. No address is built in: the
+  company's real addresses could not be looked up from the build environment.
+- Research: a picker for the tags written in front of titles ([REF], [ENERGY] …; schResTags, those used at least twice), no project
+  picker; cards share the row (`minmax(210.3px,1fr)`), so the gap and the edges stay while the width follows the sidebar.
+- Tags of filters: the word 1 lower; in the project's colour on a project page (`--pjc` on #page-project, set by schFooter) and for a
+  project filter on the main page. The list tab and the main table have no pickers above them (their column titles do that).
+- Taking the partner filter off no longer scrolls to the top. No "n개 중 n개 표시" beside 미팅.
+
+Project page
+- The + of the lower section is 40 above its tab. Gates that are not approved are at 50% except their state.
+- Gantt: the horizontal scroll bar is below the chart again (`.sg-topbar` after the scroll box); the % tags are one SVG shape and are
+  placed from the chart's own offset (they were off by the height of the bar that used to be above); the shade at the table's edge
+  is black at 5% with multiply (white over dark bars made them lighter); the triangle of a phase row is no longer cut.
+- A bar is moved by its middle and made longer or shorter by its ends (`.rz`; start: plannedStart and length, finish: plannedFinish).
+  While pulled: a dashed outline where it stood (`.sg-ghost`), both dates above its ends (`.sg-dlab`), a tag with the days.
+  SCH.drag holds back redraws of the page (sharedRedraw) for as long as something is pulled.
+- After a change by pulling: schChangeCard, a card at the foot of the window (task, dates before → after, how many others moved,
+  operation date, 되돌리기, the list of the others on demand). The bars that moved flash and keep their outline for 3.6 s; these marks
+  are data (SCH.ghost) put back by every schGanttBuild, because the page is drawn again when the change has been saved.
+- Pulling a relation: the circles stand 13 outside the bar's ends; the line is drawn by schLinkPath as soon as the pointer is on a
+  bar; the half of the target under the pointer decides start / finish and is marked. The window (schPropose) shows the four kinds
+  as small pictures (schRelGlyph) and the outcome in one line (`.pp-sum`).
+- Relation map: pulling moves the view (cards too), the wheel changes the size around the pointer (schNetZoomAt), a relation is
+  pulled from the circle at a card's right edge (`.sn-port`, schNetLink).
+- Never use the class names `main`, `hd`, `ln` and the like bare inside new blocks: the page has global rules for them (the card
+  was drawn wrongly twice because of `.main`).
+- tests/schedule-7.cjs (35 checks; two fewer when there is an owner and the member cannot set the footer links).
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): no second project has a schedule.

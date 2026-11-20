@@ -19,8 +19,8 @@ function schMainTest(r){ const c=schMf();
   return schSpanTest(c,r.ps||'',r.pf||r.ps||'')&&schDueTest(c,r.end,r.done); }
 const SCH_MSORT={proj:r=>proj(r.proj).tag||'',wbs:r=>r.order,name:r=>norm(r.title),plan:r=>(r.ps||'')+(r.pf||''),pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>SCH_STATUSES.indexOf(r.st),who:r=>userName(r.ppl[0])||'~',due:r=>r.end||'9'};
 const SCH_MF_NAMES={...SCH_CF_NAMES};
-function schMainChips(){ const c=schMf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-mchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
-  if(c.proj)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
+function schMainChips(){ const c=schMf(), out=[], chip=(k,label,col)=>out.push(`<button class="sch-chip" data-mchip="${k}" title="이 조건 지우기" ${col?`style="color:${esc(col)}"`:''}>${esc(label)}<i>✕</i></button>`);
+  if(c.proj)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj),proj(c.proj).color); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
   for(const k of ['kind','plan','pri','st','due','url']){ if(!c[k])continue; const d=SCH_MF_NAMES[k]; chip(k,d[0]+': '+(d[1]?d[1][c[k]]||c[k]:c[k])); }
   return out.join(''); }
 function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest), c=schMf(), k=S.sort.k, dir=S.sort.dir||1, notes={};
@@ -33,7 +33,7 @@ function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest)
   const th=(kk,t)=>`<span data-mcol="${kk}" class="${k===kk?'sorted':''} ${k===kk&&dir<0?'up':''} ${on[kk]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
   const urlCell=u=>{const h=urlHref(u);return h?`<a href="${esc(h)}" target="_blank" rel="noopener" data-stop>${esc(u)}</a>`:'<span style="color:#c4c4c4">-</span>';};
   let h=`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="main">${schMainChips()}</div></div>
-    <div class="sch-filters sch-all">${schSf2('mpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('mpick','who',c.who?(c.who==='none'?'미지정':userName(c.who)):'전체 담당자',!!c.who)}<div class="right">${perBox()}</div></div>
+    <div class="sch-filters sch-all"><div class="right">${perBox()}</div></div>
     <div class="tbl sch-list sch-all"><div class="hd">${th('proj','프로젝트')}${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   for(const r of page){ const p=proj(r.proj);
     h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="pj">${pill(p,'nosq')}</div><div class="w">${esc(r.wbs||'-')}</div><div class="nm"><span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${r.dots}${esc(r.title)}</span></div>

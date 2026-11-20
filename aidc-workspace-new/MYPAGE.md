@@ -78,7 +78,7 @@ Done = built and covered by `tests/mypage-1.cjs` (82 checks). Part = the part th
 | SET-06, SET-08, SET-09 | not done | P2 / nothing to configure yet |
 | SET-07 | done | Enter or Ctrl / ⌘ + Enter; never while an IME composition is open |
 | SET-10 | done | search of the settings jumps to the row; 개인 설정 초기화 with 실행 취소 |
-| ADM-01 | done | 일반: name, 소속, dropbox address (https only); owner / manager save, members read |
+| ADM-01 | done | 일반: name, 소속, dropbox address (https only), and since the seventh round the footer's links (`SETTINGS.links`: 그룹웨어, 홈페이지, YouTube, Instagram, Facebook); owner / manager save, members read |
 | ADM-02 | done | bootstrap ends with the first owner; the Worker enforces it and protects the last owner |
 | ADM-03 | part | list, add ahead of first login, roles by the owner. No invitations / deactivation (no mail, no account state) |
 | ADM-04 | part | a member can no longer assign themself to a team space |
