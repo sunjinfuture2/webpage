@@ -28,15 +28,17 @@ function schEvRows(pid,kind){ const m=schModel(pid), src=(SCH.src[pid]||{})[kind
   for(const [k,v] of Object.entries(root))if(k.startsWith('e:u:')&&v&&v.kind===kind)rows.push({id:`se-${pid}-u-${k.slice(4)}`,key:k,user:true,no:'추가',cat:v.cat||(kind==='commitmentReviews'?'보완·확약':'전제·근거'),title:v.title||'',link:v.link||'',st:v.status||'',role:v.role||'',due:v.due||'',body:v.body||'',ref:v.ref||'',note:v.note||'',by:v.by,at:v.at,fields:{}});
   return rows; }
 
-function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="sh-btn lib sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)} ✕</button>`);
+function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
   if(SCHU.sec==='proc'&&SCHU.procState)chip('procState','확약 상태: '+SCHU.procState); if(SCHU.sec==='evid'&&SCHU.evState)chip('evState','상태: '+SCHU.evState); return out.join(''); }
 function schLowerSection(pid){ const tabs=[['proc','외부설비 조달'],['gate','승인게이트'],['evid','근거 및 확약']];
-  return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}</span>
-      <span data-sch="lowadd" class="sch-evadd">${plusBtn('','추가')}</span><button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록">라이브러리</button><span class="sch-chips" data-chips="low">${schLowChips()}</span><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}"></label></div>
-    <div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
+  return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}<span data-sch="lowadd" class="sch-evadd up" title="${esc((tabs.find(x=>x[0]===SCHU.sec)||tabs[0])[1])}에 추가">${plusBtn('','추가')}</span></span>
+      <button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록" style="margin-left:14px">라이브러리</button><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}"></label></div>
+    <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="low">${schLowChips()}</div></div><div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
+// The + of the lower section stands above the middle of the tab that is open.
+function schLowAddPlace(){ const box=$('#sch-lower .sch-tabs.lead'), on=box&&$('button.on',box), add=box&&$('.sch-evadd.up',box); if(!on||!add)return; add.style.left=(on.offsetLeft+on.offsetWidth/2)+'px'; }
 function schLowerBody(pid){ const m=schModel(pid); if(!m)return `<div class="sch-empty">${SCH.failed[pid]?esc(SCH.failed[pid]):'일정을 불러오는 중입니다…'}</div>`;
   return SCHU.sec==='gate'?schGatesHtml(pid,m):SCHU.sec==='evid'?schEvidHtml(pid,m):schProcHtml(pid,m); }
-function schLowerRefresh(){ const el=$('[data-sec="sch-low"]'); if(!el||!schHas(S.proj))return; el.innerHTML=schLowerBody(S.proj); $$('#sch-lower .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.sec)); { const ch=$('#sch-lower [data-chips]'); if(ch)ch.innerHTML=schLowChips(); } schUiSave(); afterNav(); }
+function schLowerRefresh(){ const el=$('[data-sec="sch-low"]'); if(!el||!schHas(S.proj))return; el.innerHTML=schLowerBody(S.proj); $$('#sch-lower .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.sec)); { const ch=$('#sch-lower [data-chips]'); if(ch)ch.innerHTML=schLowChips(); } schLowAddPlace(); schUiSave(); afterNav(); }
 const schSf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
 
 /* ---------- 외부설비 조달 ---------- */

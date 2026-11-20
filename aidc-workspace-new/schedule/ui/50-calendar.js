@@ -31,29 +31,29 @@ function schCalBadge(pid,date,count){ let dots='';
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
-  const dateTag=`<span class="d">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</span>`;
-  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':'top:150px'}"><div class="rline"></div><div class="rcap">${D===TODAY?'금일 주요일정':'주요일정'}${dateTag}</div>`;
+  // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
+  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':'top:150px'}"><div class="rdate">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</div><div class="rline"></div><div class="rscroll"><div class="rcap ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
   if(!evs.length&&!rss.length)h+=`<div class="rnone">${D===TODAY?'오늘':'이 날짜에'} 등록된 미팅·리서치가 없습니다.</div>`;
   evs.forEach(e=>{const p=proj(e.proj);
     h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${(e.checks||[]).length?`<ul class="chk">${e.checks.map(c=>`<li><span class="bx">${pict(meetingLineIcon(c))}</span><span class="tx">${esc(c.t)}</span>${c.pre?`<span class="pre">${esc(c.pre)}</span>`:''}</li>`).join('')}</ul>`:''}</div>`;});
   if(rss.length)h+=`<div class="it rs" style="padding-top:${evs.length?30:6}px"><div class="cat" style="top:${evs.length?30:6}px"><i>${pict('research')}</i>리서치</div>${rss.map((x,i)=>`<div class="tt" style="margin-top:${i?8:18.7}px" data-open="${x.id}"><b>${one(x.title)}</b>${avstack(x.people)}</div>`).join('')}</div>`;
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
-    h+=`<div class="rsep"></div><div class="rcap">${svg('i-sch-tag',13,13)}${D===TODAY?'금일 액션':'이 날의 액션'}<span class="n">${rows.length}</span></div>`;
+    h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
     h+=rows.slice(0,60).map(schDayRowHtml).join('');
     if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
-  return h+`</div>`; }
+  return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
 // The list beside the calendar ends where the calendar ends (owner, 2026-11-19: "do not show all of today's actions, cut it at the end
 // of the calendar"). What does not fit is reached by scrolling inside the list; a soft edge shows that there is more.
 const schFitMark=el=>el.classList.toggle('cut',el.scrollHeight-el.clientHeight-el.scrollTop>2);
-function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'); if(!grid||!el.offsetParent)return;
-    // its upper line stands level with the calendar's line under the weekdays, its lower edge with the calendar's lower edge
-    const rows=grid.querySelector('.rows'); if(rows){ const d=(rows.getBoundingClientRect().top-el.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
-    const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.maxHeight=h+'px'; schFitMark(el);
-    if(!el._fit){ el._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){el.scrollTop=SCH.rs.top;schFitMark(el);}   // redrawn: back to where it stood
-      el.addEventListener('scroll',()=>{SCH.rs={k:key,top:el.scrollTop};schFitMark(el);},{passive:true}); } }); }
+function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'), box=el.querySelector('.rscroll'); if(!grid||!box||!el.offsetParent)return;
+    // its upper line stands level with the calendar's line under the weekdays, its lower line with the calendar's lower edge: neither moves
+    const rows=grid.querySelector('.rows'), line=el.querySelector('.rline'); if(rows&&line){ const d=(rows.getBoundingClientRect().top-line.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
+    const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.height=h+'px'; schFitMark(box);
+    if(!box._fit){ box._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){box.scrollTop=SCH.rs.top;schFitMark(box);}   // redrawn: back to where it stood
+      box.addEventListener('scroll',()=>{SCH.rs={k:key,top:box.scrollTop};schFitMark(box);},{passive:true}); } }); }
 function schAfterNav(){ if(!schPreview())return; schFitRight(); if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
 
 // The actions of a day in a small window, while the pointer rests on that day's (pale) count in the calendar. Sizes are those of the
@@ -64,7 +64,7 @@ function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.pr
   const date=cell.dataset.date; if(schPop&&schPop._date===date&&schPop._a===badge)return; if(schPop)schPop.remove();
   const rows=schDayRows(pid,date), [y,mo,dn]=date.split('-').map(Number), p=document.createElement('div'); p.className='sch-daypop'; p._date=date; p._a=badge; p.setAttribute('role','dialog'); p.setAttribute('aria-label',`${mo}월 ${dn}일의 액션 ${rows.length}건`);
   p.innerHTML=`<div class="dp-in">${rows.map(schDayRowHtml).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${mo}월 ${dn}일 · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
-  document.body.appendChild(p); const z=LAYOUT.zoom||1, r=badge.getBoundingClientRect(); p.style.transform=z===1?'':`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;
+  document.body.appendChild(p); const z=(LAYOUT.zoom||1)*.7, r=badge.getBoundingClientRect(); p.style.transform=`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;   /* 0.7: the owner found the window a third too large */
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});
   p.addEventListener('mouseenter',()=>clearTimeout(schPopHideT)); p.addEventListener('mouseleave',()=>schDayPopHide()); p.addEventListener('click',e=>{if(e.target.closest('[data-open]'))setTimeout(()=>schDayPopHide(true),0);}); }

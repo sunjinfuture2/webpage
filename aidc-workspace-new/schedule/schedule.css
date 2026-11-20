@@ -564,3 +564,161 @@
 /* a status never leaves its cell */
 .tbl .rw .sch-st{max-width:100%;overflow:hidden}
 .tbl .rw > div:has(> .sch-st){min-width:0;overflow:hidden}
+
+/* ===== sixth round (owner, 2026-11-20) ===== */
+/* sidebar: the logo does not travel with the sidebar (one logo, above it, always in place); no grey behind the button below it */
+.sch-on .tb-logo{display:block}
+.sch-on .sb .logo{visibility:hidden}
+.sch-on #sb-open,.sch-on #sb-collapse{background:transparent}
+.sch-on #sb-open:hover,.sch-on #sb-collapse:hover{background:#eee}
+/* recent items as a tree: project, kind (folds), item */
+.sch-on .sb .recent .item{height:22px}
+.sch-on .sb .recent .r0{color:#3d3d3d;font-weight:600;margin-top:5px}
+.sch-on .sb .recent .r0:first-child{margin-top:0}
+.sch-on .sb .recent .r0:not([data-go]){cursor:default}
+.sch-on .sb .recent .r0:not([data-go]):hover{background:none}
+.sch-on .sb .recent .r1,.sch-on .sb .recent .r3{color:#8e8e8e;font-weight:500}
+.sch-on .sb .recent .r3{color:#4a4a4a}
+.sch-on .sb .recent .r1 svg,.sch-on .sb .recent .r3 svg{position:absolute;top:50%;transform:translateY(-50%)}
+.sch-on .sb .recent .r1 svg{left:7.4px}
+.sch-on .sb .recent .r3 svg{left:9.6px}
+.sch-on .sb .recent .rn{margin-left:auto;padding:0 9px 0 6px;font-size:10.5px;font-weight:400;color:#b5b5b5;flex:none}
+.sch-on .sb .recent .r2{padding-right:8px}
+/* the trash pictogram of a content panel, half as large again */
+.sch-on .ihead .trash{width:36px;height:36px;top:-6px;right:-4px;border-radius:4px}
+.sch-on .ihead .trash .pict{width:24px;height:24px;color:#6f6f6f}
+.sch-on .ihead .trash:hover .pict{color:#0f0f0f}
+/* notices: + while open, a title per row, the text below the row that was opened, a green mark on new ones */
+.sch-on .notice .nplus{display:none;position:absolute;right:9px;top:6px;width:20px;height:20px;border-radius:4px;align-items:center;justify-content:center}
+.sch-on .notice.open .nplus{display:flex}
+.sch-on .notice .nplus:hover{background:#e6e6e6}
+.sch-on .notice .lb{display:flex;align-items:center;gap:4px}
+.sch-on .notice .nb{width:6px;height:6px;border-radius:50%;background:#1acc00;display:inline-block;flex:none;margin:0 5px 1px 0}
+.sch-on .notice .lb .nb{margin:0 0 0 1px}
+.sch-on .notice .list{padding:2px 12px 10px 16px;max-height:420px;overflow-y:auto;scrollbar-width:thin}
+.sch-on .notice .list li.nrow{align-items:center;gap:14px;height:28px;padding:0 6px 0 13.6px;border-radius:4px;cursor:pointer}
+.sch-on .notice .list li.nrow:hover,.sch-on .notice .list li.nrow.on{background:#efeeec}
+.sch-on .notice .list li.nrow .nt{font-weight:600;color:#3d3d3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-on .notice .list li.nrow .by{flex:none;color:#a6a6a6;font-size:11px}
+.sch-on .notice .list li.nrow .ndel{margin-top:0}
+.sch-on .notice .list li.nbody{display:block;margin:2px 0 8px;padding:10px 14px 12px 91px;font-size:12.5px;line-height:20px;color:#3d3d3d;white-space:pre-wrap;word-break:break-word}
+.sch-on .notice .list li.nbody .none,.sch-on .notice .list li.nnone{color:#a6a6a6}
+.sch-on .notice .list li.nnone{padding:4px 13.6px}
+.sch-on .notice .list li.nform{display:block;margin:2px 0 10px;padding:12px 14px;background:#fff;border:1px solid #e6e6e6;border-radius:6px}
+.sch-on .notice .nform input,.sch-on .notice .nform textarea{display:block;width:100%;border:0;border-bottom:1px solid #e6e6e6;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink);padding:5px 0;resize:vertical}
+.sch-on .notice .nform input{font-weight:600}
+.sch-on .notice .nform textarea{margin-top:6px;line-height:20px;min-height:64px}
+.sch-on .notice .nform input:focus,.sch-on .notice .nform textarea:focus{border-bottom-color:#8e8e8e}
+.sch-on .notice .nform .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.sch-on .notice .nform .bt button{height:26px;padding:0 12px;border-radius:4px;border:1px solid #d9d9d9;font-size:12px;background:#fff}
+.sch-on .notice .nform .bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff}
+/* footer */
+.pfoot{position:relative;margin-top:120px;padding:0 0 46px;font-size:12.5px;color:#6f6f6f;letter-spacing:-0.01em}
+.pfoot .fline{border-top:1px solid #e2e2e2}
+.pfoot .fgrid{display:grid;grid-template-columns:minmax(260px,1.7fr) repeat(4,minmax(120px,1fr));column-gap:36px;padding:38px 2px 34px}
+.pfoot .flogo{font-size:15px;font-weight:700;color:var(--orange);cursor:pointer;display:inline-block}
+.pfoot .fb p{margin-top:9px;line-height:19px;color:#4f4f4f}
+.pfoot .fb p.mut,.pfoot .mut{color:#a6a6a6}
+.pfoot .fc{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+.pfoot .fc b{font-size:11px;font-weight:600;color:#a6a6a6;margin-bottom:3px}
+.pfoot .fc a{cursor:pointer;color:#4f4f4f;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:3px}
+.pfoot .fc a:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fend{display:flex;align-items:center;gap:18px;padding:16px 2px 0;border-top:1px solid #f0f0f0;font-size:11.5px;color:#8e8e8e}
+.pfoot .fend .sp{flex:1}
+.pfoot .ftop{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:4px;font-size:11.5px;color:#4f4f4f}
+.pfoot .ftop:hover{background:#f0f0f0}
+
+/* --- lists: search box, tags of what is filtered, the main page's action table, research pickers --- */
+.sch-on .sec-title .srch.box{height:38px;margin-top:1px;margin-left:auto;padding:0 14px;border:0;border-radius:6px;background:#f6f6f6;gap:10px}
+.sch-on .sec-title .srch.box input{width:170px;font-size:14px}
+.sch-on .sec-title .srch.box:focus-within{background:#f0f0f0}
+.sch-chipwrap{position:relative;height:0;display:flow-root}
+.sch-chiprow{position:absolute;left:13px;top:17px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;max-width:calc(100% - 26px)}
+.sch-chiprow:empty{display:none}
+.sch-chip{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 7px 0 8px;border-radius:4px;background:#f1f1f0;color:#5c5c5c;font-size:11px;font-weight:500;letter-spacing:-0.01em;white-space:nowrap;transition:background .12s,color .12s}
+.sch-chip i{font-style:normal;font-size:9px;color:#9a9a9a}
+.sch-chip:hover{background:#d9d9d9;color:#0f0f0f}
+.sch-chip:hover i{color:#3d3d3d}
+#sec-partners .sch-chiprow{left:2px;top:6px}
+.tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:106px 78px calc(330px + var(--d)) 216px 82px 126px 204px 82px 1fr}
+.tbl.sch-list.sch-all .rw .pj{padding-left:6px;overflow:hidden}
+.tbl.sch-list.sch-all .rw .nm .tx{position:relative}
+.tbl.sch-list.sch-all .rw .nm .tx .sdot{left:-7px;top:-1px}.tbl.sch-list.sch-all .rw .nm .tx .sdot.g.two{left:-13px}
+.sch-filters.sch-all .right .tbl-tools{position:static;margin:0}
+.sch-filters.res{margin-left:2px}
+.sch-filters .sf[data-rpick],.sch-filters .sf[data-mpick]{min-width:104px}
+/* partner list: smaller logo, the meeting tag 2 lower, a grey ground under what can be clicked in a row */
+.sch-on .tbl.partners .rw .nm .lg.mono{width:18.6px;height:18.6px;margin:0 4px;font-size:9.5px}
+.sch-on .tbl.partners .rw .mt .chip{position:relative;top:2px}
+.sch-on .tbl.partners .rw .hp a,.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .mt .chip{border-radius:4px;transition:background .12s,box-shadow .12s}
+.sch-on .tbl.partners .rw .hp a:hover,.sch-on .tbl.partners .rw .cat a:hover{background:#e9e9e9;box-shadow:0 0 0 5px #e9e9e9}
+.sch-on .tbl.partners .rw .mt .chip:hover{box-shadow:0 0 0 4px #e9e9e9}
+/* project cards: the operation date first; half a point larger */
+.sch-on .pcard .info{font-size:12.5px;line-height:21px}
+.sch-on .pcard .info .ops{color:#1c1c1c}
+.sch-on .pcard .info .ops em{font-style:normal;font-size:11px;margin-left:6px;color:#8e8e8e}
+.sch-on .pcard .info .ops em.late{color:#e02020}.sch-on .pcard .info .ops em.early{color:#1f8e00}
+.sch-on .pcard .info .nil{color:#b5b5b5}
+/* the window that makes a project */
+.dlg.sch-np .box{width:520px;max-width:calc(100vw - 40px);padding:30px 34px 24px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.sch-np .np-hd b{display:block;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#000}
+.sch-np .np-hd span{display:block;margin-top:6px;font-size:12.5px;color:#8e8e8e;line-height:18px}
+.sch-np .np-f{display:grid;grid-template-columns:84px 1fr;column-gap:14px;row-gap:16px;align-items:start;margin-top:26px;font-size:13.5px}
+.sch-np .np-f label{font-weight:600;color:#1c1c1c;line-height:30px;white-space:nowrap}
+.sch-np .np-f label em{font-style:normal;font-size:10px;font-weight:500;color:#e02020;margin-left:3px}
+.sch-np .np-f input{width:100%;height:30px;border:0;border-bottom:1px solid #a7a7a7;outline:none;background:transparent;font-size:14px;color:#0f0f0f;padding:0 2px}
+.sch-np .np-f input:focus{border-bottom-color:#0f0f0f}
+.sch-np .np-f input::placeholder{color:#b9b9b9}
+.sch-np .np-f .err{display:block;font-size:11.5px;color:#e02020;line-height:16px;margin-top:3px}
+.sch-np .np-f .err:empty{display:none}
+.sch-np .np-st{display:flex;flex-wrap:wrap;gap:6px;padding-top:3px}
+.sch-np .np-st button{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;border:1px solid #e0e0e0;background:#fff;font-size:12px;color:#4f4f4f}
+.sch-np .np-st button i{width:6px;height:6px;border-radius:50%;display:block}
+.sch-np .np-st button.on{border-color:#0f0f0f;color:#0f0f0f;font-weight:600;box-shadow:inset 0 0 0 .5px #0f0f0f}
+.sch-np .np-bt{display:flex;justify-content:flex-end;gap:8px;margin-top:30px}
+.sch-np .np-bt button{height:32px;padding:0 16px;border-radius:6px;border:1px solid #d9d9d9;background:#fff;font-size:13px;color:#1c1c1c}
+.sch-np .np-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-np .np-bt button:hover{filter:brightness(.96)}
+/* --- the list beside the calendar --- */
+.rlist.sch{display:flex;flex-direction:column;overflow:visible;max-height:none;padding-top:0;padding-bottom:0}
+.rlist.sch .rdate{position:absolute;right:16px;bottom:calc(100% + 9px);font-size:12.5px;font-weight:400;color:#a9a9a9;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.rlist.sch .rdate .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
+.rlist.sch .rline{flex:none;margin:0}
+.rlist.sch .rline.bt{margin:0}
+.rlist.sch .rscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.rlist.sch .rscroll::-webkit-scrollbar{display:none}
+.rlist.sch .rscroll.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rlist.sch.cut{-webkit-mask-image:none;mask-image:none}
+.rlist.sch .rtail{height:14px}
+/* captions: a pictogram in the same place for both, the word, the count in a small speech bubble; they stay in sight while their list scrolls */
+.rlist.sch .rcap{position:sticky;top:0;z-index:3;background:#fff;margin:0 -16px;padding:20px 17px 18px;gap:0}
+.rlist.sch .rcap .ic{width:13px;height:13px;flex:none;display:flex;margin-right:8px}
+.rlist.sch .rcap.act .lb,.rlist.sch .rcap.act .n{position:relative;left:-2px;top:-1px}
+.rlist.sch .rcap .n{margin-left:9px;min-width:22px;height:18px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;line-height:1;border:1px solid #cfcfcf;border-radius:5px;background:#fff;font-size:11px;font-weight:600;color:#3d3d3d;font-variant-numeric:tabular-nums}
+.rlist.sch .rcap .n::before,.rlist.sch .rcap .n::after{content:"";position:absolute;left:-4.2px;top:50%;width:6px;height:6px;margin-top:-3px;background:#fff;border-left:1px solid #cfcfcf;border-bottom:1px solid #cfcfcf;transform:rotate(45deg);border-radius:0 0 0 1.5px}
+.rlist.sch .rcap .n::after{display:none}
+.rlist.sch .rsep{margin:14px 0 0}
+.rlist.sch .rnone{margin-bottom:6px}
+/* the + of the lower section, above the open tab */
+.sch-title .sch-tabs.lead{position:relative}
+.sch-title .sch-evadd.up{position:absolute;top:-31px;left:0;transform:translateX(-50%);transition:left .18s ease}
+.sch-title .sch-evadd.up .plus-btn{margin-left:0}
+/* meetings: what the edge of the row cuts fades to white */
+.sch-on .meet .fade{position:absolute;top:57.4px;height:296px;width:150px;pointer-events:none;z-index:1;transition:opacity .2s}
+.sch-on .meet .fade.r{left:calc(1338.1px + var(--d) - 150px);background:linear-gradient(to right,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet .fade.l{left:1.1px;background:linear-gradient(to left,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet.at-end .fade.r,.sch-on .meet.at-start .fade.l{opacity:0}
+/* 사업개요: the three columns share the width the folded sidebar frees; a linked partner carries its small logo */
+.sch-on .phead .col1{width:calc(337.7px + var(--d) * .2)}
+.sch-on .phead .col2{width:calc(388px + var(--d) * .22)}
+.sch-on .phead .col3{width:calc(612px + var(--d) * .58)}
+.sch-on .phead .lk i.plogo{position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;font-style:normal;font-size:9px;font-weight:600;color:#8e8e8e;background:#eee;border-radius:2px}
+.sch-on .phead .lk i.plogo img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.sch-on .phead .at-hint{display:block;margin-top:6px;font-size:11px;color:#a6a6a6}
+.pop.sch-at{min-width:240px;max-width:340px}
+.pop.sch-at .it{display:flex;align-items:center;gap:8px}
+.pop.sch-at .it i{width:16px;height:16px;flex:none;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;font-style:normal;font-size:9px;color:#8e8e8e;background:#eee;border-radius:2px}
+.pop.sch-at .it i img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.pop.sch-at .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop.sch-at .it .m{font-size:11px;color:#a6a6a6;flex:none}
+.pop.sch-at .it.sel{background:#f0f0f0}

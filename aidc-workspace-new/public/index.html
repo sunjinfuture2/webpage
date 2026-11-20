@@ -1729,6 +1729,164 @@ html{overflow:hidden}
 /* a status never leaves its cell */
 .tbl .rw .sch-st{max-width:100%;overflow:hidden}
 .tbl .rw > div:has(> .sch-st){min-width:0;overflow:hidden}
+
+/* ===== sixth round (owner, 2026-11-20) ===== */
+/* sidebar: the logo does not travel with the sidebar (one logo, above it, always in place); no grey behind the button below it */
+.sch-on .tb-logo{display:block}
+.sch-on .sb .logo{visibility:hidden}
+.sch-on #sb-open,.sch-on #sb-collapse{background:transparent}
+.sch-on #sb-open:hover,.sch-on #sb-collapse:hover{background:#eee}
+/* recent items as a tree: project, kind (folds), item */
+.sch-on .sb .recent .item{height:22px}
+.sch-on .sb .recent .r0{color:#3d3d3d;font-weight:600;margin-top:5px}
+.sch-on .sb .recent .r0:first-child{margin-top:0}
+.sch-on .sb .recent .r0:not([data-go]){cursor:default}
+.sch-on .sb .recent .r0:not([data-go]):hover{background:none}
+.sch-on .sb .recent .r1,.sch-on .sb .recent .r3{color:#8e8e8e;font-weight:500}
+.sch-on .sb .recent .r3{color:#4a4a4a}
+.sch-on .sb .recent .r1 svg,.sch-on .sb .recent .r3 svg{position:absolute;top:50%;transform:translateY(-50%)}
+.sch-on .sb .recent .r1 svg{left:7.4px}
+.sch-on .sb .recent .r3 svg{left:9.6px}
+.sch-on .sb .recent .rn{margin-left:auto;padding:0 9px 0 6px;font-size:10.5px;font-weight:400;color:#b5b5b5;flex:none}
+.sch-on .sb .recent .r2{padding-right:8px}
+/* the trash pictogram of a content panel, half as large again */
+.sch-on .ihead .trash{width:36px;height:36px;top:-6px;right:-4px;border-radius:4px}
+.sch-on .ihead .trash .pict{width:24px;height:24px;color:#6f6f6f}
+.sch-on .ihead .trash:hover .pict{color:#0f0f0f}
+/* notices: + while open, a title per row, the text below the row that was opened, a green mark on new ones */
+.sch-on .notice .nplus{display:none;position:absolute;right:9px;top:6px;width:20px;height:20px;border-radius:4px;align-items:center;justify-content:center}
+.sch-on .notice.open .nplus{display:flex}
+.sch-on .notice .nplus:hover{background:#e6e6e6}
+.sch-on .notice .lb{display:flex;align-items:center;gap:4px}
+.sch-on .notice .nb{width:6px;height:6px;border-radius:50%;background:#1acc00;display:inline-block;flex:none;margin:0 5px 1px 0}
+.sch-on .notice .lb .nb{margin:0 0 0 1px}
+.sch-on .notice .list{padding:2px 12px 10px 16px;max-height:420px;overflow-y:auto;scrollbar-width:thin}
+.sch-on .notice .list li.nrow{align-items:center;gap:14px;height:28px;padding:0 6px 0 13.6px;border-radius:4px;cursor:pointer}
+.sch-on .notice .list li.nrow:hover,.sch-on .notice .list li.nrow.on{background:#efeeec}
+.sch-on .notice .list li.nrow .nt{font-weight:600;color:#3d3d3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-on .notice .list li.nrow .by{flex:none;color:#a6a6a6;font-size:11px}
+.sch-on .notice .list li.nrow .ndel{margin-top:0}
+.sch-on .notice .list li.nbody{display:block;margin:2px 0 8px;padding:10px 14px 12px 91px;font-size:12.5px;line-height:20px;color:#3d3d3d;white-space:pre-wrap;word-break:break-word}
+.sch-on .notice .list li.nbody .none,.sch-on .notice .list li.nnone{color:#a6a6a6}
+.sch-on .notice .list li.nnone{padding:4px 13.6px}
+.sch-on .notice .list li.nform{display:block;margin:2px 0 10px;padding:12px 14px;background:#fff;border:1px solid #e6e6e6;border-radius:6px}
+.sch-on .notice .nform input,.sch-on .notice .nform textarea{display:block;width:100%;border:0;border-bottom:1px solid #e6e6e6;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink);padding:5px 0;resize:vertical}
+.sch-on .notice .nform input{font-weight:600}
+.sch-on .notice .nform textarea{margin-top:6px;line-height:20px;min-height:64px}
+.sch-on .notice .nform input:focus,.sch-on .notice .nform textarea:focus{border-bottom-color:#8e8e8e}
+.sch-on .notice .nform .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.sch-on .notice .nform .bt button{height:26px;padding:0 12px;border-radius:4px;border:1px solid #d9d9d9;font-size:12px;background:#fff}
+.sch-on .notice .nform .bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff}
+/* footer */
+.pfoot{position:relative;margin-top:120px;padding:0 0 46px;font-size:12.5px;color:#6f6f6f;letter-spacing:-0.01em}
+.pfoot .fline{border-top:1px solid #e2e2e2}
+.pfoot .fgrid{display:grid;grid-template-columns:minmax(260px,1.7fr) repeat(4,minmax(120px,1fr));column-gap:36px;padding:38px 2px 34px}
+.pfoot .flogo{font-size:15px;font-weight:700;color:var(--orange);cursor:pointer;display:inline-block}
+.pfoot .fb p{margin-top:9px;line-height:19px;color:#4f4f4f}
+.pfoot .fb p.mut,.pfoot .mut{color:#a6a6a6}
+.pfoot .fc{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+.pfoot .fc b{font-size:11px;font-weight:600;color:#a6a6a6;margin-bottom:3px}
+.pfoot .fc a{cursor:pointer;color:#4f4f4f;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:3px}
+.pfoot .fc a:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fend{display:flex;align-items:center;gap:18px;padding:16px 2px 0;border-top:1px solid #f0f0f0;font-size:11.5px;color:#8e8e8e}
+.pfoot .fend .sp{flex:1}
+.pfoot .ftop{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:4px;font-size:11.5px;color:#4f4f4f}
+.pfoot .ftop:hover{background:#f0f0f0}
+
+/* --- lists: search box, tags of what is filtered, the main page's action table, research pickers --- */
+.sch-on .sec-title .srch.box{height:38px;margin-top:1px;margin-left:auto;padding:0 14px;border:0;border-radius:6px;background:#f6f6f6;gap:10px}
+.sch-on .sec-title .srch.box input{width:170px;font-size:14px}
+.sch-on .sec-title .srch.box:focus-within{background:#f0f0f0}
+.sch-chipwrap{position:relative;height:0;display:flow-root}
+.sch-chiprow{position:absolute;left:13px;top:17px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;max-width:calc(100% - 26px)}
+.sch-chiprow:empty{display:none}
+.sch-chip{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 7px 0 8px;border-radius:4px;background:#f1f1f0;color:#5c5c5c;font-size:11px;font-weight:500;letter-spacing:-0.01em;white-space:nowrap;transition:background .12s,color .12s}
+.sch-chip i{font-style:normal;font-size:9px;color:#9a9a9a}
+.sch-chip:hover{background:#d9d9d9;color:#0f0f0f}
+.sch-chip:hover i{color:#3d3d3d}
+#sec-partners .sch-chiprow{left:2px;top:6px}
+.tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:106px 78px calc(330px + var(--d)) 216px 82px 126px 204px 82px 1fr}
+.tbl.sch-list.sch-all .rw .pj{padding-left:6px;overflow:hidden}
+.tbl.sch-list.sch-all .rw .nm .tx{position:relative}
+.tbl.sch-list.sch-all .rw .nm .tx .sdot{left:-7px;top:-1px}.tbl.sch-list.sch-all .rw .nm .tx .sdot.g.two{left:-13px}
+.sch-filters.sch-all .right .tbl-tools{position:static;margin:0}
+.sch-filters.res{margin-left:2px}
+.sch-filters .sf[data-rpick],.sch-filters .sf[data-mpick]{min-width:104px}
+/* partner list: smaller logo, the meeting tag 2 lower, a grey ground under what can be clicked in a row */
+.sch-on .tbl.partners .rw .nm .lg.mono{width:18.6px;height:18.6px;margin:0 4px;font-size:9.5px}
+.sch-on .tbl.partners .rw .mt .chip{position:relative;top:2px}
+.sch-on .tbl.partners .rw .hp a,.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .mt .chip{border-radius:4px;transition:background .12s,box-shadow .12s}
+.sch-on .tbl.partners .rw .hp a:hover,.sch-on .tbl.partners .rw .cat a:hover{background:#e9e9e9;box-shadow:0 0 0 5px #e9e9e9}
+.sch-on .tbl.partners .rw .mt .chip:hover{box-shadow:0 0 0 4px #e9e9e9}
+/* project cards: the operation date first; half a point larger */
+.sch-on .pcard .info{font-size:12.5px;line-height:21px}
+.sch-on .pcard .info .ops{color:#1c1c1c}
+.sch-on .pcard .info .ops em{font-style:normal;font-size:11px;margin-left:6px;color:#8e8e8e}
+.sch-on .pcard .info .ops em.late{color:#e02020}.sch-on .pcard .info .ops em.early{color:#1f8e00}
+.sch-on .pcard .info .nil{color:#b5b5b5}
+/* the window that makes a project */
+.dlg.sch-np .box{width:520px;max-width:calc(100vw - 40px);padding:30px 34px 24px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.sch-np .np-hd b{display:block;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#000}
+.sch-np .np-hd span{display:block;margin-top:6px;font-size:12.5px;color:#8e8e8e;line-height:18px}
+.sch-np .np-f{display:grid;grid-template-columns:84px 1fr;column-gap:14px;row-gap:16px;align-items:start;margin-top:26px;font-size:13.5px}
+.sch-np .np-f label{font-weight:600;color:#1c1c1c;line-height:30px;white-space:nowrap}
+.sch-np .np-f label em{font-style:normal;font-size:10px;font-weight:500;color:#e02020;margin-left:3px}
+.sch-np .np-f input{width:100%;height:30px;border:0;border-bottom:1px solid #a7a7a7;outline:none;background:transparent;font-size:14px;color:#0f0f0f;padding:0 2px}
+.sch-np .np-f input:focus{border-bottom-color:#0f0f0f}
+.sch-np .np-f input::placeholder{color:#b9b9b9}
+.sch-np .np-f .err{display:block;font-size:11.5px;color:#e02020;line-height:16px;margin-top:3px}
+.sch-np .np-f .err:empty{display:none}
+.sch-np .np-st{display:flex;flex-wrap:wrap;gap:6px;padding-top:3px}
+.sch-np .np-st button{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;border:1px solid #e0e0e0;background:#fff;font-size:12px;color:#4f4f4f}
+.sch-np .np-st button i{width:6px;height:6px;border-radius:50%;display:block}
+.sch-np .np-st button.on{border-color:#0f0f0f;color:#0f0f0f;font-weight:600;box-shadow:inset 0 0 0 .5px #0f0f0f}
+.sch-np .np-bt{display:flex;justify-content:flex-end;gap:8px;margin-top:30px}
+.sch-np .np-bt button{height:32px;padding:0 16px;border-radius:6px;border:1px solid #d9d9d9;background:#fff;font-size:13px;color:#1c1c1c}
+.sch-np .np-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-np .np-bt button:hover{filter:brightness(.96)}
+/* --- the list beside the calendar --- */
+.rlist.sch{display:flex;flex-direction:column;overflow:visible;max-height:none;padding-top:0;padding-bottom:0}
+.rlist.sch .rdate{position:absolute;right:16px;bottom:calc(100% + 9px);font-size:12.5px;font-weight:400;color:#a9a9a9;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.rlist.sch .rdate .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
+.rlist.sch .rline{flex:none;margin:0}
+.rlist.sch .rline.bt{margin:0}
+.rlist.sch .rscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.rlist.sch .rscroll::-webkit-scrollbar{display:none}
+.rlist.sch .rscroll.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rlist.sch.cut{-webkit-mask-image:none;mask-image:none}
+.rlist.sch .rtail{height:14px}
+/* captions: a pictogram in the same place for both, the word, the count in a small speech bubble; they stay in sight while their list scrolls */
+.rlist.sch .rcap{position:sticky;top:0;z-index:3;background:#fff;margin:0 -16px;padding:20px 17px 18px;gap:0}
+.rlist.sch .rcap .ic{width:13px;height:13px;flex:none;display:flex;margin-right:8px}
+.rlist.sch .rcap.act .lb,.rlist.sch .rcap.act .n{position:relative;left:-2px;top:-1px}
+.rlist.sch .rcap .n{margin-left:9px;min-width:22px;height:18px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;line-height:1;border:1px solid #cfcfcf;border-radius:5px;background:#fff;font-size:11px;font-weight:600;color:#3d3d3d;font-variant-numeric:tabular-nums}
+.rlist.sch .rcap .n::before,.rlist.sch .rcap .n::after{content:"";position:absolute;left:-4.2px;top:50%;width:6px;height:6px;margin-top:-3px;background:#fff;border-left:1px solid #cfcfcf;border-bottom:1px solid #cfcfcf;transform:rotate(45deg);border-radius:0 0 0 1.5px}
+.rlist.sch .rcap .n::after{display:none}
+.rlist.sch .rsep{margin:14px 0 0}
+.rlist.sch .rnone{margin-bottom:6px}
+/* the + of the lower section, above the open tab */
+.sch-title .sch-tabs.lead{position:relative}
+.sch-title .sch-evadd.up{position:absolute;top:-31px;left:0;transform:translateX(-50%);transition:left .18s ease}
+.sch-title .sch-evadd.up .plus-btn{margin-left:0}
+/* meetings: what the edge of the row cuts fades to white */
+.sch-on .meet .fade{position:absolute;top:57.4px;height:296px;width:150px;pointer-events:none;z-index:1;transition:opacity .2s}
+.sch-on .meet .fade.r{left:calc(1338.1px + var(--d) - 150px);background:linear-gradient(to right,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet .fade.l{left:1.1px;background:linear-gradient(to left,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet.at-end .fade.r,.sch-on .meet.at-start .fade.l{opacity:0}
+/* 사업개요: the three columns share the width the folded sidebar frees; a linked partner carries its small logo */
+.sch-on .phead .col1{width:calc(337.7px + var(--d) * .2)}
+.sch-on .phead .col2{width:calc(388px + var(--d) * .22)}
+.sch-on .phead .col3{width:calc(612px + var(--d) * .58)}
+.sch-on .phead .lk i.plogo{position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;font-style:normal;font-size:9px;font-weight:600;color:#8e8e8e;background:#eee;border-radius:2px}
+.sch-on .phead .lk i.plogo img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.sch-on .phead .at-hint{display:block;margin-top:6px;font-size:11px;color:#a6a6a6}
+.pop.sch-at{min-width:240px;max-width:340px}
+.pop.sch-at .it{display:flex;align-items:center;gap:8px}
+.pop.sch-at .it i{width:16px;height:16px;flex:none;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;font-style:normal;font-size:9px;color:#8e8e8e;background:#eee;border-radius:2px}
+.pop.sch-at .it i img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.pop.sch-at .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop.sch-at .it .m{font-size:11px;color:#a6a6a6;flex:none}
+.pop.sch-at .it.sel{background:#f0f0f0}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -2639,7 +2797,7 @@ function sortActs(list){const f=SORT_KEY[S.sort.k],dir=S.sort.dir||1;const base=
   return base.map((x,i)=>[x,i,f(x)]).sort((a,b)=>{const c=typeof a[2]==='number'?a[2]-b[2]:String(a[2]).localeCompare(String(b[2]),'ko');return c*dir||a[1]-b[1];}).map(x=>x[0]);}
 const norm=s=>String(s??'').toLowerCase().replace(/\s+/g,' ').trim();
 const matchQ=(q,...fields)=>{q=norm(q); if(!q)return true; return fields.some(f=>norm(f).includes(q));}; // line breaks and repeated spaces never block a match
-const searchBox=(k,ph)=>`<label class="srch">${svg('pic-search',13.5,13.5)}<input data-q="${k}" placeholder="${ph}" value="${esc(S.q[k]||'')}"></label>`;
+const searchBox=(k,ph)=>PREVIEW_ON?`<label class="srch box" title="${ph}">${svg('pic-search',15,15)}<input data-q="${k}" placeholder="검색" aria-label="${ph}" value="${esc(S.q[k]||'')}"></label>`:`<label class="srch">${svg('pic-search',13.5,13.5)}<input data-q="${k}" placeholder="${ph}" value="${esc(S.q[k]||'')}"></label>`;
 const perBox=()=>`<div class="tbl-tools" data-per>${S.actPer}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div>`;
 /* ===================== STATE ===================== */
 const NOW0=new Date();
@@ -2719,7 +2877,7 @@ function actionTable(rows,opts){ // opts: {noproj}
   h+=`<div class="ft"></div></div>`; return h;
 }
 const cardTitle=t=>{t=(t||'').trim();const m=t.match(/^([\[(][^\])\n]{1,24}[\])])[ \t]*\n?/);return m?m[1]+'\n'+t.slice(m[0].length).replace(/^\s+/,''):t;};
-function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide:null; S._slide=null; const cls=`rgrid${sl?' slide':''}`, st=sl?` style="--rg-dx:${sl.dir>0?44:-44}px"`:''; if(!rows.length)return `<div class="${cls}"${st}><div class="none">${S.q.research?'검색 결과가 없습니다.':'등록된 리서치가 없습니다.'}</div></div>`;return `<div class="${cls}"${st}>${rows.map(r=>{const f=hasFiles(r), ds=r.desc||(r.card?'':snippet(r));return `<div class="rcard ${ds?'':'nodesc'} ${f?'':'nobtn'} ${(r.title||'').split('\n').length>=4?'t4':''}" data-open="${r.id}">
+function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide:null; S._slide=null; const cls=`rgrid${sl?' slide':''}`, st=sl?` style="--rg-dx:${sl.dir>0?44:-44}px"`:''; if(!rows.length)return `<div class="${cls}"${st}><div class="none">${S.q.research?'검색 결과가 없습니다.':PREVIEW_ON&&Object.keys(S.rf||{}).some(k=>k!=='sort')?'조건에 맞는 리서치가 없습니다.':'등록된 리서치가 없습니다.'}</div></div>`;return `<div class="${cls}"${st}>${rows.map(r=>{const f=hasFiles(r), ds=r.desc||(r.card?'':snippet(r));return `<div class="rcard ${ds?'':'nodesc'} ${f?'':'nobtn'} ${(r.title||'').split('\n').length>=4?'t4':''}" data-open="${r.id}">
   ${dotsHtml(r)}<div class="dt">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="tt">${esc(cardTitle(r.title)||'(제목 없음)')}</div>${ds?`<div class="ds">${esc(ds)}</div>`:''}
   ${f?`<button class="ln-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#3d3d3d')}</button>`:''}</div>`;}).join('')}</div>`;}
 const partnerMeeting=pt=>(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))?item(pt.meet):null)||liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]||null;
@@ -2732,7 +2890,7 @@ function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><sp
 const scaleOf=(h,i,fb)=>{const s=h&&h.scale&&h.scale[i];return (s&&s[1])||fb||'';};
 const siteOf=(p,h)=>mapQuery(h&&h.loc)||((h&&h.loc)||'').split('\n')[0].trim()||p.site||'';
 function projectCards(){return orderedProjects().map(k=>{const p=PROJECTS[k], h=PHEAD[k]||{};return `<div class="pcard" data-go="project:${k}"><div class="img" style="height:${p.imgH}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><div class="grad" style="height:${p.id==='busan'?78:90}px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${p.stColor}"><i></i>${esc(p.status)}</span></div>
-  <h3 style="color:${p.color}">${esc(p.full)}</h3><div class="info"><div><b>담당자</b>${av()}${esc(h.owner||p.owner)}</div><div><b>부지</b>${esc(siteOf(p,h))}</div><div><b>총사업비</b>${esc(h.cost||p.cost)}</div><div><b>공사 면적</b>${esc(scaleOf(h,0,p.area))}</div><div><b>총 수전용량</b>${esc(scaleOf(h,2,p.power))}</div><div><b>IT 용량</b>${esc(scaleOf(h,1,p.it))}</div><div><b>서버</b>${esc(scaleOf(h,3,p.server))}</div></div></div>`;}).join('');}
+  <h3 style="color:${p.color}">${esc(p.full)}</h3><div class="info">${PREVIEW_ON?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}<div><b>담당자</b>${av()}${esc(h.owner||p.owner)}</div><div><b>부지</b>${esc(siteOf(p,h))}</div><div><b>총사업비</b>${esc(h.cost||p.cost)}</div><div><b>공사 면적</b>${esc(scaleOf(h,0,p.area))}</div><div><b>총 수전용량</b>${esc(scaleOf(h,2,p.power))}</div><div><b>IT 용량</b>${esc(scaleOf(h,1,p.it))}</div><div><b>서버</b>${esc(scaleOf(h,3,p.server))}</div></div></div>`;}).join('');}
 // Meeting cards of one project, newest date first. The lines under the title are the agenda (checks) or the first lines of the minutes.
 function meetingLineIcon(line){
   if(line.pre || /\d+\s*(시|:\d{2})/.test(line.t)) return 'clock';
@@ -2761,8 +2919,8 @@ function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car
 const actRows=pid=>sortActs(liveItems('action',pid).filter(i=>matchQ(S.q.action,i.title,...(i.people||[]).map(userName),proj(i.proj).tag)));
 function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const acts=actRows(pid); const total=Math.max(1,Math.ceil(acts.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const rows=acts.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
-function researchSecHtml(pid){const res=sortResearch(liveItems('research',pid).filter(i=>matchQ(S.q.research,i.title,i.desc))); const total=Math.max(1,Math.ceil(res.length/12)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*12,S.resPage*12);
-  return `<div style="margin-top:${pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
+function researchSecHtml(pid){const found=liveItems('research',pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), per=PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
+  return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
 const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||p.cat===S.partnerCat)&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.site));
 function partnerSecHtml(){const pts=partnerRows(); const total=Math.max(1,Math.ceil(pts.length/10)); S.ptPage=Math.min(Math.max(1,S.ptPage),total);
   return `<div style="margin-top:28.5px">${partnerTable(pts.slice((S.ptPage-1)*10,S.ptPage*10))}</div>${pager(S.ptPage,total,'pg-pt').replace('class="pager','style="margin-top:50.3px" class="pager')}`;}
@@ -2773,25 +2931,25 @@ function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.pa
 function renderMain(){ if(schPreview())Object.keys(SCH_SOURCES).forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
-   <div class="projects" style="margin-top:111.5px;height:675.8px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>
+   <div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?706:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>
-   <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action',ACT+' 검색')}</div>
+   <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${schPreview()?'':perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(null)}</div></div>
    <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(null)}</div></div>
    ${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}`;
 }
 function partnerSection(extraStyle){
-  return `<div class="sec" id="sec-partners" style="${extraStyle||''}"><div class="sec-title" style="margin-left:-2.8px">협력업체 목록${plusBtn('new-partner','협력업체 추가')}${S.partnerCat?`<button class="sh-btn lib" data-catclear style="color:#4f4f4f">구분: ${esc(S.partnerCat)} ✕</button>`:''}${searchBox('partner','협력업체 검색')}</div>
-     <div data-sec="partner">${partnerSecHtml()}</div></div>`;}
+  return `<div class="sec" id="sec-partners" style="${extraStyle||''}"><div class="sec-title" style="margin-left:-2.8px">협력업체 목록${plusBtn('new-partner','협력업체 추가')}${S.partnerCat&&!PREVIEW_ON?`<button class="sh-btn lib" data-catclear style="color:#4f4f4f">구분: ${esc(S.partnerCat)} ✕</button>`:''}${searchBox('partner','협력업체 검색')}</div>
+     ${PREVIEW_ON?`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="partner">${schPartnerChips()}</div></div>`:''}<div data-sec="partner">${partnerSecHtml()}</div></div>`;}
 // The overview record of a project, completed if a field (or the whole record) is missing.
 function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]={}); const def={cls:p.status||'',prog:'',owner:p.owner||'',loc:p.site||'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:p.cost||'',fundType:'',struct:'',main:''};
   for(const k of Object.keys(def))if(typeof h[k]!=='string')h[k]=def[k]; if(!Array.isArray(h.partners))h.partners=[]; if(!Array.isArray(h.scale)||!h.scale.length||!h.scale.every(s=>Array.isArray(s)&&s.length>=2))h.scale=['공사면적:','IT 용량:','총 수전용량 :','서버:'].map((l,i)=>{const s=Array.isArray(h.scale)?h.scale[i]:null;return Array.isArray(s)?[s[0]||l,s[1]||'']:[l,''];}); return h;}
 function renderProject(pid){
   const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
-  const lk=(t,k)=>`<span class="lk"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i><a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
+  const lk=(t,k)=>`<span class="lk">${PV?schPartnerMark(t):`<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
   $('#proj-pw').innerHTML=`
    <div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button><span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`:''}</div>${PREVIEW_ON&&!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
@@ -2802,12 +2960,12 @@ function renderProject(pid){
      <div class="col col2 ${SC?'sch':''}">${SC?schOpsRow(pid):''}<div class="fr"><b>용도지역</b><span class="v${EC}" ${edk('zone')}>${esc(d.zone)}</span></div><div class="fr"><b>사업형태</b><span class="v${EC}" ${edk('kind')}>${esc(d.kind)}</span></div><div class="fr"><b>사업시행자</b>${d.dev||E?lk(d.dev,'dev'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div><div class="fr"><b>토지소유자</b>${d.land||E?lk(d.land,'land'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div>
       <div class="fr"><b>자금조달</b><span class="v${EC}" ${edk('fund')}>${esc(d.fund)}</span></div><div class="fr"><b>총사업비</b><span class="v${EC}" ${edk('cost')}>${esc(d.cost)}</span></div><div class="fr"><b>자금조달방식</b><span class="v${EC}" ${edk('fundType')}>${esc(d.fundType)}</span></div>
       <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(s[1])}</span></div>`).join('')}</div></div>
-      <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>`:''}</div></div></div>
+      <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>${PV?'<small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>':''}`:''}</div></div></div>
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
    <div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>
-     <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid)}</div></div>
+     <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
      <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>
    ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">${ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
@@ -3012,7 +3170,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const agentGo=it.agent?agentUrl(it):'';
   if(agentGo) head+=`<a class="sh-btn agent-go" href="${esc(agentGo)}" target="_blank" rel="noopener" data-stop>에이전트 열기 ↗</a>`;
   if(window.AIDCEditor&&it.id!==NB_TRIAL&&(E||isPub(it))) head+=`<button type="button" class="nb-more" data-ed="docmenu" title="문서 메뉴 (찾기 · 내보내기 · 가져오기)" aria-label="문서 메뉴" aria-haspopup="menu">⋯</button>`;
- if(E||isPub(it)) head+=it.own&&it.task?`<button class="trash" data-schp="del" title="이 업무 삭제" aria-label="이 업무 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:`<button class="trash" data-ed="trash" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
+ if(PREVIEW_ON||E||isPub(it)) head+=it.own&&it.task?`<button class="trash" data-schp="del" title="이 업무 삭제" aria-label="이 업무 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:`<button class="trash" data-ed="trash" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
   const ph=meeting?'새 미팅':(it.type==='action'?'새 '+ACT:(tab?'새 자료':'새 리서치'));
   const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}"${typeof schTitleAttr==='function'?schTitleAttr(it):''}>${titleEmpty?ph:esc(E?it.title:it.title.split('\n').join(' '))}</div>`;
   const V=(k,inner,cls='')=>`<div class="pr"><span class="k">${k}</span><span class="v ${cls} ${E?'pk':''}" data-pf="${k}">${inner}</span></div>`;
@@ -3061,7 +3219,7 @@ async function openLibrary(type){ const label=type==='meeting'?'미팅':type==='
 const logoImg=u=>{let o; try{o=new URL(urlHref(u==='#'?'':u));}catch{return '';} return `<img class="logo" src="https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(o.hostname)}" data-alt="${esc(o.origin)}/favicon.ico" alt="" referrerpolicy="no-referrer">`;};
 /* Partners and 자료실 link cards are edited in place, the same way as the project overview: 수정 turns the texts into underlined fields, 저장 / 취소 end it. */
 const sfield=(k,ph,v,multi)=>`<span class="plain editable${multi?' multi':''}" contenteditable="true" data-sk="${k}" data-ph="${ph}">${esc(v||'')}</span>`;
-const shead=(E,kind)=>E?`<button class="sh-btn pub edit" data-ed="savesimple">저장</button><button class="cancel" data-ed="cancelsimple">취소</button>`:`<button class="sh-btn pub edit" data-ed="edit${kind}">수정</button><button class="trash" data-ed="trash${kind}" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
+const shead=(E,kind)=>E?`<button class="sh-btn pub edit" data-ed="savesimple">저장</button><button class="cancel" data-ed="cancelsimple">취소</button>${PREVIEW_ON?`<button class="trash" data-ed="trash${kind}" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}`:`<button class="sh-btn pub edit" data-ed="edit${kind}">수정</button><button class="trash" data-ed="trash${kind}" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
 const stitle=(E,name)=>`<div class="ititle ${E?'ed':''}" ${E?'contenteditable="true" data-sk="name" data-ph="이름"':''}>${esc(name)}</div>`;
 function partnerHtml(pt,E){const ms=liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date))); if(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))&&!ms.includes(item(pt.meet)))ms.unshift(item(pt.meet)); const site=pt.site&&pt.site!=='-'?pt.site:''; const u=urlHref(site); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
   return `<div class="itype"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>협력업체</div><div class="ihead">${shead(E,'partner')}</div>${stitle(E,pt.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
@@ -3100,11 +3258,11 @@ const loadList=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return Ar
 S.favs=loadList('aidc-favs',['main','project:pangyo']); S.recent=loadList('aidc-recent',[]);
 const pageKey=()=>S.page==='main'?'main':S.page==='project'?'project:'+S.proj:'archive';
 const keyLabel=k=>{if(k==='main')return '메인 페이지';if(k==='archive')return '자료실';if(k.startsWith('project:')){const p=PROJECTS[k.slice(8)];return p?p.full:'';}if(k.startsWith('item:')){const it=item(k.slice(5));return it&&(!ITEMS.includes(it)||canSee(it))?((it.title||'').split('\n')[0]||'제목 없음'):'';}return '';};
-function trackRecent(k){if(!k||k==='main')return;S.recent=[k].concat(S.recent.filter(x=>x!==k)).slice(0,8);localStorage.setItem('aidc-recent',JSON.stringify(S.recent));}
+function trackRecent(k){if(!k||k==='main')return;S.recent=[k].concat(S.recent.filter(x=>x!==k)).slice(0,PREVIEW_ON?12:8);localStorage.setItem('aidc-recent',JSON.stringify(S.recent));}
 function toggleFav(k){const on=S.favs.includes(k);S.favs=on?S.favs.filter(x=>x!==k):S.favs.concat(k);localStorage.setItem('aidc-favs',JSON.stringify(S.favs));sbState();return !on;}
 function renderSbLists(){const fav=$('#sb-fav'),rec=$('#sb-recent');if(!fav||!rec)return;
   fav.innerHTML=S.favs.map(k=>{const l=keyLabel(k);return l?`<div class="item" data-go="${k}"><span class="tx">${esc(l)}</span><button class="unfav" data-unfav="${k}" title="즐겨찾기 해제">${svg('i-star',12,11.4)}</button></div>`:'';}).join('')||'<div class="item none"><span class="tx">즐겨찾기한 페이지가 없습니다</span></div>';
-  rec.innerHTML=S.recent.map(k=>{const l=keyLabel(k);if(!l)return '';const attr=k.startsWith('item:')?`data-open="${k.slice(5)}"`:`data-go="${k}"`;return `<div class="item" ${attr}><span class="tx">${esc(l)}</span></div>`;}).join('')||'<div class="item none"><span class="tx">최근 연 항목이 여기에 표시됩니다</span></div>';}
+  rec.innerHTML=PREVIEW_ON&&typeof schRecentHtml==='function'?schRecentHtml():S.recent.map(k=>{const l=keyLabel(k);if(!l)return '';const attr=k.startsWith('item:')?`data-open="${k.slice(5)}"`:`data-go="${k}"`;return `<div class="item" ${attr}><span class="tx">${esc(l)}</span></div>`;}).join('')||'<div class="item none"><span class="tx">최근 연 항목이 여기에 표시됩니다</span></div>';}
 /* notifications for me: comments on my items, @mentions of me in comments or in a body */
 function notifications(all){const me=sharedUser, first=(sharedName||'').split(' ')[0]; let out=[]; if(!me||!first)return out;
   for(const it of ITEMS){ if(it.status==='trash'||it.status==='new'||(it.status==='draft'&&it.authorId!==me))continue; const mineItem=it.authorId===me||(it.people||[]).includes(me);
@@ -3134,7 +3292,7 @@ const cmtSend=ev=>ev.key==='Enter'&&!ev.isComposing&&ev.keyCode!==229&&(myPref('
 const cmtHint=()=>myPref('cmtEnter')==='mod'?'Ctrl+Enter':'Enter';
 const avOf=(id,cls='')=>{const a=(MEMBERS_META[id]||{}).avatar;return a?`<span class="avatar pic ${cls}" style="background-image:url(/api/file/${esc(a)}?inline=1)"></span>`:av(cls);};
 function applyBranding(){const n=SETTINGS.wsName||'AIDC WorkSpace';$$('#sb .logo,.tb-logo').forEach(e=>{if(e.textContent!==n)e.textContent=n;});if(document.title!==n)document.title=n;}
-function renderNotice(){const n=$('#notice');if(!n||(document.activeElement&&document.activeElement.id==='notice-in'))return;const list=NOTICES.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+function renderNotice(){if(PREVIEW_ON&&typeof schNoticeDraw==='function'){schNoticeDraw();return;}const n=$('#notice');if(!n||(document.activeElement&&document.activeElement.id==='notice-in'))return;const list=NOTICES.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   $('.msg',n).textContent=list.length?list[0].text.split(' — ')[0]:'등록된 공지사항이 없습니다.';
   $('.list',n).innerHTML=list.map(x=>`<li><time>${esc(x.date)}</time><span class="nt">${esc(x.text)}</span>${canAdmin()||x.by===sharedUser?`<button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:''}</li>`).join('')+`<li class="nadd"><input id="notice-in" placeholder="새 공지사항을 입력하고 Enter" maxlength="200"></li>`;}
 function sbState(){renderSbLists();const k=pageKey();$$('#sb .item').forEach(e=>{e.classList.remove('on','cur');});
@@ -3162,7 +3320,8 @@ function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content')
   else { $('#notice').style.display=''; renderNotice();
     if(S.page==='main'){renderMain();$('#page-main').classList.add('on');applyCarousel('proj');}
     else if(S.page==='project'){renderProject(S.proj);$('#page-project').classList.add('on');schMount();applyCarousel('meet');const box=$('#road-box');fixRoadLine();if(box){if(S._roadProj!==S.proj){S._roadProj=S.proj;S._roadScroll=roadOf(S.proj).length>1?160:0;}box.scrollTop=S._roadScroll;}}
-    else {renderArchive();$('#page-archive').classList.add('on');} }
+    else {renderArchive();$('#page-archive').classList.add('on');}
+    if(typeof schFooter==='function')schFooter(); }
   }catch(err){ // one broken record must not leave a blank screen: say what happened and keep the rest of the app usable
     console.error(err); const pg=$(S.full?'#page-item':S.page==='project'?'#page-project':S.page==='archive'?'#page-archive':'#page-main'); pg.classList.add('on');
     $('.pw,.pin',pg).innerHTML=`<div style="padding:140px 0;font-size:14px;color:#939393;line-height:24px">이 화면을 표시하는 중 문제가 생겼습니다. 새로고침(F5)해 주세요.<br>계속되면 이 문구를 관리자에게 알려 주세요: ${esc(String(err&&err.message||err))}</div>`; }
@@ -3296,14 +3455,14 @@ document.addEventListener('click',async e=>{
     else if(a==='dlroad'){const r=ROADMAP[id];const fs=[],seen=new Set();((r&&r.items)||[]).forEach(x=>itemFiles(item(x)).forEach(f=>{if(!seen.has(f.id)){seen.add(f.id);fs.push(f);}}));downloadFiles(fs,el);} return;}
   if(el=q('[data-cat]')){S.partnerCat=S.partnerCat===el.dataset.cat?null:el.dataset.cat;S.ptPage=1;render(true);const s=$('.page.on #sec-partners');s&&s.scrollIntoView({block:'start'});return;}
   if(el=q('[data-catclear]')){S.partnerCat=null;render();return;}
-  if(el=q('[data-partner]')){openPanel(el.dataset.partner);return;}
+  if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-open]')){e.stopPropagation();openPanel(el.dataset.open);return;}
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
   if(el=q('[data-pg]')){const pg=el.closest('.pager'); const v=el.dataset.pg; const key=pg.classList.contains('pg-act')?'actPage':pg.classList.contains('pg-res')?'resPage':pg.classList.contains('pg-pt')?'ptPage':pg.classList.contains('pg-arch')?'archPage':'memPage';
     const tot=$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
     if(key==='memPage'){renderPane('members');} else if(key==='archPage'){render(true);} else {if(key==='resPage'&&S[key]!==prev)S._slide={key,dir:S[key]>prev?1:-1}; refreshSec(key==='actPage'?'action':key==='resPage'?'research':'partner');} return;}
   if(el=q('[data-car]')){const [k,dir]=el.dataset.car.split(':'); moveCarousel(k,+dir); return;}
-  if(el=q('.new-proj')){openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${['계획중','진행중','완료'].map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
+  if(el=q('.new-proj')){if(PREVIEW_ON&&typeof schNewProject==='function'){schNewProject();return;}openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${['계획중','진행중','완료'].map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
   if(el=q('[data-npst]')){$$('#np-st button').forEach(b=>b.classList.toggle('on',b===el));return;}
   if(el=q('[data-np]')){if(el.dataset.np==='ok'){const n=$('#np-name').value.trim(); if(!n){$('#np-name').focus();return;} const npst=($('#np-st button.on')||{}).dataset?.npst||'계획중'; const id='p'+Date.now(); const ci=(PROJ_ORDER.length-4+6)%6; const TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci]; PROJECTS[id]={id,tag:n,full:n,cls:'pj-c'+ci,color:TONE[0],status:npst,stColor:PSTATUS[npst],grad:TONE[1],imgH:207.8,owner:$('#np-owner').value||sharedName,site:$('#np-site').value||'',cost:'',area:'',power:'',it:'',server:''}; PHEAD[id]={cls:npst,prog:'초기 기획',owner:PROJECTS[id].owner,loc:PROJECTS[id].site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''}; PROJ_ORDER.push(id); S.filters[id]=true; closePop(); go('project:'+id); if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);} toast('빈 프로젝트 페이지가 만들어졌습니다. 내용을 입력한 뒤 저장하세요.');} else closePop(); return;}
   if(el=q('.new-action')){const it=newItem('action');openPanel(it.id);return;}
@@ -4402,6 +4561,7 @@ const schDotsHtml=(n,id)=>{const r=n.red.has(id), g=n.green.has(id);return (r?'<
    +'<symbol id="i-sch-ext" viewBox="0 0 9 9"><path d="M1 8L8 1M2.6 1H8v5.4" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>'
    +'<symbol id="i-sch-tag" viewBox="184.8 114.6 13.7 13.7"><path transform="matrix(1,0,0,-1,189.0314,119.889987)" d="M0 0C-.637 0-1.154 .516-1.154 1.154-1.154 1.791-.637 2.308 0 2.308 .637 2.308 1.154 1.791 1.154 1.154 1.154 .516 .637 0 0 0M8.424-.853 3.802 3.769C3.167 4.404 2.307 4.76 1.41 4.76H-1.948C-2.918 4.76-3.706 3.973-3.706 3.003V-.25C-3.706-1.148-3.349-2.008-2.715-2.642L1.958-7.315C2.47-7.827 3.299-7.827 3.811-7.315L8.424-2.702C8.935-2.191 8.935-1.364 8.424-.853" fill="currentColor"/></symbol>'
    +'<symbol id="i-sch-tri" viewBox="0 0 10 8.75"><path d="M0.4 0.3h9.2L5 8.5z" fill="currentColor"/></symbol>'
+   +'<symbol id="i-sch-cal" viewBox="0 0 14 14"><path fill-rule="evenodd" d="M3.4 0h1.5v1.5h4.2V0h1.5v1.5h1.2A2.2 2.2 0 0 1 14 3.7v8.1a2.2 2.2 0 0 1-2.2 2.2H2.2A2.2 2.2 0 0 1 0 11.8V3.7a2.2 2.2 0 0 1 2.2-2.2h1.2zM1.5 5.6v6.2c0 .39.31.7.7.7h9.6a.7.7 0 0 0 .7-.7V5.6zM3.3 7.2h2v1.9h-2zm2.7 0h2v1.9H6zm2.7 0h2v1.9h-2zM3.3 9.8h2v1.9h-2zm2.7 0h2v1.9H6z" fill="currentColor"/></symbol>'
    +'<symbol id="i-sch-ck" viewBox="0 0 10 8"><path d="M1.2 4.1L3.8 6.6 8.8 1.4" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>';
   // the page's pictograms for 미팅 and 리서치 have a fixed colour; copies that take the text colour stand in front of the section titles
   for(const [src,dst] of [['pic-meeting','i-sch-meeting'],['pic-research','i-sch-research']]){ const o=document.getElementById(src); if(!o)continue; const c=o.cloneNode(true); c.id=dst; c.querySelectorAll('[fill]').forEach(n=>{if(n.getAttribute('fill')!=='none')n.setAttribute('fill','currentColor');}); c.querySelectorAll('[stroke]').forEach(n=>{if(n.getAttribute('stroke')!=='none')n.setAttribute('stroke','currentColor');}); s.appendChild(c); }
@@ -4440,7 +4600,7 @@ const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who||(S
 
 // What is filtered shows beside the title, each with an x that takes it off (owner, 2026-11-19: as the partner list does).
 const SCH_CF_NAMES={kind:['종류',{task:'일반 업무',ms:'마일스톤'}],plan:['기간',{now:'오늘 진행 중',month:'이번 달',next:'앞으로 시작',past:'지난 일정'}],pri:['중요도',{high:'높음',mid:'중간',low:'낮음'}],st:['상태',null],due:['기한',{late:'지연','7':'7일 안에 마감','30':'30일 안에 마감'}],url:['URL',{y:'주소 있음',n:'주소 없음'}]};
-function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(k,label)=>out.push(`<button class="sh-btn lib sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)} ✕</button>`);
+function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
   if(SCHU.phase){const g=m&&m.phases.find(x=>x.code===SCHU.phase);chip('phase','단계: '+(SCHU.phase==='none'?'일정 미연결':g?schPhaseLabel(g):SCHU.phase));}
   if(SCHU.scope&&SCHU.scope!=='all')chip('scope','범위: '+schScopeName());
   if(SCHU.who)chip('who','담당자: '+(SCHU.who==='none'||SCHU.who.startsWith('r:')?'미지정':userName(SCHU.who)));
@@ -4449,9 +4609,9 @@ function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(
 function schActionSection(pid){ const tabs=[['gantt','일정'],['list','리스트'],['net','관계도']];
   return `<div class="sec sch-sec" id="sch-actions" style="margin-top:112px">
     <div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션<span class="sch-tabs">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.tab===k?'on':''}" data-sch="tab" data-k="${k}">${t}</button>`).join('')}</span>
-      ${plusBtn('new-action','새 액션')}<button class="sh-btn lib" data-lib="action">라이브러리</button><span class="sch-chips" data-chips="act">${schChips(pid)}</span>
+      ${plusBtn('new-action','새 액션')}<button class="sh-btn lib" data-lib="action">라이브러리</button>
       <label class="srch box">${svg('pic-search',15,15)}<input data-schq="q" placeholder="검색" value="${esc(SCHU.q||'')}"></label></div>
-    <div data-sec="sch-act">${schActionBody(pid)}</div></div>`; }
+    <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="act">${schChips(pid)}</div></div><div data-sec="sch-act">${schActionBody(pid)}</div></div>`; }
 function schActionBody(pid){ const m=schModel(pid);
   if(!m)return `<div class="sch-empty">${SCH.failed[pid]?esc(SCH.failed[pid])+' <button class="sh-btn" data-sch="reload" style="margin-left:12px;height:26px;padding:0 10px;font-size:12px">다시 시도</button>':'일정을 불러오는 중입니다…'}</div>`;
   const sf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
@@ -4625,7 +4785,7 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
 function schMarkTags(host){ const box=host.parentElement; let layer=box.querySelector('.sg-tags'); if(!layer){layer=document.createElement('div');layer.className='sg-tags';box.appendChild(layer);}
   const view=host.clientHeight; layer.innerHTML=$$('.sg-mark',host).map(el=>{const y=SG.head+parseFloat(el.style.top)-host.scrollTop;return y<SG.head+2||y>view-2?'':`<b style="top:${y}px" title="여기까지 끝나면 전체 일정의 ${el.dataset.pc}%가 끝납니다 (기간·중요도·마일스톤 가중치 기준)">${el.dataset.pc}%</b>`;}).join('');
   if(!host._markScroll){host._markScroll=true;host.addEventListener('scroll',()=>schMarkTags(host),{passive:true});} }
-function schMount(){ if(S.page!=='project'||!schHas(S.proj)||S.full)return; if($('#sch-gantt'))schGanttBuild(S.proj); if($('#sch-net'))schNetBuild(S.proj); }
+function schMount(){ if(S.page!=='project'||!schHas(S.proj)||S.full)return; if($('#sch-gantt'))schGanttBuild(S.proj); if($('#sch-net'))schNetBuild(S.proj); if(typeof schLowAddPlace==='function')schLowAddPlace(); }
 function schRefresh(){ const el=$('[data-sec="sch-act"]'); if(!el||!schHas(S.proj))return; const keep=schKeepScroll(); el.innerHTML=schActionBody(S.proj); $$('#sch-actions .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.tab)); { const ch=$('#sch-actions [data-chips]'); if(ch)ch.innerHTML=schChips(S.proj); } schMount(); schRestoreScroll(keep); schUiSave(); afterNav(); }
 
 /* ---- schedule/ui/20-network.js ---- */
@@ -4899,15 +5059,17 @@ function schEvRows(pid,kind){ const m=schModel(pid), src=(SCH.src[pid]||{})[kind
   for(const [k,v] of Object.entries(root))if(k.startsWith('e:u:')&&v&&v.kind===kind)rows.push({id:`se-${pid}-u-${k.slice(4)}`,key:k,user:true,no:'추가',cat:v.cat||(kind==='commitmentReviews'?'보완·확약':'전제·근거'),title:v.title||'',link:v.link||'',st:v.status||'',role:v.role||'',due:v.due||'',body:v.body||'',ref:v.ref||'',note:v.note||'',by:v.by,at:v.at,fields:{}});
   return rows; }
 
-function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="sh-btn lib sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)} ✕</button>`);
+function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
   if(SCHU.sec==='proc'&&SCHU.procState)chip('procState','확약 상태: '+SCHU.procState); if(SCHU.sec==='evid'&&SCHU.evState)chip('evState','상태: '+SCHU.evState); return out.join(''); }
 function schLowerSection(pid){ const tabs=[['proc','외부설비 조달'],['gate','승인게이트'],['evid','근거 및 확약']];
-  return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}</span>
-      <span data-sch="lowadd" class="sch-evadd">${plusBtn('','추가')}</span><button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록">라이브러리</button><span class="sch-chips" data-chips="low">${schLowChips()}</span><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}"></label></div>
-    <div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
+  return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}<span data-sch="lowadd" class="sch-evadd up" title="${esc((tabs.find(x=>x[0]===SCHU.sec)||tabs[0])[1])}에 추가">${plusBtn('','추가')}</span></span>
+      <button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록" style="margin-left:14px">라이브러리</button><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}"></label></div>
+    <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="low">${schLowChips()}</div></div><div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
+// The + of the lower section stands above the middle of the tab that is open.
+function schLowAddPlace(){ const box=$('#sch-lower .sch-tabs.lead'), on=box&&$('button.on',box), add=box&&$('.sch-evadd.up',box); if(!on||!add)return; add.style.left=(on.offsetLeft+on.offsetWidth/2)+'px'; }
 function schLowerBody(pid){ const m=schModel(pid); if(!m)return `<div class="sch-empty">${SCH.failed[pid]?esc(SCH.failed[pid]):'일정을 불러오는 중입니다…'}</div>`;
   return SCHU.sec==='gate'?schGatesHtml(pid,m):SCHU.sec==='evid'?schEvidHtml(pid,m):schProcHtml(pid,m); }
-function schLowerRefresh(){ const el=$('[data-sec="sch-low"]'); if(!el||!schHas(S.proj))return; el.innerHTML=schLowerBody(S.proj); $$('#sch-lower .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.sec)); { const ch=$('#sch-lower [data-chips]'); if(ch)ch.innerHTML=schLowChips(); } schUiSave(); afterNav(); }
+function schLowerRefresh(){ const el=$('[data-sec="sch-low"]'); if(!el||!schHas(S.proj))return; el.innerHTML=schLowerBody(S.proj); $$('#sch-lower .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.sec)); { const ch=$('#sch-lower [data-chips]'); if(ch)ch.innerHTML=schLowChips(); } schLowAddPlace(); schUiSave(); afterNav(); }
 const schSf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
 
 /* ---------- 외부설비 조달 ---------- */
@@ -5076,29 +5238,29 @@ function schCalBadge(pid,date,count){ let dots='';
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
-  const dateTag=`<span class="d">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</span>`;
-  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':'top:150px'}"><div class="rline"></div><div class="rcap">${D===TODAY?'금일 주요일정':'주요일정'}${dateTag}</div>`;
+  // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
+  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':'top:150px'}"><div class="rdate">${y!==+TODAY.slice(0,4)?y+'년 ':''}${mo}월 ${dn}일 (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</div><div class="rline"></div><div class="rscroll"><div class="rcap ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
   if(!evs.length&&!rss.length)h+=`<div class="rnone">${D===TODAY?'오늘':'이 날짜에'} 등록된 미팅·리서치가 없습니다.</div>`;
   evs.forEach(e=>{const p=proj(e.proj);
     h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${(e.checks||[]).length?`<ul class="chk">${e.checks.map(c=>`<li><span class="bx">${pict(meetingLineIcon(c))}</span><span class="tx">${esc(c.t)}</span>${c.pre?`<span class="pre">${esc(c.pre)}</span>`:''}</li>`).join('')}</ul>`:''}</div>`;});
   if(rss.length)h+=`<div class="it rs" style="padding-top:${evs.length?30:6}px"><div class="cat" style="top:${evs.length?30:6}px"><i>${pict('research')}</i>리서치</div>${rss.map((x,i)=>`<div class="tt" style="margin-top:${i?8:18.7}px" data-open="${x.id}"><b>${one(x.title)}</b>${avstack(x.people)}</div>`).join('')}</div>`;
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
-    h+=`<div class="rsep"></div><div class="rcap">${svg('i-sch-tag',13,13)}${D===TODAY?'금일 액션':'이 날의 액션'}<span class="n">${rows.length}</span></div>`;
+    h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
     h+=rows.slice(0,60).map(schDayRowHtml).join('');
     if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
-  return h+`</div>`; }
+  return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
 // The list beside the calendar ends where the calendar ends (owner, 2026-11-19: "do not show all of today's actions, cut it at the end
 // of the calendar"). What does not fit is reached by scrolling inside the list; a soft edge shows that there is more.
 const schFitMark=el=>el.classList.toggle('cut',el.scrollHeight-el.clientHeight-el.scrollTop>2);
-function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'); if(!grid||!el.offsetParent)return;
-    // its upper line stands level with the calendar's line under the weekdays, its lower edge with the calendar's lower edge
-    const rows=grid.querySelector('.rows'); if(rows){ const d=(rows.getBoundingClientRect().top-el.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
-    const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.maxHeight=h+'px'; schFitMark(el);
-    if(!el._fit){ el._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){el.scrollTop=SCH.rs.top;schFitMark(el);}   // redrawn: back to where it stood
-      el.addEventListener('scroll',()=>{SCH.rs={k:key,top:el.scrollTop};schFitMark(el);},{passive:true}); } }); }
+function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'), box=el.querySelector('.rscroll'); if(!grid||!box||!el.offsetParent)return;
+    // its upper line stands level with the calendar's line under the weekdays, its lower line with the calendar's lower edge: neither moves
+    const rows=grid.querySelector('.rows'), line=el.querySelector('.rline'); if(rows&&line){ const d=(rows.getBoundingClientRect().top-line.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
+    const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.height=h+'px'; schFitMark(box);
+    if(!box._fit){ box._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){box.scrollTop=SCH.rs.top;schFitMark(box);}   // redrawn: back to where it stood
+      box.addEventListener('scroll',()=>{SCH.rs={k:key,top:box.scrollTop};schFitMark(box);},{passive:true}); } }); }
 function schAfterNav(){ if(!schPreview())return; schFitRight(); if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
 
 // The actions of a day in a small window, while the pointer rests on that day's (pale) count in the calendar. Sizes are those of the
@@ -5109,7 +5271,7 @@ function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.pr
   const date=cell.dataset.date; if(schPop&&schPop._date===date&&schPop._a===badge)return; if(schPop)schPop.remove();
   const rows=schDayRows(pid,date), [y,mo,dn]=date.split('-').map(Number), p=document.createElement('div'); p.className='sch-daypop'; p._date=date; p._a=badge; p.setAttribute('role','dialog'); p.setAttribute('aria-label',`${mo}월 ${dn}일의 액션 ${rows.length}건`);
   p.innerHTML=`<div class="dp-in">${rows.map(schDayRowHtml).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${mo}월 ${dn}일 · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
-  document.body.appendChild(p); const z=LAYOUT.zoom||1, r=badge.getBoundingClientRect(); p.style.transform=z===1?'':`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;
+  document.body.appendChild(p); const z=(LAYOUT.zoom||1)*.7, r=badge.getBoundingClientRect(); p.style.transform=`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;   /* 0.7: the owner found the window a third too large */
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});
   p.addEventListener('mouseenter',()=>clearTimeout(schPopHideT)); p.addEventListener('mouseleave',()=>schDayPopHide()); p.addEventListener('click',e=>{if(e.target.closest('[data-open]'))setTimeout(()=>schDayPopHide(true),0);}); }
@@ -5117,30 +5279,68 @@ function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.pr
 /* ---- schedule/ui/55-main.js ---- */
 // Main page while the preview is on: one table for the action items of every project and, of the projects that have a
 // schedule, the tasks that are under way or due within 30 days (owner, 2026-11-19: not all of them).
+// Sixth round (2026-11-20): the table is the project page's list (same columns, the same menus on the column titles to order and
+// filter by), with the project in front; what is filtered shows as small tags between the title and the table.
 function schMainTasks(pid){ const m=schModel(pid); if(!m)return []; const P=AIDCSchedule.progress, today=schToday(), D=AIDCSchedule.dates, red=schNotices(pid).red;
   return m.plan.tasks.filter(t=>{ if(red.has(schItemId(t.id)))return true;   // a change on a task of mine is shown whatever its dates are
     if(P.isDone(t)||P.isExcluded(t))return false; const r=m.res.tasks[t.id]; return P.isStarted(t)||(r.start<=today&&r.finish>=today)||D.diffDays(r.finish,today)<=30; })
-    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,mod:it?modDate(it):null,order:t.order};}); }
+    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,ps:t.plannedStart,pf:t.plannedFinish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,url:t.url||'',mod:it?modDate(it):null,order:t.order};}); }
 function schMainRows(){ const q=S.q.action, out=[];
-  for(const i of liveItems('action')){ if(i.own)continue; const m=i.task&&schHas(i.proj)?schModel(i.proj):null, t=m&&m.byId.get(i.task);
-    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:false,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end:itemEnd(i),done:i.st==='done',st:i.st==='done'?'완료':'진행',pri:i.pri||'mid',auto:false,mod:modDate(i),item:i,order:0}); }
+  for(const i of liveItems('action')){ if(i.own)continue; const m=i.task&&schHas(i.proj)?schModel(i.proj):null, t=m&&m.byId.get(i.task), end=itemEnd(i);
+    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:false,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end,ps:i.date,pf:end,done:i.st==='done',st:i.st==='done'?'완료':'진행',pri:i.pri||'mid',auto:false,url:i.url||'',mod:modDate(i),item:i,order:t?t.order+.5:1e9}); }
   for(const pid of Object.keys(SCH_SOURCES))if(schHas(pid))out.push(...schMainTasks(pid));
   return out.filter(r=>matchQ(q,r.title,r.wbs,proj(r.proj).tag,...r.ppl.map(userName))); }
-function schMainActions(){ const rows=schMainRows(), k=S.sort.k, dir=S.sort.dir||1, notes={};
+// what the column titles of the main table filter by
+const schMf=()=>S.mf||(S.mf={});
+function schMainTest(r){ const c=schMf();
+  if(c.proj&&r.proj!==c.proj)return false; if(c.kind&&(c.kind==='ms')!==r.ms)return false; if(c.pri&&r.pri!==c.pri)return false; if(c.st&&r.st!==c.st)return false;
+  if(c.who&&(c.who==='none'?r.ppl.length>0:!r.ppl.includes(c.who)))return false; if(c.url&&(c.url==='y')!==!!urlHref(r.url))return false;
+  return schSpanTest(c,r.ps||'',r.pf||r.ps||'')&&schDueTest(c,r.end,r.done); }
+const SCH_MSORT={proj:r=>proj(r.proj).tag||'',wbs:r=>r.order,name:r=>norm(r.title),plan:r=>(r.ps||'')+(r.pf||''),pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>SCH_STATUSES.indexOf(r.st),who:r=>userName(r.ppl[0])||'~',due:r=>r.end||'9'};
+const SCH_MF_NAMES={...SCH_CF_NAMES};
+function schMainChips(){ const c=schMf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-mchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
+  if(c.proj)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
+  for(const k of ['kind','plan','pri','st','due','url']){ if(!c[k])continue; const d=SCH_MF_NAMES[k]; chip(k,d[0]+': '+(d[1]?d[1][c[k]]||c[k]:c[k])); }
+  return out.join(''); }
+function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest), c=schMf(), k=S.sort.k, dir=S.sort.dir||1, notes={};
   for(const r of rows){ const n=notes[r.proj]||(notes[r.proj]=schNotices(r.proj)); r.red=n.red.has(r.id); r.green=n.green.has(r.id); r.dots=schDotsHtml(n,r.id); }
-  const key={proj:r=>proj(r.proj).tag,who:r=>userName(r.ppl[0])||'~',title:r=>norm(r.title),date:r=>r.end||'',pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>r.done?1:0,mod:r=>r.mod?r.mod.getTime():0}[k];
+  const key=SCH_MSORT[k];
   // without a chosen order: changed ones (red), those that start today (green), then what is not finished, nearest deadline first
   rows.sort(key?(a,b)=>{const x=key(a),y=key(b);return (x<y?-1:x>y?1:0)*dir||(a.end||'').localeCompare(b.end||'');}:(a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||(a.end||'9').localeCompare(b.end||'9')||a.order-b.order);
   const total=Math.max(1,Math.ceil(rows.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const page=rows.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
-  const th=(kk,t)=>`<span data-sort="${kk}" class="${k===kk?'sorted':''}" title="눌러서 정렬"><em>${t}${k===kk?`<i class="sa">${dir>0?'▲':'▼'}</i>`:''}</em></span>`;
-  let h=`<div class="view-wrap" style="margin-top:28.5px"><div class="tbl actions sch-main"><div class="hd">${th('proj','프로젝트')}${th('who','담당자')}${th('title','제목')}${th('date','기한')}${th('st','상태')}${th('pri','중요도')}${th('mod','최종수정일자')}</div>`;
+  const on={proj:!!c.proj,name:!!c.kind,plan:!!c.plan,pri:!!c.pri,st:!!c.st,who:!!c.who,due:!!c.due,url:!!c.url};
+  const th=(kk,t)=>`<span data-mcol="${kk}" class="${k===kk?'sorted':''} ${k===kk&&dir<0?'up':''} ${on[kk]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
+  const urlCell=u=>{const h=urlHref(u);return h?`<a href="${esc(h)}" target="_blank" rel="noopener" data-stop>${esc(u)}</a>`:'<span style="color:#c4c4c4">-</span>';};
+  let h=`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="main">${schMainChips()}</div></div>
+    <div class="sch-filters sch-all">${schSf2('mpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('mpick','who',c.who?(c.who==='none'?'미지정':userName(c.who)):'전체 담당자',!!c.who)}<div class="right">${perBox()}</div></div>
+    <div class="tbl sch-list sch-all"><div class="hd">${th('proj','프로젝트')}${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   for(const r of page){ const p=proj(r.proj);
-    h+=`<div class="rw" data-open="${esc(r.id)}"><div>${pill(p,'nosq')}</div><div class="who" style="margin-left:-1.3px">${r.ppl.length?r.ppl.slice(0,2).map(u=>`<span>${av()}${esc(userName(u))}</span>`).join(''):(r.role?`<span class="sch-role">${esc(r.role)}</span>`:'')}</div>
-      <div class="ttl" style="margin-left:-0.4px"><span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${r.dots}${r.wbs?`<span class="wb">${esc(r.wbs)})</span>`:''}${esc(r.title)}</span><span class="acts"><button class="sh-btn" data-act="open" data-id="${esc(r.id)}">열기</button>${r.item&&hasFiles(r.item)?`<button class="sh-btn" data-act="dl" data-id="${esc(r.id)}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div>
-      <div class="due">${r.done?'<span class="sch-dd"></span>':(schDdayHtml(r.end,false)||'<span class="sch-dd"></span>')}${r.end&&r.end>r.start?schRange(r.start,r.end):`<span>${schD(r.end||r.start)}</span>`}</div><div class="stt">${schStIcon(r.st)}</div><div class="pri pri-${r.pri} ${r.auto?'auto':''}">${priTxt[r.pri]}</div>
-      <div class="mod">${r.mod?esc(fmtStampShort(r.mod)):'-'}</div></div>`; }
-  if(!page.length)h+=`<div class="none">${S.q.action?'검색 결과가 없습니다.':'등록된 액션이 없습니다.'}</div>`;
-  return h+`<div class="ft"></div></div></div>${pager(S.actPage,total,'pg-act').replace('class="pager','style="margin-top:59px" class="pager')}`; }
+    h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="pj">${pill(p,'nosq')}</div><div class="w">${esc(r.wbs||'-')}</div><div class="nm"><span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${r.dots}${esc(r.title)}</span></div>
+      <div class="rg">${r.ms?schD(r.ps):(r.pf&&r.pf>r.ps?schRange(r.ps,r.pf):schD(r.ps||r.pf))}</div><div><span class="pri pri-${r.pri}">${priTxt[r.pri]}</span></div><div>${schStIcon(r.st)}</div>
+      <div class="who">${r.ppl.length?r.ppl.slice(0,2).map(u=>`<span>${av()}${esc(userName(u))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="dd">${r.done?'':schDdayHtml(r.end,false)}</div><div class="url">${urlCell(r.url)}</div></div>`; }
+  if(!page.length)h+=`<div class="none">${S.q.action||Object.keys(c).length?'조건에 맞는 액션이 없습니다.':'등록된 액션이 없습니다.'}</div>`;
+  return h+`<div class="ft"></div></div>${pager(S.actPage,total,'pg-act').replace('class="pager','style="margin-top:32px" class="pager')}`; }
+// A picker of the row of filters (the look of the project page's: a word, a line below, a chevron).
+const schSf2=(attr,k,label,set)=>`<div class="sf ${set?'set':''}" data-${attr}="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
+// The menu of a column title of the main table: how to order by that column and what to keep.
+function schMainColMenu(el,v,only){ const c=schMf(), go=()=>{S.actPage=1;refreshSec('action');};
+  const srt=(label,dir)=>({t:label,sel:S.sort.k===v&&(S.sort.dir||1)===dir,fn:()=>{S.sort={k:v,dir};go();}});
+  const fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}});
+  const rows=schMainRows(); let items=[];
+  const projs=[fl('proj','',{t:'전체 프로젝트'}),...orderedProjects().filter(p=>rows.some(r=>r.proj===p)).map(p=>fl('proj',p,{t:proj(p).tag,html:pill(proj(p),'nosq')}))];
+  const ppl=[...new Set(rows.flatMap(r=>r.ppl))].sort((x,y)=>userName(x).localeCompare(userName(y)));
+  const who=[fl('who','',{t:'전체 담당자'}),...ppl.map(u=>fl('who',u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')})),fl('who','none',{t:'미지정',html:'<span class="sch-role none">미지정</span>'})];
+  if(v==='proj')items=only?projs:[{hd:'정렬'},srt('이름 순',1),srt('이름 역순',-1),'-',{hd:'프로젝트'},...projs];
+  else if(v==='wbs')items=[{hd:'정렬'},srt('번호 순',1),srt('번호 역순',-1)];
+  else if(v==='name')items=[{hd:'정렬'},srt('가나다 순',1),srt('가나다 역순',-1),'-',{hd:'종류'},fl('kind','',{t:'전체'}),fl('kind','task',{t:'일반 업무'}),fl('kind','ms',{t:'마일스톤',ico:'<i class="sch-ms" style="margin:0 8px 1px 1px"></i>'})];
+  else if(v==='plan')items=[{hd:'정렬'},srt('시작이 빠른 순',1),srt('시작이 늦은 순',-1),'-',{hd:'기간'},fl('plan','',{t:'전체 기간'}),fl('plan','now',{t:'오늘 진행 중'}),fl('plan','month',{t:'이번 달에 걸친 일정'}),fl('plan','next',{t:'앞으로 시작'}),fl('plan','past',{t:'지난 일정'})];
+  else if(v==='pri')items=[{hd:'정렬'},srt('높은 순',1),srt('낮은 순',-1),'-',{hd:'중요도'},fl('pri','',{t:'전체'}),...['high','mid','low'].map(p=>fl('pri',p,{t:priTxt[p],html:`<span class="pri pri-${p}">${priTxt[p]}</span>`}))];
+  else if(v==='st')items=[{hd:'정렬'},srt('상태 순',1),srt('상태 역순',-1),'-',{hd:'상태'},fl('st','',{t:'전체'}),...SCH_STATUSES.map(x=>fl('st',x,{t:x,html:schStIcon(x)}))];
+  else if(v==='who')items=only?who:[{hd:'정렬'},srt('이름 순',1),srt('이름 역순',-1),'-',{hd:'담당자'},...who];
+  else if(v==='due')items=[{hd:'정렬'},srt('가까운 순',1),srt('먼 순',-1),'-',{hd:'기한'},fl('due','',{t:'전체'}),fl('due','late',{t:'지연',html:'<span class="sch-dd hot">지연</span>'}),fl('due','7',{t:'7일 안에 마감'}),fl('due','30',{t:'30일 안에 마감'})];
+  else if(v==='url')items=[{hd:'URL'},fl('url','',{t:'전체'}),fl('url','y',{t:'주소 있음'}),fl('url','n',{t:'주소 없음'})];
+  if(S.sort.k===v&&!only)items.splice(3,0,{t:'기본 순서로',fn:()=>{S.sort={k:'',dir:1};go();}});
+  menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
 
 /* ---- schedule/ui/60-tools.js ---- */
 // 프로젝트 도구: what the Schedule app offered around the plan itself. Backup (same JSON the Schedule app writes and reads),
@@ -5236,6 +5436,181 @@ function schToolPanelHtml(pid,kind){ const m=schModel(pid), A=AIDCSchedule, R=(k
   return ''; }
 // The tools have no way in any more (my-page spec DEL-02, 2026-11-19: the entry of the user menu is gone). The functions stay: schToolsMenu(anchor, pid) opens them.
 
+
+/* ---- schedule/ui/65-shell.js ---- */
+// Sixth round (owner, 2026-11-20), the frame around the pages while the preview is on: the tree of recent items in the sidebar,
+// notices with a title and a text, the footer.
+
+/* ---------- recent items: project › kind › item (the owner's picture) ---------- */
+const schRecOff=()=>{try{return new Set(JSON.parse(localStorage.getItem('aidc-recoff')||'[]'));}catch{return new Set();}};
+function schRecentHtml(){ const G=new Map(), off=schRecOff();
+  const grp=(key,label,go)=>{ if(!G.has(key))G.set(key,{label,go,kinds:new Map()}); return G.get(key); };
+  for(const k of S.recent){
+    if(k==='archive'){grp('archive','자료실','archive');continue;}
+    if(k.startsWith('project:')){const p=PROJECTS[k.slice(8)]; if(p)grp(k,p.tag||p.full,k); continue;}
+    if(!k.startsWith('item:'))continue; const id=k.slice(5), it=item(id); if(!it||(ITEMS.includes(it)&&!canSee(it)))continue;
+    let g, kind; const tab=archTabOf(it);
+    if(it.agent){g=grp('agent','에이전트','');kind='에이전트 페이지';}
+    else if(tab){g=grp('archive','자료실','archive');kind=tab;}
+    else {const p=PROJECTS[it.proj]; g=p?grp('project:'+it.proj,p.tag||p.full,'project:'+it.proj):grp('etc','기타',''); kind=TYPE_NAME[it.type]||'기타';}
+    if(!g.kinds.has(kind))g.kinds.set(kind,[]); g.kinds.get(kind).push({id,title:(it.title||'').split('\n')[0]||'제목 없음'}); }
+  let h='';
+  for(const [key,g] of G){ h+=`<div class="item r0" ${g.go?`data-go="${esc(g.go)}"`:''}><span class="tx">${esc(g.label)}</span></div>`;
+    for(const [kind,list] of g.kinds){ const rk=key+'|'+kind, shut=off.has(rk);
+      h+=`<div class="item ${shut?'r3':'r1'}" data-rec="${esc(rk)}" role="button" aria-expanded="${!shut}" title="${shut?'펼치기':'접기'}">${shut?svg('i-chev-r',3.6,6.3,'color:#8e8e8e'):svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}<span class="tx">${esc(kind)}</span><span class="rn">${list.length}</span></div>`;
+      if(!shut)h+=list.map(x=>`<div class="item r2" data-open="${esc(x.id)}"><i class="dot"></i><span class="tx">${esc(x.title)}</span></div>`).join(''); } }
+  return h||'<div class="item none"><span class="tx">최근 연 항목이 여기에 표시됩니다</span></div>'; }
+
+/* ---------- notices: a title and a text; + while the bar is open; new ones carry a green mark ---------- */
+const schNtTitle=x=>x.title||String(x.text||'').split(' — ')[0];
+const schNtBody=x=>x.body!==undefined?x.body:String(x.text||'').split(' — ').slice(1).join(' — ');
+const schNtList=()=>NOTICES.slice().sort((a,b)=>String(b.at||b.date).localeCompare(String(a.at||a.date)));
+// New for me: somebody else's notice of the last 14 days that I have not opened.
+function schNtNew(x){ if(!x||x.by===sharedUser||(INBOX_STATE.nseen||[]).includes(x.id))return false; const t=new Date(x.at||x.date+'T00:00:00').getTime(); return isFinite(t)&&Date.now()-t<14*864e5; }
+function schNoticeDraw(){ const n=$('#notice'); if(!n)return; const act=document.activeElement; if(act&&n.contains(act)&&act.matches('input,textarea'))return;   // somebody is writing one
+  const list=schNtList(), fresh=list.filter(schNtNew).length, ui=SCH.nt||(SCH.nt={});
+  if(!$('.nplus',n))n.insertAdjacentHTML('beforeend',`<button class="nplus" data-nt="add" title="공지사항 쓰기" aria-label="공지사항 쓰기">${svg('i-plus',10,10)}</button>`);
+  $('.lb',n).innerHTML=`공지사항${fresh?`<i class="nb" title="새 공지 ${fresh}건"></i>`:''}`;
+  $('.msg',n).textContent=list.length?schNtTitle(list[0]):'등록된 공지사항이 없습니다.';
+  const form=ui.form?`<li class="nform"><input id="nt-title" placeholder="제목" maxlength="60" value="${esc(ui.title||'')}"><textarea id="nt-body" placeholder="내용" rows="3" maxlength="1000">${esc(ui.body||'')}</textarea><div class="bt"><button data-nt="cancel">취소</button><button class="pri" data-nt="save">등록</button></div></li>`:'';
+  $('.list',n).innerHTML=form+(list.map(x=>{ const on=ui.open===x.id, body=schNtBody(x);
+    return `<li class="nrow ${on?'on':''}" data-nt="open" data-id="${esc(x.id)}"><time>${esc(x.date)}</time><span class="nt">${schNtNew(x)?'<i class="nb" title="새 공지"></i>':''}${esc(schNtTitle(x))}</span><span class="by">${esc(x.by?userName(x.by):'')}</span>${canAdmin()||x.by===sharedUser?`<button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:'<span class="ndel"></span>'}</li>${on?`<li class="nbody">${body?esc(body):'<span class="none">내용이 없습니다.</span>'}</li>`:''}`; }).join('')||(form?'':'<li class="nnone">등록된 공지사항이 없습니다. + 버튼으로 첫 공지를 쓰세요.</li>')); }
+function schNoticeClose(){ const n=$('#notice'); if(!n||!n.classList.contains('open'))return; const ui=SCH.nt||{}; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}   // what was typed waits for the next opening
+  n.classList.remove('open'); if(document.activeElement&&n.contains(document.activeElement))document.activeElement.blur(); }
+function schNoticeSave(){ const t=$('#nt-title'), b=$('#nt-body'), title=(t.value||'').replace(/\s+/g,' ').trim(), body=(b.value||'').trim(); if(!title){t.focus();toast('공지 제목을 입력하세요.');return;}
+  const id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  NOTICES=NOTICES.concat({id,date:TODAY,at:new Date().toISOString(),title,body,text:title+(body?' — '+body.replace(/\s+/g,' '):''),by:sharedUser});
+  SCH.nt={open:id}; t.blur(); schNoticeDraw(); toast('공지사항을 등록했습니다.'); }
+
+/* ---------- footer: the same on every page, below the same amount of room ---------- */
+function schFooterHtml(){ const ws=SETTINGS.wsName||'AIDC WorkSpace', projs=orderedProjects().slice(0,6), y=TODAY.slice(0,4);
+  const col=(t,rows)=>`<div class="fc"><b>${t}</b>${rows.join('')}</div>`, a=(attr,t)=>`<a ${attr}>${esc(t)}</a>`;
+  return `<footer class="pfoot" id="pfoot"><div class="fline"></div><div class="fgrid">
+    <div class="fb"><div class="flogo" data-go="main">${esc(ws)}</div><p>${esc(SETTINGS.org||'')}</p><p class="mut">프로젝트의 미팅 · 액션 · 리서치와 일정을 한곳에서 보는 업무 공간.</p></div>
+    ${col('바로가기',[a('data-go="main"','메인 페이지'),a('data-go="archive"','자료실'),a('data-ext="dropbox"','부서 드롭박스'),a('data-foot="search"','검색')])}
+    ${col('프로젝트',projs.map(k=>a(`data-go="project:${esc(k)}"`,PROJECTS[k].tag||PROJECTS[k].full)))}
+    ${col('에이전트',[a('data-open="ag_daily"','기관 및 업체별 일일동향'),a('data-open="ag_sim"','수익구조 시뮬레이터'),a('data-open="ag_glossary"','인터렉션 용어사전')])}
+    ${col('내 계정',[a('data-foot="account"','계정'),a('data-foot="inbox"','수신함'),a('data-foot="settings"','설정'),a('data-foot="trash"','휴지통')])}
+   </div><div class="fend"><span>© ${y} 선진엔지니어링 · ${esc(SETTINGS.org||ws)}</span><span class="sp"></span><span class="mut">사내 업무용 · 외부 공유 금지</span><button class="ftop" data-foot="top" title="맨 위로">맨 위로 ${svg('i-chev-d',8,4,'transform:rotate(180deg)')}</button></div></footer>`; }
+// Called after every draw of a page: the footer goes below the page's last section, which ends with the same room everywhere.
+function schFooter(){ if(!PREVIEW_ON)return; for(const pw of $$('#main-pw,#proj-pw,#arch-pw')){ const old=$('.pfoot',pw); if(old)old.remove(); if(!pw.closest('.page.on')||!pw.children.length)continue;
+    const last=pw.lastElementChild; if(last){last.style.paddingBottom='0px';} pw.insertAdjacentHTML('beforeend',schFooterHtml()); } }
+
+/* ---------- clicks of this file ---------- */
+document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el;
+  if(el=T.closest('[data-rec]')){ const off=schRecOff(), k=el.dataset.rec; if(off.has(k))off.delete(k); else off.add(k); try{localStorage.setItem('aidc-recoff',JSON.stringify([...off].slice(-60)));}catch{} sbState(); return; }
+  if(el=T.closest('[data-foot]')){ const k=el.dataset.foot; if(k==='top')$('#content').scrollTo({top:0,behavior:myPref('calm')?'auto':'smooth'}); else if(k==='search'){const b=$('#sb-search'); if(b){ if($('#app').classList.contains('sb-off')){$('#app').classList.remove('sb-off');render(true);} setTimeout(()=>b.click(),0);} } else openModal(k); return; }
+  const n=$('#notice'); if(!n)return;
+  if(el=T.closest('#notice [data-nt]')){ const k=el.dataset.nt, ui=SCH.nt||(SCH.nt={});
+    if(k==='add'){ ui.form=true; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
+    if(k==='cancel'){ SCH.nt={open:ui.open}; schNoticeDraw(); return; }
+    if(k==='save'){ schNoticeSave(); return; }
+    if(k==='open'){ if(T.closest('.ndel'))return; const id=el.dataset.id; ui.open=ui.open===id?null:id; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}
+      if(ui.open&&!(INBOX_STATE.nseen||[]).includes(id)){ const live=new Set(NOTICES.map(x=>x.id)); INBOX_STATE.nseen=(INBOX_STATE.nseen||[]).filter(x=>live.has(x)).concat(id); }
+      const a=document.activeElement; if(a&&n.contains(a))a.blur(); schNoticeDraw(); return; } }
+  // a click anywhere else closes the open bar
+  if(n.classList.contains('open')&&!T.closest('#notice,.dlg,.pop,#toast'))schNoticeClose();
+});
+document.addEventListener('keydown',e=>{ if(!PREVIEW_ON)return; const t=e.target; if(!t||!t.closest||!t.closest('#notice'))return;
+  if(e.key==='Escape'){e.stopPropagation(); schNoticeClose(); return;}
+  if(t.id==='nt-title'&&e.key==='Enter'&&!e.isComposing){e.preventDefault(); const b=$('#nt-body'); if(b)b.focus();}
+  if(t.id==='nt-body'&&e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&!e.isComposing){e.preventDefault(); schNoticeSave();} },true);
+
+/* ---- schedule/ui/66-lists.js ---- */
+// Sixth round (owner, 2026-11-20), lists of the main and the project page while the preview is on: filters of the research cards,
+// the small tags that show what is filtered, the operation date on a project card, the window that makes a project, partners linked
+// from a project's overview with @.
+
+/* ---------- research: a row of pickers above the cards ---------- */
+const schRf=()=>S.rf||(S.rf={});
+const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올해',old:'30일보다 이전'}],file:['첨부',{y:'첨부 있음',n:'첨부 없음'}],sort:['정렬',{new:'최신순',old:'오래된순',title:'제목순'}]};
+function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
+  list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
+    if(c.proj&&i.proj!==c.proj)return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
+    if(c.when==='30'&&!(d>=d30))return false; if(c.when==='month'&&d.slice(0,7)!==today.slice(0,7))return false; if(c.when==='year'&&d.slice(0,4)!==today.slice(0,4))return false; if(c.when==='old'&&!(d<d30))return false;
+    return true; });
+  if(c.sort==='new')return list.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||newestFirst(a,b));
+  if(c.sort==='old')return list.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||newestFirst(b,a));
+  if(c.sort==='title')return list.slice().sort((a,b)=>norm(a.title).localeCompare(norm(b.title),'ko'));
+  return sortResearch(list); }
+function schResChips(pid){ const c=schRf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-rchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
+  if(c.proj&&!pid)chip('proj','프로젝트: '+(proj(c.proj).tag||c.proj)); if(c.who)chip('who','작성자: '+userName(c.who));
+  for(const k of ['when','file','sort']){ if(c[k])chip(k,SCH_RF[k][0]+': '+(SCH_RF[k][1][c[k]]||c[k])); }
+  return out.join(''); }
+function schResBar(pid){ const c=schRf();
+  return `<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="res">${schResChips(pid)}</div></div>
+    <div class="sch-filters res">${pid?'':schSf2('rpick','proj',c.proj?proj(c.proj).tag:'전체 프로젝트',!!c.proj)}${schSf2('rpick','when',c.when?SCH_RF.when[1][c.when]:'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}<div class="right">${schSf2('rpick','sort',c.sort?SCH_RF.sort[1][c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
+function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
+  const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
+  const pool=liveItems('research',pid); let items=[];
+  if(k==='proj')items=[fl('',{t:'전체 프로젝트'}),...orderedProjects().filter(p=>pool.some(i=>i.proj===p)).map(p=>fl(p,{t:proj(p).tag,html:pill(proj(p),'nosq')}))];
+  else if(k==='who')items=[fl('',{t:'전체 작성자'}),...[...new Set(pool.map(i=>i.authorId).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
+  else items=[fl('',{t:k==='when'?'전체 기간':k==='file'?'첨부 전체':'기본 순서'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
+  menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu',right:k==='sort'}); }
+// As many cards on a page as fill whole rows (two rows; the number of columns follows the width, so nothing is left empty when the
+// sidebar is folded).
+function schResPer(){ const t=document.createElement('div'); t.style.cssText='position:absolute;visibility:hidden;height:0;width:var(--pw)'; $('#app').appendChild(t); const w=t.offsetWidth; t.remove();
+  return Math.max(1,Math.floor((w+15.2)/(210.3+15.2)))*2; }
+// the tag of the partner list's filter (구분)
+const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear title="이 조건 지우기">구분: ${esc(S.partnerCat)}<i>✕</i></button>`:'';
+
+/* ---------- project cards: the operation date the schedule arrives at ---------- */
+function schCardOps(k){ if(!schHas(k))return '<span class="nil">미정</span>'; const m=schModel(k); if(!m)return '<span class="nil">계산 중…</span>'; const d=m.res.operationDelay;
+  return `${schD(m.res.operationDate)}${d?`<em class="${d>0?'late':'early'}">${d>0?'+':''}${d}일</em>`:''}`; }
+
+/* ---------- the window that makes a project ---------- */
+function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st='계획중';
+  const sts=['계획중','진행중','완료','초기기획사업'].filter(s=>PSTATUS[s]);
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>이름만 있으면 만들 수 있습니다. 나머지는 프로젝트 페이지의 사업개요에서 채웁니다.</span></div>
+    <div class="np-f"><label for="np2-name">사업명 <em>필수</em></label><div><input id="np2-name" maxlength="60" placeholder="예: 대전 AI 데이터센터" autocomplete="off"><small class="err" id="np2-err"></small></div>
+      <label for="np2-tag">약칭</label><div><input id="np2-tag" maxlength="20" placeholder="목록과 태그에 쓰는 짧은 이름 (예: 대전 AIDC)" autocomplete="off"></div>
+      <label>분류</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
+      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
+      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div></div>
+    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
+  document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
+  const close=()=>d.remove();
+  const make=()=>{ const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+    if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
+    const tag=$n('#np2-tag').value.replace(/\s+/g,' ').trim()||n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
+    const id='p'+Date.now(), ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
+    PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
+    PHEAD[id]={cls:st,prog:'초기 기획',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''};
+    PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
+    if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
+    toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
+  d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
+    const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
+
+/* ---------- 사업개요: a partner is linked the way a person is called, with @ ---------- */
+const schPartnerOf=name=>{const n=norm(name||''); return n?PARTNERS.find(p=>!p.trash&&norm(p.name)===n):null;};
+// the small logo in front of a linked company (the first letter stands in until the logo is there, or when there is none)
+function schPartnerMark(name){ const p=schPartnerOf(name); if(!p)return `<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`;
+  const u=p.site&&p.site!=='-'?urlHref(p.site):''; return `<i class="plogo" title="협력업체 목록에 등록된 업체">${esc([...String(p.name||'').trim()][0]||'')}${u?logoImg(p.site):''}</i>`; }
+let schAtEl=null;
+function schAtClose(){ if(schAtEl){schAtEl=null; if(popEl&&popEl.classList.contains('sch-at'))closePop();} }
+function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
+  const hits=PARTNERS.filter(p=>!p.trash&&(!q||norm(p.name).includes(q)||norm(p.cat||'').includes(q))).slice(0,8); schAtEl=el;
+  const p=openPop(el,`<div class="hd">협력업체 ${q?`“${esc(txt.slice(at+1).trim())}”`:'목록'}</div>${hits.map((x,i)=>`<div class="it ${i?'':'sel'}" data-at="${esc(x.id)}">${schPartnerMark(x.name)}<span class="t">${esc(x.name)}</span><span class="m">${esc(x.cat||'')}</span></div>`).join('')||'<div class="msg" style="padding-top:0">맞는 협력업체가 없습니다. 이름을 그대로 적어도 됩니다.</div>'}`,{cls:'sch-at'});
+  p.addEventListener('mousedown',e=>{ const b=e.target.closest('[data-at]'); if(!b)return; e.preventDefault(); schAtPick(b.dataset.at); }); }
+function schAtPick(id){ const p=PARTNERS.find(x=>x.id===id), el=schAtEl; if(!p||!el)return; const txt=el.textContent, at=txt.lastIndexOf('@'); el.textContent=(at>0?txt.slice(0,at):'')+p.name; schAtClose();
+  const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+document.addEventListener('input',e=>{ if(!PREVIEW_ON)return; const t=e.target; if(t&&t.matches&&t.matches('.phead [contenteditable][data-k^="partner:"],.phead [contenteditable][data-k="dev"],.phead [contenteditable][data-k="land"]'))schAtShow(t); });
+document.addEventListener('keydown',e=>{ if(!schAtEl||!popEl||!popEl.classList.contains('sch-at'))return; const its=[...popEl.querySelectorAll('[data-at]')], cur=its.findIndex(x=>x.classList.contains('sel'));
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ if(!its.length)return; e.preventDefault(); const n=(cur+(e.key==='ArrowDown'?1:-1)+its.length)%its.length; its.forEach((x,i)=>x.classList.toggle('sel',i===n)); }
+  else if(e.key==='Enter'&&!e.isComposing){ if(cur>=0){e.preventDefault();e.stopPropagation();schAtPick(its[cur].dataset.at);} }
+  else if(e.key==='Escape'){e.stopPropagation();schAtClose();} },true);
+document.addEventListener('focusout',e=>{ if(schAtEl&&e.target===schAtEl)setTimeout(schAtClose,120); });
+
+/* ---------- clicks of this file ---------- */
+document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el;
+  if(el=T.closest('[data-mcol]')){e.stopPropagation();schMainColMenu(el,el.dataset.mcol);return;}
+  if(el=T.closest('[data-mpick]')){e.stopPropagation();schMainColMenu(el,el.dataset.mpick,true);return;}
+  if(el=T.closest('[data-mchip]')){delete schMf()[el.dataset.mchip];S.actPage=1;refreshSec('action');return;}
+  if(el=T.closest('[data-rpick]')){e.stopPropagation();schResMenu(el,el.dataset.rpick);return;}
+  if(el=T.closest('[data-rchip]')){delete schRf()[el.dataset.rchip];S.resPage=1;refreshSec('research');return;}
+},true);
 
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).

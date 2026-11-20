@@ -14,6 +14,7 @@
    +'<symbol id="i-sch-ext" viewBox="0 0 9 9"><path d="M1 8L8 1M2.6 1H8v5.4" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>'
    +'<symbol id="i-sch-tag" viewBox="184.8 114.6 13.7 13.7"><path transform="matrix(1,0,0,-1,189.0314,119.889987)" d="M0 0C-.637 0-1.154 .516-1.154 1.154-1.154 1.791-.637 2.308 0 2.308 .637 2.308 1.154 1.791 1.154 1.154 1.154 .516 .637 0 0 0M8.424-.853 3.802 3.769C3.167 4.404 2.307 4.76 1.41 4.76H-1.948C-2.918 4.76-3.706 3.973-3.706 3.003V-.25C-3.706-1.148-3.349-2.008-2.715-2.642L1.958-7.315C2.47-7.827 3.299-7.827 3.811-7.315L8.424-2.702C8.935-2.191 8.935-1.364 8.424-.853" fill="currentColor"/></symbol>'
    +'<symbol id="i-sch-tri" viewBox="0 0 10 8.75"><path d="M0.4 0.3h9.2L5 8.5z" fill="currentColor"/></symbol>'
+   +'<symbol id="i-sch-cal" viewBox="0 0 14 14"><path fill-rule="evenodd" d="M3.4 0h1.5v1.5h4.2V0h1.5v1.5h1.2A2.2 2.2 0 0 1 14 3.7v8.1a2.2 2.2 0 0 1-2.2 2.2H2.2A2.2 2.2 0 0 1 0 11.8V3.7a2.2 2.2 0 0 1 2.2-2.2h1.2zM1.5 5.6v6.2c0 .39.31.7.7.7h9.6a.7.7 0 0 0 .7-.7V5.6zM3.3 7.2h2v1.9h-2zm2.7 0h2v1.9H6zm2.7 0h2v1.9h-2zM3.3 9.8h2v1.9h-2zm2.7 0h2v1.9H6z" fill="currentColor"/></symbol>'
    +'<symbol id="i-sch-ck" viewBox="0 0 10 8"><path d="M1.2 4.1L3.8 6.6 8.8 1.4" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>';
   // the page's pictograms for 미팅 and 리서치 have a fixed colour; copies that take the text colour stand in front of the section titles
   for(const [src,dst] of [['pic-meeting','i-sch-meeting'],['pic-research','i-sch-research']]){ const o=document.getElementById(src); if(!o)continue; const c=o.cloneNode(true); c.id=dst; c.querySelectorAll('[fill]').forEach(n=>{if(n.getAttribute('fill')!=='none')n.setAttribute('fill','currentColor');}); c.querySelectorAll('[stroke]').forEach(n=>{if(n.getAttribute('stroke')!=='none')n.setAttribute('stroke','currentColor');}); s.appendChild(c); }
@@ -52,7 +53,7 @@ const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who||(S
 
 // What is filtered shows beside the title, each with an x that takes it off (owner, 2026-11-19: as the partner list does).
 const SCH_CF_NAMES={kind:['종류',{task:'일반 업무',ms:'마일스톤'}],plan:['기간',{now:'오늘 진행 중',month:'이번 달',next:'앞으로 시작',past:'지난 일정'}],pri:['중요도',{high:'높음',mid:'중간',low:'낮음'}],st:['상태',null],due:['기한',{late:'지연','7':'7일 안에 마감','30':'30일 안에 마감'}],url:['URL',{y:'주소 있음',n:'주소 없음'}]};
-function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(k,label)=>out.push(`<button class="sh-btn lib sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)} ✕</button>`);
+function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-sch="chip" data-k="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
   if(SCHU.phase){const g=m&&m.phases.find(x=>x.code===SCHU.phase);chip('phase','단계: '+(SCHU.phase==='none'?'일정 미연결':g?schPhaseLabel(g):SCHU.phase));}
   if(SCHU.scope&&SCHU.scope!=='all')chip('scope','범위: '+schScopeName());
   if(SCHU.who)chip('who','담당자: '+(SCHU.who==='none'||SCHU.who.startsWith('r:')?'미지정':userName(SCHU.who)));
@@ -61,9 +62,9 @@ function schChips(pid){ const m=schReady(pid)?schModel(pid):null, out=[], chip=(
 function schActionSection(pid){ const tabs=[['gantt','일정'],['list','리스트'],['net','관계도']];
   return `<div class="sec sch-sec" id="sch-actions" style="margin-top:112px">
     <div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션<span class="sch-tabs">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.tab===k?'on':''}" data-sch="tab" data-k="${k}">${t}</button>`).join('')}</span>
-      ${plusBtn('new-action','새 액션')}<button class="sh-btn lib" data-lib="action">라이브러리</button><span class="sch-chips" data-chips="act">${schChips(pid)}</span>
+      ${plusBtn('new-action','새 액션')}<button class="sh-btn lib" data-lib="action">라이브러리</button>
       <label class="srch box">${svg('pic-search',15,15)}<input data-schq="q" placeholder="검색" value="${esc(SCHU.q||'')}"></label></div>
-    <div data-sec="sch-act">${schActionBody(pid)}</div></div>`; }
+    <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="act">${schChips(pid)}</div></div><div data-sec="sch-act">${schActionBody(pid)}</div></div>`; }
 function schActionBody(pid){ const m=schModel(pid);
   if(!m)return `<div class="sch-empty">${SCH.failed[pid]?esc(SCH.failed[pid])+' <button class="sh-btn" data-sch="reload" style="margin-left:12px;height:26px;padding:0 10px;font-size:12px">다시 시도</button>':'일정을 불러오는 중입니다…'}</div>`;
   const sf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-sch="pick" data-k="${k}"><span>${esc(label)}</span>${svg('i-chev-d',9,4.6)}</div>`;
@@ -237,5 +238,5 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
 function schMarkTags(host){ const box=host.parentElement; let layer=box.querySelector('.sg-tags'); if(!layer){layer=document.createElement('div');layer.className='sg-tags';box.appendChild(layer);}
   const view=host.clientHeight; layer.innerHTML=$$('.sg-mark',host).map(el=>{const y=SG.head+parseFloat(el.style.top)-host.scrollTop;return y<SG.head+2||y>view-2?'':`<b style="top:${y}px" title="여기까지 끝나면 전체 일정의 ${el.dataset.pc}%가 끝납니다 (기간·중요도·마일스톤 가중치 기준)">${el.dataset.pc}%</b>`;}).join('');
   if(!host._markScroll){host._markScroll=true;host.addEventListener('scroll',()=>schMarkTags(host),{passive:true});} }
-function schMount(){ if(S.page!=='project'||!schHas(S.proj)||S.full)return; if($('#sch-gantt'))schGanttBuild(S.proj); if($('#sch-net'))schNetBuild(S.proj); }
+function schMount(){ if(S.page!=='project'||!schHas(S.proj)||S.full)return; if($('#sch-gantt'))schGanttBuild(S.proj); if($('#sch-net'))schNetBuild(S.proj); if(typeof schLowAddPlace==='function')schLowAddPlace(); }
 function schRefresh(){ const el=$('[data-sec="sch-act"]'); if(!el||!schHas(S.proj))return; const keep=schKeepScroll(); el.innerHTML=schActionBody(S.proj); $$('#sch-actions .sch-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===SCHU.tab)); { const ch=$('#sch-actions [data-chips]'); if(ch)ch.innerHTML=schChips(S.proj); } schMount(); schRestoreScroll(keep); schUiSave(); afterNav(); }

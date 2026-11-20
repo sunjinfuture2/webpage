@@ -146,6 +146,48 @@ Main page (preview only)
 승인게이트
 - 76 between gates; the menus of gate / evidence / commitment states show the marks and colours (schStateMark).
 
+## Sixth round (owner, 2026-11-20; frame, main page, project page)
+
+All of it only while the preview is on (PREVIEW_ON / html.sch-on). New files: schedule/ui/65-shell.js (frame), 66-lists.js (lists).
+
+Frame
+- One logo: `.tb-logo` is always shown and the sidebar's own is hidden, so nothing travels when the sidebar folds. No grey behind
+  `#sb-open` / `#sb-collapse`.
+- Recent items are a tree (schRecentHtml): project › kind (미팅 / 액션 / 리서치, 자료실 › tab) › item, classes r0 / r1 / r2, a folded
+  kind is r3; folded kinds are kept in localStorage `aidc-recoff`. Twelve entries instead of eight.
+- The trash pictogram of a content panel is 24 in a box of 36 and is there on every panel, also while editing (itemHtml / shead).
+- Notices (schNoticeDraw): `{id, date, at, title, body, text, by}`; `text` stays "title — body" for the page without the preview.
+  The + shows while the bar is open and opens a form (title, text); a row opens its text; a notice by somebody else of the last
+  14 days that this member has not opened carries a green mark (`nseen` in meta:inbox:<사번>); a click outside closes the bar.
+- Footer (schFooter, called at the end of render): appended to the page's `.pw` after 120 of room; the last section's own bottom
+  padding is set to 0 so the room is the same on the main page, a project page and 자료실.
+
+Main page
+- Action table: the project list's design (`.tbl.sch-list.sch-all`, columns 프로젝트 · WBS · 업무명 · 관리일정 · 중요도 · 상태 · 담당자 ·
+  기한 · URL). Column titles open menus to order and filter (schMainColMenu; filters in S.mf, order in S.sort). Do not call a class
+  `main`: `.main` is the page's main area.
+- What is filtered shows as small grey tags (`.sch-chip`, darker under the pointer) in `.sch-chiprow`, between the title and the list:
+  main actions, research, partner list (구분), and on a project page the action and the lower section (they used to stand beside
+  라이브러리). `.sch-chipwrap` has no height; it is `display:flow-root` so that the margin below it does not collapse through it.
+- Research: a row of pickers (schResBar: 프로젝트 on the main page, 기간, 작성자, 첨부, 정렬; state S.rf) and whole rows of cards
+  (schResPer: two rows of as many columns as fit, so a folded sidebar leaves no gaps).
+- Search boxes are the project page's grey box everywhere (searchBox).
+- Partner rows: logo 18.6, the meeting tag 2 lower and it opens that meeting (it used to open the partner), a grey ground under
+  links on hover.
+- Project cards: 운영개시 예상 first (schCardOps: from the schedule, "미정" without one); type 12.5.
+- The + beside 프로젝트 opens a window (schNewProject: 사업명, 약칭, 분류, 담당자, 부지).
+
+Project page
+- The list beside the calendar (schRightList): `.rlist.sch` is a frame with two fixed lines (`.rline`), `.rscroll` between them
+  scrolls; the date stands above the upper line (`.rdate`); captions 주요일정 / 액션 (no "금일") are sticky, each with a pictogram in the
+  same place (i-sch-cal is new), the count in a speech bubble. schFitRight sets the frame's height to the calendar's.
+- The + of 외부설비 조달 · 승인게이트 · 근거 및 확약 stands above the open tab (schLowAddPlace); 라이브러리 stays.
+- Meeting cards cut by the edge fade to white (`.meet .fade`).
+- 사업개요: the three columns share the width a folded sidebar frees; a company that is in the partner list shows its small logo
+  (schPartnerMark); in edit mode `@` in a company field lists the partners (schAtShow), Enter or a click takes one.
+- The day window is drawn at 0.7 of its size.
+- tests/schedule-6.cjs (49 checks).
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): no second project has a schedule.

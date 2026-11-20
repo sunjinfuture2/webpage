@@ -59,14 +59,14 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.evaluate(() => closePanel(true)); await sleep(300);
 
   console.log('— the list beside the calendar ends where the calendar ends');
-  const fit = () => a.evaluate(() => { const g = document.querySelector('#page-project .cal .grid').getBoundingClientRect(), el = document.querySelector('#page-project .rlist.sch'), r = el.getBoundingClientRect(); return { grid: Math.round(g.bottom), list: Math.round(r.bottom), over: el.scrollHeight > el.clientHeight + 2, cut: el.classList.contains('cut'), rows: el.querySelectorAll('.ra').length, n: +el.querySelector('.rcap .n').textContent }; });
+  const fit = () => a.evaluate(() => { const g = document.querySelector('#page-project .cal .grid').getBoundingClientRect(), wrap = document.querySelector('#page-project .rlist.sch'), el = wrap.querySelector('.rscroll'), r = wrap.getBoundingClientRect(); return { grid: Math.round(g.bottom), list: Math.round(r.bottom), over: el.scrollHeight > el.clientHeight + 2, cut: el.classList.contains('cut'), rows: el.querySelectorAll('.ra').length, n: +el.querySelector('.rcap .n').textContent }; });
   const f1 = await fit();
   check('the list of today\'s actions stops at the lower edge of the calendar (the rest by scrolling inside, soft edge)', f1.list <= f1.grid + 1 && f1.over && f1.cut && f1.rows === f1.n && f1.n >= 10, f1);
-  await sleep(1200); await a.evaluate(() => { const el = document.querySelector('#page-project .rlist.sch'); el.scrollTop = el.scrollHeight; }); await sleep(300);
-  check('…scrolled to its end the soft edge is gone', await a.evaluate(() => !document.querySelector('#page-project .rlist.sch').classList.contains('cut')));
+  await sleep(1200); await a.evaluate(() => { const el = document.querySelector('#page-project .rlist.sch .rscroll'); el.scrollTop = el.scrollHeight; }); await sleep(300);
+  check('…scrolled to its end the soft edge is gone', await a.evaluate(() => !document.querySelector('#page-project .rlist.sch .rscroll').classList.contains('cut')));
   await a.evaluate(() => render(true)); await sleep(400);
-  check('…and a redraw of the page leaves the list where it stood', await a.evaluate(() => { const el = document.querySelector('#page-project .rlist.sch'); return el.scrollTop > 100 && !el.classList.contains('cut'); }));
-  await a.evaluate(() => { document.querySelector('#page-project .rlist.sch').scrollTop = 0; }); await sleep(250);
+  check('…and a redraw of the page leaves the list where it stood', await a.evaluate(() => { const el = document.querySelector('#page-project .rlist.sch .rscroll'); return el.scrollTop > 100 && !el.classList.contains('cut'); }));
+  await a.evaluate(() => { document.querySelector('#page-project .rlist.sch .rscroll').scrollTop = 0; }); await sleep(250);
   await a.click('#page-project .cal [data-cal="next"]'); await sleep(600); const f2 = await fit();
   await a.click('#page-project .cal [data-cal="prev"]'); await sleep(600);
   check('…also after turning the month', f2.list <= f2.grid + 1, f2);
@@ -79,9 +79,11 @@ const sfx = Date.now().toString(36).slice(-5);
   await pale.hover(); await sleep(600);
   const pop = await a.evaluate(d => { const e = document.querySelector('.sch-daypop'); if (!e) return null; const r = e.getBoundingClientRect(), rows = [...e.querySelectorAll('.ra')], want = schDayRows('pangyo', d), box = e.querySelector('.dp-in'), first = rows[0].getBoundingClientRect(), tt = rows[0].querySelector('.tt'), dd = rows[0].querySelector('.sch-dd').getBoundingClientRect(), dt = rows[0].querySelector('.dt').getBoundingClientRect();
     return { w: Math.round(r.width), h: Math.round(r.height), n: rows.length, want: want.length, same: rows.every((x, i) => x.dataset.open === want[i].id), view: box.clientHeight, rowH: first.height, firstMid: Math.round((first.top + first.height / 2 - r.top) * 10) / 10, titleLeft: Math.round((tt.getBoundingClientRect().left - r.left) * 10) / 10, ddMid: Math.round((dd.left + dd.width / 2 - r.left) * 10) / 10, dtRight: Math.round((r.right - dt.right) * 10) / 10, font: getComputedStyle(tt).fontSize + '/' + getComputedStyle(tt).fontWeight, inView: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth }; }, day);
-  check('resting on a pale count opens that day\'s actions: 505 wide, rows 48 apart, at most eight rows before it scrolls, wholly on screen', pop && pop.w === 505 && pop.n === pop.want && pop.same && pop.rowH === 48 && pop.view <= 384 && pop.h <= 483 && pop.inView, pop);
-  check('…laid out as in the picture (first row 68 down, title 39 in, D-day about 358 in, date 45.5 from the right, 17 px / 600)', pop && Math.abs(pop.firstMid - 69) < 1.6 && Math.abs(pop.titleLeft - 40) < 1.1 && Math.abs(pop.ddMid - 358) < 6 && Math.abs(pop.dtRight - 46.5) < 1.1 && pop.font === '17px/600', pop);
-  const pr = await a.evaluate(() => { const r = document.querySelector('.sch-daypop').getBoundingClientRect(); return { x: r.left + 120, y: r.top + 70 }; });
+  // since the sixth round the window is drawn at 0.7 of the picture's size (owner: "30% smaller"); K scales the picture's numbers
+  const K = 0.7;
+  check('resting on a pale count opens that day\'s actions: 505 wide and rows 48 apart in the picture (drawn at 0.7), at most eight rows before it scrolls, wholly on screen', pop && Math.abs(pop.w - 505 * K) <= 1 && pop.n === pop.want && pop.same && Math.abs(pop.rowH - 48 * K) < .2 && pop.view <= 384 && pop.h <= 483 * K + 1 && pop.inView, pop);
+  check('…laid out as in the picture (first row 68 down, title 39 in, D-day about 358 in, date 45.5 from the right, 17 px / 600)', pop && Math.abs(pop.firstMid - 69 * K) < 1.6 && Math.abs(pop.titleLeft - 40 * K) < 1.1 && Math.abs(pop.ddMid - 358 * K) < 6 && Math.abs(pop.dtRight - 46.5 * K) < 1.1 && pop.font === '17px/600', pop);
+  const pr = await a.evaluate(() => { const r = document.querySelector('.sch-daypop').getBoundingClientRect(); return { x: r.left + 120 * .7, y: r.top + 69 * .7 }; });
   await a.mouse.move(pr.x, pr.y, { steps: 6 }); await sleep(500);
   check('it stays while the pointer is on it', await a.evaluate(() => !!document.querySelector('.sch-daypop')));
   await a.mouse.click(pr.x, pr.y); await sleep(700);
@@ -92,7 +94,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await pale.hover(); await sleep(600); await a.mouse.move(30, 400, { steps: 4 }); await sleep(700);
   check('the window goes when the pointer leaves', await a.evaluate(() => !document.querySelector('.sch-daypop')));
   await a.evaluate(() => { const c = [...document.querySelectorAll('#page-project .cal .cell:not(.today):not(.out)')][8]; c.click(); }); await sleep(500);
-  check('a click on a day of the project calendar selects nothing: no frame, the list stays today\'s', await a.evaluate(() => !S.selDate && document.querySelectorAll('#page-project .cal .cell.sel:not(.today)').length === 0 && /금일 액션/.test(document.querySelector('#page-project .rlist.sch').textContent)));
+  check('a click on a day of the project calendar selects nothing: no frame, the list stays today\'s', await a.evaluate(() => !S.selDate && document.querySelectorAll('#page-project .cal .cell.sel:not(.today)').length === 0 && document.querySelector('#page-project .rlist.sch .rcap.act .lb').textContent === '액션'));
   const lines = await a.evaluate(() => { const el = document.querySelector('#page-project .rlist.sch'), rows = document.querySelector('#page-project .cal .rows').getBoundingClientRect(), l1 = el.querySelector('.rline'), l2 = el.querySelector('.rsep'), c1 = getComputedStyle(l1), c2 = getComputedStyle(l2); return { dy: Math.abs(l1.getBoundingClientRect().top - rows.top), same: c1.borderTopColor === c2.borderTopColor && c1.borderTopWidth === c2.borderTopWidth && Math.abs(l1.getBoundingClientRect().width - l2.getBoundingClientRect().width) < 0.5, cal: c1.borderTopColor === getComputedStyle(document.querySelector('#page-project .cal .rows')).borderTopColor }; });
   check('the line above the list stands level with the calendar\'s line; both lines of the list have its colour and one width', lines.dy < 0.8 && lines.same && lines.cal, lines);
 
@@ -146,7 +148,7 @@ const sfx = Date.now().toString(36).slice(-5);
   check('after a reload: what I opened stays seen, what I did not open is still red', !s9.red.includes(lid) && s9.red.includes('wt-' + ids.far) && s9.red.includes(gid), s9.red);
   // main page
   await a.evaluate(() => go('main')); await sleep(900);
-  const mainRows = await a.evaluate(() => [...document.querySelectorAll('#page-main .tbl.sch-main .rw')].slice(0, 6).map(r => ({ id: r.dataset.open, r: !!r.querySelector('.sdot.r'), g: !!r.querySelector('.sdot.g') })));
+  const mainRows = await a.evaluate(() => [...document.querySelectorAll('#page-main .tbl.sch-list.sch-all .rw')].slice(0, 6).map(r => ({ id: r.dataset.open, r: !!r.querySelector('.sdot.r'), g: !!r.querySelector('.sdot.g') })));
   check('the main page\'s action table follows the same order and shows the same marks', mainRows.length > 3 && mainRows[0].r && mainRows.filter(r => r.r).length === 2 && /^r+g*-*$/.test(mainRows.map(r => r.r ? 'r' : r.g ? 'g' : '-').join('')), mainRows);
 
   console.log('— without the preview nothing of this shows');
