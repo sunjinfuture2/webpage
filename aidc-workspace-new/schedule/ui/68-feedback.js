@@ -10,7 +10,7 @@
 /* ---------- before / after ---------- */
 function schSnap(pid){ const m=schModel(pid), out={op:m.res.operationDate,t:{}}; for(const t of m.plan.tasks){const r=m.res.tasks[t.id]; out.t[t.id]=[r.start,r.finish];} return out; }
 let schCardT=0;
-function schCardHide(){ clearTimeout(schCardT); const c=$('#sch-card'); if(c)c.remove(); }
+function schCardHide(){ clearTimeout(schCardT); const c=$('#sch-card'); if(c)c.remove(); toastPlace(); }
 // o: {title, focus (task id), want (the start that was asked for, to say when a predecessor holds the task)}
 function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D=AIDCSchedule.dates, moved=[];
   for(const t of m.plan.tasks){ const a=snap.t[t.id], r=m.res.tasks[t.id]; if(a&&(a[0]!==r.start||a[1]!==r.finish))moved.push({t,a,b:[r.start,r.finish],dl:D.diffDays(r.finish,a[1])}); }
@@ -19,15 +19,15 @@ function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D
   schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.dataset.pid=pid; c.setAttribute('role','status');
   c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>
     ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schWbs(f.wbs))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
-    ${held?`<div class="c-note">선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(m.res.tasks[f.id].start)}입니다.</div>`:''}
+    ${held?`<div class="c-note">선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(m.res.tasks[f.id].start)}입니다.</div>`:''}${o.note?`<div class="c-note">${esc(o.note)}</div>`:''}
     <div class="c-facts"><span class="${others.length?'on':''}">함께 바뀐 업무 <b>${others.length}</b>건</span><span class="${opD>0?'late':opD<0?'early':''}">운영개시 예상 <b>${schD(m.res.operationDate)}</b>${opD?` (${opD>0?'+':''}${opD}일)`:' · 변화 없음'}</span></div>
     ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schWbs(x.t.wbs))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
     <div class="c-bt">${others.length?'<button data-card="more">바뀐 업무 보기</button>':''}<span class="sp"></span><button class="pri" data-card="undo">되돌리기</button></div>`;
   document.body.appendChild(c);
   // it stays until it is closed (owner, 2026-11-20): 되돌리기 must not slip away while one is still looking at what moved
   c.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-card]'); if(!b)return; const k=b.dataset.card;
-    if(k==='x')schCardHide(); else if(k==='undo'){schCardHide();schUndo();} else if(k==='more'){const box=c.querySelector('.c-more'); box.hidden=!box.hidden; b.textContent=box.hidden?'바뀐 업무 보기':'접기';} });
-  schGhosts(pid,moved); }
+    if(k==='x')schCardHide(); else if(k==='undo'){schCardHide();schUndo();} else if(k==='more'){const box=c.querySelector('.c-more'); box.hidden=!box.hidden; b.textContent=box.hidden?'바뀐 업무 보기':'접기';toastPlace();} });
+  toastPlace(); schGhosts(pid,moved); }
 // In the gantt: the bars that moved flash, and where they stood stays as a dashed outline for a few seconds.
 // (The page is drawn again when the change has been saved, so the marks are kept as data and put back by every draw until their time is up.)
 function schGhosts(pid,moved){ SCH.ghost={pid,at:Date.now(),list:moved.map(x=>({id:x.t.id,a:x.a}))}; schGhostsDraw(); clearTimeout(schGhosts.t);

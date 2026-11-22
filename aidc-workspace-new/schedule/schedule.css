@@ -1044,3 +1044,21 @@
 .lb-m{margin:1px 4px 0;font-size:11.5px;color:#a6a6a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-end{display:block;height:1px}
 .lb-done{padding:34px 0 10px;text-align:center;font-size:12.5px;color:#a6a6a6}
+
+/* ================= ninth round (owner, 2026-11-22) ================= */
+/* 1. the project tag of the main action table is not cut: the column takes the width the longest name needs (--pjw) */
+.tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:var(--pjw,106px) 78px calc(330px + var(--d) - (var(--pjw,106px) - 106px)) 216px 82px 126px 204px 82px 1fr}
+.tbl.sch-list.sch-all .rw .pj .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+/* 2. partner list: an address keeps to its column; the lines under address and class are straight */
+.sch-on .tbl.partners .rw .hp{min-width:0}
+.sch-on .tbl.partners .rw .hp a{display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-on .tbl.partners .rw .hp a,.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .cat a.pc-value{border-radius:0}
+.sch-on .tbl.partners .rw .hp a:hover,.sch-on .tbl.partners .rw .cat a:hover{box-shadow:0 -4px 0 4px #e9e9e9}
+/* 3. sidebar: the agents' square further right; items under a kind closer together and further left; more room above a group */
+.sch-on .sb .agent .cnt{right:12px}
+.sch-on .sb .agent .num{right:31px}
+.sch-on .sb .agent .sb-lk{max-width:calc(100% - 46px)}
+.sch-on .sb .recent .r2{height:19px;padding-left:24.5px}
+.sch-on .sb .recent .r2 .dot{left:17px}
+.sch-on .sb .recent .r0{margin-top:14px}
+.sch-on .sb .recent .r0:first-child{margin-top:0}

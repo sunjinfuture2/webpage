@@ -291,7 +291,19 @@ Frame and lists:
 - Project cards: pickers 분류 · 담당자 · 정렬 (schProjBar); a picture's height follows its shape between 150 and 부산's 296.2
   (`imgR`, measured at upload), without a picture 판교's 207.8.
 - Library: a wall of cards made 36 at a time (schLibDraw / schLibMore, IntersectionObserver), pictures lazy.
-- tests/schedule-8.cjs (71 checks, three members; it makes a project from nothing and removes it again).
+- tests/schedule-8.cjs (three members; it makes a project from nothing and removes it again).
+
+## Ninth round (owner, 2026-11-22, five points with pictures)
+
+- Main action table: the project column is as wide as the longest project name needs (schPillW measures the tags, `--pjw`
+  on the table; 106 to 230, beyond that the tag ends in …).
+- Partner list: an address keeps to its column (…); the lines under address and class are straight (no rounded box).
+- Sidebar: the agents' square stands further right; items under a kind are closer together and further left; a group has
+  more room above it.
+- A change made in a task's panel that moves the schedule (dates, actual dates, state, milestone, phase) shows the card of the
+  gantt (schChangeCard through `editCard` in schFieldEdit) instead of a toast. The card stays while that project's task is open.
+- Relation map: nobody assigned is an empty face (`.avatar.nil`), members show their own pictures.
+- tests/schedule-8.cjs has these (77 checks now).
 
 ## Not done yet (say so when asked)
 

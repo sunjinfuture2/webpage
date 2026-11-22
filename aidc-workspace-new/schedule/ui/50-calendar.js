@@ -56,7 +56,7 @@ function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ c
     const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.height=h+'px'; schFitMark(box);
     if(!box._fit){ box._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){box.scrollTop=SCH.rs.top;schFitMark(box);}   // redrawn: back to where it stood
       box.addEventListener('scroll',()=>{SCH.rs={k:key,top:box.scrollTop};schFitMark(box);},{passive:true}); } }); }
-function schAfterNav(){ if(!schPreview())return; schFitRight(); { const c=$('#sch-card'); if(c&&(S.page!=='project'||c.dataset.pid!==S.proj))c.remove(); }   /* the card of a change belongs to its project's page */ if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
+function schAfterNav(){ if(!schPreview())return; schFitRight(); { const c=$('#sch-card'), open=item(S.panel||S.full); if(c&&!(S.page==='project'&&c.dataset.pid===S.proj)&&!(open&&open.proj===c.dataset.pid&&open.own)){c.remove();toastPlace();} }   /* the card of a change belongs to its project's page */ if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
 
 // The actions of a day in a small window, while the pointer rests on that day's (pale) count in the calendar. Sizes are those of the
 // owner's picture: 505 wide, rows 48 apart, 44 above the first row and 53 below the last, eight rows before it scrolls.

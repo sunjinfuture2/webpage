@@ -54,7 +54,7 @@ const sfx = Date.now().toString(36).slice(-5);
   check('looking at a task creates nothing on the server; nothing of it can be changed before 수정; the trash is there', !p0.real && p0.trash && await ev(a, () => !document.querySelector('#panel-pin [data-schp="f"]') && !!document.querySelector('#panel-pin .sf-r')), p0);
   await a.click('#panel-pin [data-ed="edit"]'); await sleep(1300);
   await a.click('#panel-pin [data-schp="f"][data-k="status"]'); await sleep(200); await a.click('.pop .it:has-text("진행")'); await sleep(700);
-  const s1 = await ev(a, () => { const m = schModel('pangyo'), t = m.byWbs.get('W1.2'); return { st: t.status, as: t.actualStart, toast: document.querySelector('#toast').textContent, ov: Object.keys(SCHED.pangyo), row: document.querySelector('.sg-row.tk[data-row="' + t.id + '"] .st').textContent, pin: document.querySelector('#panel-pin .sch-st').textContent }; });
+  const s1 = await ev(a, () => { const m = schModel('pangyo'), t = m.byWbs.get('W1.2'); return { st: t.status, as: t.actualStart, toast: document.querySelector('#toast').textContent + ((document.querySelector('#sch-card') || {}).textContent || ''), ov: Object.keys(SCHED.pangyo), row: document.querySelector('.sg-row.tk[data-row="' + t.id + '"] .st').textContent, pin: document.querySelector('#panel-pin .sch-st').textContent }; });
   check('after 수정, choosing 진행 applies at once (state, actual start), in the panel and in the gantt, with an undo offer', s1.st === '진행' && !!s1.as && /되돌리기/.test(s1.toast) && s1.ov.length === 1 && /진행/.test(s1.row) && /진행/.test(s1.pin), s1);
   await a.click('#panel-pin [data-ed="save"]'); await sleep(1200);
   const B = await newUser(browser, 'SCB', '일정 나', { url: 'http://127.0.0.1:8787/?v=2' }), b = B.page; await goP(b);

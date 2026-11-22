@@ -1509,12 +1509,14 @@ const typeName=it=>{if(!it)return '';const t=archTabOf(it);return t?'자료실 �
 const priTxt={high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};
 // with the schedule preview on, every status on the page is drawn with the one design of schedule/ (schStIcon)
 const stIcon=st=>typeof schPreview==='function'&&schPreview()?schStIcon(st==='done'?'완료':'진행'):st==='done'?`<span class="status-ic st-done">${svg('i-check',9.3,7.1)}완료</span>`:`<span class="status-ic st-prog">${svg('i-prog',10.5,10.5,'margin:-1px -1px 0 -1px')}진행중</span>`;
+// A toast stands above the card of a schedule change when that is up (the card stays until it is closed).
+function toastPlace(){ const t=$('#toast'), c=$('#sch-card'); if(t)t.style.bottom=c?Math.round(innerHeight-c.getBoundingClientRect().top+12)+'px':''; }
 // act: one action {t, fn} or a list of them. {go:true} marks one that leads somewhere, {keep:true} makes the toast stay until it is closed.
 let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m; const acts=(Array.isArray(act)?act:[act]).filter(a=>a&&a.t), PV=PREVIEW_ON, keep=PV&&acts.some(a=>a.keep), hide=()=>{clearTimeout(toastT);t.classList.remove('on');};
   for(const a of acts){ if(a.go&&!PV)continue; const b=document.createElement('button');b.type='button';b.textContent=a.t;if(a.go)b.className='go';b.onclick=()=>{hide();a.fn();};t.appendChild(b); }
   if(PV){ const x=document.createElement('button');x.type='button';x.className='tx';x.title='닫기';x.setAttribute('aria-label','알림 닫기');x.textContent='✕';x.onclick=hide;t.appendChild(x); ms=Math.max(7000,ms*2.4); }
   const arm=()=>{clearTimeout(toastT);if(!keep)toastT=setTimeout(()=>t.classList.remove('on'),ms);};
-  t.classList.toggle('pv',PV);t.classList.toggle('keep',keep);t.classList.add('on');arm(); t.onmouseenter=PV?()=>clearTimeout(toastT):null; t.onmouseleave=PV?()=>{if(t.classList.contains('on'))arm();}:null;};
+  t.classList.toggle('pv',PV);t.classList.toggle('keep',keep);t.classList.add('on');arm(); toastPlace(); t.onmouseenter=PV?()=>clearTimeout(toastT):null; t.onmouseleave=PV?()=>{if(t.classList.contains('on'))arm();}:null;};
 const pager=(cur,total,cls='')=>{let h=`<div class="pager ${cls}"><button class="arr" data-pg="prev" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;for(let i=1;i<=total;i++)h+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;h+=`<button class="arr" data-pg="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;return h;};
 function downloadText(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 /* popovers */

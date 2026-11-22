@@ -23,6 +23,9 @@ function schMainChips(){ const c=schMf(), out=[], chip=(k,label,col)=>out.push(`
   if(c.proj)chip('proj','프로젝트: '+(pname(proj(c.proj))||c.proj),proj(c.proj).color); if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who)));
   for(const k of ['kind','plan','pri','st','due','url']){ if(!c[k])continue; const d=SCH_MF_NAMES[k]; chip(k,d[0]+': '+(d[1]?d[1][c[k]]||c[k]:c[k])); }
   return out.join(''); }
+// The width the project column needs: the widest tag among the projects (measured once per set of names), within reason.
+function schPillW(){ const names=orderedProjects().map(k=>pname(PROJECTS[k])).join('|'); if(schPillW.k===names)return schPillW.w; const box=document.createElement('div'); box.style.cssText='position:absolute;visibility:hidden;left:-9999px;top:0;white-space:nowrap';
+  box.innerHTML=orderedProjects().map(k=>pill(PROJECTS[k],'nosq')).join('<br>'); $('#app').appendChild(box); let w=0; for(const p of box.querySelectorAll('.pill'))w=Math.max(w,p.offsetWidth); box.remove(); schPillW.k=names; return schPillW.w=Math.max(106,Math.min(230,Math.ceil(w)+18)); }
 function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest), c=schMf(), k=S.sort.k, dir=S.sort.dir||1, notes={};
   for(const r of rows){ const n=notes[r.proj]||(notes[r.proj]=schNotices(r.proj)); r.red=n.red.has(r.id); r.green=n.green.has(r.id); r.dots=schDotsHtml(n,r.id); }
   const key=SCH_MSORT[k];
@@ -34,7 +37,7 @@ function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest)
   const urlCell=schUrlCell;
   let h=`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="main">${schMainChips()}</div></div>
     <div class="sch-filters sch-all"><div class="sf per" data-per title="한 쪽에 보이는 줄 수"><span>${S.actPer}개씩 보기</span>${svg('i-chev-d',9,4.6)}</div></div>
-    <div class="tbl sch-list sch-all"><div class="hd">${th('proj','프로젝트')}${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
+    <div class="tbl sch-list sch-all" style="--pjw:${schPillW()}px"><div class="hd">${th('proj','프로젝트')}${th('wbs','WBS')}${th('name','업무명')}${th('plan','관리일정')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   for(const r of page){ const p=proj(r.proj);
     h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="pj">${pill(p,'nosq')}</div><div class="w">${esc(r.wbs||'-')}</div><div class="nm"><span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${r.dots}${esc(r.title)}</span></div>
       <div class="rg">${r.ms?schD(r.ps):(r.pf&&r.pf>r.ps?schRange(r.ps,r.pf):schD(r.ps||r.pf))}</div><div><span class="pri pri-${r.pri}">${priTxt[r.pri]}</span></div><div>${schStIcon(r.st)}</div>

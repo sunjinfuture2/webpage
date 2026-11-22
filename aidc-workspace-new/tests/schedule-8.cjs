@@ -22,7 +22,7 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
 
   console.log('— for everybody: files, meetings, windows, addresses');
   const ids = await ev(t => { const tm = new Date(Date.now() + 25 * 60000), hh = String(tm.getHours()).padStart(2, '0') + ':' + String(tm.getMinutes()).padStart(2, '0');
-    const m = newItem('meeting', { title: t + ' 미팅', proj: 'pangyo', status: 'published', date: TODAY, checks: [{ t: hh + ', 대회의실', pre: '12 min before' }, { t: '안건 하나' }, { t: '상대 둘' }] }), old = newItem('meeting', { title: t + ' 지난 미팅', proj: 'pangyo', status: 'published', date: '2026-01-05', checks: [{ t: '14시, 회의실', pre: '12 min before' }] });
+    const m = newItem('meeting', { title: t + ' 미팅', proj: 'pangyo', status: 'published', date: ymd(tm.getFullYear(), tm.getMonth() + 1, tm.getDate()), checks: [{ t: hh + ', 대회의실', pre: '12 min before' }, { t: '안건 하나' }, { t: '상대 둘' }] }), old = newItem('meeting', { title: t + ' 지난 미팅', proj: 'pangyo', status: 'published', date: '2026-01-05', checks: [{ t: '14시, 회의실', pre: '12 min before' }] });
     const r = newItem('research', { title: '[REF]\n' + t + ' 리서치 제목이 아주 길어서 좁은 칸에서는 여러 줄로 넘어가는 경우', proj: 'pangyo', status: 'published' }); m.research = [r.id]; render(true); return [m.id, old.id, r.id]; }, 'R8' + sfx);
   await flush(); await sleep(500);
   const f0 = await ev(([m, old, r]) => ({ a: hasFiles(item(r)), b: hasFiles({ file: true, body: '' }), c: hasFiles({ body: '<a href="/api/file/x">f</a>' }), card: !!document.querySelector(`#page-main .rcard[data-open="${r}"] [data-act="dl"]`), pre: meetPre(item(m)), preOld: meetPre(item(old)), preTxt: chkHtml(item(m)) }), ids);
@@ -217,6 +217,24 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   check('"내용 보기" opens the item, with the library as a step of the trail', await ev(id => S.panel === id && S.trail.length === 1 && S.trail[0] === 'lib:research' && /리서치 라이브러리/.test(document.querySelector('#panel-pin .itrail').textContent), fid));
   await a.click('#panel-pin .itrail [data-trail]'); await sleep(900); check('…and that step leads back to the library', await ev(() => S.panel === 'lib:research' && !!document.querySelector('#lb-wall')));
   await ev(() => closePanel(true));
+
+  console.log('— ninth round (2026-11-22)');
+  await ev(() => go('main')); await sleep(600);
+  const n9 = await ev(() => { const pills = [...document.querySelectorAll('#sec-actions .tbl.sch-all .rw .pj .pill')], cut = pills.filter(p => p.scrollWidth > p.clientWidth + 1 || p.getBoundingClientRect().right > p.parentElement.getBoundingClientRect().right + 1).length, hp = document.querySelector('#sec-partners .rw .hp a'), cat = document.querySelector('#sec-partners .rw .cat a');
+    const r0 = document.querySelector('#sb-recent .r0:not(:first-child)'), r2 = document.querySelector('#sb-recent .r2'), cnt = document.querySelector('#sb .agent .cnt');
+    return { pills: pills.length, cut, hp: hp && [getComputedStyle(hp).borderRadius, getComputedStyle(hp).textOverflow], cat: cat && getComputedStyle(cat).borderRadius, r0: r0 && getComputedStyle(r0).marginTop, r2: r2 && [getComputedStyle(r2).height, getComputedStyle(r2).paddingLeft], cnt: cnt && getComputedStyle(cnt).right }; });
+  check('main action table: no project tag is cut', n9.pills > 0 && n9.cut === 0, n9);
+  check('partner list: an address keeps to its column (…), the lines under address and class are straight', !!n9.hp && n9.hp[0] === '0px' && n9.hp[1] === 'ellipsis' && n9.cat === '0px', n9);
+  check('sidebar: more room above a group, items under a kind closer and further left, the agents\' square further right', (!n9.r0 || n9.r0 === '14px') && (!n9.r2 || (n9.r2[0] === '19px' && n9.r2[1] === '24.5px')) && n9.cnt === '12px', n9);
+  await goP(); const tk9 = await ev(() => { const m = schModel('pangyo'), t = m.phases[0].tasks.find(x => x.kind !== 'milestone' && !x.actualStart && !x.finishRule && m.succ.get(x.id).length); openPanel(schItemId(t.id), true); return { id: t.id, pf: t.plannedFinish }; }); await sleep(500);
+  await a.click('#panel-pin [data-ed="edit"]'); await sleep(700); await a.click('#panel-pin [data-schp="f"][data-k="plannedFinish"]'); await sleep(300); await ev(() => { const bs = [...document.querySelectorAll('.pop .dp [data-ds]')].filter(b => !b.disabled); bs[bs.length - 1].click(); }); await sleep(700);
+  const c9 = await ev(o => { const c = document.querySelector('#sch-card'), t = schModel('pangyo').byId.get(o.id); return { card: c ? c.textContent : '', undo: !!(c && c.querySelector('[data-card="undo"]')), moved: t.plannedFinish !== o.pf, toast: document.querySelector('#toast').classList.contains('on') && /일정 변경/.test(document.querySelector('#toast').textContent) }; }, tk9);
+  check('a date changed in a task\'s panel shows the card of the gantt (what moved, the operation date, 되돌리기) instead of a bare toast', c9.moved && /일정 변경/.test(c9.card) && /함께 바뀐 업무/.test(c9.card) && /운영개시 예상/.test(c9.card) && c9.undo && !c9.toast, c9);
+  await a.click('#sch-card [data-card="undo"]'); await sleep(600); check('되돌리기 on it takes the change back', await ev(o => schModel('pangyo').byId.get(o.id).plannedFinish === o.pf && !document.querySelector('#sch-card'), tk9));
+  await a.click('#panel-pin [data-ed="cancel"]'); await sleep(500); await ev(() => closePanel(true));
+  await ev(() => { SCHU.tab = 'net'; schRefresh(); }); await sleep(700);
+  check('relation map: nobody assigned is an empty face, not the word', await ev(() => { const w = [...document.querySelectorAll('#sch-net .sn-node .who')]; return w.length > 0 && w.every(x => !x.querySelector('.sch-role') && !!x.querySelector('.avatar')); }));
+  await ev(() => { SCHU.tab = 'gantt'; schRefresh(); });
 
   console.log('— without the preview nothing of this shows');
   const C = await newUser(browser, 'R8C' + sfx, '여덟 삼'), c = C.page; await sleep(600);
