@@ -1,0 +1,47 @@
+name: Create workspace_ver3 Worker
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workspace_ver3/**'
+      - '.github/workflows/deploy-workspace-ver3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cloudflare-workspace-ver3
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace_ver3
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: workspace_ver3/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build companion assets and seed
+        run: |
+          npm run build
+          node prepare-seed.mjs
+          node --check shared-worker.mjs
+          npx wrangler deploy --dry-run --outdir .dry-run
+      - name: Create isolated Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          code=$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/f1ac689fded81b2578beca600e38fea6/workers/scripts/workspace_ver3")
+          if [ "$code" != "404" ]; then
+            echo "::error::Expected a new Worker (404), received $code. Existing Workers are not overwritten by this creation workflow."
+            exit 1
+          fi
+          npx wrangler deploy

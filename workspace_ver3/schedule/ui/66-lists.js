@@ -1,0 +1,142 @@
+// Sixth round (owner, 2026-11-20), lists of the main and the project page while the preview is on: filters of the research cards,
+// the small tags that show what is filtered, the operation date on a project card, the window that makes a project, partners linked
+// from a project's overview with @.
+
+/* ---------- research: a row of pickers above the cards ---------- */
+const schRf=()=>S.rf||(S.rf={});
+const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올해',old:'30일보다 이전'}],file:['첨부',{y:'첨부 있음',n:'첨부 없음'}]};
+// The tags members write in square brackets in front of a title, most used first (a tag used once is not offered).
+const schResTagsOf=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>m[1].trim().toUpperCase()).filter(Boolean);
+function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of new Set(schResTagsOf(i)))n.set(t,(n.get(t)||0)+1); return [...n].filter(([,k])=>k>1).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,12); }
+function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
+  list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
+    if(c.tag&&!(c.tag==='-'?!schResTagsOf(i).length:schResTagsOf(i).includes(c.tag)))return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
+    if(c.when==='range'&&!((!c.from||d>=c.from)&&(!c.to||d<=c.to)))return false;
+    if(c.when==='30'&&!(d>=d30))return false; if(c.when==='month'&&d.slice(0,7)!==today.slice(0,7))return false; if(c.when==='year'&&d.slice(0,4)!==today.slice(0,4))return false; if(c.when==='old'&&!(d<d30))return false;
+    return true; });
+  return sortResearch(list); }
+function schResChips(pid){ const c=schRf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-rchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
+  if(c.tag)chip('tag','태그: '+(c.tag==='-'?'태그 없음':'['+c.tag+']')); if(c.who)chip('who','작성자: '+userName(c.who));
+  for(const k of ['when','file']){ if(c[k])chip(k,SCH_RF[k][0]+': '+(k==='when'&&c.when==='range'?schRangeTxt(c):(SCH_RF[k][1][c[k]]||c[k]))); }
+  return out.join(''); }
+function schResBar(pid){ const c=schRf();
+  return `<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="res">${schResChips(pid)}</div></div>
+    <div class="sch-filters res">${schSf2('rpick','tag',c.tag?(c.tag==='-'?'태그 없음':'['+c.tag+']'):'전체 태그',!!c.tag)}${schSf2('rpick','when',c.when?(c.when==='range'?schRangeTxt(c):SCH_RF.when[1][c.when]):'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}</div>`; }
+function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
+  const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
+  const pool=liveItems('research',null); let items=[];
+  if(k==='tag')items=[fl('',{t:'전체 태그'}),...schResTags(pool).map(([t,n])=>fl(t,{t:`[${t}]`,html:`<b style="font-weight:600">[${esc(t)}]</b><span style="margin-left:8px;color:#a6a6a6;font-size:11px">${n}</span>`})),fl('-',{t:'태그 없음'})];
+  else if(k==='who')items=[fl('',{t:'전체 작성자'}),...[...new Set(pool.map(i=>i.authorId).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
+  else items=[fl('',{t:k==='when'?'전체 기간':'첨부 전체'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
+  if(k==='when')items.push('-',{t:'직접 설정…',sel:c.when==='range',fn:()=>schRangePick(el,c.from||'',c.to||'',(a,b)=>{ if(a||b){c.when='range';c.from=a;c.to=b;} else{delete c.when;delete c.from;delete c.to;} go(); })});
+  menuPop(el,items.map((x,i)=>x==='-'?x:({...x,k:String(i)})),{cls:'sch-colmenu'}); }
+const schRangeTxt=c=>`${c.from?schD(c.from):'처음'} ~ ${c.to?schD(c.to):'오늘'}`;
+// Two months side by side: the first press is the first day, the second the last (pressing an earlier day starts over), the days
+// between are shaded while the pointer moves. 적용 hands both back; 지우기 hands back none.
+function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m]=(a||TODAY).split('-').map(Number);
+  const month=(yy,mm)=>{ const first=new Date(yy,mm-1,1).getDay(), dim=new Date(yy,mm,0).getDate(); let g=`<div class="rp-m"><div class="rp-t">${yy}년 ${mm}월</div><div class="rp-g">${['일','월','화','수','목','금','토'].map(x=>`<span>${x}</span>`).join('')}${'<b></b>'.repeat(first)}`;
+    const hi=b||(a&&hov&&hov>=a?hov:'');
+    for(let n=1;n<=dim;n++){ const ds=ymd(yy,mm,n), cls=[ds===a?'a':'',ds===b?'b':'',a&&hi&&ds>a&&ds<hi?'in':'',!b&&a&&ds===hi&&ds!==a?'hv':'',ds===TODAY?'tdy':''].filter(Boolean).join(' '); g+=`<button data-rd="${ds}" class="${cls}">${n}</button>`; }
+    return g+'</div></div>'; };
+  const draw=()=>{ const m2=m===12?1:m+1, y2=m===12?y+1:y; return `<div class="rp"><div class="rp-h"><button data-rn="-1" aria-label="이전 달">‹</button><span class="rp-s"><em class="${a?'':'ph'}">${a?schD(a):'시작일'}</em>${svg('i-sch-arr',12,8)}<em class="${b?'':'ph'}">${b?schD(b):'종료일'}</em></span><button data-rn="1" aria-label="다음 달">›</button></div><div class="rp-ms">${month(y,m)}${month(y2,m2)}</div><div class="rp-f"><span>${!a?'시작일을 누르세요':!b?'종료일을 누르세요':'기간이 정해졌습니다'}</span><button data-rx="clear">지우기</button><button data-rx="ok" class="pri" ${a?'':'disabled'}>적용</button></div></div>`; };
+  const p=openPop(anchor,draw(),{cls:'sch-rp'}), redraw=()=>{p.innerHTML=draw();};
+  p.addEventListener('click',e=>{ e.stopPropagation(); const t=e.target.closest('button'); if(!t)return;
+    if(t.dataset.rn){ m+=+t.dataset.rn; if(m<1){m=12;y--;} if(m>12){m=1;y++;} redraw(); }
+    else if(t.dataset.rd){ const d=t.dataset.rd; if(!a||b||d<a){a=d;b='';} else b=d; hov=''; redraw(); }
+    else if(t.dataset.rx==='clear'){ closePop(); cb('',''); }
+    else if(t.dataset.rx==='ok'&&a){ closePop(); cb(a,b||a); } });
+  p.addEventListener('mouseover',e=>{ const t=e.target.closest('[data-rd]'); if(!t||!a||b)return; if(hov!==t.dataset.rd){ hov=t.dataset.rd; p.querySelectorAll('[data-rd]').forEach(x=>{ const ds=x.dataset.rd; x.classList.toggle('in',hov>a&&ds>a&&ds<hov); x.classList.toggle('hv',ds===hov&&ds>a); }); } }); }
+// As many cards on a page as fill whole rows (two rows; the number of columns follows the width, so nothing is left empty when the
+// sidebar is folded).
+function schResPer(){ const t=document.createElement('div'); t.style.cssText='position:absolute;visibility:hidden;height:0;width:var(--pw)'; $('#app').appendChild(t); const w=t.offsetWidth; t.remove();
+  return Math.max(1,Math.floor((w+15.2)/(210.3+15.2)))*2; }
+// the tag of the partner list's filter (구분)
+const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear title="이 조건 지우기">구분: ${esc(S.partnerCat)}<i>✕</i></button>`:'';
+
+/* ---------- project cards: a row of pickers, and how tall a card's picture is ---------- */
+// (owner, 2026-11-20: a few plain ones only) 분류 · 담당자 · 정렬
+const schPf=()=>S.pf||(S.pf={});
+const SCH_PSORT={name:'이름순',ops:'운영개시 빠른 순',new:'최근 만든 순'};
+const schProjOwner=k=>String((PHEAD[k]||{}).owner||PROJECTS[k].owner||'').trim();
+function schProjFilter(ids){ const c=schPf(); ids=ids.filter(k=>(!c.st||normStatus(PROJECTS[k].status)===c.st)&&(!c.owner||schProjOwner(k)===c.owner));
+  const ops=k=>{const m=schHas(k)?schModel(k):null;return (m&&m.res.operationDate)||'9999';};
+  if(c.sort==='name')ids=ids.slice().sort((a,b)=>String(PROJECTS[a].full||'').localeCompare(String(PROJECTS[b].full||''),'ko'));
+  else if(c.sort==='ops')ids=ids.slice().sort((a,b)=>ops(a).localeCompare(ops(b)));
+  else if(c.sort==='new')ids=ids.slice().sort((a,b)=>(/^p\d{10,}$/.test(b)?+b.slice(1):0)-(/^p\d{10,}$/.test(a)?+a.slice(1):0));
+  return ids; }
+function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
+  const chips=(c.st?chip('st','분류: '+c.st):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
+  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','st',c.st||'전체 분류',!!c.st)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
+function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;render(true);}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
+  if(k==='st')items=[fl('',{t:'전체 분류'}),...[...new Set(orderedProjects().map(p=>normStatus(PROJECTS[p].status)))].map(s=>fl(s,{t:s,html:`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${PSTATUS[s]||'#8e8e8e'}"></i>${esc(s)}</span>`}))];
+  else if(k==='owner')items=[fl('',{t:'전체 담당자'}),...[...new Set(orderedProjects().map(schProjOwner).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(o=>fl(o,{t:o,ico:av('av15')}))];
+  else items=[fl('',{t:'기본 순서'}),...Object.entries(SCH_PSORT).map(([v,t])=>fl(v,{t}))];
+  menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu'}); }
+// A card's picture: without one, the height of 판교's card; with one, as tall as the picture's own shape makes it at the card's width,
+// but never taller than 부산's card was (what is over is cut evenly above and below) and never a sliver.
+const SCH_IMG={w:379.5,base:207.8,max:296.2,min:150};
+const schCardImgH=p=>p.img&&p.imgR>0?Math.round(Math.max(SCH_IMG.min,Math.min(SCH_IMG.max,SCH_IMG.w*p.imgR))*10)/10:SCH_IMG.base;
+const schImgRatio=file=>new Promise(ok=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{URL.revokeObjectURL(u);ok(im.naturalWidth?Math.round(im.naturalHeight/im.naturalWidth*1000)/1000:0);}; im.onerror=()=>{URL.revokeObjectURL(u);ok(0);}; im.src=u; });
+// a picture put up before its shape was recorded: measured when it has loaded (for this view only)
+document.addEventListener('load',e=>{ const im=e.target; if(!PREVIEW_ON||!im||!im.matches||!im.matches('.pcard .img .photo'))return; const p=PROJECTS[im.dataset.pk]; if(!p||p.imgR>0||!im.naturalWidth)return;
+  im.parentElement.style.height=schCardImgH({img:1,imgR:im.naturalHeight/im.naturalWidth})+'px'; },true);
+
+/* ---------- project cards: the operation date the schedule arrives at ---------- */
+function schCardOps(k){ if(!schHas(k))return '<span class="nil">미정</span>'; const m=schModel(k); if(!m)return '<span class="nil">계산 중…</span>'; const d=m.res.operationDelay;
+  if(!m.res.operationDate)return '<span class="nil">미정</span>';
+  return `${schD(m.res.operationDate)}${d?`<em class="${d>0?'late':'early'}">${d>0?'+':''}${d}일</em>`:''}`; }
+
+/* ---------- the window that makes a project ---------- */
+function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st='계획중';
+  const sts=['계획중','진행중','완료','초기기획사업'].filter(s=>PSTATUS[s]);
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>이름만 있으면 만들 수 있습니다. 나머지는 프로젝트 페이지의 사업개요에서 채웁니다.</span></div>
+    <div class="np-f"><label for="np2-name">사업명 <em>필수</em></label><div><input id="np2-name" maxlength="60" placeholder="예: 대전 AI 데이터센터" autocomplete="off"><small class="err" id="np2-err"></small></div>
+      <label>분류</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
+      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
+      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div></div>
+    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
+  document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
+  const close=()=>d.remove();
+  const make=()=>{ const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+    if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
+    const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
+    const id='p'+Date.now(), ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
+    PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
+    PHEAD[id]={cls:st,prog:'초기 기획',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''};
+    PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
+    if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
+    toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
+  d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
+    const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
+
+/* ---------- 사업개요: a partner is linked the way a person is called, with @ ---------- */
+const schPartnerOf=name=>{const n=norm(name||''); return n?PARTNERS.find(p=>!p.trash&&norm(p.name)===n):null;};
+// the small logo in front of a linked company (the first letter stands in until the logo is there, or when there is none)
+function schPartnerMark(name){ const p=schPartnerOf(name); if(!p)return `<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`;
+  const u=p.site&&p.site!=='-'?urlHref(p.site):''; return `<i class="plogo" title="협력업체 목록에 등록된 업체">${esc([...String(p.name||'').trim()][0]||'')}${u?logoImg(p.site):''}</i>`; }
+let schAtEl=null;
+function schAtClose(){ if(schAtEl){schAtEl=null; if(popEl&&popEl.classList.contains('sch-at'))closePop();} }
+function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
+  const hits=PARTNERS.filter(p=>!p.trash&&(!q||norm(p.name).includes(q)||norm(p.cat||'').includes(q))).slice(0,8); schAtEl=el;
+  const p=openPop(el,`<div class="hd">협력업체 ${q?`“${esc(txt.slice(at+1).trim())}”`:'목록'}</div>${hits.map((x,i)=>`<div class="it ${i?'':'sel'}" data-at="${esc(x.id)}">${schPartnerMark(x.name)}<span class="t">${esc(x.name)}</span><span class="m">${esc(x.cat||'')}</span></div>`).join('')||'<div class="msg" style="padding-top:0">맞는 협력업체가 없습니다. 이름을 그대로 적어도 됩니다.</div>'}`,{cls:'sch-at'});
+  p.addEventListener('mousedown',e=>{ const b=e.target.closest('[data-at]'); if(!b)return; e.preventDefault(); schAtPick(b.dataset.at); }); }
+function schAtPick(id){ const p=PARTNERS.find(x=>x.id===id), el=schAtEl; if(!p||!el)return; const txt=el.textContent, at=txt.lastIndexOf('@'); el.textContent=(at>0?txt.slice(0,at):'')+p.name; schAtClose();
+  const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+document.addEventListener('input',e=>{ if(!PREVIEW_ON)return; const t=e.target; if(t&&t.matches&&t.matches('.phead [contenteditable][data-k^="partner:"],.phead [contenteditable][data-k="dev"],.phead [contenteditable][data-k="land"]'))schAtShow(t); });
+document.addEventListener('keydown',e=>{ if(!schAtEl||!popEl||!popEl.classList.contains('sch-at'))return; const its=[...popEl.querySelectorAll('[data-at]')], cur=its.findIndex(x=>x.classList.contains('sel'));
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ if(!its.length)return; e.preventDefault(); const n=(cur+(e.key==='ArrowDown'?1:-1)+its.length)%its.length; its.forEach((x,i)=>x.classList.toggle('sel',i===n)); }
+  else if(e.key==='Enter'&&!e.isComposing){ if(cur>=0){e.preventDefault();e.stopPropagation();schAtPick(its[cur].dataset.at);} }
+  else if(e.key==='Escape'){e.stopPropagation();schAtClose();} },true);
+document.addEventListener('focusout',e=>{ if(schAtEl&&e.target===schAtEl)setTimeout(schAtClose,120); });
+
+/* ---------- clicks of this file ---------- */
+document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el;
+  if(el=T.closest('[data-mcol]')){e.stopPropagation();schMainColMenu(el,el.dataset.mcol);return;}
+  if(el=T.closest('[data-mpick]')){e.stopPropagation();schMainColMenu(el,el.dataset.mpick,true);return;}
+  if(el=T.closest('[data-mchip]')){delete schMf()[el.dataset.mchip];S.actPage=1;refreshSec('action');return;}
+  if(el=T.closest('[data-rpick]')){e.stopPropagation();schResMenu(el,el.dataset.rpick);return;}
+  if(el=T.closest('[data-ppick]')){e.stopPropagation();schProjMenu(el,el.dataset.ppick);return;}
+  if(el=T.closest('[data-pchip]')){e.stopPropagation();delete schPf()[el.dataset.pchip];S.car.proj=0;render(true);return;}
+  if(el=T.closest('[data-rchip]')){const c=schRf();delete c[el.dataset.rchip];if(el.dataset.rchip==='when'){delete c.from;delete c.to;}S.resPage=1;refreshSec('research');return;}
+},true);

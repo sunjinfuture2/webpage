@@ -1,0 +1,1046 @@
+/* WorkSpace x Schedule: the schedule views of a project page. Built from the page's own tokens (see :root in original.html):
+   white ground, thin dividers, underline for the active tab, the project colour only for "belongs to / selected". */
+.sch-sec{position:relative}
+.sec-title.sch-title{font-size:28px;font-weight:700;letter-spacing:-0.03em}
+.sch-title .sch-ic{width:32.5px;height:31px;margin:3px 9.5px 0 0;display:flex;align-items:center;justify-content:center;flex:none}
+.sch-title .sch-ic svg{width:32.5px;height:31px;color:#000}
+.sch-title .sch-ic .pict *{fill:#000;stroke:none}
+.sch-tabs{display:inline-flex;align-items:flex-start;margin-left:8px;color:#e6e6e6}
+.sch-tabs button{font:inherit;letter-spacing:inherit;color:#e6e6e6;padding:0;line-height:36px;transition:color .12s;background:linear-gradient(currentColor,currentColor) 0 calc(100% - 1.5px)/100% 0 no-repeat}
+.sch-tabs button:hover{color:#b5b5b5}
+.sch-tabs button.on{color:#000;background-size:100% 1.6px}
+.sch-tabs i{font-style:normal;margin:0 8px;font-weight:700}
+.sch-tabs.lead button:first-child{margin-left:0}
+.sch-title .lib.tools{margin-left:8px}
+.sch-title .srch.box{height:38px;margin-top:1px;padding:0 14px;border:0;border-radius:6px;background:#f6f6f6;gap:10px}
+.sch-title .srch.box input{width:170px;font-size:14px}
+.sch-title .srch.box:focus-within{background:#f0f0f0}
+.sch-filters{display:flex;align-items:flex-end;gap:27px;margin-top:54px;margin-left:13px;height:20px;font-size:13.5px;color:#4f4f4f}
+.sch-filters .sf{display:flex;align-items:center;justify-content:space-between;gap:18px;min-width:112px;height:20px;padding:0 5px 3px 0;border-bottom:1px solid #a7a7a7;cursor:pointer;white-space:nowrap;font-weight:400;color:#4f4f4f;transition:border-color .12s}
+.sch-filters .sf:hover{border-bottom-color:#000}
+.sch-filters .sf.narrow{min-width:65px;margin-left:8px}
+.sch-filters .sf.set{font-weight:600}
+.sch-filters .sf svg{color:#4f4f4f;flex:none}
+.sch-filters .ck{display:flex;align-items:center;gap:4.5px;cursor:pointer;user-select:none;white-space:nowrap;line-height:14px;padding-bottom:3px}
+.sch-filters .ck i{width:11px;height:11px;border:1px solid #4f4f4f;border-radius:0.5px;display:flex;align-items:center;justify-content:center;background:#fff;color:#4f4f4f}
+.sch-filters .ck.on i{background:#c9c9c9;border-color:#c9c9c9}
+.sch-filters .ck i svg{display:none}
+.sch-filters .ck.on i svg{display:block}
+.sch-filters .cks{display:flex;gap:22px;margin-left:2px}
+.sch-filters .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.sch-note{margin-top:14px;font-size:12.5px;color:#b06a00;background:#fff8ec;border-radius:4px;padding:7px 11px;line-height:18px}
+.sch-empty{height:120px;display:flex;align-items:center;color:#939393;font-size:14px}
+.sch-rg{display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-rg svg{color:#4f4f4f;flex:none}
+/* status marks: one design everywhere (owner's sheet). Sizes in em of the word: the sheet's pixels / 91. */
+.sch-st{display:inline-flex;align-items:center;gap:.22em;font-weight:600;white-space:nowrap;letter-spacing:-0.01em}
+.sch-st .si{flex:none;width:.91em;height:.91em;display:inline-flex;align-items:center;justify-content:center;font-style:normal}
+.sch-st .si svg{display:block;flex:none}
+.sch-st .si-plan{width:.91em;height:.91em}.sch-st .si-ask{width:.148em;height:.79em}.sch-st .si-prog{width:.846em;height:.846em}
+.sch-st .si-done{width:.8em;height:.687em}.sch-st .si-hold{width:.445em;height:.626em}.sch-st .si-cond{width:.89em;height:.77em}
+.sch-st.st-plan{color:#939393}.sch-st.st-ask{color:#efad1b}.sch-st.st-prog{color:#1da3ed}.sch-st.st-done{color:#1acc00}.sch-st.st-hold{color:#ea4949}.sch-st.st-cond{color:#b751ed}
+.sch-dd{font-weight:500;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dd.hot{color:#d30000}
+.sch-role{color:#a9a9a9;font-size:13px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* (an importance the schedule works out itself used to be drawn paler: the owner asked for full colour, 2026-11-19) */
+.sch-ms{display:inline-block;width:7px;height:7px;background:#111;transform:rotate(45deg);margin:0 7px 1px 1px;flex:none}
+
+/* ----- list ----- */
+.tbl.sch-list{margin-top:34px}
+.tbl.sch-list .hd,.tbl.sch-list .rw{grid-template-columns:104px calc(396px + var(--d)) 216px 82px 126px 232px 82px 1fr;column-gap:0}
+/* the three views of 액션 share one height (--schh); what does not fit scrolls inside (owner, 2026-11-19) */
+.sch-sec{--schh:600px}
+.tbl.sch-list{max-height:var(--schh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#c4c4c4 transparent;border-bottom:1px solid #c9c9c9}
+.tbl.sch-list::-webkit-scrollbar{width:8px}.tbl.sch-list::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}
+.tbl.sch-list .ft{display:none}
+.tbl.sch-list .hd{position:sticky;top:0;z-index:3;height:22px;background:#f7f7f6;border-top:1px solid #c9c9c9;align-items:center;font-size:11px}
+.tbl.sch-list .hd span.flt{color:#000;font-weight:600}
+.tbl.sch-list .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px}
+.sch-cfx{height:22px;padding:0 9px;font-size:12px;border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:#4f4f4f;margin-bottom:-1px}
+.pop.sch-colmenu .it .sch-st{font-size:13.5px}.pop.sch-colmenu .it .pri{font-size:13.5px}
+.tbl.sch-list .hd span{border-bottom:0;padding-left:10px;cursor:pointer;display:flex;align-items:center;gap:5px;height:22px;color:#4f4f4f}
+.tbl.sch-list .hd span svg{color:#6f6f6f}
+.tbl.sch-list .hd span.sorted{color:#000;font-weight:600}
+.tbl.sch-list .hd span.up svg{transform:rotate(180deg)}
+.tbl.sch-list .rw{height:43.6px}
+.tbl.sch-list .rw > div{padding-left:10px;font-size:15px;min-width:0}
+.tbl.sch-list .rw .w{font-size:15px;color:#3d3d3d;font-variant-numeric:tabular-nums}
+.tbl.sch-list .rw .nm{font-size:15px;font-weight:500;color:var(--ink);letter-spacing:-0.012em;padding-left:0}
+/* a name starts where the column's title starts; the mark of a milestone hangs to its left and moves nothing */
+.tbl.sch-list .rw .nm .gut{position:relative;width:10px;flex:none;height:1px}
+.tbl.sch-list .rw .nm .gut .sch-ms{position:absolute;right:6px;top:-3.5px}
+.tbl.sch-list .rw .nm .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl.sch-list .rw .nm .cnt{margin-left:8px;font-size:11px;color:#8e8e8e;font-weight:500;flex:none}
+.tbl.sch-list .rw .rg{font-size:15px;color:#3d3d3d}
+.tbl.sch-list .rw .who{gap:14px;overflow:hidden}
+.tbl.sch-list .rw .who span{font-size:14.5px}
+.tbl.sch-list .rw .who .sch-role{font-size:13px;font-weight:400;color:#a9a9a9}
+.tbl.sch-list .rw .dd{font-size:15px}
+.tbl.sch-list .rw .url{overflow:hidden}
+.tbl.sch-list .rw.sel{background:#f3f8f1}
+.tbl.sch-list .rw.sub .w{color:#b9b9b9}
+.tbl.sch-list .rw.sub .nm{font-weight:400;color:#3d3d3d}
+.sch-sub-h{margin-top:46px;display:flex;align-items:baseline;gap:10px;font-size:15px;font-weight:600;color:#000}
+.sch-sub-h small{font-size:12.5px;font-weight:400;color:#8e8e8e}
+.sch-sub-h + .tbl.sch-list{margin-top:12px}
+.sch-per{margin-left:auto}
+
+/* ----- gantt -----
+   Sizes and colours are those of the design file (page 9), measured on a 4x render. The design's hairlines are 0.5px #848484;
+   they are written as 1px of the same weight (#c1c1c1) so that they look the same on an ordinary screen. */
+.sch-gantt{margin-top:24px;width:calc(1337.9px + var(--d));border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative}
+.sg-scroll{overflow-x:hidden;overflow-y:auto;max-height:var(--schh);position:relative;scrollbar-width:thin;overscroll-behavior:auto}
+/* the horizontal scroll bar: above the chart, over the time line only */
+.sg-topbar{overflow-x:auto;overflow-y:hidden;height:11px;scrollbar-width:thin;scrollbar-color:#bdbdbd transparent;border-bottom:1px solid #f1f1f1}
+.sg-topbar.none{visibility:hidden}
+.sg-topbar i{display:block;height:1px}
+.sg-topbar::-webkit-scrollbar{height:8px}.sg-topbar::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}
+.sg-inner{position:relative}
+.sg-head{position:sticky;top:0;z-index:6;height:40.75px;background:#fff}
+.sg-corner{position:sticky;left:0;z-index:7;height:40.75px;background:#fff;border-right:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;float:left;display:flex;align-items:center;gap:20px;padding:0 10px 0 1px;font-size:13px;color:#8e8e8e;white-space:nowrap;overflow:hidden;letter-spacing:-0.012em}
+.sg-corner b{color:#3d3d3d;font-weight:600;margin-left:2px}
+.sg-corner em{font-style:normal;margin-left:5px;font-size:11.5px}
+.sg-axis{position:absolute;top:0;height:40.75px;border-bottom:1px solid #c1c1c1}
+.sg-axis::after{content:"";position:absolute;left:0;right:0;top:24.25px;border-top:1px solid #f1f1f1}
+.sg-axis .mo{position:absolute;top:0;height:24.25px;padding:9.5px 0 0 4px;font-size:11.5px;font-weight:600;line-height:11px;color:#848484;white-space:nowrap;overflow:hidden;letter-spacing:-0.01em}
+.sg-axis .mline{position:absolute;top:0;bottom:0;width:1px;background:#f1f1f1}
+.sg-axis .dy{position:absolute;top:24.5px;height:16.25px;font-size:9px;color:#848484;text-align:center;line-height:16.25px;white-space:nowrap}
+.sg-axis .dy i{font-style:normal;display:inline-block;min-width:14.5px;height:12.75px;line-height:12.75px;border-radius:2.5px}
+.sg-axis .dy.sat{color:#4b42fc}.sg-axis .dy.sun{color:#ff4848}
+.sg-axis .dy.now i{color:#1f8e00;font-weight:700;background:#e8f3e5}
+.sg-axis .dy.tick{border-left:1px solid #f1f1f1;text-align:left;padding-left:3px}
+.sg-body{position:relative;clear:both}
+.sg-left{position:sticky;left:0;z-index:4;float:left;background:#fff;border-right:1px solid #c1c1c1}
+/* the soft edge between the table and the chart stays at the table's edge while the chart scrolls */
+.sg-left::after{content:"";position:absolute;left:calc(100% + 1px);top:0;bottom:0;width:16px;background:linear-gradient(90deg,#f6f6f6,rgba(250,250,250,0));pointer-events:none}
+.sg-split{position:absolute;right:-5px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:8}
+.sg-split:hover{background:linear-gradient(90deg,transparent 3.5px,#8e8e8e 3.5px,#8e8e8e 5.5px,transparent 5.5px)}
+.sg-row{position:absolute;left:0;right:0;display:flex;align-items:center;white-space:nowrap;cursor:pointer}
+.sg-row.ph{font-size:13.5px;font-weight:700;color:#000;letter-spacing:-0.012em;padding-left:0}
+.sg-row.ph .tw{width:10px;height:8.75px;margin:0 7.3px 0 -2.2px;display:flex;color:#474747;flex:none}
+.sg-row.ph .tw svg{transition:transform .14s;transform:rotate(-90deg)}
+.sg-row.ph.open .tw svg{transform:none}
+.sg-row.ph .tt{line-height:16px}
+.sg-row.ph .n{font-size:11px;font-weight:400;color:#999;margin-left:6px;letter-spacing:0}
+.sg-row.ph .pg{display:flex;align-items:center;gap:5px;margin-left:15.5px;font-size:10.5px;font-weight:600;color:#d6d6d6;letter-spacing:0}
+.sg-row.ph .pg .bar{width:47px;height:5px;border-radius:2.5px;background:#efefef;overflow:hidden}
+.sg-row.ph .pg .bar i{display:block;height:100%;background:linear-gradient(90deg,#e6f2e3,#8fc780);border-radius:2.5px}
+.sg-row.ph .pg.has{color:#1f8e00}
+.sg-row.ph .add{margin-left:auto;margin-right:12px;width:20px;height:20px;border-radius:5px;display:none;align-items:center;justify-content:center}
+.sg-row.ph:hover .add{display:flex}
+.sg-row.ph .add:hover{background:#ececec}
+.sg-row.tk{height:33.25px;font-size:12.2px;color:#5b5b5b;padding-left:23.5px}
+.sg-row.tk.hover{background:linear-gradient(#f9f8f7,#f9f8f7) 0 2.1px/100% 29px no-repeat}
+.sg-row.tk .bl{width:2.5px;flex:none;display:flex;align-items:center;justify-content:center;margin-right:5.3px}
+.sg-row.tk .bl i{width:2.3px;height:2.3px;border-radius:50%;background:#5b5b5b}
+.sg-row.tk .bl i.ms{width:5.6px;height:5.6px;border-radius:0.8px;background:#111;transform:rotate(45deg);flex:none}
+.sg-row.tk .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.sg-row.tk .nm b{font-weight:600;margin-right:5px}
+.sg-row.tk .avstack{margin-left:10px;flex:none}
+.sg-row.tk .avstack .avatar{width:15.25px;height:15.25px;margin-left:-6.3px;border:1px solid #fff;box-sizing:content-box}
+.sg-row.tk .avstack .avatar:first-child{margin-left:0}
+.sg-row.tk .sch-dd{margin-left:6.5px;font-size:12.2px;font-weight:500;flex:none}
+.sg-row.tk .fill{flex:1 1 0;min-width:6px}
+.sg-row.tk .rg{width:134px;flex:none}
+.sg-row.tk .rg .sch-rg{gap:4px}
+.sg-row.tk .rg .sch-rg svg{color:#5b5b5b;width:9px;height:7px}
+.sg-row.tk .st{width:56.7px;flex:none;font-size:11.5px}
+.sg-row.tk .st .sch-st{letter-spacing:-0.02em}
+.sg-right{position:absolute;top:0;overflow:hidden}
+.sg-shade{position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,#f6f6f6,rgba(250,250,250,0));pointer-events:none}
+.sg-band{position:absolute;left:0;right:0;height:29px;background:#f9f8f7;pointer-events:none}
+.sg-right .now{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:repeating-linear-gradient(to bottom,#1f8e00 0 2px,transparent 2px 5px);opacity:.75;z-index:3;pointer-events:none}
+.sg-sum{position:absolute;height:9.75px;border-radius:2px;background:#474747;cursor:pointer;min-width:3px}
+.sg-sum em{position:absolute;right:6.5px;top:0;font-style:normal;font-size:8.5px;line-height:9.75px;color:#fff;font-weight:500;white-space:nowrap;letter-spacing:-0.01em}
+.sg-sum.out em{right:auto;left:calc(100% + 5px);color:#848484}
+.sg-dia{position:absolute;width:7.2px;height:7.2px;border:1px solid #6f6f6f;background:#fff;transform:rotate(45deg);cursor:pointer;border-radius:1px}
+.sg-dia.done{background:#474747}
+.sg-dia.sel{background:#e8f3e5;border-color:#474747}
+.sg-bar{position:absolute;height:22px;border:1px solid #cfcfcf;border-radius:4.5px;background:#f9f8f7;cursor:pointer;z-index:2;display:flex;align-items:center;min-width:4px;font-size:12px;color:#474747;white-space:nowrap;transition:border-color .12s,background .12s}
+.sg-bar .lb{padding:0 10px;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.012em}
+.sg-bar .lb b{font-weight:600;margin-right:5px}
+.sg-bar.hover{background:#fff}
+.sg-bar.done{color:#9a9a9a}
+.sg-bar:hover{border-color:#8e8e8e}
+.sg-bar.near{border-color:#6a6a6a}
+.sg-bar.sel{background:#e8f3e5;border-color:#474747;color:#1f8e00;box-shadow:0 0 0 0.75px #474747}
+.sg-bar .pc{position:absolute;left:3px;bottom:1.5px;height:2px;max-width:calc(100% - 6px);background:#8fc780;border-radius:1px}
+.sg-bar .pl{position:absolute;top:-1px;bottom:-1px;pointer-events:none}
+.sg-bar .pl.in{left:-1px;border-right:1px dashed #8e8e8e;border-radius:0 4.5px 4.5px 0}
+.sg-bar .pl.out{border:1px dashed #a9a9a9;border-left:0;border-radius:0 4.5px 4.5px 0}
+.sg-bar .pt{position:absolute;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:#fff;border:1px solid #474747;display:none;cursor:crosshair;z-index:4}
+.sg-bar .pt.l{left:-5px}.sg-bar .pt.r{right:-5px}
+.sg-bar:hover .pt,.sg-bar.linking .pt{display:block}
+.sg-bar.target{border-color:#1f8e00;box-shadow:0 0 0 1.5px rgba(31,142,0,.35)}
+.sg-tx{position:absolute;height:22px;line-height:22px;font-size:12px;color:#474747;white-space:nowrap;cursor:pointer;z-index:2;letter-spacing:-0.012em;text-shadow:0 0 2px #fff,0 0 2px #fff,1px 0 1px #fff,-1px 0 1px #fff,0 1px 1px #fff,0 -1px 1px #fff}
+.sg-tx b{font-weight:600;margin-right:5px}
+.sg-tx.sel,.sg-tx.sel b{color:#1f8e00}
+.sg-msb{position:absolute;width:18.7px;height:18.7px;border:1px solid #cfcfcf;background:#f9f8f7;transform:rotate(45deg);border-radius:2.5px;cursor:pointer;z-index:2}
+.sg-msb.near{border-color:#6a6a6a}
+.sg-msb.done{background:#e9e9e9}
+.sg-msb.sel{background:#e8f3e5;border-color:#474747;box-shadow:0 0 0 0.75px #474747}
+.sg-ref{position:absolute;height:2.5px;border-radius:1.5px;background:#d6d6d6;z-index:1}
+.sg-links{position:absolute;left:0;top:0;z-index:1;overflow:visible;pointer-events:none}
+.sg-links path{fill:none;stroke:#afafaf;stroke-width:.6;stroke-linecap:round;stroke-linejoin:round}
+.sg-links circle{fill:#afafaf}
+.sg-links g.hot path{stroke:#474747;stroke-width:1.1}
+.sg-links g.hot circle{fill:#474747}
+.sg-links g.off path{stroke-dasharray:2.5 2.5}
+.sg-links path.hit{stroke:transparent!important;stroke-width:9;pointer-events:stroke;cursor:pointer}
+.sg-links g:hover path:not(.hit){stroke:#1f8e00;stroke-width:1.1}
+.sg-links g:hover circle{fill:#1f8e00}
+.sg-links .draft{stroke:#1f8e00;stroke-width:1.1;stroke-dasharray:3 3;fill:none}
+.sg-mark{position:absolute;left:0;right:0;height:0;border-top:1px dashed #d9d9d9;z-index:5;pointer-events:none}
+.sg-tags{position:absolute;left:0;top:0;width:0;height:0}
+.sg-tags b{position:absolute;left:-45px;margin-top:-6.6px;height:13.2px;padding:0 8px 0 5px;font-size:9px;font-weight:400;line-height:12px;color:#8e8e8e;background:#fff;border:1px solid #cfcfcf;border-right:0;border-radius:2.5px 0 0 2.5px;white-space:nowrap;cursor:default}
+.sg-tags b::after{content:"";position:absolute;right:-4.7px;top:1.4px;width:8.6px;height:8.6px;background:#fff;border-top:1px solid #cfcfcf;border-right:1px solid #cfcfcf;transform:rotate(45deg)}
+.sch-gantt .sg-foot{display:flex;align-items:center;gap:16px;height:28px;font-size:11px;color:#9a9a9a;border-top:1px solid #f1f1f1;padding:0 2px}
+.sch-gantt .sg-foot b{color:#5b5b5b;font-weight:600}
+.sch-gantt .sg-foot .sp{margin-left:auto}
+/* ----- relation map (design page 10, measured on a 4x render) ----- */
+.sch-net{margin-top:26px;width:calc(1337.9px + var(--d));height:var(--schh);border-top:1px solid #c1c1c1;border-bottom:1px solid #c1c1c1;position:relative;background-color:#f9f8f7}
+.sn-scroll{position:absolute;inset:0;overflow:auto;scrollbar-width:thin}
+.sn-canvas{position:relative;min-width:100%;min-height:100%}
+.sn-zoom{position:absolute;left:0;top:0;transform-origin:0 0}
+.sn-links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.sn-links path{fill:none;stroke:#9a9a9a;stroke-width:.6;stroke-linecap:round;stroke-linejoin:round}
+.sn-links circle{fill:#9a9a9a}
+.sn-links g.hot path{stroke:#000;stroke-width:.75}
+.sn-links g.hot circle{fill:#000}
+.sn-links g.hov path{stroke:#1c1c1c;stroke-width:1.5}
+.sn-links g.hov circle{fill:#1c1c1c}
+.sn-links text{font-size:10px;fill:#848484;paint-order:stroke;stroke:#f9f8f7;stroke-width:4px}
+.sn-node{position:absolute;width:271px;height:128.5px;background:#fff;border:1px solid #d7d7d7;border-radius:4px;cursor:pointer;transition:border-color .12s;color:#000;letter-spacing:-0.012em}
+.sn-node:hover{border-color:#8e8e8e}
+.sn-node.sel{border-color:#000}
+.sn-node > div{position:absolute;left:18px;white-space:nowrap}
+.sn-node .w{top:13.5px;font-size:13.5px;font-weight:700;line-height:17px;display:flex;align-items:center}
+.sn-node .w .sch-ms{margin:0 6px 0 1px}
+.sn-node .nm{top:30.5px;right:18px;font-size:13.5px;font-weight:600;line-height:17.5px;overflow:hidden;text-overflow:ellipsis}
+.sn-node .rg{top:54.5px;font-size:13.5px;line-height:17px}
+.sn-node .rg .sch-rg{gap:6px}
+.sn-node .rg .sch-rg svg{color:#000}
+.sn-node .dd{top:89.5px;font-size:15px;line-height:19px}
+.sn-node .dd .sch-dd{font-size:15px;font-weight:700}
+.sn-node .dd .sch-st{font-size:13.5px}
+.sn-node .who{left:auto;right:20.5px;top:86.5px;height:23px;display:flex;align-items:center;max-width:120px;overflow:hidden}
+.sn-node .who .avstack .avatar{width:23px;height:23px;margin-left:-9.7px;border:1px solid #fff;box-sizing:content-box}
+.sn-node .who .avstack .avatar:first-child{margin-left:0}
+.sn-node .who .sch-role{font-size:11.5px}
+.sn-node.done .dd .sch-st{color:#1acc00;font-weight:700}
+.sn-tools{position:absolute;left:20px;top:20px;display:flex;align-items:center;gap:8px;z-index:3}
+.sch-net > .sn-info{position:absolute;right:22px;bottom:16px;z-index:3}
+.sn-tools .sh-btn{width:30px;height:30px;border-radius:8px;font-size:17px;color:#4f4f4f}
+.sn-tools .sn-fit{width:44px;height:44px;border-radius:10px;color:#111}
+.sn-info{font-size:11px;color:#8e8e8e;background:rgba(249,248,247,.92);padding:2px 6px;border-radius:4px}
+/* the row above the map: two words to switch the mode, then the two choices */
+.sch-filters .seg{display:flex;gap:10.5px;align-items:flex-end}
+.sch-filters .seg button{font-size:13.5px;color:#d3d3d3;padding:0 0 3.5px;line-height:14px;border-bottom:1px solid transparent;white-space:nowrap}
+.sch-filters .seg button.on{color:#4f4f4f;border-bottom-color:#3d3d3d}
+.sch-filters.net{gap:28px}
+.sch-filters.net .sf{min-width:117.5px;margin-left:0}
+.sch-filters.net .sf + .sf{margin-left:-5.5px}
+/* ----- a task in the right panel ----- */
+.ititle[data-wbs]::before{content:attr(data-wbs) ") ";color:rgba(15,15,15,.8)}
+.props.sch-props{display:block;right:0;width:auto;max-width:898px}
+.sch-props .sp-tabs{display:flex;gap:16px;height:62px;align-items:flex-start;padding-top:4px;font-size:19px;font-weight:600;letter-spacing:-0.02em}
+.sch-props .sp-tabs button{font:inherit;color:#c9c9c9;padding:0 2px 5px;border-bottom:2px solid transparent;transition:color .12s,border-color .12s}
+.sch-props .sp-tabs button:hover{color:#8e8e8e}
+.sch-props .sp-tabs button.on{color:#3d3d3d;border-bottom-color:#3d3d3d}
+.sch-props .sp-tabs small{font-size:inherit;font-weight:600;color:inherit;opacity:.75;margin-left:6px}
+.sch-props .sp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.sch-props .sp-grid .pr .k,.sch-props .sp-more .pr .k{width:124px}
+.props .pr .v.sch-v{cursor:default;align-items:center;flex-wrap:wrap;gap:3.3px 6px;font-variant-numeric:tabular-nums}
+.props .pr .v.sch-v.wide{max-width:300px}
+.sch-v .sf-e{cursor:pointer;border-radius:3px;padding:0 4px;margin:0 -4px;display:inline-flex;align-items:center;gap:6px;min-height:20px;transition:background .12s}
+.sch-v .sf-e:hover{background:#efefef}
+.sch-v .sf-e i{font-style:normal;color:#c4c4c4}
+.sch-v .plain.wrap{white-space:pre-wrap;line-height:20px}
+.sch-v .plain.sch-moved{color:#1c1c1c;font-weight:500}
+.sch-v .sch-dd{margin-left:8px;font-size:13px}
+.sch-v .sch-delta{font-style:normal;font-size:12px;color:#8e8e8e;margin-left:6px}
+.sch-v .sch-delta.late{color:#e10000}
+.sch-v .people{gap:4px 8px}
+.sch-stage{display:inline-flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sch-stage .sf{display:inline-flex;align-items:center;gap:8px;border-bottom:1px solid #9a9a9a;cursor:pointer;max-width:200px;white-space:nowrap;line-height:19px}
+.sch-stage .sf:hover{border-bottom-color:#000}
+.sch-stage .sf svg{flex:none;color:#4f4f4f}
+.sch-stage.ro span,.sch-stage.ro a{max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-stage.ro a{border-bottom:1px solid #cfcfcf;line-height:18px;cursor:pointer}
+.sch-stage.ro a:hover{border-bottom-color:#3d3d3d}
+.sch-stage .x{width:16px;height:16px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center}
+.sch-stage .x:hover{background:#ececec}
+.sch-props .sp-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#8e8e8e;border-bottom:1px solid #d9d9d9;height:22px;margin:-6px 0 18px}
+.sch-props .sp-toggle:hover{color:var(--ink);border-bottom-color:#8e8e8e}
+.sch-props .sp-more{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding-top:6px}
+.sch-props .sp-more .full{grid-column:1 / -1;padding-bottom:18px}
+.sch-props .sp-del{height:26px;padding:0 11px;font-size:12.5px;color:#d30000;border-radius:6px}
+.sp-links{padding:44px 0 56px}
+.sp-links .sl-map{margin:0 auto}
+.sl-none{margin-top:26px;font-size:12.5px;color:#a9a9a9;text-align:center}
+.sl-node em.rel{font-style:normal;background:transparent;color:#a9a9a9;display:inline-flex;align-items:center}
+.sch-v .sf-r{display:inline-flex;align-items:center;gap:6px;min-height:20px}
+.sch-v .sf-r i{font-style:normal;color:#c4c4c4}
+.sch-v .sch-mv{font-style:normal;font-size:11px;color:#8e8e8e;margin-left:8px;border:1px solid #e3e3e3;border-radius:9px;padding:0 7px;line-height:17px;cursor:help;white-space:nowrap}
+.sch-stage .wbno{font-weight:600;color:#3d3d3d}
+.sl-refs{flex-direction:row!important;flex-wrap:wrap;gap:6px 8px!important}
+/* --- item panel while the preview is on (owner, 2026-11-19) --- */
+/* 저장 is told from 수정 at a glance: filled */
+.sch-on .ihead .pub.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
+.sch-on .ihead .pub.save:hover{background:#2b2b2b}
+.sch-on .ihead .pub[data-ed="edit"]{color:#3f3f3f}
+/* what can be changed while editing: paler and underlined; full on the pointer */
+.sch-on .props .pr .v.pk [data-pick]:not(.pill):not(.px),.sch-on .sch-props.ed .sf-e{opacity:.6;text-decoration:underline;text-decoration-color:#9a9a9a;text-underline-offset:4px;text-decoration-thickness:1px;cursor:pointer;transition:opacity .12s}
+.sch-on .props .pr .v.pk [data-pick]:not(.pill):not(.px):hover,.sch-on .sch-props.ed .sf-e:hover{opacity:1}
+.sch-on .props .pr .v.pk [data-pick] *,.sch-on .sch-props.ed .sf-e *{text-decoration:inherit}
+.sch-on .sch-props.ed .sch-stage .sf{opacity:.6}.sch-on .sch-props.ed .sch-stage .sf:hover{opacity:1}
+.sch-on .proj-pick{display:inline-flex;align-items:center;gap:6px}
+.sch-on .proj-pick .pill{cursor:pointer;opacity:.75;box-shadow:0 1.5px 0 -0.5px #9a9a9a}
+.sch-on .proj-pick .pill:hover{opacity:1}
+.sch-on .proj-pick .px{width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#6f6f6f;background:#eeeeee}
+.sch-on .proj-pick .px:hover{background:#dcdcdc;color:#000}
+.pop.proj-menu .it{padding-top:5px;padding-bottom:5px}
+.pop.proj-menu .it .pill{pointer-events:none}
+
+.sl-map{position:relative;margin-bottom:14px}
+.sp-links .sl-wrap{overflow-x:auto;scrollbar-width:thin}
+.sl-map svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.sl-map path{fill:none;stroke:#4f4f4f;stroke-width:1}
+.sl-map path.off{stroke:#b9b9b9;stroke-dasharray:3 3}
+.sl-node{position:absolute;height:26px;border:1px solid #c9c9c9;border-radius:4px;background:#fff;display:flex;align-items:center;padding:0 6px 0 11px;font-size:13px;color:#3d3d3d;cursor:pointer;white-space:nowrap;transition:border-color .12s}
+.sl-node:hover{border-color:#1c1c1c}
+.sl-node b{font-weight:700;margin-right:5px;color:#1c1c1c;flex:none}
+.sl-node span{overflow:hidden;text-overflow:ellipsis;flex:1 1 auto;min-width:0}
+.sl-node.off{border-style:dashed;color:#a9a9a9}
+.sl-node.cur{background:var(--g-bg);border-color:#9ccb8f;color:var(--g);cursor:default;padding-right:11px}
+.sl-node.cur b{color:var(--g)}
+.sl-node .rel{flex:none;margin-left:6px;height:17px;padding:0 5px;border-radius:3px;background:#f0f0f0;font-size:10px;font-weight:600;color:#6f6f6f}
+.sl-node .rel:hover{background:#dedede;color:#000}
+.sl-items .pr{min-height:0;padding-bottom:16px}
+.sl-items .chips{flex-direction:row!important;flex-wrap:wrap;gap:6px 8px!important}
+.sl-ref{display:inline-flex;align-items:center;gap:2px}
+.sl-ref button{width:15px;height:15px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;opacity:.5}
+.sl-ref button:hover{background:#ececec;opacity:1}
+.sch-tm{max-height:300px;overflow-y:auto;scrollbar-width:thin;min-width:360px}
+.sch-tm .it{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:440px;display:block}
+.sch-tm .it b{display:inline-block}
+.sch-ops em{font-style:normal;font-size:12px;color:#8e8e8e;margin-left:8px}
+.sch-ops em.late{color:#e10000}
+.sch-ops{cursor:pointer;font-variant-numeric:tabular-nums}
+.sch-ops:hover{text-decoration:underline;text-underline-offset:3px}
+
+.sch-pair{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+/* ----- calendar: actions of the day are a count next to the date ----- */
+/* measured on the design (page 9, 8x): bubble 16.75 high, hairline #f4f4f4 / tag and number #dfdfdf; today's #e6e6e6 / #4f4f4f */
+.cal.pv .cell .n{display:inline-block;vertical-align:top}
+.cal .cell .acnt{position:relative;display:inline-flex;align-items:center;vertical-align:top;gap:3px;height:16.75px;margin:-0.9px 0 0 8.6px;padding:0 6.6px 0 5px;border-radius:2.75px;border:1px solid #f4f4f4;background:#fff;font-size:11px;font-weight:500;line-height:1;color:#dddddd;cursor:default}
+.cal .cell .acnt::before{content:"";position:absolute;left:-3.1px;top:50%;width:4.6px;height:4.6px;margin-top:-2.3px;background:#fff;border-left:1px solid #f4f4f4;border-bottom:1px solid #f4f4f4;transform:rotate(45deg);border-radius:0 0 0 1px}
+.cal .cell .acnt svg{width:9.75px;height:9.5px;color:#dfdfdf;flex:none}
+.cal .cell .acnt b{font-weight:500}
+.cal .cell.today .acnt{color:#4f4f4f;border-color:#e6e6e6}
+.cal .cell.today .acnt::before{border-color:#e6e6e6}
+.cal .cell.today .acnt svg{color:#4f4f4f}
+.cal .cell .acnt .nd{position:absolute;left:calc(100% - 3px);top:50%;display:flex;transform:translateY(-50%)}
+.cal .cell .acnt .nd i{font-style:normal;min-width:9px;height:9px;padding:0 1.5px;border-radius:5px;border:1px solid #fff;box-sizing:content-box;display:flex;align-items:center;justify-content:center;font-size:6.5px;font-weight:700;line-height:1;color:#fff}
+.cal .cell .acnt .nd i.g{background:#2bdb00}
+.cal .cell .acnt .nd i.r{background:#ff0000}
+.cal .cell .acnt .nd i + i{margin-left:-2.4px}
+/* the clicked day keeps its plain number (owner, 2026-11-19: no black mark); a hairline frame shows which day the list is for */
+.cal.pv .cell.sel .n{display:inline-block;height:15px;line-height:15px;min-width:0;padding:0;margin:0;border-radius:0;background:none;text-align:left;color:#1c1c1c!important}
+.cal.pv .cell.sel.sun .n{color:var(--red)!important}
+.cal.pv .cell.sel.sat .n{color:var(--sat)!important}
+.cal.pv .cell.sel:not(.today){box-shadow:inset 0 0 0 1px #ececec}
+.rlist.sch{border-top:0;padding-top:0;max-height:640px}
+/* the two lines of the list: the calendar's own line (1px #ededed), both as wide as the text */
+.rlist.sch .rline{border-top:1px solid #ededed;margin:0 0 22px}
+#page-project .cal.pv .cell[data-date]{cursor:default}
+.rlist.sch.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rlist.sch .rcap{font-size:12.5px;font-weight:600;color:#4f4f4f;margin:0 0 20px 1px;display:flex;align-items:center;gap:8px}
+.rlist.sch .rcap .n{font-size:11px;font-weight:600;color:#3d3d3d;border:1px solid #e3e3e3;border-radius:4px;padding:1px 6px;background:#fff}
+.rlist.sch .rcap svg{width:13px;height:13px;color:#3d3d3d;flex:none}
+.rlist.sch .rcap .d{margin-left:auto;font-weight:400;color:#a9a9a9;display:flex;align-items:center;gap:8px}
+.rlist.sch .rcap .td{font-size:10px;font-weight:600;color:#fff;background:#0f0f0f;border-radius:9px;padding:1px 7px}
+.rlist.sch .rcap .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
+.rlist.sch .rsep{border-top:1px solid #ededed;margin:22px 0 26px}
+.rlist.sch .ra{position:relative;display:flex;align-items:center;height:42px;margin:0 -16px;padding:0 16px;border-radius:8px;cursor:pointer;gap:10px}
+.rlist.sch .ra .sp,.sch-daypop .ra .sp{flex:1 1 0;min-width:0}
+/* notice dots at the upper left corner of a title: red = one of my actions changed, green = starts today */
+.sdot{position:absolute;left:11.5px;top:calc(50% - 10.5px);width:5px;height:5px;border-radius:50%;pointer-events:auto;font-style:normal}
+.sdot.r{background:#ff0000}.sdot.g{background:#2bdb00}.sdot.g.two{left:5.5px}
+.tbl.sch-main .rw .ttl .tx{position:relative}
+.tbl.sch-main .rw .ttl .tx .sdot{left:-7px;top:-1px}.tbl.sch-main .rw .ttl .tx .sdot.g.two{left:-13px}
+.rlist.sch .ra:hover{background:#f4f4f4}
+.rlist.sch .ra .tt{flex:0 1 auto;min-width:0;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rlist.sch .ra .avstack{flex:none}
+.rlist.sch .ra .sch-role{flex:none;max-width:92px;font-size:11.5px}
+.rlist.sch .ra .sch-dd{flex:none;width:72px;text-align:center;font-size:14px;font-weight:700}
+.rlist.sch .ra .dt{flex:none;width:56px;text-align:right;font-size:13.5px;color:#4f4f4f;font-variant-numeric:tabular-nums}
+.rlist.sch .more{font-size:12px;color:#8e8e8e;margin:8px 0 0 1px}
+
+.phead .col2.sch .fr > b{width:101px}
+/* ----- 외부설비 조달 · 승인게이트 · 근거 및 확약 ----- */
+.sch-cm{font-weight:500;white-space:nowrap}
+.sch-cm.cm-ok{color:#1acc00}.sch-cm.cm-quote{color:#f59a00}.sch-cm.cm-cond{color:#0b93e6}.sch-cm.cm-none{color:#9a9a9a}.sch-cm.cm-bad{color:#e10000}
+.sch-wl{border-bottom:1px solid #cfcfcf;cursor:pointer;line-height:17px;font-variant-numeric:tabular-nums}
+.sch-wl:hover{border-bottom-color:#3d3d3d}
+.tbl.sch-proc,.tbl.sch-ev{margin-top:34px}
+.tbl.sch-proc .hd,.tbl.sch-ev .hd{height:22px;background:#f7f7f6;border-top:1px solid #c9c9c9;align-items:center;font-size:11px;column-gap:0}
+.tbl.sch-proc .hd span,.tbl.sch-ev .hd span{border-bottom:0;height:22px;padding-left:10px;display:flex;align-items:center}
+.tbl.sch-proc .hd span em,.tbl.sch-ev .hd span em{position:static}
+.tbl.sch-proc .rw,.tbl.sch-ev .rw{column-gap:0}
+.tbl.sch-proc .rw > div,.tbl.sch-ev .rw > div{padding-left:10px;font-size:15px;min-width:0}
+.tbl.sch-proc .hd,.tbl.sch-proc .rw{grid-template-columns:86px calc(264px + var(--d)) 122px 232px 116px 128px 202px 96px 1fr}
+.tbl.sch-proc .rw{height:62px}
+.tbl.sch-proc .rw .w,.tbl.sch-ev .rw .w{color:#3d3d3d;font-variant-numeric:tabular-nums}
+.tbl.sch-proc .rw .nm{font-weight:500;color:var(--ink)}
+.tbl.sch-proc .rw .lk a{display:inline-flex;align-items:center;gap:7px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.tbl.sch-proc .rw .lk a:hover{text-decoration:underline;text-underline-offset:3px}
+.tbl.sch-proc .rw .lk svg{color:#4f4f4f}
+.tbl.sch-proc .rw .rg{color:#3d3d3d}
+.tbl.sch-proc .rw .who{overflow:hidden}
+.tbl.sch-proc .rw .lead small{font-size:11.5px;color:#8e8e8e;margin-left:6px}
+.tbl.sch-proc .rw.sel,.tbl.sch-ev .rw.sel{background:#f3f8f1}
+.tbl .rw .sf-e{cursor:pointer;border-radius:3px;padding:2px 5px;margin:-2px -5px;transition:background .12s}
+.tbl .rw .sf-e:hover{background:#e9e9e9}
+.tbl.sch-ev .hd,.tbl.sch-ev .rw{grid-template-columns:72px 124px calc(250px + var(--d)) 168px 112px 156px 84px 1fr}
+.tbl.sch-ev .rw{height:46px}
+.tbl.sch-ev .rw > div{font-size:14px}
+.tbl.sch-ev .rw .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl.sch-ev .rw .nm{font-weight:500;color:var(--ink);font-size:15px}
+.tbl.sch-ev .rw .ct,.tbl.sch-ev .rw .rl,.tbl.sch-ev .rw .bd{color:#4f4f4f;overflow:hidden}
+.tbl.sch-ev .rw .bd{font-size:13px;color:#6f6f6f}
+/* as tall as fits one screen; the rest by its scroll bar */
+.sch-gates{position:relative;margin-top:34px;width:calc(1337.9px + var(--d));border-top:1px solid #c9c9c9;border-bottom:1px solid #c9c9c9;padding:40px 0 6px;max-height:596px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#bdbdbd transparent}
+.sch-gates::-webkit-scrollbar{width:8px}.sch-gates::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}.sch-gates::-webkit-scrollbar-track{background:transparent}
+.sch-gates .gt{position:relative;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:0;padding:0 0 76px 210px;cursor:pointer;min-height:112px}
+.sch-gates .gt:last-child{padding-bottom:30px}
+.sch-gates .gt .ln{position:absolute;left:173.6px;top:12px;height:100%;width:1.6px;background:#cfcfcf}   /* from this gate's dot to the next one's */
+.sch-gates .gt:last-child .ln{display:none}
+.sch-gates .gt .ln0{position:absolute;left:173.6px;top:-40px;height:52px;width:1.6px;background:#cfcfcf}   /* from the top down to the first dot */
+.sch-gates .gt.to-ok .ln,.sch-gates .gt .ln0.ok{background:#0f0f0f;width:2px;left:173.4px}
+.sch-gates .gt .date{position:absolute;left:52px;top:1px;width:104px;text-align:right;font-size:15.5px;font-weight:600;color:#000;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-gates .gt .date em{display:block;font-style:normal;font-size:11px;font-weight:500;color:#8e8e8e;margin-top:2px}
+.sch-gates .gt .date em.late{color:#e10000}
+.sch-gates .gt .dot{position:absolute;left:169.9px;top:7.5px;width:9px;height:9px;border-radius:50%;background:#c4c4c4;z-index:1}
+.sch-gates .gt.ok .dot{background:#0f0f0f}
+.sch-gates .gt .hd2{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding-right:20px}
+.sch-gates .gt .cat{font-size:15px;font-weight:600;color:#3d3d3d;line-height:22px}
+.sch-gates .gt .cat small{font-size:15px;font-weight:700;color:inherit;margin-right:7px}
+.sch-gates .gt .chip{max-width:230px}
+.sch-gates .gt .sf-e{cursor:pointer;border-radius:3px;padding:1px 5px;margin:0 -5px;font-size:13px}
+.sch-gates .gt .sf-e:hover{background:#ececec}
+.sch-gates .gt dl{display:grid;grid-template-columns:100px minmax(0,1fr);row-gap:8px;font-size:15px;color:var(--t2);line-height:22px}
+.sch-gates .gt dt{font-weight:600}
+.sch-gates .gt dd{color:#4f4f4f}
+.sch-gates .gt:hover .cat{color:#000}
+.sch-gates .gt.sel dd,.sch-gates .gt.sel .cat{color:#000}
+.props.sch-simple{right:0;width:auto;max-width:830px;display:block}
+.props.sch-simple .pr .k{width:138px}
+.props.sch-simple .pr{padding-bottom:18px}
+
+.tbl.sch-proc .rw .who .sch-role{color:#a9a9a9;font-weight:400;font-size:13px}
+/* ----- main page: actions of every project, with the schedule tasks that are under way or due soon ----- */
+.tbl.sch-main .hd,.tbl.sch-main .rw{grid-template-columns:104px 176px calc(458px + var(--d)) 252px 104px 82px 1fr}
+.tbl.sch-main .rw .ttl .wb{font-weight:700;margin-right:5px;color:#1c1c1c;font-variant-numeric:tabular-nums}
+.tbl.sch-main .rw .ttl .gut{position:relative;width:0;flex:none;height:1px}
+.tbl.sch-main .rw .ttl .gut .sch-ms{position:absolute;right:7px;top:-3.5px}
+.tbl.sch-main .rw .due{gap:12px;font-size:14px;color:#3d3d3d}
+.tbl.sch-main .rw .due .sch-dd{width:64px;flex:none;font-size:13.5px}
+.tbl.sch-main .rw .who{overflow:hidden}
+.tbl.sch-main .rw .who .sch-role{font-size:12.5px;font-weight:400;color:#a9a9a9}
+.tbl.sch-main .rw .stt{font-size:14px}
+
+.sch-p{font-size:14px;line-height:23px;color:var(--t2);margin-bottom:22px;max-width:780px}
+.sch-p b{color:#000}
+.sch-path{display:flex;flex-direction:column;gap:6px;max-width:800px}
+.sch-path .st{display:grid;grid-template-columns:54px minmax(0,1fr) 150px 150px;align-items:center;height:34px;padding:0 10px;border:1px solid #e3e3e3;border-radius:4px;cursor:pointer;font-size:13.5px;color:#3d3d3d}
+.sch-path .st:hover{border-color:#1c1c1c}
+.sch-path .st b{font-weight:700;color:#1c1c1c}
+.sch-path .st span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-path .st em{font-style:normal;font-variant-numeric:tabular-nums;color:#4f4f4f;text-align:right}
+.sch-path .st small{font-size:11.5px;color:#8e8e8e;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sg-bar.drag,.sg-msb.drag{border-color:var(--g);box-shadow:0 2px 8px rgba(0,0,0,.16);z-index:5;transition:none}
+.sg-tip{position:fixed;z-index:400;background:#0f0f0f;color:#fff;font-size:12px;font-weight:500;padding:4px 8px;border-radius:4px;pointer-events:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sch-pv{height:22px;padding:0 9px;border-radius:11px;background:#fff4e8;color:#c25e00;font-size:11.5px;font-weight:600;margin-right:14px;white-space:nowrap;flex:none}
+.sch-pv:hover{background:#ffe9d1}
+/* ----- 라이브러리 of the lower section ----- */
+.sch-lib{margin-bottom:26px;max-width:800px}
+.sch-lib h4{font-size:13px;font-weight:600;color:#000;margin-bottom:8px;display:flex;align-items:baseline;gap:7px}
+.sch-lib h4 small{font-size:11px;font-weight:500;color:#a9a9a9}
+.sch-lib .lr{display:grid;grid-template-columns:52px minmax(0,1fr) 150px;align-items:center;height:32px;border-bottom:1px solid #f1f1f1;font-size:13.5px;color:#3d3d3d;cursor:pointer;padding:0 4px;border-radius:3px}
+.sch-lib .lr:hover{background:#f7f7f7}
+.sch-lib .lr b{font-weight:500;color:#8e8e8e;font-variant-numeric:tabular-nums}
+.sch-lib .lr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-lib .lr em{font-style:normal;font-size:12px;color:#8e8e8e;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-lib .lr.none{color:#c4c4c4;cursor:default;display:flex}
+.sch-title .sch-evadd{display:inline-flex}
+.sch-title .sch-evadd .plus-btn{margin-left:10.7px}
+
+/* the day window of the calendar (owner's picture, 2026-11-19): 505 wide, white, hairline, rows 48 apart */
+.sch-daypop{position:fixed;z-index:9000;width:505px;padding:44px 0 53px;background:#fff;border:1px solid #c9c9c9;border-radius:9px;box-shadow:0 6px 24px rgba(0,0,0,.10);transform-origin:0 0;font-family:inherit;animation:schDayPop .12s ease-out}
+@keyframes schDayPop{from{opacity:0;margin-top:-3px}to{opacity:1;margin-top:0}}
+.sch-daypop .dp-in{max-height:384px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d9d9d9 transparent}
+.sch-daypop .dp-in.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+.sch-daypop .dp-more{position:absolute;left:39px;bottom:19px;font-size:11.5px;color:#a9a9a9;letter-spacing:-0.01em}
+.sch-daypop .ra{position:relative;display:flex;align-items:center;height:48px;padding:0 45.5px 0 39px;cursor:pointer}
+.sch-daypop .ra:hover{background:#f6f6f6}
+.sch-daypop .ra .tt{flex:0 1 auto;min-width:0;max-width:212px;font-size:17px;font-weight:600;color:#000;letter-spacing:-0.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-daypop .ra .avstack{flex:none;margin-left:11.5px}
+.sch-daypop .ra .avstack .avatar{width:23px;height:23px}
+.sch-daypop .ra .sch-role{flex:none;max-width:96px;margin-left:11.5px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-daypop .ra .sch-dd{flex:none;width:84px;text-align:center;font-size:14.5px;font-weight:700}
+.sch-daypop .ra .dt{flex:none;width:50px;margin-left:10px;text-align:right;font-size:14.5px;color:#4f4f4f;letter-spacing:-0.045em}
+.sch-daypop .sdot{left:34.5px;top:calc(50% - 10.5px)}.sch-daypop .sdot.g.two{left:28.5px}
+.sch-daypop .dp-none{padding:0 39px;font-size:13.5px;color:#9a9a9a}
+
+/* the window that shows a change of relations before it is saved (schPropose) */
+.dlg.sch-dlg .box{width:880px;max-width:calc(100vw - 40px);max-height:calc(100vh - 60px);overflow-y:auto;padding:30px 34px 24px;background:#fff;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18);text-align:left;font-size:13.5px;color:#3d3d3d}
+.sch-dlg .pp-hd{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.sch-dlg .pp-hd b{font-size:20px;font-weight:700;color:#000;letter-spacing:-0.02em}
+.sch-dlg .pp-hd span{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:#4f4f4f;min-width:0}
+.sch-dlg .pp-hd em{font-style:normal;font-weight:600;color:#1c1c1c;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-dlg .pp-types{display:flex;gap:6px;margin-top:18px}
+.sch-dlg .pp-types button{height:30px;padding:0 12px;border:1px solid #dcdcdc;border-radius:7px;background:#fff;font-size:12.5px;color:#4f4f4f;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.sch-dlg .pp-types button b{font-weight:700;color:#1c1c1c}
+.sch-dlg .pp-types button.on{border-color:#0f0f0f;background:#0f0f0f;color:#fff}.sch-dlg .pp-types button.on b{color:#fff}
+.sch-dlg .pp-sent{margin:14px 0 0;font-size:13.5px;color:#4f4f4f;line-height:20px}
+.sch-dlg .pp-err{margin:18px 0 6px;padding:14px 16px;border-radius:8px;background:#fdf1f1;color:#b80000;font-size:13.5px}
+.sch-dlg .pp-cmp{display:flex;align-items:stretch;gap:12px;margin-top:20px}
+.sch-dlg .pp-cmp > i{display:flex;align-items:center;color:#8e8e8e;font-style:normal}
+.sch-dlg .pp-cmp .bx{flex:1 1 0;min-width:0;border:1px solid #e3e3e3;border-radius:8px;padding:11px 14px 12px;display:flex;flex-direction:column;gap:5px}
+.sch-dlg .pp-cmp .bx span{font-size:11.5px;color:#8e8e8e}
+.sch-dlg .pp-cmp .bx strong{font-size:15px;font-weight:600;color:#1c1c1c;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dlg .pp-cmp .bx.new{border-color:#1f8e00;background:#f4faf2}.sch-dlg .pp-cmp .bx.new strong{color:#1f8e00}
+.sch-dlg .pp-cmp .bx.op{flex:1.25 1 0;margin-left:10px;background:#f7f7f6;border-color:#f7f7f6}
+.sch-dlg .pp-cmp .bx.op em{font-style:normal;font-size:12px;font-weight:600;color:#8e8e8e}
+.sch-dlg .pp-cmp .bx.op.late em{color:#d30000}.sch-dlg .pp-cmp .bx.op.early em{color:#1f8e00}
+.sch-dlg .pp-chart{position:relative;margin:22px 0 0;border-top:1px solid #ededed;border-bottom:1px solid #ededed;max-width:100%;overflow:hidden}
+.sch-dlg .pp-chart .ax .mo{position:absolute;top:4px;font-style:normal;font-size:10px;color:#a9a9a9;border-left:1px solid #ededed;padding-left:4px;height:14px;line-height:12px;white-space:nowrap}
+.sch-dlg .pp-chart .lb{position:absolute;left:0;height:20px;line-height:20px;font-size:12px;color:#474747;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-dlg .pp-chart .lb b{font-weight:600;margin-right:5px}
+.sch-dlg .pp-chart .br{position:absolute;height:14px;border-radius:3.5px;box-sizing:border-box}
+.sch-dlg .pp-chart .br.same{background:#eeeeec;border:1px solid #d6d6d6}
+.sch-dlg .pp-chart .br.was{border:1px dashed #a9a9a9;background:transparent}
+.sch-dlg .pp-chart .br.now{background:#1f8e00;opacity:.9}
+.sch-dlg .pp-chart .ms{position:absolute;width:10px;height:10px;transform:rotate(45deg);box-sizing:border-box;border-radius:1.5px}
+.sch-dlg .pp-chart .ms.same{background:#eeeeec;border:1px solid #c4c4c4}.sch-dlg .pp-chart .ms.was{border:1px dashed #a9a9a9}.sch-dlg .pp-chart .ms.now{background:#1f8e00}
+.sch-dlg .pp-chart .td{position:absolute;width:1px;background:repeating-linear-gradient(to bottom,#1f8e00 0 2px,transparent 2px 5px);opacity:.7}
+.sch-dlg .pp-chart svg{position:absolute;top:0;overflow:visible;pointer-events:none}
+.sch-dlg .pp-chart svg path{fill:none;stroke:#0f0f0f;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}.sch-dlg .pp-chart svg circle{fill:#0f0f0f}
+.sch-dlg .pp-chart .lg{position:absolute;right:4px;top:3px;display:flex;gap:12px;font-size:10.5px;color:#8e8e8e;background:rgba(255,255,255,.9);padding:0 4px}
+.sch-dlg .pp-chart .lg span{display:inline-flex;align-items:center;gap:5px}.sch-dlg .pp-chart .lg .br{position:static;width:16px;height:8px;border-radius:2px}
+.sch-dlg .pp-h{margin-top:20px;font-size:13.5px;font-weight:600;color:#1c1c1c;display:flex;align-items:baseline;gap:8px}
+.sch-dlg .pp-h b{font-weight:700}.sch-dlg .pp-h small{font-size:11.5px;font-weight:400;color:#a9a9a9}
+.sch-dlg .pp-tbl{margin-top:8px;max-height:176px;overflow-y:auto;border-top:1px solid #dcdcdc;scrollbar-width:thin}
+.sch-dlg .pp-tbl .hd,.sch-dlg .pp-tbl .rw{display:grid;grid-template-columns:minmax(0,1fr) 330px 84px;align-items:center;column-gap:12px;padding:0 6px}
+.sch-dlg .pp-tbl .hd{position:sticky;top:0;height:24px;background:#f7f7f6;font-size:11px;color:#6f6f6f}
+.sch-dlg .pp-tbl .rw{min-height:34px;border-bottom:1px solid #f1f1f1;font-size:13px}
+.sch-dlg .pp-tbl .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sch-dlg .pp-tbl .nm b{font-weight:600;margin-right:6px}
+.sch-dlg .pp-tbl .rg{display:flex;gap:10px;align-items:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-dlg .pp-tbl .rg s{color:#a9a9a9;text-decoration:none}.sch-dlg .pp-tbl .rg strong{font-weight:600;color:#1c1c1c}.sch-dlg .pp-tbl .rg s::after{content:"→";margin-left:10px;color:#c4c4c4}
+.sch-dlg .pp-tbl .dl{text-align:right;font-weight:600;color:#8e8e8e}.sch-dlg .pp-tbl .dl.late{color:#d30000}.sch-dlg .pp-tbl .dl.early{color:#1f8e00}
+.sch-dlg .pp-none{margin-top:8px;font-size:12.5px;color:#8e8e8e}
+.sch-dlg .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+.sch-dlg .bt button{height:34px;min-width:76px;padding:0 16px;border-radius:8px;border:1px solid #dcdcdc;background:#fff;font-size:13.5px;color:#3d3d3d;cursor:pointer}
+.sch-dlg .bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-dlg .bt button.pri:disabled{background:#c4c4c4;border-color:#c4c4c4;cursor:default}
+.sn-node.target{border-color:#1f8e00;box-shadow:0 0 0 1.5px rgba(31,142,0,.35)}
+.sn-node.linking{border-color:#474747}
+.sn-links .draft{stroke:#1f8e00;stroke-width:1.4;stroke-dasharray:4 4;fill:none}
+
+/* partner list (preview): the site's logo in the box before the name; without a site, or when the logo cannot be had, the first letter */
+.sch-on .tbl.partners .rw .nm .lg.mono{position:relative;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;color:#8e8e8e;overflow:hidden}
+.sch-on .tbl.partners .rw .nm .lg.mono img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+/* deleting a project: at the right end of the row of 수정 */
+.phead .pdel{position:absolute;right:0;top:86px;width:27.9px;height:27.9px;background:transparent;border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.phead .pdel:hover{background:#eee}
+.phead .pdel .pict{width:14px;height:14px}
+
+/* what is filtered, beside a section's title (each with an x) */
+.sch-chips{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-left:2px}
+.sch-chips .sch-chip{color:#4f4f4f;white-space:nowrap}
+.sch-chips:empty{display:none}
+/* a status never leaves its cell */
+.tbl .rw .sch-st{max-width:100%;overflow:hidden}
+.tbl .rw > div:has(> .sch-st){min-width:0;overflow:hidden}
+
+/* ===== sixth round (owner, 2026-11-20) ===== */
+/* sidebar: the logo does not travel with the sidebar (one logo, above it, always in place); no grey behind the button below it */
+.sch-on .tb-logo{display:block}
+.sch-on .sb .logo{visibility:hidden}
+.sch-on #sb-open,.sch-on #sb-collapse{background:transparent}
+.sch-on #sb-open:hover,.sch-on #sb-collapse:hover{background:#eee}
+/* recent items as a tree: project, kind (folds), item */
+.sch-on .sb .recent .item{height:22px}
+.sch-on .sb .recent .r0{color:#3d3d3d;font-weight:600;margin-top:5px}
+.sch-on .sb .recent .r0:first-child{margin-top:0}
+.sch-on .sb .recent .r0:not([data-go]){cursor:default}
+.sch-on .sb .recent .r0:not([data-go]):hover{background:none}
+.sch-on .sb .recent .r1,.sch-on .sb .recent .r3{color:#8e8e8e;font-weight:500}
+.sch-on .sb .recent .r3{color:#4a4a4a}
+.sch-on .sb .recent .r1 svg,.sch-on .sb .recent .r3 svg{position:absolute;top:50%;transform:translateY(-50%)}
+.sch-on .sb .recent .r1 svg{left:7.4px}
+.sch-on .sb .recent .r3 svg{left:9.6px}
+.sch-on .sb .recent .rn{margin-left:auto;padding:0 9px 0 6px;font-size:10.5px;font-weight:400;color:#b5b5b5;flex:none}
+.sch-on .sb .recent .r2{padding-right:8px}
+/* the trash pictogram of a content panel, half as large again */
+.sch-on .ihead .trash{width:36px;height:36px;top:-6px;right:-4px;border-radius:4px}
+.sch-on .ihead .trash .pict{width:24px;height:24px;color:#6f6f6f}
+.sch-on .ihead .trash:hover .pict{color:#0f0f0f}
+/* notices: + while open, a title per row, the text below the row that was opened, a green mark on new ones */
+.sch-on .notice .nplus{display:none;position:absolute;right:9px;top:6px;width:20px;height:20px;border-radius:4px;align-items:center;justify-content:center}
+.sch-on .notice.open .nplus{display:flex}
+.sch-on .notice .nplus:hover{background:#e6e6e6}
+.sch-on .notice .lb{display:flex;align-items:center;gap:4px}
+.sch-on .notice .nb{width:6px;height:6px;border-radius:50%;background:#1acc00;display:inline-block;flex:none;margin:0 5px 1px 0}
+.sch-on .notice .lb .nb{margin:0 0 0 1px}
+.sch-on .notice .list{padding:2px 12px 10px 16px;max-height:420px;overflow-y:auto;scrollbar-width:thin}
+.sch-on .notice .list li.nrow{align-items:center;gap:14px;height:28px;padding:0 6px 0 13.6px;border-radius:4px;cursor:pointer}
+.sch-on .notice .list li.nrow:hover,.sch-on .notice .list li.nrow.on{background:#efeeec}
+.sch-on .notice .list li.nrow .nt{font-weight:600;color:#3d3d3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-on .notice .list li.nrow .by{flex:none;color:#a6a6a6;font-size:11px}
+.sch-on .notice .list li.nrow .ndel{margin-top:0}
+.sch-on .notice .list li.nbody{display:block;margin:2px 0 8px;padding:10px 14px 12px 91px;font-size:12.5px;line-height:20px;color:#3d3d3d;white-space:pre-wrap;word-break:break-word}
+.sch-on .notice .list li.nbody .none,.sch-on .notice .list li.nnone{color:#a6a6a6}
+.sch-on .notice .list li.nnone{padding:4px 13.6px}
+.sch-on .notice .list li.nform{display:block;margin:2px 0 10px;padding:12px 14px;background:#fff;border:1px solid #e6e6e6;border-radius:6px}
+.sch-on .notice .nform input,.sch-on .notice .nform textarea{display:block;width:100%;border:0;border-bottom:1px solid #e6e6e6;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink);padding:5px 0;resize:vertical}
+.sch-on .notice .nform input{font-weight:600}
+.sch-on .notice .nform textarea{margin-top:6px;line-height:20px;min-height:64px}
+.sch-on .notice .nform input:focus,.sch-on .notice .nform textarea:focus{border-bottom-color:#8e8e8e}
+.sch-on .notice .nform .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.sch-on .notice .nform .bt button{height:26px;padding:0 12px;border-radius:4px;border:1px solid #d9d9d9;font-size:12px;background:#fff}
+.sch-on .notice .nform .bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff}
+/* footer */
+.pfoot{position:relative;margin-top:120px;padding:0 0 46px;font-size:12.5px;color:#6f6f6f;letter-spacing:-0.01em}
+.pfoot .fline{border-top:1px solid #e2e2e2}
+.pfoot .fgrid{display:grid;grid-template-columns:minmax(260px,1.7fr) repeat(4,minmax(120px,1fr));column-gap:36px;padding:38px 2px 34px}
+.pfoot .flogo{font-size:15px;font-weight:700;color:var(--orange);cursor:pointer;display:inline-block}
+.pfoot .fb p{margin-top:9px;line-height:19px;color:#4f4f4f}
+.pfoot .fb p.mut,.pfoot .mut{color:#a6a6a6}
+.pfoot .fc{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+.pfoot .fc b{font-size:11px;font-weight:600;color:#a6a6a6;margin-bottom:3px}
+.pfoot .fc a{cursor:pointer;color:#4f4f4f;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:3px}
+.pfoot .fc a:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fend{display:flex;align-items:center;gap:18px;padding:16px 2px 0;border-top:1px solid #f0f0f0;font-size:11.5px;color:#8e8e8e}
+.pfoot .fend .sp{flex:1}
+.pfoot .ftop{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:4px;font-size:11.5px;color:#4f4f4f}
+.pfoot .ftop:hover{background:#f0f0f0}
+
+/* --- lists: search box, tags of what is filtered, the main page's action table, research pickers --- */
+.sch-on .sec-title .srch.box{height:38px;margin-top:1px;margin-left:auto;padding:0 14px;border:0;border-radius:6px;background:#f6f6f6;gap:10px}
+.sch-on .sec-title .srch.box input{width:170px;font-size:14px}
+.sch-on .sec-title .srch.box:focus-within{background:#f0f0f0}
+.sch-chipwrap{position:relative;height:0;display:flow-root}
+.sch-chiprow{position:absolute;left:13px;top:17px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;max-width:calc(100% - 26px)}
+.sch-chiprow:empty{display:none}
+.sch-chip{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 7px 0 8px;border-radius:4px;background:#f1f1f0;color:#5c5c5c;font-size:11px;font-weight:500;letter-spacing:-0.01em;white-space:nowrap;transition:background .12s,color .12s}
+.sch-chip i{font-style:normal;font-size:9px;color:#9a9a9a}
+.sch-chip:hover{background:#d9d9d9;color:#0f0f0f}
+.sch-chip:hover i{color:#3d3d3d}
+#sec-partners .sch-chiprow{left:2px;top:6px}
+.tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:106px 78px calc(330px + var(--d)) 216px 82px 126px 204px 82px 1fr}
+.tbl.sch-list.sch-all .rw .pj{padding-left:6px;overflow:hidden}
+.tbl.sch-list.sch-all .rw .nm .tx{position:relative}
+.tbl.sch-list.sch-all .rw .nm .tx .sdot{left:-7px;top:-1px}.tbl.sch-list.sch-all .rw .nm .tx .sdot.g.two{left:-13px}
+.sch-filters.sch-all .right .tbl-tools{position:static;margin:0}
+.sch-filters.res{margin-left:2px}
+.sch-filters .sf[data-rpick],.sch-filters .sf[data-mpick]{min-width:104px}
+/* partner list: smaller logo, the meeting tag 2 lower, a grey ground under what can be clicked in a row */
+.sch-on .tbl.partners .rw .nm .lg.mono{width:18.6px;height:18.6px;margin:0 4px;font-size:9.5px}
+.sch-on .tbl.partners .rw .mt .chip{position:relative;top:2px}
+.sch-on .tbl.partners .rw .hp a,.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .mt .chip{border-radius:4px;transition:background .12s,box-shadow .12s}
+.sch-on .tbl.partners .rw .hp a:hover,.sch-on .tbl.partners .rw .cat a:hover{background:#e9e9e9;box-shadow:0 0 0 5px #e9e9e9}
+.sch-on .tbl.partners .rw .mt .chip:hover{box-shadow:0 0 0 4px #e9e9e9}
+/* project cards: the operation date first; half a point larger */
+.sch-on .pcard .info{font-size:12.5px;line-height:21px}
+.sch-on .pcard .info .ops{color:#1c1c1c}
+.sch-on .pcard .info .ops em{font-style:normal;font-size:11px;margin-left:6px;color:#8e8e8e}
+.sch-on .pcard .info .ops em.late{color:#e02020}.sch-on .pcard .info .ops em.early{color:#1f8e00}
+.sch-on .pcard .info .nil{color:#b5b5b5}
+/* the window that makes a project */
+.dlg.sch-np .box{width:520px;max-width:calc(100vw - 40px);padding:30px 34px 24px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.sch-np .np-hd b{display:block;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#000}
+.sch-np .np-hd span{display:block;margin-top:6px;font-size:12.5px;color:#8e8e8e;line-height:18px}
+.sch-np .np-f{display:grid;grid-template-columns:84px 1fr;column-gap:14px;row-gap:16px;align-items:start;margin-top:26px;font-size:13.5px}
+.sch-np .np-f label{font-weight:600;color:#1c1c1c;line-height:30px;white-space:nowrap}
+.sch-np .np-f label em{font-style:normal;font-size:10px;font-weight:500;color:#e02020;margin-left:3px}
+.sch-np .np-f input{width:100%;height:30px;border:0;border-bottom:1px solid #a7a7a7;outline:none;background:transparent;font-size:14px;color:#0f0f0f;padding:0 2px}
+.sch-np .np-f input:focus{border-bottom-color:#0f0f0f}
+.sch-np .np-f input::placeholder{color:#b9b9b9}
+.sch-np .np-f .err{display:block;font-size:11.5px;color:#e02020;line-height:16px;margin-top:3px}
+.sch-np .np-f .err:empty{display:none}
+.sch-np .np-st{display:flex;flex-wrap:wrap;gap:6px;padding-top:3px}
+.sch-np .np-st button{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;border:1px solid #e0e0e0;background:#fff;font-size:12px;color:#4f4f4f}
+.sch-np .np-st button i{width:6px;height:6px;border-radius:50%;display:block}
+.sch-np .np-st button.on{border-color:#0f0f0f;color:#0f0f0f;font-weight:600;box-shadow:inset 0 0 0 .5px #0f0f0f}
+.sch-np .np-bt{display:flex;justify-content:flex-end;gap:8px;margin-top:30px}
+.sch-np .np-bt button{height:32px;padding:0 16px;border-radius:6px;border:1px solid #d9d9d9;background:#fff;font-size:13px;color:#1c1c1c}
+.sch-np .np-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-np .np-bt button:hover{filter:brightness(.96)}
+/* --- the list beside the calendar --- */
+.rlist.sch{display:flex;flex-direction:column;overflow:visible;max-height:none;padding-top:0;padding-bottom:0}
+.rlist.sch .rdate{position:absolute;right:16px;bottom:calc(100% + 9px);font-size:12.5px;font-weight:400;color:#a9a9a9;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.rlist.sch .rdate .sh-btn{height:20px;padding:0 8px;font-size:11px;font-weight:500;color:#4f4f4f;border-radius:6px}
+.rlist.sch .rline{flex:none;margin:0}
+.rlist.sch .rline.bt{margin:0}
+.rlist.sch .rscroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.rlist.sch .rscroll::-webkit-scrollbar{display:none}
+.rlist.sch .rscroll.cut{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rlist.sch.cut{-webkit-mask-image:none;mask-image:none}
+.rlist.sch .rtail{height:14px}
+/* captions: a pictogram in the same place for both, the word, the count in a small speech bubble; they stay in sight while their list scrolls */
+.rlist.sch .rcap{position:sticky;top:0;z-index:3;background:#fff;margin:0 -16px;padding:20px 17px 18px;gap:0}
+.rlist.sch .rcap .ic{width:13px;height:13px;flex:none;display:flex;margin-right:8px}
+.rlist.sch .rcap.act .lb,.rlist.sch .rcap.act .n{position:relative;left:-2px;top:-1px}
+.rlist.sch .rcap .n{margin-left:9px;min-width:22px;height:18px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;line-height:1;border:1px solid #cfcfcf;border-radius:5px;background:#fff;font-size:11px;font-weight:600;color:#3d3d3d;font-variant-numeric:tabular-nums}
+.rlist.sch .rcap .n::before,.rlist.sch .rcap .n::after{content:"";position:absolute;left:-4.2px;top:50%;width:6px;height:6px;margin-top:-3px;background:#fff;border-left:1px solid #cfcfcf;border-bottom:1px solid #cfcfcf;transform:rotate(45deg);border-radius:0 0 0 1.5px}
+.rlist.sch .rcap .n::after{display:none}
+.rlist.sch .rsep{margin:14px 0 0}
+.rlist.sch .rnone{margin-bottom:6px}
+/* the + of the lower section, above the open tab */
+.sch-title .sch-tabs.lead{position:relative}
+.sch-title .sch-evadd.up{position:absolute;top:-31px;left:0;transform:translateX(-50%);transition:left .18s ease}
+.sch-title .sch-evadd.up .plus-btn{margin-left:0}
+/* meetings: what the edge of the row cuts fades to white */
+.sch-on .meet .fade{position:absolute;top:57.4px;height:296px;width:150px;pointer-events:none;z-index:1;transition:opacity .2s}
+.sch-on .meet .fade.r{left:calc(1338.1px + var(--d) - 150px);background:linear-gradient(to right,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet .fade.l{left:1.1px;background:linear-gradient(to left,rgba(255,255,255,0),#fff 92%)}
+.sch-on .meet.at-end .fade.r,.sch-on .meet.at-start .fade.l{opacity:0}
+/* 사업개요: the three columns share the width the folded sidebar frees; a linked partner carries its small logo */
+.sch-on .phead .col1{width:calc(337.7px + var(--d) * .2)}
+.sch-on .phead .col2{width:calc(388px + var(--d) * .22)}
+.sch-on .phead .col3{width:calc(612px + var(--d) * .58)}
+.sch-on .phead .lk i.plogo{position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;font-style:normal;font-size:9px;font-weight:600;color:#8e8e8e;background:#eee;border-radius:2px}
+.sch-on .phead .lk i.plogo img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.sch-on .phead .at-hint{display:block;margin-top:6px;font-size:11px;color:#a6a6a6}
+.pop.sch-at{min-width:240px;max-width:340px}
+.pop.sch-at .it{display:flex;align-items:center;gap:8px}
+.pop.sch-at .it i{width:16px;height:16px;flex:none;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;font-style:normal;font-size:9px;color:#8e8e8e;background:#eee;border-radius:2px}
+.pop.sch-at .it i img.logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.pop.sch-at .it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop.sch-at .it .m{font-size:11px;color:#a6a6a6;flex:none}
+.pop.sch-at .it.sel{background:#f0f0f0}
+
+/* ===== seventh round (owner, 2026-11-20) ===== */
+/* calendar: the count of actions carries the project's colour (pale on other days, full today) */
+.cal.pv .cell .acnt svg{color:var(--pc,#4f4f4f);opacity:.3}
+.cal.pv .cell.today .acnt svg{color:var(--pc,#4f4f4f);opacity:1}
+/* the list beside the calendar and the day window: a soft upper edge once scrolled */
+.rlist.sch .rcap::after{content:"";position:absolute;left:0;right:0;top:100%;height:20px;background:linear-gradient(to bottom,#fff,rgba(255,255,255,0));pointer-events:none;opacity:0;transition:opacity .15s}
+.rlist.sch .rcap.stuck::after{opacity:1}
+.sch-daypop .dp-in.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px);mask-image:linear-gradient(to bottom,transparent,#000 22px)}
+.sch-daypop .dp-in.cut.cut-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+/* sidebar: only what is open is dark */
+.sch-on .sb .recent .r0{color:#8e8e8e}
+.sch-on .sb .recent .r3{color:#8e8e8e}
+.sch-on .sb .recent .item.on,.sch-on .sb .recent .r0.on{color:#2b2b2b}
+/* the way to the open page: only its last part at full strength */
+.sch-on #crumbs > :not(:last-child){opacity:.5}
+.sch-on #crumbs > [data-go]:not(:last-child):hover{opacity:.85}
+/* footer */
+.pfoot{margin-top:240px}
+.pfoot .fline{position:relative;left:calc(-1 * var(--L));width:calc(100% + var(--L) * 2)}
+.pfoot .flogo{color:#0f0f0f}
+.pfoot .fout{display:flex;align-items:center;gap:14px;margin-top:16px}
+.pfoot .fout .fx{font-size:12.5px;color:#4f4f4f;cursor:pointer}
+.pfoot .fout .fx:hover{color:#0f0f0f;text-decoration:underline;text-underline-offset:2px}
+.pfoot .fout .fsns{display:inline-flex;align-items:center;gap:8px;margin-left:6px}
+.pfoot .fout .fx.ic{width:20px;height:20px;display:inline-flex;color:#9a9a9a}
+.pfoot .fout .fx.ic svg{width:20px;height:20px;display:block}
+.pfoot .fout .fx.ic:hover{color:#4f4f4f;text-decoration:none}
+.pfoot .fout .fx.off{opacity:.45}
+/* research cards share the width: never narrower than 210.3, as many in a row as fit */
+.sch-on .rgrid{grid-template-columns:repeat(auto-fill,minmax(210.3px,1fr))}
+/* tags of filters: the word 1 lower; on a project page in the project's colour, like a picker that is set */
+.sch-chip{padding-top:2px}
+#page-project .sch-chip{color:var(--pjc,#5c5c5c)}
+#page-project .sch-chip i{color:var(--pjc,#9a9a9a);opacity:.6}
+#page-project .sch-chip:hover{color:var(--pjc,#0f0f0f)}
+#page-project .sch-filters .sf.set span{color:var(--pjc,#000)}
+
+/* --- seventh round, project page --- */
+/* the + of the lower section a little higher */
+.sch-title .sch-evadd.up{top:-40px}
+/* gantt: scroll bar below; nothing of a phase row is cut at the left; the shade of the table's edge darkens what is under it (it used to lighten dark bars) */
+.sg-topbar{border-bottom:0;border-top:1px solid #f1f1f1}
+.sg-row.ph .tw{margin:0 5.6px 0 .5px;width:10px;overflow:visible}
+.sg-left::after{background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,0));mix-blend-mode:multiply}
+/* the % tags: one closed shape, its tip on the chart's edge, its middle on the dashed line */
+.sg-tags b{left:-41px;margin-top:-7.5px;height:15px;width:40px;padding:0;border:0;background:none;border-radius:0;line-height:15px}
+.sg-tags b::after{display:none}
+.sg-tags b svg{position:absolute;left:0;top:0;display:block}
+.sg-tags b span{position:absolute;left:0;top:0;width:31px;text-align:center;font-size:9px;font-weight:500;color:#8e8e8e;line-height:15px}
+/* a bar's ends: pulled to change the start or the finish */
+.sg-bar .rz{position:absolute;top:-1px;bottom:-1px;width:7px;cursor:ew-resize;z-index:3}
+.sg-bar .rz.l{left:-1px}.sg-bar .rz.r{right:-1px}
+.sg-bar .rz::after{content:"";position:absolute;top:5px;bottom:5px;width:2px;border-radius:1px;background:#8e8e8e;opacity:0;transition:opacity .12s}
+.sg-bar .rz.l::after{left:2px}.sg-bar .rz.r::after{right:2px}
+.sg-bar:hover .rz::after{opacity:.55}
+.sg-bar .rz:hover::after{opacity:1;background:#1f8e00}
+.sg-bar{cursor:grab}
+.sg-bar.drag{cursor:grabbing;background:#eef6ec;border-color:#1f8e00;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+/* where a bar stood: a dashed outline (while it is pulled, and for a moment after a change) */
+.sg-ghost{position:absolute;height:22px;border:1px dashed #9a9a9a;border-radius:4.5px;background:rgba(0,0,0,.025);z-index:1;pointer-events:none;transition:opacity .6s}
+.sg-ghost.ms{width:14px;height:14px;border-radius:2px;transform:rotate(45deg)}
+.sg-ghost.out{opacity:0}
+/* the dates above the ends of a bar that is pulled */
+.sg-dlab{position:absolute;z-index:6;height:15px;padding:0 5px;border-radius:3px;background:#fff;border:1px solid #d9d9d9;font-style:normal;font-size:10.5px;line-height:13px;color:#6f6f6f;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+.sg-dlab.l{transform:translateX(-100%)}.sg-dlab.c{transform:translateX(-50%)}
+.sg-dlab.on{background:#1f8e00;border-color:#1f8e00;color:#fff;font-weight:600}
+.sg-tip b{margin-right:7px;color:#9be58b;font-weight:700}
+/* bars that moved */
+@keyframes sgChg{0%,60%{box-shadow:0 0 0 2px rgba(31,142,0,.55)}100%{box-shadow:0 0 0 2px rgba(31,142,0,0)}}
+.sg-bar.chg,.sg-msb.chg{animation:sgChg 3.4s ease-out}
+/* pulling a relation: the line as it will be drawn, the end of the target that is meant */
+.sg-links .draft{stroke:#1f8e00;stroke-width:1.5;stroke-dasharray:4 3;fill:none}
+.sg-links .draft.head{stroke-dasharray:none}
+.sg-scroll.linking .sg-bar .pt{display:block;opacity:.5}
+.sg-bar.target.ts{box-shadow:-3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+.sg-bar.target.tf{box-shadow:3px 0 0 0 #1f8e00,0 0 0 1.5px rgba(31,142,0,.35)}
+/* the card that says what a change did */
+@keyframes schCardIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.sch-card{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:350;width:520px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #d9d9d9;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.18);padding:14px 16px 12px;font-size:13px;color:#1c1c1c;letter-spacing:-0.012em;animation:schCardIn .18s ease-out}
+.sch-card .c-hd{display:flex;align-items:center;gap:8px}
+.sch-card .c-hd b{flex:1;font-size:14px;font-weight:700}
+.sch-card .c-x{width:22px;height:22px;border-radius:4px;font-size:16px;line-height:20px;color:#8e8e8e}
+.sch-card .c-x:hover{background:#f0f0f0;color:#0f0f0f}
+.sch-card .c-ln{display:flex;align-items:center;gap:10px;min-height:26px}
+.sch-card .c-ln.c-first{margin-top:8px;padding:8px 10px;border-radius:6px;background:#f7f7f6}
+.sch-card .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-card .nm b{font-weight:600;margin-right:5px}
+.sch-card .rg{flex:none;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:12.5px}
+.sch-card .rg s{color:#a6a6a6;text-decoration:line-through}
+.sch-card .rg strong{font-weight:600}
+.sch-card .rg svg{color:#a6a6a6}
+.sch-card .mut{color:#8e8e8e}
+.sch-card .c-note{margin-top:6px;font-size:12px;color:#b76b00}
+.sch-card .c-facts{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:#6f6f6f}
+.sch-card .c-facts b{color:#1c1c1c;font-weight:600}
+.sch-card .c-facts .late,.sch-card .c-facts .late b,.sch-card em.late{color:#e02020}
+.sch-card .c-facts .early,.sch-card .c-facts .early b,.sch-card em.early{color:#1f8e00}
+.sch-card .c-more{margin-top:8px;max-height:176px;overflow-y:auto;border-top:1px solid #ededed;padding-top:4px;scrollbar-width:thin}
+.sch-card .c-more em{flex:none;width:44px;text-align:right;font-style:normal;font-size:12px;font-variant-numeric:tabular-nums}
+.sch-card .c-bt{display:flex;align-items:center;gap:8px;margin-top:12px}
+.sch-card .c-bt .sp{flex:1}
+.sch-card .c-bt button{height:28px;padding:0 12px;border-radius:5px;border:1px solid #d9d9d9;background:#fff;font-size:12.5px;color:#1c1c1c}
+.sch-card .c-bt button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600}
+.sch-card .c-bt button:hover{filter:brightness(.96)}
+/* the relation window: the kinds as small pictures, the outcome in one line */
+.dlg.sch-dlg .pp-types button{display:inline-flex;align-items:center;gap:7px}
+.dlg.sch-dlg .pp-types button .rg{flex:none;color:#6f6f6f}
+.dlg.sch-dlg .pp-types button.on .rg{color:#fff}
+.dlg.sch-dlg .pp-sum{display:flex;align-items:center;flex-wrap:wrap;gap:0 2px;margin:0 0 14px;padding:10px 14px;border-radius:7px;background:#f4f4f3;font-size:14px;color:#3d3d3d}
+.dlg.sch-dlg .pp-sum b{font-weight:700;margin:0 3px}
+.dlg.sch-dlg .pp-sum i{width:1px;height:12px;background:#cfcfcf;margin:0 12px}
+.dlg.sch-dlg .pp-sum.late{background:#fdf1f0;color:#b3261e}
+.dlg.sch-dlg .pp-sum.early{background:#eef6ec;color:#1a6e05}
+/* relation map: the ground is pulled, the wheel changes the size, a relation is pulled from the circle at a card's right edge */
+.sch-net .sn-scroll{cursor:grab;scrollbar-width:none}
+.sch-net .sn-scroll::-webkit-scrollbar{display:none}
+.sch-net.pan .sn-scroll,.sch-net.pan .sn-node{cursor:grabbing}
+.sn-node .sn-port{position:absolute;right:-7px;top:17px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #474747;cursor:crosshair;opacity:0;transition:opacity .12s;z-index:3}
+.sn-node:hover .sn-port,.sn-node.linking .sn-port{opacity:1}
+.sn-node .sn-port:hover{background:#1f8e00;border-color:#1f8e00}
+/* gates that are not approved yet: everything but the state is paler */
+.sch-gates .gt.wait .date,.sch-gates .gt.wait .cat,.sch-gates .gt.wait .chip,.sch-gates .gt.wait dl{opacity:.5}
+.sch-gates .gt.wait:hover .date,.sch-gates .gt.wait:hover .cat,.sch-gates .gt.wait:hover .chip,.sch-gates .gt.wait:hover dl,.sch-gates .gt.wait.sel .date,.sch-gates .gt.wait.sel .cat,.sch-gates .gt.wait.sel dl{opacity:.8}
+.dlg.sch-dlg .pp-types{flex-wrap:wrap}
+.dlg.sch-dlg .pp-types button{white-space:nowrap}
+/* the circles a relation is pulled from stand clear of the bar's ends (which are pulled to change its dates) */
+.sg-bar .pt.l{left:-13px}.sg-bar .pt.r{right:-13px}
+.sg-bar .pt::before{content:"";position:absolute;inset:-5px -5px -5px -3px}
+.sg-bar .pt.l::before{inset:-5px -3px -5px -5px}
+.sg-bar .pt:hover{background:#1f8e00;border-color:#1f8e00}
+/* ================= eighth round (owner, 2026-11-20) ================= */
+/* --- research cards: the tag on its own line, the title never more than two lines --- */
+.sch-on .rcard .tt.two{white-space:normal}
+.rcard .tt.two .tg{display:block}
+.rcard .tt.two .t2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+
+/* --- "n개씩 보기" where it stands alone: at the left, in the pickers' look --- */
+.sch-filters .sf.per{min-width:104px}
+.sch-filters.sch-all{margin-left:2px}
+
+/* --- the edge of the content panel: a stronger shade, darkening what is under it instead of painting over it --- */
+.sch-on #app::after{width:26px;border-left:0;border-right:1px solid rgba(150,150,150,.55);box-shadow:none;background:linear-gradient(to left,rgba(0,0,0,.13),rgba(0,0,0,.05) 38%,rgba(0,0,0,0));mix-blend-mode:multiply}
+
+/* --- calendar: the words of an entry half a point lower --- */
+.sch-on .cal .ev .lb{position:relative;top:.67px}
+/* counts of days other than today are grey; today's and the captions of the list beside it take the project's colour */
+.cal.pv .cell:not(.today) .acnt svg{color:#cfcfcf;opacity:1}
+.rlist.sch.pv .rcap svg{color:var(--pc,#3d3d3d)}
+.rlist.sch.pv .rcap .n{color:var(--pc,#3d3d3d)}
+/* the list of today's actions: a diamond for a milestone, a smaller title, a face (an empty one when nobody is assigned) */
+.rlist.sch .ra .tt{font-size:15.7px}
+.rlist.sch .ra .sch-ms,.sch-daypop .ra .sch-ms{margin:0 -3px 0 1px}
+.rlist.sch .ra .avstack .avatar,.sch-daypop .ra .avstack .avatar{width:21px;height:21px;margin-left:-9px}
+.rlist.sch .ra .avstack .avatar:first-child,.sch-daypop .ra .avstack .avatar:first-child{margin-left:0}
+.avatar.nil{background:#ececec}
+.avatar.nil::before,.avatar.nil::after{background:#f8f8f8}
+.avatar.pic{background-size:cover;background-position:center}
+
+/* --- toasts with the preview: slow to leave, can be closed, may lead somewhere --- */
+.toast.pv{display:flex;align-items:center;padding:9px 8px 9px 16px;transition:opacity 1.1s ease,transform 1.1s ease;max-width:calc(100vw - 32px)}
+.toast.pv.on{pointer-events:auto;transition:opacity .18s ease,transform .18s ease}
+.toast.pv button{flex:none}
+.toast.pv button.go{color:#fff}
+.toast.pv button.tx{margin-left:12px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;color:#9a9a9a;font-size:11px;font-weight:400;text-decoration:none}
+.toast.pv button.tx:hover{background:#3a3a3a;color:#fff}
+
+/* --- + and 라이브러리 beside a section title: one higher --- */
+.sch-on .sec-title .plus-btn,.sch-on .sec-title .lib{translate:0 -1px}
+
+/* --- an address in a list is an arrow; in the panel it keeps to one line until it is edited --- */
+.sch-ua{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:-5px;border-radius:5px;color:#8e8e8e;transition:background .12s,color .12s}
+.sch-ua:hover{background:#e9e9e9;color:#1c1c1c}
+.sch-ua svg{width:10px;height:10px}
+.sch-on .props .pr .v a.url{max-width:calc(100% - 34px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top}
+.sch-on .props .pr .v .url[contenteditable="true"]{white-space:normal;word-break:normal;overflow-wrap:anywhere;max-width:380px}
+
+/* --- sidebar: the logo and the three buttons under it stay; what scrolls ends in a soft edge below them --- */
+.sch-on .sb .top{position:sticky;top:0;z-index:6;background:var(--sb-bg)}
+.sch-on .sb .top::after{content:"";position:absolute;left:0;right:0;top:100%;height:18px;background:linear-gradient(to bottom,var(--sb-bg),rgba(255,255,255,0));pointer-events:none}
+/* name + arrow of a row are one link (underlined as a whole); the square at the right of an agent has a mark of its own */
+.sb .agent .sb-lk{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:calc(100% - 64px);line-height:17px}
+.sb .agent .sb-lk::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;opacity:0;transition:opacity .1s}
+.sb .agent .sb-lk:hover::after,.sb .agent .item[data-go]:hover .sb-lk::after,.sb .agent .item[data-ext]:hover .sb-lk::after{opacity:1}
+.sb .agent .sb-lk .ext,.sb .agent .sb-lk .service-arrow{margin-left:5.7px}
+.sb .agent .sb-lk .service-arrow .ext{margin-left:0}
+.sch-on #sb .agent a[data-service-link]:hover{text-decoration:none}
+.sch-on .sb .agent .item{gap:0}
+.sch-on .sb .agent .item[data-open] .sb-lk{color:inherit}
+.sch-on .sb .agent .cnt{cursor:pointer;border-radius:3px;transition:background .12s}
+.sch-on .sb .agent .cnt:hover{background:#cfcfcf}
+.sch-on .sb .agent .cnt:hover .pict{color:#2b2b2b}
+
+/* --- notices: closed ▶, open ▲, a little larger --- */
+.sch-on .notice .tri{transform:rotate(-90deg) scale(1.4)}
+.sch-on .notice.open .tri{transform:rotate(180deg) scale(1.4)}
+
+/* --- footer without the project and agent columns --- */
+.pfoot .fgrid{grid-template-columns:minmax(300px,1fr) 150px 150px;column-gap:64px}
+
+/* --- gantt: the points relations start from stand above the bars; the chosen task's are larger, its lines a little thicker --- */
+.sg-dots{position:absolute;left:0;top:0;z-index:3;overflow:visible;pointer-events:none}
+.sg-dots circle{fill:#afafaf;stroke:#fff;stroke-width:.7}
+.sg-dots circle.hot{fill:#474747}
+.sg-links g.hot path{stroke-width:1.5}
+.sg-links g:hover path:not(.hit){stroke-width:1.5}
+/* the shade at the table's edge: one strip over dates, rows and the scroll bar */
+.sch-on .sg-left::after{display:none}
+.sg-shade{position:absolute;top:0;bottom:0;width:16px;z-index:8;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.06),rgba(0,0,0,0));mix-blend-mode:multiply}
+
+/* --- meeting cards: smaller pictograms in front of the three lines --- */
+.sch-on .mcard .chk li .bx,.sch-on .rlist .chk li .bx{width:16px;height:16px;margin:2px 8.5px 0 2px}
+.sch-on .mcard .chk li.nil .tx::before,.sch-on .rlist .chk li.nil .tx::before{content:"—";color:#d0d0d0}
+.tbl .rw .url a.sch-ua{border-bottom:0;line-height:1}
+/* the outline of the gantt ends with a row that adds a phase */
+.sg-row.add{display:flex;align-items:center;gap:8px;padding-left:4px;color:#a6a6a6;font-size:12.5px;cursor:pointer;left:0;right:0}
+.sg-row.add:hover{color:#1c1c1c}
+.sg-row.add em{font-style:normal;color:#c4c4c4;margin-left:10px;font-size:12px}
+/* --- the way one came through panels: between the type at the top and the 수정 row, in the type's size and colour --- */
+.itrail{position:absolute;max-width:calc(100% - 60px);top:68.5px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#8e8e8e;white-space:nowrap;overflow:hidden}
+.itrail a{cursor:pointer;max-width:260px;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;border-radius:3px}
+.itrail a:hover{color:#1c1c1c;text-decoration:underline;text-underline-offset:2px}
+.itrail i{font-style:normal;color:#c4c4c4;flex:none}
+.pin:has(>.itrail) .itype{top:47px}
+/* --- a meeting's three lines as fields of its panel --- */
+.props .mt-ln{display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px 7px;min-width:0;max-width:100%}
+.props .pr:has(.mt-ln){height:auto;min-height:42px}
+.props .mt-ln .bx{width:16px;height:16px;flex:none;display:flex}
+.props .mt-ln .bx .pict{width:100%;height:100%}
+.props .mt-ln .mt-v{margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.props .mt-ln .mt-v.nil{color:#c4c4c4}
+.props .mt-ln .mt-v.nil:empty{display:none}
+.pop.mt-time{max-height:300px;overflow-y:auto}
+/* --- an ordinary action in the block of a task --- */
+.sp-links .sl-none.on{position:static;padding:30px 0 34px;color:#8e8e8e;font-size:13px}
+/* --- public holidays: red like a Sunday --- */
+.cal .cell.hol .n{color:var(--red)}
+.cal.pv .cell.sel.hol .n{color:var(--red)!important}
+/* --- gantt: a relation taken hold of; the ground can be pulled --- */
+.sg-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:4 3;stroke-width:1.5}
+.sg-links g.pull.far path:not(.hit){opacity:.5}
+.sg-right{cursor:grab}
+.sg-scroll.pan .sg-right,.sg-scroll.pan .sg-bar,.sg-scroll.pan .sg-msb{cursor:grabbing}
+/* --- relation map: lines can be chosen and pulled off; the card pressed before --- */
+.sn-links path.hit{stroke:transparent!important;stroke-width:12;fill:none;pointer-events:stroke;cursor:pointer}
+.sn-links g:hover path:not(.hit){stroke:#1f8e00}
+.sn-links g:hover circle{fill:#1f8e00}
+.sn-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:6 4}
+.sn-links g.pull.far path:not(.hit){opacity:.5}
+.sn-node.prev{outline:1.5px dashed #9a9a9a;outline-offset:3px}
+.sn-node .sn-prev{position:absolute;right:10px;top:-10px;font-style:normal;font-size:10.5px;font-weight:600;line-height:1;color:#fff;background:#8e8e8e;border-radius:9px;padding:4px 8px}
+/* --- a period of one's own: two months, first day and last day --- */
+.pop.sch-rp{padding:14px 16px 12px;max-width:none}
+.rp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rp-h button{width:26px;height:26px;border-radius:6px;font-size:16px;color:#4f4f4f}
+.rp-h button:hover{background:#f0f0f0}
+.rp-s{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#1c1c1c}
+.rp-s em{font-style:normal;min-width:70px;text-align:center;padding:3px 8px;border-bottom:1px solid #a7a7a7}
+.rp-s em.ph{color:#b5b5b5;font-weight:400}
+.rp-ms{display:flex;gap:24px}
+.rp-t{font-size:12.5px;font-weight:600;color:#4f4f4f;text-align:center;margin-bottom:6px}
+.rp-g{display:grid;grid-template-columns:repeat(7,30px);row-gap:2px}
+.rp-g span{font-size:10.5px;color:#a6a6a6;text-align:center;height:20px}
+.rp-g button{height:28px;font-size:12.5px;color:#2b2b2b;border-radius:0}
+.rp-g button:hover{background:#f0f0f0}
+.rp-g button.in{background:#eef5ec}
+.rp-g button.hv{background:#dfe9dc}
+.rp-g button.a,.rp-g button.b{background:#1c1c1c;color:#fff;border-radius:6px}
+.rp-g button.tdy{font-weight:700}
+.rp-f{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#8e8e8e}
+.rp-f span{flex:1}
+.rp-f button{height:28px;padding:0 12px;border-radius:6px;font-size:12.5px;color:#4f4f4f;border:1px solid #dcdcdc}
+.rp-f button.pri{background:#0f0f0f;border-color:#0f0f0f;color:#fff}
+.rp-f button.pri:disabled{opacity:.35}
+/* --- pickers above the project cards --- */
+.projects .pfil{position:absolute;left:0;top:50px;right:0}
+.projects .pfil .sch-chiprow{min-height:20px}
+.projects .pfil .sch-filters{margin:6px 0 0 2px}
+.sch-on .projects .track{top:120px}
+.sch-on .projects .arr{top:187px}
+.sch-on .projects .fade{top:44px}
+/* --- the export pictogram of a content panel: beside the ⋯ menu, the size and colour of the trash --- */
+.ihead .iexp{flex:none;width:36px;height:36px;margin:-6px 0 0 4px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#6f6f6f;transition:background .12s,color .12s}
+.ihead .iexp:hover{background:#eee;color:#0f0f0f}
+.ihead .iexp svg{width:24px;height:24px}
+/* --- Excel export beside the filters: the look of 라이브러리, in the project's colour --- */
+.sch-filters .sch-xl{height:22.4px;padding:1px 10px 0 8px;border-radius:8px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--pjc,#4f4f4f);border-color:color-mix(in srgb,var(--pjc,#8e8e8e) 38%,#fff);margin-bottom:1px}
+.sch-filters .sch-xl:hover{background:color-mix(in srgb,var(--pjc,#8e8e8e) 9%,#fff)}
+.sch-filters .sch-xl svg{flex:none}
+/* --- a library as a wall of cards (columns of one width, cards of their own height) --- */
+.lib-view.lb{left:56px;right:56px}
+.lb-bar{display:flex;align-items:center;gap:18px;margin:-4px 0 22px}
+.lb-bar .lb-q{display:flex;align-items:center;gap:9px;width:300px;height:36px;padding:0 15px;border-radius:18px;background:#f1f1f0;flex:none;color:#8e8e8e}
+.lb-bar .lb-q input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:13.5px;color:#1c1c1c}
+.lb-kinds{display:flex;gap:6px;flex-wrap:wrap}
+.lb-kinds button{height:28px;padding:0 13px;border-radius:14px;font-size:12.5px;font-weight:500;color:#5c5c5c;background:#f1f1f0;transition:background .12s,color .12s}
+.lb-kinds button:hover{background:#e2e2e1}
+.lb-kinds button.on{background:#1c1c1c;color:#fff}
+.lb-wall{display:flex;align-items:flex-start;gap:16px}
+.lb-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:22px}
+.lb-card{min-width:0}
+.lb-media{position:relative;border-radius:16px;overflow:hidden;background:#efefee;cursor:zoom-in}
+.lb-card:not(.img) .lb-media{cursor:default}
+.lb-card.img .lb-media{min-height:120px}
+.lb-card.img.in .lb-media{min-height:0}
+.lb-media img{display:block;width:100%;height:auto;opacity:0;transition:opacity .25s}
+.lb-card.in .lb-media img{opacity:1}
+.lb-card.bad .lb-media{height:140px}
+.lb-tile{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:18px 18px 16px}
+.lb-tile b{font-size:30px;font-weight:800;letter-spacing:-0.02em;line-height:1}
+.lb-tile span{font-size:12px;font-weight:500;line-height:16px;opacity:.82;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-all}
+.lb-ov{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:12px;background:linear-gradient(to bottom,rgba(0,0,0,.05),rgba(0,0,0,.34));opacity:0;transition:opacity .14s}
+.lb-card:hover .lb-ov,.lb-ov:focus-within{opacity:1}
+.lb-bt{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:16px;background:#fff;color:#1c1c1c;font-size:12.5px;font-weight:600;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.lb-bt:hover{background:#f1f1f0}
+.lb-bt.dl{background:#1c1c1c;color:#fff}
+.lb-bt.dl:hover{background:#000}
+.lb-t{margin:9px 4px 0;font-size:13.5px;font-weight:600;color:#1c1c1c;line-height:18px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-all}
+.lb-s{margin:2px 4px 0;font-size:12px;color:#5c5c5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-m{margin:1px 4px 0;font-size:11.5px;color:#a6a6a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-end{display:block;height:1px}
+.lb-done{padding:34px 0 10px;text-align:center;font-size:12.5px;color:#a6a6a6}
