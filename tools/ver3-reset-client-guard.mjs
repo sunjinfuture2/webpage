@@ -17,34 +17,15 @@ const dstSettings=await settings(target);
 const dstNS=dstSettings.bindings.find(b=>b.name==='WORKSPACE')?.namespace_id;
 if(!dstNS)throw Error('Missing target storage');
 const original=await modules(target);
-let sourceToken,targetToken;
-const dir=path.resolve('.ver3-business-reset'),assets=path.resolve('.ver3-reset-assets');
-await fs.mkdir(dir,{recursive:true});await fs.mkdir(assets,{recursive:true});
-const main=original.find(m=>/javascript/.test(m.type));
-if(!main)throw Error('No module entry');
-const writeModules=async()=>{for(const m of original){const p=path.resolve(dir,m.name);if(!p.startsWith(dir+'/'))throw Error('Unsafe module path');await fs.mkdir(path.dirname(p),{recursive:true});await fs.writeFile(p,m.bytes);}};
-await writeModules();
-async function walk(d){let out=[];for(const e of await fs.readdir(d,{withFileTypes:true})){const p=path.join(d,e.name);out.push(...e.isDirectory()?await walk(p):[p]);}return out;}
-const assetHashes={};
-for(const f of await walk('aidc-workspace-new/public')){const rel=path.relative('aidc-workspace-new/public',f).split(path.sep).join('/');if(rel.startsWith('.')||rel==='_headers'||rel==='_redirects')continue;const r=await fetch(root(target)+'/'+rel);if(!r.ok)throw Error('Missing asset '+rel);const b=Buffer.from(await r.arrayBuffer());if(rel!=='index.html'&&!rel.endsWith('.html')&&/text\/html/.test(r.headers.get('content-type')||''))throw Error('Asset fallback');await fs.mkdir(path.dirname(path.join(assets,rel)),{recursive:true});await fs.writeFile(path.join(assets,rel),b);assetHashes[rel]=hash(b);}
-const scripts=await(await fetch('https://api.cloudflare.com/client/v4/accounts/'+account+'/workers/scripts',{headers:cfHeaders})).json();
-const tag=scripts.result.find(s=>s.id===target)?.migration_tag;if(!tag)throw Error('No migration tag');
-const cfg={name:target,account_id:account,main:main.name,no_bundle:true,compatibility_date:dstSettings.compatibility_date,compatibility_flags:dstSettings.compatibility_flags||[],workers_dev:true,keep_vars:true,assets:{directory:'../.ver3-reset-assets',binding:'ASSETS',not_found_handling:'single-page-application',run_worker_first:['/api/*']},durable_objects:{bindings:[{name:'WORKSPACE',class_name:'Workspace'}]},migrations:[{tag,new_sqlite_classes:['Workspace']}],rules:original.filter(m=>m!==main&&!/javascript/.test(m.type)).map(m=>({type:m.type.includes('text')||m.name.endsWith('.json')?'Text':'Data',globs:[m.name.replace(/^\.\//,'')],fallthrough:false}))};
-const configPath=path.join(dir,'wrangler.json');
-const deploy=()=>execFileSync(path.resolve('aidc-workspace-new/node_modules/.bin/wrangler'),['deploy','--config',configPath],{stdio:'inherit'});
 
-let changed=0;
-const cutoff=Date.parse('2026-11-23T06:20:00Z');
-for(const f of await walk(assets)){
- if(!/\.(html|js)$/.test(f))continue;
- let s=await fs.readFile(f,'utf8');
- const old='let rec;try{rec=JSON.parse(raw);}catch{return;}';
- if(s.includes(old)){s=s.replace(old,old+'if(!rec.at||rec.at<'+cutoff+')return;');changed++;}
- // Remove old category suggestions before applying the current authoritative server state.
- const begin='const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);';
- if(s.includes(begin))s=s.replace(begin,begin+'for(const k of Object.keys(partnerCategoryHistory))delete partnerCategoryHistory[k];for(const k of Object.keys(partnerCategoryHidden))delete partnerCategoryHidden[k];');
- await fs.writeFile(f,s);
-}
-if(!changed)throw Error('Recovery loader not found');
-await fs.writeFile(configPath,JSON.stringify(cfg,null,2));deploy();
-console.log('RESET_CLIENT_VERIFIED '+JSON.stringify({recoveryCutoff:new Date(cutoff).toISOString(),changed,sourceUntouched:true}));
+const main=original.find(m=>/javascript/.test(m.type));
+const s=main.bytes.toString('utf8'),at=s.indexOf('ver3_reset_manifest');
+console.log('MODULES',original.map(m=>({name:m.name,type:m.type,size:m.bytes.length})));
+console.log('CONTEXT',s.slice(at-500,at+160));
+const {spawn}=await import('node:child_process');
+const child=spawn(path.resolve('aidc-workspace-new/node_modules/.bin/wrangler'),['tail',target,'--format','json'],{env:process.env});
+let out='';child.stdout.on('data',b=>out+=b);child.stderr.on('data',b=>out+=b);
+await new Promise(r=>setTimeout(r,6000));
+try{const l=await app(target,'/api/login',null,{employee:'test',name:'test'});const st=await app(target,'/api/state',l.token);console.log('STATE',Object.keys(st.records).length,st.records['meta:flags']);await app(target,'/api/logout',l.token);}catch(e){console.log('APP_ERROR',e.message)}
+await new Promise(r=>setTimeout(r,6000));child.kill();
+console.log('TAIL',out.slice(-16000));
