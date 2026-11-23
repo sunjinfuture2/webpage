@@ -1287,3 +1287,7 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
    the band and made it as thin as the line itself, so exactly the lines one reaches for were the hardest to take hold of. The same
    in the gantt, whose band stays 9. */
 .sg-links path.hit{stroke-width:9px!important;stroke-dasharray:none!important}
+
+/* the text of a calendar entry and of a chip in the partner list's 미팅 column stands 1 lower; its pictogram stays where it is (owner, 2026-11-23) */
+.sch-on .cal .ev .lb{top:1.67px}
+.sch-on .tbl.partners .rw .mt .chip .t{position:relative;top:1px}
