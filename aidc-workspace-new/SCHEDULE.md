@@ -441,3 +441,20 @@ Preview only. tests/schedule-10.cjs covers it.
 - For the gantt (found through a test that failed now and then): the chart and the scroll bar below it follow each other; a
   position one was just given by the other is not handed back (`_echo`). Handing it back a frame later, after the chart had
   been moved on, made the view jump back a step while it was pulled.
+
+## Thirteenth round (owner, 2026-11-23): a change of dates is shown first
+
+"액션일정에서 일자 바꾸면 어떻게 될지 연결 옮기기처럼 보여주고 적용하면 그때 가능하게 해. 상세에서 일정을 바꿔도 마찬가지야."
+
+- schProposeDates(pid, o) in 35-propose.js is the sibling of schPropose: the same window (`.box.pp-dates`), for one task. It tries
+  the change on a copy (validatedPlan + schCalc), says how the task itself moves, how many others move with it and what happens
+  to the operation date, draws the small chart (before dashed, after solid) and lists every task that moves. 취소 changes
+  nothing; 적용 saves through `o.commit` (schEditTask, so the toast carries 되돌리기 and Ctrl+Z works) and leaves the outlines of
+  where the bars stood for a moment (schGhosts).
+- It is opened by: a bar of the gantt moved by its middle or pulled by an end (schBarDrag: the bar is back where it stood until
+  적용), and in a task's panel 시작일 / 완료일 of 예상 기한 and 실제 시작일 / 완료일 (schFieldEdit's `askDates`; the saved change is
+  tagged with the edit as before, so 취소 of the edit takes it back).
+- A change of state or of kind (마일스톤) is not a change of dates: it applies at once and shows the card (schChangeCard), as
+  does moving a task to another phase. The card is no longer shown for dates.
+- This replaces, for dates, the rule "a schedule change applies at once"; relations have been shown first since the fourth round.
+- Tests: schedule-2 (window, 취소, 적용 from the gantt), schedule-7 (pulling an end), schedule-8 (the panel).

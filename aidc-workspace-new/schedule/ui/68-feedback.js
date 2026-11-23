@@ -55,11 +55,12 @@ function schBarDrag(e,bar){ const pid=S.proj, m=schModel(pid), host=$('#sch-gant
     la.textContent=schD(a); la.style.cssText=`left:${ms?L+9.35:L}px;top:${top}px`; la.className='sg-dlab '+(ms?'c':'l')+(mode!=='end'&&days?' on':''); if(lb){ lb.textContent=schD(b); lb.style.cssText=`left:${L+W}px;top:${top}px`; lb.className='sg-dlab r'+(mode!=='start'&&days?' on':''); }
     tip.innerHTML=`<b>${days>0?'+':''}${days}일</b>${mode==='move'?'기간 이동':mode==='start'?'시작일 변경':'종료일 변경'}${ms?'':` · ${D.diffDays(b,a)+1}일간`}`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; SCH.drag=false; for(const n of [tip,ghost,la,lb])if(n)n.remove(); if(!moved)return; swallowClick(); bar.classList.remove('drag'); bar.style.left=left0+'px'; if(!ms)bar.style.width=w0+'px'; if(lock||!days)return;
-    const snap=schSnap(pid), len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schWbs(t.wbs); let label, want=null, fn;
-    if(mode==='move'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 기간 이동 ${sign}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);}; }
-    else if(mode==='start'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 시작일 ${sign}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=D.addDays(ns,Math.max(0,span-days));}; }
-    else { label=`${w} 종료일 ${sign}`; fn=x=>{x.plannedFinish=D.addDays(x.plannedFinish,days);}; }
-    if(schEditTask(pid,t.id,label,fn,true))schChangeCard(pid,snap,{title:label,focus:t.id,want}); };
+    const len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schWbs(t.wbs); let label, want=null, fn, note;
+    if(mode==='move'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 기간 이동 ${sign}`; note=`막대를 ${sign} 옮겼습니다 · 시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);}; }
+    else if(mode==='start'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 시작일 ${sign}`; note=`시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=D.addDays(ns,Math.max(0,span-days));}; }
+    else { label=`${w} 종료일 ${sign}`; note=`완료일 ${schD(r.finish)} → ${schD(D.addDays(r.finish,days))}`; fn=x=>{x.plannedFinish=D.addDays(x.plannedFinish,days);}; }
+    // shown first, saved by 적용 (owner, 2026-11-23): the bar is back where it stood until then
+    schProposeDates(pid,{task:t.id,title:label,label,note,want,mutate:d=>{const x=d.tasks.find(q=>q.id===t.id);if(x)fn(x,d);},commit:()=>schEditTask(pid,t.id,label,fn)}); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
 
 /* ---------- gantt: pulling a relation ---------- */
