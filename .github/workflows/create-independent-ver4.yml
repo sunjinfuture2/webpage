@@ -1,9 +1,6 @@
 name: Create independent workspace ver4
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/create-independent-ver4.yml'
 permissions:
   contents: read
 concurrency:
