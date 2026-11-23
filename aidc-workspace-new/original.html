@@ -1486,7 +1486,8 @@ const pict=name=>`<svg class="pict" aria-hidden="true"><use href="#pic-${esc(nam
 // The name a project is shown with: with the preview always the full name (owner, 2026-11-20: no short names anywhere).
 const pname=p=>p?(PREVIEW_ON?(p.full||p.tag||''):(p.tag||p.full||'')):'';
 const pill=(p,extra='')=>`<span class="pill ${p.cls} ${extra}"><i class="sq"><svg class="pict" aria-hidden="true"><use href="#pic-project"/></svg></i>${esc(pname(p))}</span>`;
-const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}><i class="sq">${pict(it.type)}</i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
+const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; const PVC=PREVIEW_ON&&typeof schCalPict==='function';   /* preview: the pictogram in the project's point colour, and the whole title on one line (no shortened form: it is cut where the room ends) */
+  return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}${PVC?` title="${esc((it.title||'').split('\n').join(' '))}"`:''}><i class="sq">${PVC?schCalPict(it.type,p.color):pict(it.type)}</i><span class="t">${esc(full||PVC?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
 const chipFull=(it,edit=false,field='')=>chipOf(it,'',true,edit,field);
 const linkChips=(it,field,E)=>{const ids=(it[field]||[]).filter(id=>item(id)); const h=ids.map(a=>chipFull(item(a),E,field)).join(''); return E?h+`<span class="chip add" title="연결할 항목 선택">+ 연결 추가</span>`:(h||'<span class="plain">없음</span>');};
 // One way to write a date while the preview is on (owner, 2026-11-23): yyyy. mm. dd. Every helper below follows it there; the
@@ -1595,7 +1596,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const mStart=ymd(Y,M,1), mEnd=ymd(Y,M,dim); const dayNo=x=>x<mStart?0:(x>mEnd?dim+1:+x.slice(8)); const RANK={meeting:0,action:1,research:2};
   const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
-  const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=(opts.proj&&schPreview())?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
+  const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=schPreview()?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
   let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
@@ -2384,7 +2385,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-typeflt]')){const k=el.dataset.typeflt;S.typeOff[k]=!S.typeOff[k];refreshSec('cal');return;}
   if(el=q('[data-seltoday]')){S.selDate=null;const n=new Date();if(S.page==='project'){S.calYp=n.getFullYear();S.calMp=n.getMonth()+1;}else{S.calY=n.getFullYear();S.calM=n.getMonth()+1;}refreshSec('cal');return;}
   if(el=q('.cal .cell .add')){const it=newItem('meeting',{date:el.closest('.cell').dataset.date}); openPanel(it.id); return;}
-  if(el=q('.cal [data-date]')){ if(S.page==='project'&&typeof schPreview==='function'&&schPreview())return;   // owner, 2026-11-19: the project calendar does not select days
+  if(el=q('.cal [data-date]')){ if(typeof schPreview==='function'&&schPreview()){ if(el.classList.contains('more'))schCalMore(el); return; }   // owner: no calendar selects days (project 2026-11-19, main 2026-11-23); "+N건" lists what did not fit
     const v=el.dataset.date;S.selDate=v===TODAY?null:v;refreshSec('cal');return;}
   if(el=q('[data-act]')){const a=el.dataset.act,id=el.dataset.id; e.stopPropagation();
     if(a==='open'||a==='partner'){openPanel(id);} else if(a==='dl'){downloadFiles(itemFiles(item(id)),el);}

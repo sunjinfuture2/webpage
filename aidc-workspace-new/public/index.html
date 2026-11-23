@@ -2439,6 +2439,32 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 .arch .agrid.g5 .acard .more{right:8px;top:27.8px}
 .arch .agrid.g5 .cell .add,.arch .agrid.g5 .cell.first .add{left:14.1px;top:11.5px}
 .arch .agrid.g5 .cell.addc.alone{margin-top:35.8px}
+
+/* ================= twelfth round (owner, 2026-11-23) ================= */
+/* recent items: the lines that begin with a dot stand a little further apart (19 -> 22) */
+.sch-on .sb .recent .r2{height:22px}
+/* the caption 주요일정 is not an entry: no hand, nothing on hover */
+.rlist.sch .rcap{cursor:default}
+.rlist.sch .rcap:hover{background:#fff}
+/* no calendar selects days */
+.cal.pv .cell[data-date]{cursor:default}
+/* "+N건": the list of what did not fit */
+.pop.sch-calmore{max-width:340px}
+.pop.sch-calmore .it{display:flex;align-items:center;gap:8px}
+.pop.sch-calmore .cm-ic{width:13px;height:13px;flex:none;display:flex;font-style:normal}
+.pop.sch-calmore .cm-ic .pict{width:13px;height:13px}
+.pop.sch-calmore .cm-t{min-width:0;overflow:hidden;white-space:nowrap}
+/* the "n일 지연" mark while a panel is edited: pressed to say why */
+.sch-why{cursor:pointer;border-radius:4px;display:inline-flex;transition:box-shadow .12s,background .12s}
+.sch-why:hover{background:#fdeaea;box-shadow:0 0 0 4px #fdeaea}
+.sch-why .sch-dd{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+/* a partner's 구분: the line under it half as thick */
+.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .cat a.pc-value{border-bottom-width:1px}
+/* chips: the whole title on one line, cut where the room ends, no dots (owner: rather cut than shortened) */
+.sch-on .chip{max-width:100%}
+.sch-on .chip .t{text-overflow:clip}
+.sch-on .cal .ev .lb{text-overflow:clip}
+.sch-on .tbl.partners .rw .mt{min-width:0;overflow:hidden}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3270,7 +3296,8 @@ const pict=name=>`<svg class="pict" aria-hidden="true"><use href="#pic-${esc(nam
 // The name a project is shown with: with the preview always the full name (owner, 2026-11-20: no short names anywhere).
 const pname=p=>p?(PREVIEW_ON?(p.full||p.tag||''):(p.tag||p.full||'')):'';
 const pill=(p,extra='')=>`<span class="pill ${p.cls} ${extra}"><i class="sq"><svg class="pict" aria-hidden="true"><use href="#pic-project"/></svg></i>${esc(pname(p))}</span>`;
-const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}><i class="sq">${pict(it.type)}</i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
+const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; const PVC=PREVIEW_ON&&typeof schCalPict==='function';   /* preview: the pictogram in the project's point colour, and the whole title on one line (no shortened form: it is cut where the room ends) */
+  return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}${PVC?` title="${esc((it.title||'').split('\n').join(' '))}"`:''}><i class="sq">${PVC?schCalPict(it.type,p.color):pict(it.type)}</i><span class="t">${esc(full||PVC?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
 const chipFull=(it,edit=false,field='')=>chipOf(it,'',true,edit,field);
 const linkChips=(it,field,E)=>{const ids=(it[field]||[]).filter(id=>item(id)); const h=ids.map(a=>chipFull(item(a),E,field)).join(''); return E?h+`<span class="chip add" title="연결할 항목 선택">+ 연결 추가</span>`:(h||'<span class="plain">없음</span>');};
 // One way to write a date while the preview is on (owner, 2026-11-23): yyyy. mm. dd. Every helper below follows it there; the
@@ -3379,7 +3406,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const mStart=ymd(Y,M,1), mEnd=ymd(Y,M,dim); const dayNo=x=>x<mStart?0:(x>mEnd?dim+1:+x.slice(8)); const RANK={meeting:0,action:1,research:2};
   const PV=schPreview(), cnt=PV&&opts.proj&&!S.typeOff.action?schCalCounts(opts.proj,mStart,mEnd):null;
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
-  const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=(opts.proj&&schPreview())?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
+  const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=schPreview()?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
   let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
     <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
@@ -4168,7 +4195,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-typeflt]')){const k=el.dataset.typeflt;S.typeOff[k]=!S.typeOff[k];refreshSec('cal');return;}
   if(el=q('[data-seltoday]')){S.selDate=null;const n=new Date();if(S.page==='project'){S.calYp=n.getFullYear();S.calMp=n.getMonth()+1;}else{S.calY=n.getFullYear();S.calM=n.getMonth()+1;}refreshSec('cal');return;}
   if(el=q('.cal .cell .add')){const it=newItem('meeting',{date:el.closest('.cell').dataset.date}); openPanel(it.id); return;}
-  if(el=q('.cal [data-date]')){ if(S.page==='project'&&typeof schPreview==='function'&&schPreview())return;   // owner, 2026-11-19: the project calendar does not select days
+  if(el=q('.cal [data-date]')){ if(typeof schPreview==='function'&&schPreview()){ if(el.classList.contains('more'))schCalMore(el); return; }   // owner: no calendar selects days (project 2026-11-19, main 2026-11-23); "+N건" lists what did not fit
     const v=el.dataset.date;S.selDate=v===TODAY?null:v;refreshSec('cal');return;}
   if(el=q('[data-act]')){const a=el.dataset.act,id=el.dataset.id; e.stopPropagation();
     if(a==='open'||a==='partner'){openPanel(id);} else if(a==='dl'){downloadFiles(itemFiles(item(id)),el);}
@@ -5232,6 +5259,9 @@ const schStatus=t=>{const P=AIDCSchedule.progress;return P.isDone(t)?'완료':(t
 const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
 // D-day of a task that is not finished: against its forecast finish. Late ones read "n일 지연".
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
+// The "n일 지연" mark of a panel: while the panel is being edited (수정) a press on it asks for the reason of the delay (owner, 2026-11-23).
+// how: 'schp' for a task of the schedule (data-schp="f"), 'pick' for an ordinary action (data-pick).
+const schWhyMark=(html,E,how)=>E&&/class="sch-dd[^"]*\blate\b/.test(html)?`<span class="sch-why" ${how==='schp'?'data-schp="f" data-k="why"':'data-pick="why"'} role="button" title="눌러서 지연 사유 입력">${html}</span>`:html;
 const schDdayHtml=(finish,done,why)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}"${why&&d.late?` data-tip="${esc(why)}" data-tiph="지연 사유"`:''}>${d.txt}</span>`:'';};   // why: shown when the pointer rests on a late one
 const schPri=(m,t)=>t.pri||AIDCSchedule.progress.defaultPriority(m.res,t.id);
 const schPriHtml=(m,t)=>{const p=schPri(m,t);return `<span class="pri pri-${p}" ${t.pri?'':'title="아직 지정하지 않아 일정 여유로 정한 값입니다 (운영개시 경로와 근접 업무는 높음)"'}>${priTxt[p]}</span>`;};
@@ -5565,8 +5595,12 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   // the horizontal scroll bar: a bar of its own below the chart, kept in step with it; the chart itself shows none
   { const box=host.parentElement; const old=box.querySelector('.sg-foot'); if(old)old.remove(); let tb=box.querySelector('.sg-topbar');
     if(!tb){ tb=document.createElement('div'); tb.className='sg-topbar'; tb.innerHTML='<i></i>'; box.insertBefore(tb,host.nextSibling);
-      tb.addEventListener('scroll',()=>{ if(Math.abs(host.scrollLeft-tb.scrollLeft)>.5)host.scrollLeft=tb.scrollLeft; },{passive:true});
-      host.addEventListener('scroll',()=>{ if(Math.abs(tb.scrollLeft-host.scrollLeft)>.5)tb.scrollLeft=host.scrollLeft; if(host._key)SCH.gs={key:host._key,x:host.scrollLeft,y:host.scrollTop}; },{passive:true});
+      // Each of the two follows the other. A position one of them was just given by the other is not handed back (`_echo`): the scroll event
+      // of that comes a frame later, and by then the chart may have been moved on (pulled by its ground, turned by the wheel); handing the
+      // older position back made the view jump back a step now and then (found 2026-11-23 through the test of pulling the ground).
+      const echo=el=>{ const mine=el._echo!==undefined&&Math.abs(el.scrollLeft-el._echo)<1; el._echo=undefined; return mine; }, give=(to,x)=>{ if(Math.abs(to.scrollLeft-x)>.5){to._echo=x;to.scrollLeft=x;} };
+      tb.addEventListener('scroll',()=>{ if(!echo(tb))give(host,tb.scrollLeft); },{passive:true});
+      host.addEventListener('scroll',()=>{ if(!echo(host))give(tb,host.scrollLeft); if(host._key)SCH.gs={key:host._key,x:host.scrollLeft,y:host.scrollTop}; },{passive:true});
       host.addEventListener('wheel',e=>{ const dx=e.shiftKey&&!e.deltaX?e.deltaY:e.deltaX; if(dx&&(e.shiftKey||Math.abs(dx)>Math.abs(e.deltaY))){host.scrollLeft+=dx;e.preventDefault();} },{passive:false}); }
     tb.style.marginLeft=(SG.left+1)+'px'; tb.firstChild.style.width=TW+'px'; tb.classList.toggle('none',TW<=host.clientWidth-SG.left);
     // the shade at the table's edge runs over the dates above and the scroll bar below as well
@@ -5575,7 +5609,7 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   // where the view stands: the selected task, else today
   const key=pid+'|'+SCHU.scale+'|'+SCHU.phase; if(host._key!==key){ host._key=key;   // a fresh chart: where it stood before a redraw of the page (SCH.gs), else at the selected task or today
     if(SCH.gs&&SCH.gs.key===key){host.scrollLeft=SCH.gs.x;host.scrollTop=SCH.gs.y;} else{ const target=sel&&rowOf.get(sel)?rowOf.get(sel).x1:nowX; if(px>1.2&&target>=0)host.scrollLeft=Math.max(0,target-viewW*0.3); } }
-  const tb=host.parentElement.querySelector('.sg-topbar'); if(tb)tb.scrollLeft=host.scrollLeft; if(typeof schGhostsDraw==='function')schGhostsDraw(); }
+  const tb=host.parentElement.querySelector('.sg-topbar'); if(tb&&Math.abs(tb.scrollLeft-host.scrollLeft)>.5){tb._echo=host.scrollLeft;tb.scrollLeft=host.scrollLeft;} if(typeof schGhostsDraw==='function')schGhostsDraw(); }
 // The 30 / 60 / 90 % tags stand in the page margin left of the chart (outside the scrolling part), level with their lines.
 function schMarkTags(host){ const box=host.parentElement; let layer=box.querySelector('.sg-tags'); if(!layer){layer=document.createElement('div');layer.className='sg-tags';box.appendChild(layer);}
   const view=host.clientHeight, off=host.offsetTop; layer.innerHTML=$$('.sg-mark',host).map(el=>{const y=SG.head+parseFloat(el.style.top)-host.scrollTop;return y<SG.head+2||y>view-2?'':`<b style="top:${off+y}px" title="여기까지 끝나면 전체 일정의 ${el.dataset.pc}%가 끝납니다 (기간·중요도·마일스톤 가중치 기준)"><svg width="40" height="15" viewBox="0 0 40 15" aria-hidden="true"><path d="M2.5 .5H30.6L39.2 7.5 30.6 14.5H2.5a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2z" fill="#fff" stroke="#cfcfcf"/></svg><span>${el.dataset.pc}%</span></b>`;}).join('');
@@ -5681,9 +5715,9 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
   const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schD(r.finish)}</span>`:f('plannedFinish',schD(r.finish),E?'완료일 변경\n'+why:why))}</span>`;
   const refs=schRefs(pid,t.id);
   const L=[V('사업명',pill(proj(pid),'nosq').replace('class="pill',`data-go="project:${esc(pid)}" title="프로젝트 페이지로 이동" class="pill`)),
-    V('예상 기한'+schInfo('dates'),dates+(done?'':schDdayHtml(r.finish,false,schLateWhy(m,t)))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
+    V('예상 기한'+schInfo('dates'),dates+(done?'':schWhyMark(schDdayHtml(r.finish,false,schLateWhy(m,t)),E,'schp'))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
     V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schD(t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
-    ...(t.why||schLateWhy(m,t)?[V('지연 사유',f('why',t.why?`<span class="plain wrap">${esc(t.why)}</span>`:ph('사유 입력'),'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),
+    ...(t.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(t.why)}</span>`,'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),   // shown once there is one; it is entered through the "n일 지연" mark above (수정 first)
     V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`),
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-schp="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-schp="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
@@ -5807,9 +5841,9 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span><span class="sf" data-schp="link-task">${t?esc(schTaskTitle(t)):'업무 선택'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
-  const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schDdayHtml(end,false,schLateWhyItem(it)))),
+  const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
     V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schD(it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
-    ...(it.why||schLateWhyItem(it)?[V('지연 사유',f('why',it.why?`<span class="plain wrap">${esc(it.why)}</span>`:ph('사유 입력'),'지연 사유'),'wide')]:[]),
+    ...(it.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(it.why)}</span>`,'지연 사유'),'wide')]:[]),
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const R=[V('담당자',`<span class="people" ${h.pk('people')}>${h.who(it.people)}</span>`),V('상태'+schInfo('status'),f('stx',schStIcon(schItemSt(it)),'상태 변경')),V('중요도',f('pri',`<span class="pri pri-${it.pri||'mid'}">${priTxt[it.pri||'mid']}</span>`,'중요도 변경')),V('URL',urlField(it,E,'margin-left:0'))];
@@ -6101,14 +6135,13 @@ function schCalBadge(pid,date,count){ let dots='';
   if(date===TODAY){ const rows=schDayRows(pid,date), g=rows.filter(x=>x.green).length, r=rows.filter(x=>x.red).length;
     dots=(g?`<i class="g${g>9?' w':''}" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r${r>9?' w':''}" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
-function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
-  const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
+function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* the list is always today's: neither calendar selects days (project: 2026-11-19, main: 2026-11-23) */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
+  const evs=by('meeting'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
   // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
-  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</div><div class="rline"></div><div class="rscroll"><div class="rcap ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
-  if(!evs.length&&!rss.length)h+=`<div class="rnone">${D===TODAY?'오늘':'이 날짜에'} 등록된 미팅·리서치가 없습니다.</div>`;
+  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})</div><div class="rline"></div><div class="rscroll"><div class="rcap cap-ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
+  if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
   evs.forEach(e=>{const p=proj(e.proj);
     h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;});
-  if(rss.length)h+=`<div class="it rs" style="padding-top:${evs.length?30:6}px"><div class="cat" style="top:${evs.length?30:6}px"><i>${pict('research')}</i>리서치</div>${rss.map((x,i)=>`<div class="tt" style="margin-top:${i?8:18.7}px" data-open="${x.id}"><b>${one(x.title)}</b>${avstack(x.people)}</div>`).join('')}</div>`;
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
@@ -6142,6 +6175,11 @@ function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.pr
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});
   p.addEventListener('mouseenter',()=>clearTimeout(schPopHideT)); p.addEventListener('mouseleave',()=>schDayPopHide()); p.addEventListener('click',e=>{if(e.target.closest('[data-open]'))setTimeout(()=>schDayPopHide(true),0);}); }
+
+// "+N건" in a day of the calendar: what did not fit, as a small list (the calendars do not select days, so there is no other way to it).
+function schCalMore(el){ const d=el.dataset.date, pid=S.page==='project'?S.proj:null; if(!d)return;
+  const rank={meeting:0,research:1}, list=calItems(pid).filter(i=>i.type!=='action'&&i.date<=d&&itemEnd(i)>=d).sort((a,b)=>((rank[a.type]||0)-(rank[b.type]||0))||newestFirst(a,b)); if(!list.length)return;
+  menuPop(el,[{hd:schD(d)+' · '+list.length+'건'},...list.map((i,n)=>({html:`<span class="cm-t">${esc(oneLine(i.title)||'(제목 없음)')}</span>`,ico:`<i class="cm-ic">${schCalPict(i.type,proj(i.proj).color)}</i>`,k:'cm'+n,fn:()=>openPanel(i.id)}))],{cls:'sch-calmore'}); }
 
 /* ---- schedule/ui/52-holidays.js ---- */
 // Calendar-only holiday labels. No changes to tasks, schedule arithmetic or workspace settings.
@@ -7119,7 +7157,7 @@ function schArchBody(){ const q=SCH_ARCH.q.trim(), found=q?schArchFind(q):{docs:
 function schArchRender(){ if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||''; const pw=$('#arch-pw'), keep=pw.querySelector('input[data-arq]'), had=keep&&document.activeElement===keep, pos=had?keep.selectionStart:0;
   pw.innerHTML=`<div class="arch-title">자료실</div><div class="ar-pv"><div class="ar-top"><div class="ar-views" role="tablist"><button data-arview="docs" role="tab">문서 목록<small></small></button><button data-arview="sites" role="tab">참고사이트<small></small></button></div>
       <label class="srch box ar-q" title="자료실 검색">${svg('pic-search',15,15)}<input data-arq placeholder="자료실 검색 (문서 · 참고사이트)" aria-label="자료실 검색" value="${esc(SCH_ARCH.q)}" autocomplete="off">${qx(SCH_ARCH.q)}</label></div>
-    <div id="ar-body"></div>${partnerSection('margin-top:120px;padding-bottom:206.7px')}</div>`;
+    <div id="ar-body"></div>${partnerSection('margin-top:120px')}</div>`;   // nothing below it: the footer keeps its own distance, as on the other pages (it stood 207 further down here)
   schArchBody(); if(had){ const i=pw.querySelector('input[data-arq]'); if(i){i.focus();try{i.setSelectionRange(pos,pos);}catch(_){}} } }
 let schArchT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!t||!t.matches||!t.matches('input[data-arq]'))return; SCH_ARCH.q=t.value; S.archPage=1; clearTimeout(schArchT); schArchT=setTimeout(schArchBody,140); });

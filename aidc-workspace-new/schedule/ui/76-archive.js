@@ -38,7 +38,7 @@ function schArchBody(){ const q=SCH_ARCH.q.trim(), found=q?schArchFind(q):{docs:
 function schArchRender(){ if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||''; const pw=$('#arch-pw'), keep=pw.querySelector('input[data-arq]'), had=keep&&document.activeElement===keep, pos=had?keep.selectionStart:0;
   pw.innerHTML=`<div class="arch-title">자료실</div><div class="ar-pv"><div class="ar-top"><div class="ar-views" role="tablist"><button data-arview="docs" role="tab">문서 목록<small></small></button><button data-arview="sites" role="tab">참고사이트<small></small></button></div>
       <label class="srch box ar-q" title="자료실 검색">${svg('pic-search',15,15)}<input data-arq placeholder="자료실 검색 (문서 · 참고사이트)" aria-label="자료실 검색" value="${esc(SCH_ARCH.q)}" autocomplete="off">${qx(SCH_ARCH.q)}</label></div>
-    <div id="ar-body"></div>${partnerSection('margin-top:120px;padding-bottom:206.7px')}</div>`;
+    <div id="ar-body"></div>${partnerSection('margin-top:120px')}</div>`;   // nothing below it: the footer keeps its own distance, as on the other pages (it stood 207 further down here)
   schArchBody(); if(had){ const i=pw.querySelector('input[data-arq]'); if(i){i.focus();try{i.setSelectionRange(pos,pos);}catch(_){}} } }
 let schArchT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!t||!t.matches||!t.matches('input[data-arq]'))return; SCH_ARCH.q=t.value; S.archPage=1; clearTimeout(schArchT); schArchT=setTimeout(schArchBody,140); });

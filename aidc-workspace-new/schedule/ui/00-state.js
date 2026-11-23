@@ -115,6 +115,9 @@ const schStatus=t=>{const P=AIDCSchedule.progress;return P.isDone(t)?'완료':(t
 const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
 // D-day of a task that is not finished: against its forecast finish. Late ones read "n일 지연".
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
+// The "n일 지연" mark of a panel: while the panel is being edited (수정) a press on it asks for the reason of the delay (owner, 2026-11-23).
+// how: 'schp' for a task of the schedule (data-schp="f"), 'pick' for an ordinary action (data-pick).
+const schWhyMark=(html,E,how)=>E&&/class="sch-dd[^"]*\blate\b/.test(html)?`<span class="sch-why" ${how==='schp'?'data-schp="f" data-k="why"':'data-pick="why"'} role="button" title="눌러서 지연 사유 입력">${html}</span>`:html;
 const schDdayHtml=(finish,done,why)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}"${why&&d.late?` data-tip="${esc(why)}" data-tiph="지연 사유"`:''}>${d.txt}</span>`:'';};   // why: shown when the pointer rests on a late one
 const schPri=(m,t)=>t.pri||AIDCSchedule.progress.defaultPriority(m.res,t.id);
 const schPriHtml=(m,t)=>{const p=schPri(m,t);return `<span class="pri pri-${p}" ${t.pri?'':'title="아직 지정하지 않아 일정 여유로 정한 값입니다 (운영개시 경로와 근접 업무는 높음)"'}>${priTxt[p]}</span>`;};

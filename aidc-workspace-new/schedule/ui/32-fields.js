@@ -15,9 +15,9 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span><span class="sf" data-schp="link-task">${t?esc(schTaskTitle(t)):'업무 선택'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
-  const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schDdayHtml(end,false,schLateWhyItem(it)))),
+  const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
     V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schD(it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
-    ...(it.why||schLateWhyItem(it)?[V('지연 사유',f('why',it.why?`<span class="plain wrap">${esc(it.why)}</span>`:ph('사유 입력'),'지연 사유'),'wide')]:[]),
+    ...(it.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(it.why)}</span>`,'지연 사유'),'wide')]:[]),
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const R=[V('담당자',`<span class="people" ${h.pk('people')}>${h.who(it.people)}</span>`),V('상태'+schInfo('status'),f('stx',schStIcon(schItemSt(it)),'상태 변경')),V('중요도',f('pri',`<span class="pri pri-${it.pri||'mid'}">${priTxt[it.pri||'mid']}</span>`,'중요도 변경')),V('URL',urlField(it,E,'margin-left:0'))];

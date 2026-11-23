@@ -414,3 +414,26 @@ With the preview on:
 - Working calendars, resources, cost: out of the brief's first scope.
 - Taking over the gate / evidence sheets of an imported workbook (see Excel above).
 - A milestone has no circles to pull a relation from (it can be the target of one; its own relations are added in its panel).
+
+## Twelfth round (owner, 2026-11-23)
+
+Preview only. tests/schedule-10.cjs covers it.
+
+- The list beside both calendars (schRightList): 주요일정 is meetings only (research is not listed there; it stays an entry of the
+  calendar itself). Its caption carries the class `cap-ev`, not `ev`: `.rlist .ev` is an entry that opens something (hand, grey
+  under the pointer), which made the caption look like something to press.
+- No calendar selects days: the project calendar since the fourth round, the main calendar since this one. The list is always
+  today's, `S.selDate` is not read while the preview is on, there is no "오늘로". "+N건" of a full day opens a small list of
+  that day's meetings and research (schCalMore), each of which opens its panel.
+- The reason of a delay is entered by 수정 and then a press on the "n일 지연" mark of 예상 기한 (schWhyMark wraps the mark while the
+  panel is edited: `data-schp="f" data-k="why"` for a task, `data-pick="why"` for an ordinary action). The line 지연 사유 shows
+  only once there is a reason; there is no empty line asking for one.
+- Chips of items (chipOf): the pictogram takes the project's point colour (schCalPict; it was grey inside a coloured chip) and
+  the title is always the whole title on one line, cut where the room ends, without dots (`text-overflow: clip`; the fixture
+  field `short` is not used). The owner: "줄여쓰기는 쓰지마. 길어지면 차라리 잘리게". The calendar's chips are cut the same way.
+  Titles in lists and tables keep their dots.
+- The line under a partner's 구분 is 1px (2 before). The archive ends with the partner list and nothing below it, so the footer
+  stands 240 below as on the other pages (207 more before). The lines of the recent items that begin with a dot are 22 high (19).
+- For the gantt (found through a test that failed now and then): the chart and the scroll bar below it follow each other; a
+  position one was just given by the other is not handed back (`_echo`). Handing it back a frame later, after the chart had
+  been moved on, made the view jump back a step while it was pulled.

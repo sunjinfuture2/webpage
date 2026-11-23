@@ -1249,3 +1249,29 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 .arch .agrid.g5 .acard .more{right:8px;top:27.8px}
 .arch .agrid.g5 .cell .add,.arch .agrid.g5 .cell.first .add{left:14.1px;top:11.5px}
 .arch .agrid.g5 .cell.addc.alone{margin-top:35.8px}
+
+/* ================= twelfth round (owner, 2026-11-23) ================= */
+/* recent items: the lines that begin with a dot stand a little further apart (19 -> 22) */
+.sch-on .sb .recent .r2{height:22px}
+/* the caption 주요일정 is not an entry: no hand, nothing on hover */
+.rlist.sch .rcap{cursor:default}
+.rlist.sch .rcap:hover{background:#fff}
+/* no calendar selects days */
+.cal.pv .cell[data-date]{cursor:default}
+/* "+N건": the list of what did not fit */
+.pop.sch-calmore{max-width:340px}
+.pop.sch-calmore .it{display:flex;align-items:center;gap:8px}
+.pop.sch-calmore .cm-ic{width:13px;height:13px;flex:none;display:flex;font-style:normal}
+.pop.sch-calmore .cm-ic .pict{width:13px;height:13px}
+.pop.sch-calmore .cm-t{min-width:0;overflow:hidden;white-space:nowrap}
+/* the "n일 지연" mark while a panel is edited: pressed to say why */
+.sch-why{cursor:pointer;border-radius:4px;display:inline-flex;transition:box-shadow .12s,background .12s}
+.sch-why:hover{background:#fdeaea;box-shadow:0 0 0 4px #fdeaea}
+.sch-why .sch-dd{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+/* a partner's 구분: the line under it half as thick */
+.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .cat a.pc-value{border-bottom-width:1px}
+/* chips: the whole title on one line, cut where the room ends, no dots (owner: rather cut than shortened) */
+.sch-on .chip{max-width:100%}
+.sch-on .chip .t{text-overflow:clip}
+.sch-on .cal .ev .lb{text-overflow:clip}
+.sch-on .tbl.partners .rw .mt{min-width:0;overflow:hidden}

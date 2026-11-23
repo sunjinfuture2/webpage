@@ -29,14 +29,13 @@ function schCalBadge(pid,date,count){ let dots='';
   if(date===TODAY){ const rows=schDayRows(pid,date), g=rows.filter(x=>x.green).length, r=rows.filter(x=>x.red).length;
     dots=(g?`<i class="g${g>9?' w':''}" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r${r>9?' w':''}" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
-function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
-  const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
+function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* the list is always today's: neither calendar selects days (project: 2026-11-19, main: 2026-11-23) */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
+  const evs=by('meeting'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
   // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
-  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})${D===TODAY?'':'<button class="sh-btn" data-seltoday>오늘로</button>'}</div><div class="rline"></div><div class="rscroll"><div class="rcap ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
-  if(!evs.length&&!rss.length)h+=`<div class="rnone">${D===TODAY?'오늘':'이 날짜에'} 등록된 미팅·리서치가 없습니다.</div>`;
+  let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})</div><div class="rline"></div><div class="rscroll"><div class="rcap cap-ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
+  if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
   evs.forEach(e=>{const p=proj(e.proj);
     h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;});
-  if(rss.length)h+=`<div class="it rs" style="padding-top:${evs.length?30:6}px"><div class="cat" style="top:${evs.length?30:6}px"><i>${pict('research')}</i>리서치</div>${rss.map((x,i)=>`<div class="tt" style="margin-top:${i?8:18.7}px" data-open="${x.id}"><b>${one(x.title)}</b>${avstack(x.people)}</div>`).join('')}</div>`;
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
@@ -70,3 +69,8 @@ function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.pr
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});
   p.addEventListener('mouseenter',()=>clearTimeout(schPopHideT)); p.addEventListener('mouseleave',()=>schDayPopHide()); p.addEventListener('click',e=>{if(e.target.closest('[data-open]'))setTimeout(()=>schDayPopHide(true),0);}); }
+
+// "+N건" in a day of the calendar: what did not fit, as a small list (the calendars do not select days, so there is no other way to it).
+function schCalMore(el){ const d=el.dataset.date, pid=S.page==='project'?S.proj:null; if(!d)return;
+  const rank={meeting:0,research:1}, list=calItems(pid).filter(i=>i.type!=='action'&&i.date<=d&&itemEnd(i)>=d).sort((a,b)=>((rank[a.type]||0)-(rank[b.type]||0))||newestFirst(a,b)); if(!list.length)return;
+  menuPop(el,[{hd:schD(d)+' · '+list.length+'건'},...list.map((i,n)=>({html:`<span class="cm-t">${esc(oneLine(i.title)||'(제목 없음)')}</span>`,ico:`<i class="cm-ic">${schCalPict(i.type,proj(i.proj).color)}</i>`,k:'cm'+n,fn:()=>openPanel(i.id)}))],{cls:'sch-calmore'}); }
