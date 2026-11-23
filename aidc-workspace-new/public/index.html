@@ -2384,7 +2384,7 @@ html{overflow:hidden}
 .pop.sch-multi .it b{font-weight:600}
 .pop.sch-multi .it .n{margin-left:auto;padding-left:14px;color:#a6a6a6;font-size:11px}
 .pop.sch-multi .rc-new{padding:8px 8px 4px;border-top:1px solid #ececec;margin-top:4px}
-.sch-on .rgrid{align-items:stretch}
+/* (the cards of a row are NOT made equally high: a card is as high as what it holds, as before the eleventh round. Owner, 2026-11-23) */
 .sch-on .rcard{min-width:0;overflow:hidden}
 .sch-on .rcard .tt{overflow-wrap:anywhere}
 .sch-on .rcard .ds{width:auto;white-space:normal;overflow-wrap:anywhere;word-break:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
@@ -2465,6 +2465,18 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 .sch-on .chip .t{text-overflow:clip}
 .sch-on .cal .ev .lb{text-overflow:clip}
 .sch-on .tbl.partners .rw .mt{min-width:0;overflow:hidden}
+
+/* ---- owner, 2026-11-23: three small things after the twelfth round ---- */
+/* the count beside 액션: black, and its digits 1 lower inside the bubble (2 of padding above = 1 down, the bubble keeps its height) */
+.rlist.sch.pv .rcap .n{color:#000}
+.rlist.sch .rcap.act .n{padding-top:2px}
+/* relation map: the band around a line that takes the pointer. 16 wide in the map's own measure and never under 11 on the screen
+   (--snz is the map's zoom, set on .sn-zoom): it was 12 times the zoom, so 6 on the screen at half size */
+.sn-links path.hit{stroke-width:max(16px,calc(11px / var(--snz,1)))!important;stroke-dasharray:none!important}
+/* …and the band keeps its width on the lines of the selected task: `g.hot path` / `g.hov path` (the look of the line) also matched
+   the band and made it as thin as the line itself, so exactly the lines one reaches for were the hardest to take hold of. The same
+   in the gantt, whose band stays 9. */
+.sg-links path.hit{stroke-width:9px!important;stroke-dasharray:none!important}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -5676,7 +5688,7 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
     h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''} ${id===SCH.netPrev&&id!==focus?'prev':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schWbs(t.wbs)})</div><div class="nm">${esc(t.name)}</div>
       <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who" title="${esc(ppl.length?ppl.map(userName).join(', '):'담당자 미지정')}"><span class="avstack">${ppl.length?ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span></div>${id===SCH.netPrev&&id!==focus?'<em class="sn-prev" title="바로 전에 누른 업무">이전</em>':''}<u class="sn-port" title="끌어서 다른 업무에 연결"></u></div>`; }
   // the dots of the ground belong to the drawing: they scroll with it and grow and shrink with it
-  host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z})"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
+  host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z});--snz:${z}"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
   host._lay={w:LW,h:LH};
   const info=$('#sch-net .sn-info'); if(info)info.textContent=`업무 ${row.size}${lay.total&&lay.total>row.size?' / '+lay.total:''}건 · 관계 ${lay.edges.length-hidden}건`+(hidden?` · 이웃 열이 아닌 관계 ${hidden}건은 숨김`:'');
   // keep the selected task in view

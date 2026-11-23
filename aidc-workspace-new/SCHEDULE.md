@@ -434,6 +434,10 @@ Preview only. tests/schedule-10.cjs covers it.
   Titles in lists and tables keep their dots.
 - The line under a partner's 구분 is 1px (2 before). The archive ends with the partner list and nothing below it, so the footer
   stands 240 below as on the other pages (207 more before). The lines of the recent items that begin with a dot are 22 high (19).
+- Later the same day: the count beside 액션 in a project's list is black and stands 1 lower in its bubble; research cards are
+  as high as what they hold again (`.rgrid` is `align-items:start`: the eleventh round had stretched the cards of a row to the
+  tallest, the owner wants the heights to show which card has a note or a file); the band around a line of the relation map
+  that takes the pointer is `max(16, 11 / zoom)` wide (`--snz` on `.sn-zoom`; it was 12 times the zoom).
 - For the gantt (found through a test that failed now and then): the chart and the scroll bar below it follow each other; a
   position one was just given by the other is not handed back (`_echo`). Handing it back a frame later, after the chart had
   been moved on, made the view jump back a step while it was pulled.
