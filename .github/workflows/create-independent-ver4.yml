@@ -1,0 +1,30 @@
+name: Create independent workspace ver4
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cloudflare-workspace-ver4
+  cancel-in-progress: false
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: aidc-workspace-new/package-lock.json
+      - name: Prepare deployment tool
+        working-directory: aidc-workspace-new
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Back up, reset and verify ver3 only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node tools/create-independent-ver4.mjs
