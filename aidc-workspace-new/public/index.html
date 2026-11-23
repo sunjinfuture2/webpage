@@ -2149,16 +2149,18 @@ html{overflow:hidden}
 .cal .cell.hol .n{color:var(--red)}
 .cal.pv .cell.sel.hol .n{color:var(--red)!important}
 /* --- gantt: a relation taken hold of; the ground can be pulled --- */
-.sg-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:4 3;stroke-width:1.5}
-.sg-links g.pull.far path:not(.hit){opacity:.5}
+.sg-links g.pull path:not(.hit){opacity:.38;stroke-dasharray:2 3}   /* where it stands: it does not move while one of its ends is pulled */
+.sg-links g.pull.far path:not(.hit){opacity:.2}
+.sg-links .draft.cut,.sn-links .draft.cut{stroke:#d30000}
 .sg-right{cursor:grab}
 .sg-scroll.pan .sg-right,.sg-scroll.pan .sg-bar,.sg-scroll.pan .sg-msb{cursor:grabbing}
 /* --- relation map: lines can be chosen and pulled off; the card pressed before --- */
 .sn-links path.hit{stroke:transparent!important;stroke-width:12;fill:none;pointer-events:stroke;cursor:pointer}
 .sn-links g:hover path:not(.hit){stroke:#1f8e00}
 .sn-links g:hover circle{fill:#1f8e00}
-.sn-links g.pull path:not(.hit){stroke:#d30000!important;stroke-dasharray:6 4}
-.sn-links g.pull.far path:not(.hit){opacity:.5}
+.sn-links g.pull path:not(.hit){opacity:.38;stroke-dasharray:3 4}
+.sn-links g.pull.far path:not(.hit){opacity:.2}
+.sn-links g.pull circle,.sn-links g.pull text{opacity:.38}
 .sn-node.prev{outline:1.5px dashed #9a9a9a;outline-offset:3px}
 .sn-node .sn-prev{position:absolute;right:10px;top:-10px;font-style:normal;font-size:10.5px;font-weight:600;line-height:1;color:#fff;background:#8e8e8e;border-radius:9px;padding:4px 8px}
 /* --- a period of one's own: two months, first day and last day --- */
@@ -6448,13 +6450,50 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; line.remove(); head.remove(); if(tip)tip.remove(); bar.classList.remove('linking'); host.classList.remove('linking'); swallowClick(); if(!target)return; target.classList.remove('target','ts','tf');
     schPropose(pid,{kind:'new',from,to:target.dataset.bar,type:kind()}); };   // shown with its effect first; 확인 saves
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
-// A relation can be taken hold of (its thin hit area) and pulled off: let go away from it and the window asks whether to remove it.
-function schLinkPull(e,g){ const pid=S.proj, m=schModel(pid), rel=m&&m.plan.dependencies.find(x=>x.id===g.dataset.link); if(!rel)return; const x0=e.clientX, y0=e.clientY, z=(LAYOUT.zoom||1)*(g.closest('#sch-net')?(SCHU.netZoom||1):1); let on=false, tip=null, far=false;
-  const move=ev=>{ const dx=ev.clientX-x0, dy=ev.clientY-y0, d=Math.hypot(dx,dy); if(!on){ if(d<7)return; on=true; SCH.drag=true; g.classList.add('pull'); document.body.style.userSelect='none'; tip=document.createElement('div'); tip.className='sg-tip'; document.body.appendChild(tip); }
-    far=d>=28; g.classList.toggle('far',far); g.style.transform=`translate(${dx/z*.4}px,${dy/z*.4}px)`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=far?'<b>연결 빼기</b>놓으면 이 연결을 뺄지 묻습니다':'조금 더 끌어내면 연결을 뺄 수 있습니다'; };
-  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; SCH.drag=false; document.body.style.userSelect=''; g.classList.remove('pull','far'); g.style.transform=''; if(tip)tip.remove(); swallowClick(); if(!far)return;
-    const a=m.byId.get(rel.from), b=m.byId.get(rel.to), nm=`${schWbs(a.wbs)} → ${schWbs(b.wbs)}`;
-    schPropose(pid,{kind:'change',from:rel.from,to:rel.to,title:'연결 빼기',note:`${nm} 연결을 뺍니다. 확인을 누르면 관계가 지워집니다.`,label:`${nm} 관계 삭제`,gone:true,mutate:d=>{d.dependencies=d.dependencies.filter(q=>q.id!==rel.id);}}); };
+// An existing relation is changed the way a new one is made (owner, 2026-11-23). The line itself does not move: it stays where
+// it is, pale, and the end that was taken hold of (the half of the line the pointer was on) comes loose and follows the pointer,
+// drawn by the rule a new relation is drawn by; the other end stays on its task. Let go on another task and the relation moves
+// there (in the gantt the half of the bar under the pointer says start or end, so the same task's other half changes the kind);
+// let go on empty ground away from where it was taken and the window asks whether to remove it. Whatever it is, the outcome is
+// shown first and 확인 saves (schPropose). Used by the gantt and by the relation map.
+function schLinkPull(e,g){ const pid=S.proj, m=schModel(pid), rel=m&&m.plan.dependencies.find(x=>x.id===g.dataset.link), svgEl=g.ownerSVGElement; if(!rel||!svgEl)return;
+  const net=!!g.closest('#sch-net'), host=net?null:$('#sch-gantt .sg-scroll'), rows=host&&host._rows; if(!net&&!rows)return;
+  e.preventDefault();   // no text selection and no drag of a selection left on the page by something else: either would swallow the pointer's moves
+  const NS='http://www.w3.org/2000/svg', x0=e.clientX, y0=e.clientY, z=LAYOUT.zoom||1, A=AIDCSchedule, W=id=>schWbs(m.byId.get(id).wbs);
+  const pt=net?((x,y)=>{const M=svgEl.getScreenCTM();return M?[(x-M.e)/M.a,(y-M.f)/M.d]:[0,0];}):((x,y)=>{const b=svgEl.getBoundingClientRect();return [(x-b.left)/z,(y-b.top)/z];});
+  let loose='to';   // which end comes loose: the half of the line that was taken hold of
+  try{ const hp=g.querySelector('path.hit')||g.querySelector('path'), L=hp.getTotalLength(), p0=pt(x0,y0); let best=Infinity, at=1; for(let i=0;i<=40;i++){ const q=hp.getPointAtLength(L*i/40), dd=Math.hypot(q.x-p0[0],q.y-p0[1]); if(dd<best){best=dd;at=i/40;} } loose=at<.5?'from':'to'; }catch(_){}
+  const fixed=loose==='to'?rel.from:rel.to, sel=net?'#sch-net .sn-node':'#sch-gantt [data-bar]', idOf=el=>net?el.dataset.k:el.dataset.bar;
+  let on=false, tip=null, line=null, head=null, target=null, far=false, type=rel.type, nf=rel.from, nt=rel.to;
+  const move=ev=>{ const d=Math.hypot(ev.clientX-x0,ev.clientY-y0);
+    if(!on){ if(d<7)return; on=true; SCH.drag=true; schCardHide(); g.classList.add('pull'); document.body.style.userSelect='none'; if(host)host.classList.add('linking');
+      line=document.createElementNS(NS,'path'); line.setAttribute('class','draft'); svgEl.appendChild(line); head=document.createElementNS(NS,'path'); head.setAttribute('class','draft head'); svgEl.appendChild(head);
+      tip=document.createElement('div'); tip.className='sg-tip'; document.body.appendChild(tip); }
+    const el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest(sel); if(target&&target!==hit)target.classList.remove('target','ts','tf');
+    target=hit&&idOf(hit)!==fixed&&m.byId.has(idOf(hit))?hit:null; type=rel.type; nf=rel.from; nt=rel.to; const [mx,my]=pt(ev.clientX,ev.clientY);
+    if(target){ target.classList.add('target'); if(loose==='to')nt=idOf(target); else nf=idOf(target);
+      if(!net){ const r=target.getBoundingClientRect(), half=target.classList.contains('sg-msb')?(loose==='to'?'S':'F'):(ev.clientX<=r.left+r.width/2?'S':'F'); type=loose==='to'?rel.type[0]+half:half+rel.type[1]; target.classList.toggle('ts',half==='S'); target.classList.toggle('tf',half==='F'); } }
+    far=!target&&d>=28; g.classList.toggle('far',far);
+    if(net){ const card=id=>$(`#sch-net .sn-node[data-k="${id}"]`), side=(c,right)=>{const r=c.getBoundingClientRect();return pt(right?r.right:r.left,r.top+r.height*SN.port/SN.h);}, ca=card(nf), cb=card(nt);
+      const a=(loose==='from'&&!target)||!ca?[mx,my]:side(ca,true), b=(loose==='to'&&!target)||!cb?[mx,my]:side(cb,false), mid=(a[0]+b[0])/2;
+      line.setAttribute('d',`M${a[0]},${a[1]} C${mid},${a[1]} ${mid},${b[1]} ${b[0]},${b[1]}`); head.setAttribute('d',''); }
+    else { // the line the chart would draw: from the task that stays to the pointer (or the other way round), or between the two tasks once the pointer is on a bar
+      const ga=loose==='from'&&!target?{cy:my,cx:mx,x1:mx,x2:mx,so:0}:rows.get(nf), gb=loose==='to'&&!target?{cy:my,cx:mx,x1:mx+2,x2:mx-2}:rows.get(nt), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined?schLinkPath(ga,gb,type):null;
+      line.setAttribute('d',c?c.d:''); head.setAttribute('d',c?c.head:''); }
+    line.classList.toggle('cut',far); head.classList.toggle('cut',far); tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px';
+    tip.innerHTML=target?(nf===rel.from&&nt===rel.to&&type===rel.type?'지금 연결 그대로입니다'
+        :`<b>${net?'연결 옮기기':type}</b>${esc(W(nf))} ${type[0]==='F'?'끝나면':'시작하면'} → ${esc(W(nt))} ${type[1]==='S'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`)
+      :far?'<b>연결 빼기</b>놓으면 이 연결을 뺄지 묻습니다':`다른 업무${net?' 카드':'의 막대'}에 놓으면 연결을 옮기고, 빈 곳에 놓으면 연결을 뺍니다`; };
+  const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; SCH.drag=false; document.body.style.userSelect=''; g.classList.remove('pull','far'); if(host)host.classList.remove('linking');
+    for(const n of [line,head,tip])if(n)n.remove(); const had=target; if(target)target.classList.remove('target','ts','tf'); swallowClick(); const old=`${W(rel.from)} → ${W(rel.to)}`;
+    if(had){ if(nf===rel.from&&nt===rel.to&&type===rel.type)return; if(m.plan.dependencies.some(x=>x.id!==rel.id&&x.from===nf&&x.to===nt&&x.type===type)){toast('이미 있는 관계입니다.',3200);return;}
+      const now=`${W(nf)} → ${W(nt)}`, kindOnly=nf===rel.from&&nt===rel.to, ty=type, a=nf, b=nt;
+      if(kindOnly)schPropose(pid,{kind:'change',from:a,to:b,title:'관계 유형 변경',note:`${old} 연결의 유형을 바꿉니다: ${rel.type} → ${ty}. ${A.relationshipSentence(ty,m.byId.get(a).name,m.byId.get(b).name)}`,label:`${old} 관계 유형 ${ty}`,mutate:d=>{const q=d.dependencies.find(x=>x.id===rel.id);if(q)q.type=ty;}});
+      else schPropose(pid,{kind:'change',from:a,to:b,title:'연결 옮기기',note:`${old} 연결을 ${now}${ty!==rel.type?` (${ty})`:''} 연결로 옮깁니다. 확인을 누르면 바뀝니다.`,label:`${old} 관계를 ${now} 관계로 변경`,
+        mutate:d=>{ d.dependencies=d.dependencies.filter(q=>q.id!==rel.id); d.dependencies.push(A.newDependency(a,b,ty,rel.lag||0)); }});
+      return; }
+    if(!far)return;
+    schPropose(pid,{kind:'change',from:rel.from,to:rel.to,title:'연결 빼기',note:`${old} 연결을 뺍니다. 확인을 누르면 관계가 지워집니다.`,label:`${old} 관계 삭제`,gone:true,mutate:d=>{d.dependencies=d.dependencies.filter(q=>q.id!==rel.id);}}); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
 // The ground of the chart (where no bar is) can be pulled to move the view, like the relation map.
 function schGanttPan(e){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const x0=e.clientX, y0=e.clientY, sl=host.scrollLeft, st=host.scrollTop, z=LAYOUT.zoom||1; let on=false;

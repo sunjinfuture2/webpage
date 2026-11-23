@@ -320,6 +320,14 @@ Frame and lists:
 - Main action table: the project tag's text sits in the middle of its box again (it had lost that when the tag became a
   block for the … in the ninth round).
 - Project calendar: the notice beside today's count is a circle (11 x 11); "9+" gets smaller type (`.w`).
+- An existing relation is changed the way a new one is made (schLinkPull, gantt and relation map): the line does not move
+  (it stays, pale, class `pull`); the end that was taken hold of (the half of the line under the pointer) comes loose and a
+  draft line from the task that stays follows the pointer, drawn by the rule of a new relation. On another task: the
+  relation moves there (gantt: the bar's half says start or end, so the same task's other half changes the kind) -
+  schPropose shows it first (연결 옮기기 / 관계 유형 변경); a move is stored as the old relation removed and a new one added.
+  On empty ground away from where it was taken: the draft turns red (`cut`) and the window asks whether to remove it.
+  The mousedown is cancelled (preventDefault): a text selection left on the page made the browser start its own drag and
+  swallow the pointer's moves.
 - Pulling the ground of the gantt writes the scroll position into SCH.gs at once (a redraw held back during the pull runs
   on letting go and used to put the chart back a few pixels, because the scroll event had not arrived yet).
 - tests/schedule-8.cjs has these; tests/schedule-1.cjs checks the new starting point of a relation.
