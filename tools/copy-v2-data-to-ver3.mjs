@@ -70,8 +70,8 @@ try{
       });
     }
 `;
- const code=main.bytes.toString('utf8'),method=code.indexOf('\n  put(id, v) {'),end=code.lastIndexOf('\n  }',method);
- if(method<0||end<0||!code.slice(0,end).includes('constructor(ctx, env)'))throw Error('Unexpected Worker constructor layout');
+ const code=main.bytes.toString('utf8'),method=code.lastIndexOf('\n  put('),end=code.lastIndexOf('\n  }',method);
+ if(method<0||end<0||!code.slice(0,end).includes('CREATE TABLE IF NOT EXISTS records'))throw Error('Unexpected Worker constructor layout');
  const patched='import ver3TransferText from "./'+moduleName+'";\n'+code.slice(0,end)+injection+code.slice(end);
  await fs.writeFile(path.resolve(dir,main.name),patched);
  execFileSync(process.execPath,['--check',path.resolve(dir,main.name)],{stdio:'inherit'});
