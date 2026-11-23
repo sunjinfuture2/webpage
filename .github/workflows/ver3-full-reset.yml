@@ -1,9 +1,6 @@
 name: Full reset ver3 only
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/ver3-full-reset.yml'
 permissions:
   contents: read
 concurrency:
