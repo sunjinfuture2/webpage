@@ -6,27 +6,50 @@
 const schRf=()=>S.rf||(S.rf={});
 const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올해',old:'30일보다 이전'}],file:['첨부',{y:'첨부 있음',n:'첨부 없음'}]};
 // The tags members write in square brackets in front of a title, most used first (a tag used once is not offered).
-const schResTagsOf=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>m[1].trim().toUpperCase()).filter(Boolean);
-function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of new Set(schResTagsOf(i)))n.set(t,(n.get(t)||0)+1); return [...n].filter(([,k])=>k>1).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,12); }
+// 구분 (owner, 2026-11-23): what a member chose in the detail (`cats` on the item) together with the [..] at the start of the
+// title, as before. Every one in use can be filtered by (it used to take two items with the same one), several at once.
+const schTagNorm=t=>String(t||'').replace(/\s+/g,' ').trim().toUpperCase();
+const schResCats=i=>[...new Set((Array.isArray(i.cats)?i.cats:[]).map(schTagNorm).filter(Boolean))];
+const schResTitleTags=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>schTagNorm(m[1])).filter(Boolean);
+const schResTagsOf=i=>[...new Set(schResCats(i).concat(schResTitleTags(i)))];
+function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of schResTagsOf(i))n.set(t,(n.get(t)||0)+1); return [...n].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,80); }
+const schRfTags=c=>{ if(c.tag){c.tags=[c.tag];delete c.tag;} return Array.isArray(c.tags)?c.tags:[]; };   // the single choice of before becomes a list
+const schTagLabel=t=>t==='-'?'구분 없음':'['+t+']';
+// A list one can tick several of; it stays open. all: [[value, count|null]], isOn(value), toggle(value); tail: html below the list.
+function schMultiPop(el,title,all,isOn,toggle,tail,none){ const draw=()=>`<div class="hd">${esc(title)}</div>${none?`<div class="it ${all.some(([t])=>isOn(t))?'':'sel'}" data-none>${esc(none)}</div><div class="sep"></div>`:''}`+(all.map(([t,n])=>`<div class="it ${isOn(t)?'sel':''}" data-t="${esc(t)}"><i class="ck">${isOn(t)?svg('i-check',9,7.5):''}</i><b>${esc(schTagLabel(t))}</b>${n!=null?`<span class="n">${n}</span>`:''}</div>`).join('')||'<div class="msg">아직 쓰인 구분이 없습니다.</div>')+(tail||'');
+  const p=openPop(el,draw(),{cls:'sch-colmenu sch-multi'}); p._draw=()=>{const y=p.scrollTop;p.innerHTML=draw();p.scrollTop=y;if(p._after)p._after();};
+  p.addEventListener('click',e=>{ const it=e.target.closest('.it[data-t]'), no=e.target.closest('.it[data-none]'); if(no){e.stopPropagation();toggle(null);closePop();return;} if(!it)return; e.stopPropagation(); toggle(it.dataset.t); p._draw(); }); return p; }
+// The 구분 of a research note in its detail: chips, and while it is edited a list of those in use to tick and a box for a new one.
+function schCatsField(it,E){ const own=schResCats(it), auto=schResTitleTags(it).filter(t=>!own.includes(t));
+  const chips=own.map(t=>`<span class="rc-tag">${esc(t)}${E?`<button type="button" data-pick="uncat" data-k="${esc(t)}" title="이 구분 빼기">${svg('i-x',7,7)}</button>`:''}</span>`).join('')+auto.map(t=>`<span class="rc-tag auto" title="제목의 [${esc(t)}] 에서 온 구분입니다">${esc(t)}</span>`).join('');
+  return `<span class="rc-tags">${chips}${E?'<span class="chip add" data-pick="cats">+ 구분 선택</span>':(chips?'':'<span class="plain" style="color:#c4c4c4">없음</span>')}</span>`; }
+function schCatsPick(el,it){ const redraw=()=>{ it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); };
+  const set=l=>{ if(l.length)it.cats=l; else delete it.cats; redraw(); }, has=t=>schResCats(it).includes(t);
+  const all=()=>{ const m=new Map(schResTags(liveItems('research',null))); for(const t of schResCats(it))if(!m.has(t))m.set(t,null); return [...m]; };
+  let list=all(); const p=schMultiPop(el,'구분 선택 (여러 개 가능)',list,has,t=>{ set(has(t)?schResCats(it).filter(x=>x!==t):schResCats(it).concat(t)); },
+    `<div class="msg rc-new"><input id="rc-new" maxlength="16" placeholder="새 구분 입력 후 Enter" autocomplete="off"></div>`);
+  const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const t=schTagNorm(inp.value); if(!t)return; if(!has(t))set(schResCats(it).concat(t)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
+  p._after=wire; wire(); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
   list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
-    if(c.tag&&!(c.tag==='-'?!schResTagsOf(i).length:schResTagsOf(i).includes(c.tag)))return false; if(c.who&&i.authorId!==c.who)return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;
+    const ts=schRfTags(c); if(ts.length){ const own=schResTagsOf(i); if(!ts.some(t=>t==='-'?!own.length:own.includes(t)))return false; }
+    if(c.who&&!(i.people||[]).includes(c.who))return false; if(c.file&&(c.file==='y')!==hasFiles(i))return false;   // 담당자 (the detail says 담당자 too), not who wrote it
     if(c.when==='range'&&!((!c.from||d>=c.from)&&(!c.to||d<=c.to)))return false;
     if(c.when==='30'&&!(d>=d30))return false; if(c.when==='month'&&d.slice(0,7)!==today.slice(0,7))return false; if(c.when==='year'&&d.slice(0,4)!==today.slice(0,4))return false; if(c.when==='old'&&!(d<d30))return false;
     return true; });
   return sortResearch(list); }
 function schResChips(pid){ const c=schRf(), out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-rchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
-  if(c.tag)chip('tag','태그: '+(c.tag==='-'?'태그 없음':'['+c.tag+']')); if(c.who)chip('who','작성자: '+userName(c.who));
+  for(const t of schRfTags(c))chip('tag:'+t,'구분: '+schTagLabel(t)); if(c.who)chip('who','담당자: '+userName(c.who));
   for(const k of ['when','file']){ if(c[k])chip(k,SCH_RF[k][0]+': '+(k==='when'&&c.when==='range'?schRangeTxt(c):(SCH_RF[k][1][c[k]]||c[k]))); }
   return out.join(''); }
 function schResBar(pid){ const c=schRf();
   return `<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="res">${schResChips(pid)}</div></div>
-    <div class="sch-filters res">${schSf2('rpick','tag',c.tag?(c.tag==='-'?'태그 없음':'['+c.tag+']'):'전체 태그',!!c.tag)}${schSf2('rpick','when',c.when?(c.when==='range'?schRangeTxt(c):SCH_RF.when[1][c.when]):'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 작성자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}</div>`; }
+    <div class="sch-filters res">${schSf2('rpick','tag',schRfTags(c).length?(schRfTags(c).length===1?schTagLabel(schRfTags(c)[0]):`구분 ${schRfTags(c).length}개`):'전체 구분',!!schRfTags(c).length)}${schSf2('rpick','when',c.when?(c.when==='range'?schRangeTxt(c):SCH_RF.when[1][c.when]):'전체 기간',!!c.when)}${schSf2('rpick','who',c.who?userName(c.who):'전체 담당자',!!c.who)}${schSf2('rpick','file',c.file?SCH_RF.file[1][c.file]:'첨부 전체',!!c.file)}</div>`; }
 function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
   const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
   const pool=liveItems('research',null); let items=[];
-  if(k==='tag')items=[fl('',{t:'전체 태그'}),...schResTags(pool).map(([t,n])=>fl(t,{t:`[${t}]`,html:`<b style="font-weight:600">[${esc(t)}]</b><span style="margin-left:8px;color:#a6a6a6;font-size:11px">${n}</span>`})),fl('-',{t:'태그 없음'})];
-  else if(k==='who')items=[fl('',{t:'전체 작성자'}),...[...new Set(pool.map(i=>i.authorId).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
+  if(k==='tag'){ const has=t=>schRfTags(c).includes(t); schMultiPop(el,'구분 (여러 개 선택 가능)',schResTags(pool).concat([['-',pool.filter(i=>!schResTagsOf(i).length).length]]),has,t=>{ if(t===null)delete c.tags; else{ const l=has(t)?schRfTags(c).filter(x=>x!==t):schRfTags(c).concat(t); if(l.length)c.tags=l; else delete c.tags; } go(); },'','전체 구분'); return; }
+  else if(k==='who')items=[fl('',{t:'전체 담당자'}),...[...new Set(pool.flatMap(i=>i.people||[]).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
   else items=[fl('',{t:k==='when'?'전체 기간':'첨부 전체'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   if(k==='when')items.push('-',{t:'직접 설정…',sel:c.when==='range',fn:()=>schRangePick(el,c.from||'',c.to||'',(a,b)=>{ if(a||b){c.when='range';c.from=a;c.to=b;} else{delete c.when;delete c.from;delete c.to;} go(); })});
   menuPop(el,items.map((x,i)=>x==='-'?x:({...x,k:String(i)})),{cls:'sch-colmenu'}); }
@@ -138,5 +161,5 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   if(el=T.closest('[data-rpick]')){e.stopPropagation();schResMenu(el,el.dataset.rpick);return;}
   if(el=T.closest('[data-ppick]')){e.stopPropagation();schProjMenu(el,el.dataset.ppick);return;}
   if(el=T.closest('[data-pchip]')){e.stopPropagation();delete schPf()[el.dataset.pchip];S.car.proj=0;render(true);return;}
-  if(el=T.closest('[data-rchip]')){const c=schRf();delete c[el.dataset.rchip];if(el.dataset.rchip==='when'){delete c.from;delete c.to;}S.resPage=1;refreshSec('research');return;}
+  if(el=T.closest('[data-rchip]')){const c=schRf(), rk=el.dataset.rchip; if(rk.startsWith('tag:')){const l=schRfTags(c).filter(t=>t!==rk.slice(4)); if(l.length)c.tags=l; else delete c.tags;} else delete c[rk]; if(rk==='when'){delete c.from;delete c.to;}S.resPage=1;refreshSec('research');return;}
 },true);

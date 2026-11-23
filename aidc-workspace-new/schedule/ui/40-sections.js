@@ -32,7 +32,7 @@ function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="s
   if(SCHU.sec==='proc'&&SCHU.procState)chip('procState','확약 상태: '+SCHU.procState); if(SCHU.sec==='evid'&&SCHU.evState)chip('evState','상태: '+SCHU.evState); return out.join(''); }
 function schLowerSection(pid){ const tabs=[['proc','외부설비 조달'],['gate','승인게이트'],['evid','근거 및 확약']];
   return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}<span data-sch="lowadd" class="sch-evadd up" title="${esc((tabs.find(x=>x[0]===SCHU.sec)||tabs[0])[1])}에 추가">${plusBtn('','추가')}</span></span>
-      <button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록" style="margin-left:14px">라이브러리</button><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}"></label></div>
+      <button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록" style="margin-left:14px">라이브러리</button><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}">${qx(SCHU.lq)}</label></div>
     <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="low">${schLowChips()}</div></div><div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
 // The + of the lower section stands above the middle of the tab that is open.
 function schLowAddPlace(){ const box=$('#sch-lower .sch-tabs.lead'), on=box&&$('button.on',box), add=box&&$('.sch-evadd.up',box); if(!on||!add)return; add.style.left=(on.offsetLeft+on.offsetWidth/2)+'px'; }
@@ -50,7 +50,7 @@ function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.pro
     h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schWbs(po.wbs)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
       <div class="rg">${pr&&ins?schRange(pr.start,ins.finish):'-'}</div><div class="dl"><span class="sf-e" data-schc="pdelay" data-k="${esc(x.id)}" title="PO 추가지연 (일) 변경">${x.delay?x.delay+'일':'-'}</span></div>
       <div>${schStateMark(x.commitment||'미확약','sf-e',`data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경"`)}</div>
-      <div class="who">${ppl.length?ppl.map(k=>`<span>${av()}${esc(userName(k))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
+      <div class="who">${ppl.length?ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
       <div class="lead">${x.leadWeeks!==null?`${+(+x.leadWeeks).toFixed(1)}주${dl?` <small>${schD(dl)} 납품</small>`:''}`:'-'}</div></div>`; }
   if(!list.length)h+=`<div class="none">조건에 맞는 설비가 없습니다.</div>`;
   return h+`<div class="ft"></div></div>`; }
@@ -95,7 +95,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     const ins=m.res.tasks[x.installTaskId], ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
     return wrap('action','외부설비 조달 · '+esc(x.sourceIndex<0?'추가':x.id),x.name,[
       ...(x.sourceIndex<0?[R('설비 이름',e('name',`<span class="plain wrap">${esc(x.name)}</span>`))]:[]),
-      R('확약 상태',e('commitment',schStateMark(x.commitment||'미확약'))),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>')),
+      R('확약 상태',e('commitment',schStateMark(x.commitment||'미확약'))),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>')),
       R('PO 추가지연',e('delay',x.delay?x.delay+'일':ph('없음'),'계약·PO 업무에 더하는 지연 일수')),R('확약 납기',e('leadWeeks',x.leadWeeks!==null?(+(+x.leadWeeks).toFixed(2))+'주':ph('미입력'),'공급사가 확약한 납기 (주)')+(dl?`<span class="plain" style="color:#8e8e8e;margin-left:8px">확약 기준 예상 납품 ${schD(dl)}</span>`:'')),
       R('납기 기산조건',e('trigger',esc(x.trigger||'미확정'))+(x.trigger&&x.trigger!=='PO 발행'&&x.trigger!=='미확정'?`<span class="plain" style="margin:0 6px;color:#c4c4c4">충족일</span>`+e('triggerDate',x.triggerDate?schD(x.triggerDate):ph('입력')):'')),R('별도 운송',e('transport',x.transport?x.transport+'일':ph('없음'))),
       R('공급사·계약상태',e('supplier',x.supplier?`<span class="plain wrap">${esc(x.supplier)}</span>`:ph('입력')),true),R('견적·조건 증빙',e('evidence',x.evidence?`<span class="plain wrap">${esc(x.evidence)}</span>`:ph('입력')),true),
@@ -105,7 +105,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     const ue=(k,v,p)=>U?e('gu:'+k,v?`<span class="plain wrap">${esc(v)}</span>`:ph(p)):txt(v);
     return wrap('action','승인게이트 · '+(U?'추가':esc(g.code)),g.title,[
       ...(U?[R('승인 사항',e('gu:title',`<span class="plain wrap">${esc(g.title)}</span>`))]:[]),
-      R('승인 상태',e('gstate',schStateMark(g.st))+(g.o.by?`<span class="plain" style="color:#8e8e8e;margin-left:10px">${esc(userName(g.o.by))} · ${esc((g.o.at||'').slice(0,10))}</span>`:'')),
+      R('승인 상태',e('gstate',schStateMark(g.st))+(g.o.by?`<span class="plain" style="color:#8e8e8e;margin-left:10px">${esc(userName(g.o.by))} · ${esc(schD((g.o.at||'').slice(0,10)))}</span>`:'')),
       R('예상 승인일',`<span class="plain">${g.date?schD(g.date):'-'}</span>${slip?`<em class="sch-delta ${slip>0?'late':''}">계획 대비 ${slip>0?'+':''}${slip}일</em>`:''}`),...(U?[]:[R('계획 승인일',`<span class="plain">${g.plan?schD(g.plan):'-'}</span>`)]),
       R('연결 업무',(g.t?`<a class="sch-wl" data-open="${schItemId(g.t.id)}">${esc(schTaskTitle(g.t))}</a>`:none)+(U?e('gu:task',ph(g.t?'변경':'선택')):''),true),...(U?[]:[R('연계 업무',`<span class="plain wrap">${schWbsLinks(m,g.f['연계업무'])}</span>`,true)]),
       R('승인 역할',ue('role',g.f['승인 역할'],'입력')),R('통과 증빙',ue('evidence',g.f['통과 증빙'],'입력'),true),R('미충족 처리',ue('fallback',g.f['미충족 처리'],'입력'),true),R('메모',e('gnote',g.o.note?`<span class="plain wrap">${esc(g.o.note)}</span>`:ph('입력')),true)],
@@ -116,7 +116,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
   const rows=[R('상태',e('estate',r.st?schStateMark(r.st):ph('지정'))+(r.st0&&r.st!==r.st0?`<span class="plain" style="color:#8e8e8e;margin-left:10px">원본: ${esc(r.st0)}</span>`:''))];
   if(r.user){ const ue=(k,v,p)=>e('u:'+k,v?`<span class="plain wrap">${esc(v)}</span>`:ph(p));
     rows.push(R('구분',ue('cat',r.cat,'입력')),R('연결 업무',r.link?`<span class="plain wrap">${schWbsLinks(m,r.link)}</span>${e('u:link',ph('변경'))}`:ue('link','','예: W4.24 또는 4-24'),true),R('확인 역할',ue('role',r.role,'입력')),R('기한',e('u:due',r.due?schD(r.due):ph('입력'))),R('내용',ue('body',r.body,'입력'),true),R('근거·URL',r.ref&&isUrl(r.ref)?`<a class="url" style="margin-left:0" href="${esc(r.ref)}" target="_blank" rel="noopener" data-stop>${esc(r.ref)}</a>${e('u:ref',ph('변경'))}`:ue('ref',r.ref,'입력'),true),
-      R('작성',`<span class="plain">${esc(userName(r.by))} · ${esc((r.at||'').slice(0,10))}</span>`)); }
+      R('작성',`<span class="plain">${esc(userName(r.by))} · ${esc(schD((r.at||'').slice(0,10)))}</span>`)); }
   else for(const [k,v] of Object.entries(r.fields)){ if(v==null||String(v).trim()==='')continue; const day=schDayOnly(v);
     rows.push(R(esc(k),isUrl(v)?`<a class="url" style="margin-left:0" href="${esc(String(v).trim())}" target="_blank" rel="noopener" data-stop>${esc(v)}</a>`:day&&/T00:00:00$/.test(String(v))?`<span class="plain">${schD(day)}</span>`:`<span class="plain wrap">${/WBS|업무|위치/.test(k)?schWbsLinks(m,v):esc(String(v))}</span>`,true)); }
   rows.push(R('메모',e('enote',r.note?`<span class="plain wrap">${esc(r.note)}</span>`:ph('입력')),true));

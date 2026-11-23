@@ -145,7 +145,7 @@ export class Workspace {
     return { m, role, owners, hasOwner: owners.length > 0, admin: id => !owners.length || ['소유자', '관리자'].includes(role(id)), owner: id => !owners.length || role(id) === '소유자' }; }
   // What a member may be sent: not other members' inbox / personal records, not other members' drafts.
   // (Drafts of the demo data that the design lists — table / card / cal — are listed for everybody, as before.)
-  privateDraft(v, me) { return !!v && !!v.authorId && v.authorId !== me && !(v.table || v.card || v.cal) && (v.status === 'draft' || (v.status === 'trash' && v.prevStatus === 'draft')); }
+  privateDraft(v, me) { return !!v && !!v.authorId && v.authorId !== me && (v.status === 'draft' || (v.status === 'trash' && v.prevStatus === 'draft')); }   // whatever fixture flags it carries (a recovered draft copied them and was sent to everybody)
   hidden(key, v, me) { if (key.startsWith('meta:inbox:')) return key !== 'meta:inbox:' + me; return key.startsWith('item:') && this.privateDraft(v, me); }
   // A change this member may not make: returns the reason, or '' when it is fine.
   denied(c, old, me, R) {

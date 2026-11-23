@@ -58,7 +58,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const tags = await ev(() => [...document.querySelectorAll('.pop .it')].map(e => e.textContent.trim()));
   await a.click('.pop .it:has-text("[ENERGY]")'); await sleep(400);
   const rt = await ev(() => ({ chip: (document.querySelector('#sec-research .sch-chiprow .sch-chip') || {}).textContent, titles: [...document.querySelectorAll('#page-main .rcard .tt')].map(e => e.textContent.trim().split('\n')[0]) }));
-  check('the tags written in front of titles are found ([REF], [ENERGY] …) and filter the cards', tags[0] === '전체 태그' && tags.some(t => t.startsWith('[REF]')) && tags.some(t => t.startsWith('[ENERGY]')) && tags[tags.length - 1] === '태그 없음' && /태그: \[ENERGY\]/.test(rt.chip || '') && rt.titles.length >= 2 && rt.titles.every(t => t.toUpperCase().startsWith('[ENERGY]')), { tags, rt });
+  check('the tags written in front of titles are found ([REF], [ENERGY] …) and filter the cards', tags[0] === '전체 구분' && tags.some(t => t.startsWith('[REF]')) && tags.some(t => t.startsWith('[ENERGY]')) && tags[tags.length - 1].startsWith('구분 없음') && /구분: \[ENERGY\]/.test(rt.chip || '') && rt.titles.length >= 2 && rt.titles.every(t => t.toUpperCase().startsWith('[ENERGY]')), { tags, rt }); await ev(() => closePop());   // the list of 구분 stays open (several can be ticked)
   const chipY = await ev(() => { const c = document.querySelector('#sec-research .sch-chip'); return { pt: getComputedStyle(c).paddingTop, h: c.offsetHeight }; });
   check('the word of a tag sits 1 lower (the tag itself stays 20 high)', chipY.pt === '2px' && chipY.h === 20, chipY);
   await a.click('#sec-research .sch-chip'); await sleep(300);

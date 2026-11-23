@@ -122,7 +122,8 @@ function sharedStatus(text){if(!/못했|확인|필요|보관|겹|재시도|실�
 /* ---------- attachments, history, members ---------- */
 // Attachments are stored by the Worker (/api/file); the page embeds only the file id, so records stay small.
 // version history of one item (kept by the server at every save of its title or body)
-async function sharedVersions(id){const r=await apiFetch('/api/versions?item='+encodeURIComponent(id));if(!r.ok)throw new Error('versions');return (await r.json()).versions||[];}
+async function sharedVersions(id){const r=await apiFetch('/api/versions?item='+encodeURIComponent(id));if(r.status===404)return [];   // the server has no such item yet (never saved): no versions, which is not a fault
+ if(!r.ok){const e=new Error('versions');try{e.userMessage=(await r.json()).error||'';}catch(_){ }throw e;}return (await r.json()).versions||[];}
 async function sharedVersion(n){const r=await apiFetch('/api/version?id='+encodeURIComponent(n));if(!r.ok)throw new Error('version');return (await r.json()).version;}
 async function sharedUnfurl(u){if(!sharedReady)return null;const r=await apiFetch('/api/unfurl?url='+encodeURIComponent(u));if(!r.ok)return null;const d=await r.json();return d&&d.ok?d:null;}
 async function sharedUploadFile(file,itemId){if(!sharedReady)throw Error('서버에 연결된 후 첨부할 수 있습니다.');if(file.size>1887436)throw Error('파일은 1.8MB까지 첨부할 수 있습니다. ('+file.name+')');
@@ -140,7 +141,7 @@ async function sharedAddUser(employee,name){const r=await postJson('/api/user',{
 /* ---------- unsaved work kept in this browser ---------- */
 const recoveryKey=()=>'aidc-recovery:'+sharedUser;
 function sharedKeepCopy(v){v=stripTransient(copy(v));if(!v.title&&!v.body)return;const sig=JSON.stringify([v.title,v.body]);if(ITEMS.some(x=>x._recoverySignature===sig))return;
- ITEMS.push({...v,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(v.title||'제목 없음').replace(/^(\[복구 초안\]\s*)+/,''),status:'draft',authorId:sharedUser,editing:false,arch:undefined,trashedAt:undefined,_recoverySignature:sig});}
+ ITEMS.push({...v,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(v.title||'제목 없음').replace(/^(\[복구 초안\]\s*)+/,''),status:'draft',authorId:sharedUser,table:undefined,card:undefined,cal:undefined,editing:false,arch:undefined,trashedAt:undefined,_recoverySignature:sig});}
 function sharedKeepDraft(it){const v=stripTransient(copy(it));const original=stripTransient(copy(it._editOriginal||{}));if(same(v,original))return;sharedKeepCopy(v);}
 // Only work that the server does not have yet is kept: open edits, never-saved new items and changes that failed to send.
 function preserveLocal(capture){if(!sharedUser||!sharedReady)return;if(capture&&typeof captureEditor==='function')captureEditor();
@@ -152,7 +153,7 @@ function restoreLocal(){const raw=localStorage.getItem(recoveryKey());if(!raw)re
  const bare=t=>(t||'').replace(/^(\[복구 초안\]\s*)+/,'');
  const seen=new Set(ITEMS.filter(i=>i.status==='draft'&&i.authorId===sharedUser).map(i=>JSON.stringify([bare(i.title),i.body||''])));
  const add=v=>{if(!v||(!v.title&&!v.body))return;const sig=JSON.stringify([bare(v.title),v.body||'']);if(seen.has(sig))return;seen.add(sig);const c=stripTransient(copy(v));delete c._was;
-  ITEMS.push({...c,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(bare(c.title)||'제목 없음'),status:'draft',authorId:sharedUser,arch:undefined,trashedAt:undefined});};
+  ITEMS.push({...c,id:'recovery-'+crypto.randomUUID(),title:'[복구 초안] '+(bare(c.title)||'제목 없음'),status:'draft',authorId:sharedUser,table:undefined,card:undefined,cal:undefined,arch:undefined,trashedAt:undefined});};
  for(const x of rec.items||[]){
   if(rec.v===2){const cur=item(x.id);if(x._was==='new'){if(!cur)add(x);}else if(!cur||cur.title!==x.title||(cur.body||'')!==(x.body||''))add(x);}
   else if(x.editing||x.status==='new')add(x);                                          // older format: only real unsaved work …

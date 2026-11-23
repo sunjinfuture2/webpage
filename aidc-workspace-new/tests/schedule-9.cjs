@@ -1,0 +1,144 @@
+// WorkSpace x Schedule (preview), ninth part (owner's list of 2026-11-23, the "eleventh round"): what is put right for everybody
+// (a draft is only its writer's, the global search finds schedule tasks, one value for a project's scale, versions of something
+// never saved, one rule for "has a file") and what the preview shows (dates as yyyy. mm. dd, start / finish as two columns, why
+// something is late, pages with first / last, an X in search boxes, the member card, help, Excel of what is shown, the archive
+// with its search and kinds at the top, 구분 of research notes, the library's previews and kinds, headings read from the content).
+// Needs wrangler dev on 127.0.0.1:8787.
+const { chromium, sleep, check, newUser, done } = require('./h.cjs');
+const zlib = require('zlib'); const fs = require('fs'); const os = require('os'); const path = require('path');
+const sfx = Date.now().toString(36).slice(-5);
+const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
+function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06])); const n = buf.readUInt16LE(p + 10); let q = buf.readUInt32LE(p + 16);
+  for (let i = 0; i < n; i++) { const method = buf.readUInt16LE(q + 10), csize = buf.readUInt32LE(q + 20), nl = buf.readUInt16LE(q + 28), el = buf.readUInt16LE(q + 30), cl = buf.readUInt16LE(q + 32), off = buf.readUInt32LE(q + 42), name = buf.slice(q + 46, q + 46 + nl).toString('utf8');
+    const lnl = buf.readUInt16LE(off + 26), lel = buf.readUInt16LE(off + 28), data = buf.slice(off + 30 + lnl + lel, off + 30 + lnl + lel + csize); out[name] = method === 0 ? data : zlib.inflateRawSync(data); q += 46 + nl + el + cl; }
+  return out; }
+(async () => {
+  const browser = await chromium.launch();
+  const A = await newUser(browser, 'R9A' + sfx, '아홉 일', { url: V2 }), a = A.page;
+  const B = await newUser(browser, 'R9B' + sfx, '아홉 이', { url: V2 }), b = B.page;
+  const ev = (f, x) => a.evaluate(f, x);
+  const flush = () => a.evaluate(() => sharedFlush(true));
+  const reloadB = async () => { await b.reload(); await b.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady, null, { timeout: 15000 }); await sleep(900); };
+  const goP = async () => { await ev(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 15000 }); await sleep(700); };
+  const save = async (fn, file) => { const [dl] = await Promise.all([a.waitForEvent('download', { timeout: 30000 }), fn()]); const f = path.join(os.tmpdir(), 'r9-' + sfx + '-' + file); await dl.saveAs(f); return { name: dl.suggestedFilename(), buf: fs.readFileSync(f) }; };
+  const toSec = sel => ev(s => { const c = document.querySelector('#content'), e = document.querySelector(s); c.scrollTop += e.getBoundingClientRect().top - 110; }, sel);
+  await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 15000 }); await sleep(600);
+
+  console.log('— for everybody: drafts, search, scale, versions, files');
+  const did = await ev(t => { const it = newItem('action', { title: t, status: 'draft', table: true, card: true, cal: true }); render(true); return it.id; }, 'R9 플래그 초안 ' + sfx); await flush(); await sleep(500);
+  const d1 = await ev(id => ({ see: canSee(item(id)), live: isLive(item(id)), row: !!document.querySelector(`#sec-actions .rw[data-open="${id}"]`) }), did); await reloadB();
+  check('a draft is only its writer\'s, whatever fixture flags it carries: not in the lists, not sent to another member', d1.see && !d1.live && !d1.row && await b.evaluate(id => !ITEMS.some(x => x.id === id), did), d1);
+  await a.click('#sb-search'); await sleep(300); await a.fill('#srch-in', '최신 RFP'); await sleep(400);
+  const gs = await ev(() => ({ hits: [...document.querySelectorAll('#srch-res .it')].map(x => x.textContent), x: !document.querySelector('.srch-inw .q-x').hidden, own: ITEMS.some(i => /최신 RFP/.test(i.title || '')) }));
+  check('the global search finds a task of the schedule nobody has written in yet', gs.hits.some(t => /최신 RFP/.test(t) && /판교/.test(t)) && !gs.own, gs);
+  check('…and its box shows an X once something is typed', gs.x); await a.keyboard.press('Escape'); await a.mouse.click(1000, 600); await sleep(200);
+  const sc = await ev(() => { const h = headOf('pangyo'), p = PROJECTS.pangyo, keep = [copy(h.scale), p.area]; h.scale[0][1] = ''; p.area = '9,876㎡ 시험'; render(true); const card = (document.querySelector('#proj-inner .pcard[data-go="project:pangyo"] .info') || {}).textContent || ''; go('project:pangyo'); const ov = (document.querySelector('#page-project .phead') || document.querySelector('#page-project')).textContent; h.scale = keep[0]; p.area = keep[1]; go('main'); return { card: card.includes('9,876㎡ 시험'), ov: ov.includes('9,876㎡ 시험') }; });
+  check('a project\'s scale reads the same on its card and in its overview (an empty value falls back the same way)', sc.card && sc.ov, sc);
+  const vs = await ev(async s => { let none, err = ''; try { none = await sharedVersions('never-saved-' + s); } catch (e) { err = String(e.message || e); } return { none, err }; }, sfx);
+  check('versions of something the server has never been given: none, not an error', Array.isArray(vs.none) && vs.none.length === 0 && !vs.err, vs);
+  const fl = await ev(async t => { const it = newItem('research', { title: t, status: 'published' }); const up = async (n, ty, body) => (await sharedUploadFile(new File([body], n, { type: ty }), it.id)).id; const pdf = await up('r9.pdf', 'application/pdf', '%PDF-1.4 r9'), txt = await up('r9.txt', 'text/plain', '첫 줄\n둘째 줄'), ppt = await up('r9.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'x'), gone = await up('r9-gone.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'x');
+    const link = (id, n) => `<p><a class="file" href="/api/file/${id}" download="${n}" data-name="${n}" data-fid="${id}">${n}</a></p>`; it.body = link(pdf, 'r9.pdf') + link(txt, 'r9.txt') + link(ppt, 'r9.pptx'); const plain = newItem('research', { title: t + ' 글만', status: 'published', body: '<p>주소만 적은 글 /api/file/abc</p>' }); render(true); return { id: it.id, gone, has: hasFiles(it), plain: hasFiles(plain) }; }, 'R9 첨부 ' + sfx); await flush(); await sleep(400);
+  check('"has a file" is what the body links to (a body that only mentions the address has none)', fl.has && !fl.plain, fl);
+
+  console.log('— dates, lists, pages, search boxes');
+  const dt = await ev(() => ({ d: schD('2026-11-02'), dot: fmtDateDot('2026-03-05'), k: fmtDateK('2026-03-05'), st: fmtStampShort(new Date(2026, 2, 5, 9, 7)), show: dateShow({ date: '2026-03-05', dateTxt: '2026. 3. 5' }), txt: dateShow({ dateTxt: '10월 중' }), none: dateShow({}) }));
+  check('one way to write a date: yyyy. mm. dd (schedule, lists, stamps; a stored old form is not shown)', dt.d === '2026. 11. 02' && dt.dot === '2026. 03. 05' && dt.k === '2026. 03. 05' && dt.st === '2026. 03. 05 09:07' && dt.show === '2026. 03. 05' && dt.txt === '10월 중' && dt.none === '', dt);
+  await toSec('#sec-actions'); await sleep(300);
+  const mt = await ev(() => { const tb = document.querySelector('#sec-actions .tbl.sch-all'), rows = [...tb.querySelectorAll('.rw')]; return { head: [...tb.querySelectorAll('.hd span')].map(s => s.textContent.trim()).join(), two: rows.every(r => r.querySelectorAll('.rg').length === 2), fmt: rows.every(r => { const [s, f] = [...r.querySelectorAll('.rg')].map(x => x.textContent.trim()); return /^(\d{4}\. \d{2}\. \d{2}|-)$/.test(s) && /^(\d{4}\. \d{2}\. \d{2}|-)$/.test(f); }), arrows: tb.querySelectorAll('.rw .rg svg').length, ms: rows.filter(r => r.querySelector('.sch-ms')).every(r => r.querySelectorAll('.rg')[1].textContent.trim() === '-'), n: rows.length }; });
+  check('main action table: 시작일 and 완료일 are two columns without an arrow; a milestone has "-" as its finish', mt.head === '프로젝트,WBS,업무명,시작일,완료일,중요도,상태,담당자,기한,URL' && mt.n > 0 && mt.two && mt.fmt && mt.arrows === 0 && mt.ms, mt);
+  const late = a.locator('#sec-actions .sch-dd[data-tip]').first(); let tip = '';
+  if (await late.count()) { await late.hover(); await sleep(450); tip = await ev(() => (document.querySelector('.sch-tip') || {}).innerText || ''); await a.mouse.move(5, 5); await sleep(150); }
+  check('resting on "n일 지연" says why it is late', /지연 사유/.test(tip) && /(경과|미입력)/.test(tip) && await ev(() => !document.querySelector('.sch-tip')), tip);
+  await a.fill('#sec-actions input[data-q="action"]', 'RFP'); await sleep(500); const qx1 = await ev(() => !document.querySelector('#sec-actions .q-x').hidden); await a.click('#sec-actions .q-x'); await sleep(500);
+  check('a search box shows an X once something is typed; the X empties it', qx1 && await ev(() => S.q.action === '' && document.querySelector('#sec-actions input[data-q="action"]').value === '' && document.querySelector('#sec-actions .q-x').hidden));
+  await goP(); await ev(() => { SCHU.tab = 'list'; SCHU.per = 10; SCHU.page = 1; SCHU.phase = ''; SCHU.q = ''; schRefresh(); }); await sleep(600); await toSec('#sch-actions');
+  const pg = () => ev(() => { const p = document.querySelector('#sch-actions .pager'); return { nums: [...p.querySelectorAll('button:not(.arr)')].map(x => x.textContent), cur: (p.querySelector('.cur') || {}).textContent, ends: p.querySelectorAll('.arr.ends').length, firstOff: p.querySelector('[data-v="first"]').disabled, lastOff: p.querySelector('[data-v="last"]').disabled }; });
+  const pg1 = await pg(); await a.click('#sch-actions .pager [data-v="last"]'); await sleep(500); const pg2 = await pg(); await a.click('#sch-actions .pager [data-v="first"]'); await sleep(500); const pg3 = await pg();
+  check('pages: "<<" and ">>" go to the first and the last page; the numbers come ten at a time', pg1.ends === 2 && pg1.nums.join() === '1,2,3,4,5,6,7,8,9,10' && pg1.firstOff && !pg1.lastOff && +pg2.cur > 10 && +pg2.nums[0] % 10 === 1 && +pg2.nums[0] > 10 && pg2.cur === pg2.nums[pg2.nums.length - 1] && pg2.lastOff && pg3.cur === '1', { pg1, pg2 });
+  const lh = await ev(() => ({ head: [...document.querySelectorAll('#sch-actions .tbl.sch-list .hd span')].map(s => s.textContent.trim()).join(), xl: [...document.querySelectorAll('#sch-actions .sch-filters .right .sch-xl')].map(x => x.textContent.trim()), info: !!document.querySelector('#sch-actions .sch-filters [data-info]') }));
+  check('project list: the same two date columns; Excel of what is shown and of the whole project stand side by side', lh.head === 'WBS,업무명,시작일,완료일,중요도,상태,담당자,기한,URL' && lh.xl.join() === '현재 검색 결과 내보내기,프로젝트 전체 내보내기' && lh.info, lh);
+
+  console.log('— Excel, help, the member card, the reason of a delay');
+  await ev(() => { SCHU.per = 20; SCHU.q = 'RFP'; schRefresh(); }); await sleep(500); const want = await ev(() => schFiltered(schModel('pangyo'), true).length);
+  const xv = await save(() => a.click('#sch-actions .sch-xl[data-part="view"]'), 'view.xlsx'), xa = await save(() => a.click('#sch-actions .sch-xl.all'), 'all.xlsx'); await ev(() => { SCHU.q = ''; schRefresh(); document.querySelector('#toast').classList.remove('on'); });
+  const zv = unzip(xv.buf), wb = (zv['xl/workbook.xml'] || Buffer.alloc(0)).toString('utf8'), rowsOf = z => ((z['xl/worksheets/sheet2.xml'] || Buffer.alloc(0)).toString('utf8').match(/<row /g) || []).length;
+  check('"현재 검색 결과 내보내기" writes only what the search and the filters show; "프로젝트 전체 내보내기" the whole workbook', /액션 검색결과/.test(xv.name) && want > 0 && rowsOf(zv) === want + 1 && /액션\(업무\)/.test(wb) && /마스터스케줄/.test(xa.name) && xa.buf.length > xv.buf.length * 2, { view: xv.name, all: xa.name, want, rows: rowsOf(zv) });
+  await a.click('#sch-actions .sch-filters [data-info]'); await sleep(300); const hp = await ev(() => { const p = document.querySelector('.pop.sch-help'); return p ? p.innerText : ''; }); await a.mouse.click(5, 5); await sleep(200);
+  check('an "i" opens short help on what the dates and the states mean', /예상 기한/.test(hp) && /실제 기한/.test(hp) && /상태일/.test(hp) && /확인 전/.test(hp) && /조건부 미발동/.test(hp), hp.slice(0, 120));
+  const lt = await ev(() => { const m = schModel('pangyo'), P = AIDCSchedule.progress, today = schToday(), t = m.plan.tasks.find(x => !P.isDone(x) && m.res.tasks[x.id].finish < today && x.kind !== 'milestone'); schEditTask('pangyo', t.id, '지연 사유 입력', x => { x.why = '발주처 회신 지연 R9'; }, true); return { id: t.id, why: schLateWhy(schModel('pangyo'), schModel('pangyo').byId.get(t.id)) }; }); await flush(); await sleep(600);
+  await ev(id => openPanel(schItemId(id), true), lt.id); await sleep(700);
+  const lp = await ev(() => { const rows = [...document.querySelectorAll('#panel-pin .sch-props .pr')].map(r => [r.querySelector('.k').textContent.trim(), r.querySelector('.v').textContent.trim()]); return { why: (rows.find(r => r[0] === '지연 사유') || [])[1], info: document.querySelectorAll('#panel-pin .sch-props .k [data-info]').length, tip: (document.querySelector('#panel-pin .sch-dd[data-tip]') || { dataset: {} }).dataset.tip || '' }; });
+  check('a late task has 지연 사유 as a field; what a member writes there leads the note of the list', /^발주처 회신 지연 R9/.test(lt.why) && lp.why === '발주처 회신 지연 R9' && lp.info >= 2 && /^발주처 회신 지연 R9/.test(lp.tip), { lt, lp });
+  await reloadB(); check('…and reaches the other member', await b.evaluate(id => schReady('pangyo') && schModel('pangyo').byId.get(id).why === '발주처 회신 지연 R9', lt.id));
+  await ev(() => closePanel(true)); await ev(id => schEditTask('pangyo', id, '지연 사유 지움', x => { x.why = ''; }, true), lt.id);
+  await ev(() => { MEMBERS_META[sharedUser] = { ...(MEMBERS_META[sharedUser] || {}), email: 'r9@sunjin.co.kr', phone: '010-1234-5678', title: '책임' }; const t = schModel('pangyo').phases[0].tasks[1]; schEditTask('pangyo', t.id, '담당 지정', x => { x.people = [sharedUser]; }, true); SCHU.page = 1; SCHU.sort = 'wbs'; schRefresh(); }); await sleep(600);
+  await a.locator('#sch-actions .tbl.sch-list .rw .who [data-user]').first().click(); await sleep(400);
+  const uc = await ev(() => { const p = document.querySelector('.pop.ucard'); return { txt: p ? p.innerText : '', panel: S.panel }; });
+  check('pressing an assignee shows the member (name, title, team, e-mail, phone) instead of opening the row', /아홉 일/.test(uc.txt) && /책임/.test(uc.txt) && /r9@sunjin\.co\.kr/.test(uc.txt) && /010-1234-5678/.test(uc.txt) && !uc.panel, uc); await a.mouse.click(5, 5); await sleep(200);
+  await a.locator('#sch-actions .tbl.sch-list .rw .who [data-user]').first().hover(); await sleep(1300);
+  check('…and so does resting on the name for a second', await ev(() => !!document.querySelector('.pop.ucard'))); await a.mouse.move(5, 300); await sleep(300); await ev(() => closePop());
+  await ev(() => { const t = schModel('pangyo').phases[0].tasks[1]; schEditTask('pangyo', t.id, '담당 해제', x => { x.people = []; }, true); });
+  const ph = await ev(() => { const el = document.querySelector('#page-project .phead .pdel .pict'), tri = document.querySelector('#notice .tri'); return { w: el ? el.getBoundingClientRect().width / (LAYOUT.zoom || 1) : 0, tri: getComputedStyle(tri).transform, open: document.querySelector('#notice').classList.contains('open') }; });
+  check('the project\'s delete pictogram is 2.5 times as large (35); the closed notice bar\'s arrow points down', Math.abs(ph.w - 35) < .6 && !ph.open && /^matrix\(1\.4, 0, 0, 1\.4, 0, 0\)$/.test(ph.tri), ph);
+
+  console.log('— archive');
+  await ev(() => go('archive')); await sleep(900);
+  const ar = await ev(() => { const pw = document.querySelector('#arch-pw'), top = pw.querySelector('.ar-top').getBoundingClientRect(), tabs = pw.querySelector('.tabs').getBoundingClientRect(), rows = [...pw.querySelectorAll('.tbl.archive .rw')];
+    return { views: [...pw.querySelectorAll('[data-arview]')].map(b => b.firstChild.textContent), on: pw.querySelector('[data-arview].on').dataset.arview, q: !!pw.querySelector('input[data-arq]'), order: top.bottom <= tabs.top, tabsY: tabs.top, head: [...pw.querySelectorAll('.tbl.archive .hd em')].map(e => e.textContent).join(), pri: rows.length > 0 && rows.every(r => !!r.querySelector('.pri')), links: rows.filter(r => r.querySelector('a.ttl-link')).length, icons: rows.filter(r => r.querySelector('.ttl-ic svg')).length, plain: rows.filter(r => !r.querySelector('a.ttl-link') && r.querySelector('.ttl-ic')).length, cards: pw.querySelectorAll('.acard').length }; });
+  check('archive: its search and the kinds of document stand at the top, documents first; the site cards are a view of their own', ar.views.join() === '문서 목록,참고사이트' && ar.on === 'docs' && ar.q && ar.order && ar.tabsY < 420 && ar.cards === 0, ar);
+  check('archive table: importance is a column, the last one is the Dropbox address; a title that opens a site carries a link pictogram (and only such a title)', ar.head === '제목,담당자,기한,중요도,최종수정일자,드롭박스 URL' && ar.pri && ar.links > 0 && ar.icons === ar.links && ar.plain === 0, ar);
+  await a.fill('#arch-pw input[data-arq]', '커미셔닝'); await sleep(500);
+  const as = await ev(() => { const pw = document.querySelector('#arch-pw'); return { rows: [...pw.querySelectorAll('.tbl.archive .rw')].map(r => [(r.querySelector('.ar-cat') || {}).textContent, r.querySelector('.tx').textContent]), focus: document.activeElement === pw.querySelector('input[data-arq]'), note: (pw.querySelector('.ar-note') || {}).textContent || '' }; });
+  check('archive search looks through every kind at once and says which kind a document is in; the box keeps the caret', as.rows.length > 0 && as.rows.every(r => r[0] && /커미셔닝/.test(r[1])) && as.focus && /모든 분류/.test(as.note), as);
+  await a.click('#arch-pw .ar-q .q-x'); await sleep(400); await a.click('#arch-pw [data-arview="sites"]'); await sleep(400);
+  check('…the X empties it; 참고사이트 shows the site cards', await ev(() => { const pw = document.querySelector('#arch-pw'); return pw.querySelector('input[data-arq]').value === '' && pw.querySelectorAll('.acard').length > 0 && !pw.querySelector('.tbl.archive'); }));
+  await a.click('#arch-pw [data-arview="docs"]'); await sleep(300);
+  const rowId = await ev(() => { const t = ARCH_TABS.find(t => (ARCH_ROWS[t] || []).length); S.archTab = t; renderArchive(); return ARCH_ROWS[t][0].id; }); await ev(id => openPanel(id), rowId); await sleep(700);
+  const ad = await ev(() => [...document.querySelectorAll('#panel-pin .props .pr .k')].map(k => k.textContent.trim()));
+  await ev(() => nbHistory(curItem())); await sleep(1100); const hv = await ev(() => { const d = document.querySelector('[class*="nb-hist"]'); return d ? d.closest('body > *').textContent.replace(/\s+/g, ' ') : ''; }); await a.keyboard.press('Escape'); await sleep(300);
+  check('an archive document has 드롭박스 URL in its detail; its version window says there are none yet (no error about the connection)', ad.includes('드롭박스 URL') && ad.includes('출처 URL') && /아직 보관된 버전이 없습니다/.test(hv) && !/연결을 확인/.test(hv), { ad, hv: hv.slice(0, 80) });
+  await ev(() => closePanel(true));
+
+  console.log('— research: 구분, 담당자, cards; library; export');
+  await ev(() => go('main')); await sleep(500);
+  const rids = await ev(t => { const mk = (title, cats, ppl, body) => newItem('research', { title, status: 'published', people: ppl, ...(cats ? { cats } : {}), body: body || '' }).id; const x = [mk(t + ' 하나', ['전력R9'], [sharedUser]), mk('[냉각R9] ' + t + ' 둘', null, []), mk(t + ' 셋', ['부지R9'], [], '<p>' + 'abcdefghij'.repeat(30) + '</p>')]; render(true); return x; }, 'R9 구분 ' + sfx); await flush(); await sleep(400); await toSec('#sec-research'); await sleep(300);
+  const rb = await ev(() => [...document.querySelectorAll('#sec-research .sch-filters [data-rpick]')].map(x => x.textContent.trim()));
+  await a.click('#sec-research [data-rpick="tag"]'); await sleep(300); const tm = await ev(() => [...document.querySelectorAll('.pop.sch-multi .it[data-t]')].map(x => x.dataset.t));
+  await a.click('.pop.sch-multi .it[data-t="전력R9"]'); await sleep(350); await a.click('.pop.sch-multi .it[data-t="냉각R9"]'); await sleep(500);
+  const rf = await ev(ids => ({ open: !!document.querySelector('.pop.sch-multi'), tags: (S.rf.tags || []).join(), chips: [...document.querySelectorAll('#sec-research .sch-chip')].map(x => x.firstChild.textContent), cards: [...new Set([...document.querySelectorAll('#sec-research .rcard')].map(c => c.dataset.open))], ids }), rids);
+  check('research filters read 구분 and 담당자; a 구분 used once can be chosen, several at once, and the list stays open', rb.join() === '전체 구분,전체 기간,전체 담당자,첨부 전체' && tm.includes('전력R9') && tm.includes('냉각R9') && tm.includes('부지R9') && rf.open && rf.tags === '전력R9,냉각R9' && rf.chips.length === 2 && rf.cards.includes(rids[0]) && rf.cards.includes(rids[1]) && !rf.cards.includes(rids[2]), { rb, rf });
+  await a.mouse.click(1000, 950); await sleep(200); await ev(() => { delete S.rf.tags; S.rf.who = sharedUser; refreshSec('research'); }); await sleep(400);
+  const rw = await ev(ids => { const c = [...new Set([...document.querySelectorAll('#sec-research .rcard')].map(x => x.dataset.open))]; delete S.rf.who; refreshSec('research'); return c.includes(ids[0]) && !c.includes(ids[1]); }, rids);
+  check('the 담당자 filter goes by who is assigned, not by who wrote it', rw);
+  await sleep(300); const ov = await ev(id => { const c = document.querySelector(`#sec-research .rcard[data-open="${id}"]`), ds = c && c.querySelector('.ds'); if (!c) return null; const r = c.getBoundingClientRect(), d = ds ? ds.getBoundingClientRect() : r; return { inside: d.right <= r.right + .5 && d.bottom <= r.bottom + .5, clip: getComputedStyle(c).overflow, h: [...document.querySelectorAll('#sec-research .rgrid .rcard')].slice(0, 3).map(x => Math.round(x.getBoundingClientRect().height)) }; }, rids[2]);
+  check('a card keeps a long text without spaces inside itself', !!ov && ov.inside && ov.clip === 'hidden', ov);
+  await ev(id => openPanel(id), rids[0]); await sleep(600); const cf0 = await ev(() => [...document.querySelectorAll('#panel-pin .props .pr')].map(p => p.querySelector('.k').textContent.trim() + '=' + p.querySelector('.v').textContent.trim()));
+  await a.click('#panel-pin [data-ed="edit"]'); await sleep(800); await a.click('#panel-pin [data-pick="cats"]'); await sleep(300); await a.click('.pop.sch-multi .it[data-t="냉각R9"]'); await sleep(250); await a.fill('#rc-new', '새구분' + sfx); await a.press('#rc-new', 'Enter'); await sleep(300); await a.mouse.click(1100, 980); await sleep(200); await a.click('#panel-pin [data-ed="save"]'); await sleep(1000); await flush();
+  const cf1 = await ev(id => item(id).cats, rids[0]); await reloadB();
+  check('a research note has 구분 below URL; those in use can be ticked and a new one typed, and they are saved for everybody', cf0.some(x => x === '구분=전력R9') && cf0.findIndex(x => x.startsWith('구분=')) === cf0.findIndex(x => x.startsWith('URL=')) + 1 && cf1.join() === ['전력R9', '냉각R9', ('새구분' + sfx).toUpperCase()].join() && await b.evaluate(id => (item(id).cats || []).length === 3, rids[0]), { cf0, cf1 });
+  await ev(() => closePanel(true)); await ev(() => openLibrary('research')); await a.waitForSelector('#lb-wall .lb-card', { timeout: 15000 }); await sleep(600);
+  const lb = await ev(f => ({ kinds: [...document.querySelectorAll('.lb-kinds button')].map(x => x.textContent).join(), mine: [...document.querySelectorAll('.lb-card')].filter(c => /^r9/.test(c.querySelector('.lb-t').textContent)).map(c => c.querySelector('.lb-t').textContent).sort().join(), gone: !!document.querySelector(`.lb-card[data-fid="${f.gone}"]`), pdf: !!document.querySelector('.lb-card.sh-pdf iframe[src*="inline=1"]'), tile: !!document.querySelector('.lb-card.sh-tile .lb-tile') }), fl); await sleep(900);
+  check('library: only files a body links to (one taken out of its body is gone), kinds by file format', lb.kinds === '전체,이미지,PDF,PPT,WORD,한글,엑셀,기타' && lb.mine === 'r9.pdf,r9.pptx,r9.txt' && !lb.gone, lb);
+  check('library: a PDF is shown by the browser inside its card, a text by its first lines; what a browser cannot open stays a sheet with its format', lb.pdf && lb.tile && await ev(() => /첫 줄/.test((document.querySelector('.lb-emb.text pre') || {}).textContent || '')), lb);
+  await ev(() => closePanel(true));
+  const ex = await ev(() => { const secs = schExpBody('<p><strong>회의 개요</strong></p><p>오늘 회의에서는 전력 인입 일정과 수전 용량 확보 방안을 길게 논의하였고 결론은 다음 주에 정리한다.</p><p>논의 사항:</p><ul><li>하나</li><li>둘</li></ul><p>장소: 대회의실</p><p>참석자: 홍길동, 김철수, 박영희 외 여러 명이 참석하여 긴 논의를 이어 갔다고 한다.</p><p>[구조]</p><p>내용 문단</p><p>향후 계획</p><ul><li>가</li></ul><p>이것은 문장입니다.</p><p>마지막 줄</p>').map(s => s.h); const it = newItem('research', { title: 'R9 내보내기', status: 'published', body: '<pre>code line</pre><p>본문</p>' }), d = schExpModel(it), html = schExpHtml(d, ''); it.status = 'trash'; return { secs, pre: /p\.pre\{font-family:Pretendard/.test(html), mono: /Consolas/.test(html) }; });
+  check('export: headings are read from the content (bold line, line ending in a colon, short line above a list, [..]) — not a sentence, not a "name: value" line', ex.secs.join('|') === '회의 개요|논의 사항|구조|향후 계획', ex.secs);
+  const dx = await save(() => ev(() => { const it = ITEMS.find(i => i.type === 'research' && isLive(i)); return schExport(it, 'docx'); }), 'f.docx'), dz = unzip(dx.buf), ft = (dz['word/fontTable.xml'] || Buffer.alloc(0)).toString('utf8'), stl = (dz['word/styles.xml'] || Buffer.alloc(0)).toString('utf8'), docx = (dz['word/document.xml'] || Buffer.alloc(0)).toString('utf8');
+  check('export: one font (Pretendard) for everything, in the Word file with one fallback for every script, in the PDF page for code too', ex.pre && !ex.mono && /w:name="Pretendard"/.test(ft) && /w:altName/.test(ft) && /w:ascii="Pretendard" w:eastAsia="Pretendard"/.test(stl) && !/w:rFonts/.test(docx), { ft: ft.slice(0, 120) });
+
+  console.log('— calendar tags; my page; without the preview');
+  const cl = await ev(() => { const keep = PROJ_ORDER.slice(), add = []; for (let i = 0; i < 6; i++) { const id = 'r9x' + i; PROJECTS[id] = { ...PROJECTS.pangyo, id, tag: '추가' + i, full: '이름이 긴 추가 프로젝트 ' + i }; PROJ_ORDER.push(id); add.push(id); } go('main'); render(true);
+    const f = document.querySelector('#page-main .cal .filters'), l = document.querySelector('#page-main .cal .legend').getBoundingClientRect(), g = document.querySelector('#page-main .cal .grid').getBoundingClientRect(), pills = [...f.querySelectorAll('.pill')].map(p => p.getBoundingClientRect()), fr = f.getBoundingClientRect();
+    const out = { rows: new Set(pills.map(r => Math.round(r.top))).size, overlap: pills.some(r => r.right > l.left - 4 && r.bottom > l.top && r.top < l.bottom), below: Math.round((g.top - fr.bottom) * 10) / 10 }; for (const id of add) delete PROJECTS[id]; PROJ_ORDER.length = 0; PROJ_ORDER.push(...keep); render(true); return out; });
+  check('main calendar: project tags take a second row when there are many; they never run into 미팅 · 리서치 and the grid moves down', cl.rows >= 2 && !cl.overlap && cl.below >= 20, cl);
+  await ev(() => openModal('account')); await sleep(700); const mp = await ev(() => { const f = document.querySelector('[data-mpf="profile.phone"]'); return { has: !!f, label: !!f && /연락처/.test(f.closest('label').textContent) }; }); await ev(() => closeModal());
+  check('my page › 프로필 has 연락처 (shown on the member card)', mp.has && mp.label, mp);
+  const C = await newUser(browser, 'R9C' + sfx, '아홉 삼', { url: V1 }), c = C.page;
+  const off = await c.evaluate(() => ({ pv: PREVIEW_ON, dot: fmtDateDot('2026-03-05'), show: dateShow({ dateTxt: '10월 중' }), none: dateShow({}), ends: document.querySelectorAll('.pager .arr.ends').length, qx: document.querySelectorAll('.q-x').length, arch: (go('archive'), !!document.querySelector('#arch-pw .ar-top')) }));
+  check('without the preview: dates, pages, search boxes and the archive are as they were', off.pv === false && off.dot === '2026. 3. 5' && off.show === '10월 중' && off.none === '' && off.ends === 0 && off.qx === 0 && !off.arch, off);
+  check('no script errors', A.errs.length === 0 && B.errs.length === 0 && C.errs.length === 0, [...A.errs, ...B.errs, ...C.errs].slice(0, 3));
+
+  // what this suite made goes to the trash
+  await ev(([d, r, f]) => { for (const id of [d, f, ...r]) { const it = ITEMS.find(x => x.id === id); if (it) { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } } for (const it of ITEMS) if (/^R9 (첨부|구분|내보내기)/.test(it.title || '') && it.status !== 'trash') { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } render(true); }, [did, rids, fl.id]); await flush(); await sleep(400);
+  await browser.close(); done();
+})().catch(e => { console.error(e); process.exit(1); });

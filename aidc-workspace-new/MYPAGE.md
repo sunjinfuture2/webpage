@@ -52,7 +52,7 @@ Done = built and covered by `tests/mypage-1.cjs` (82 checks). Part = the part th
 | DEL-01 | done | no export entry, no `canExport`, no "내보내기 제한" (a stored `exportAdminOnly` is ignored) |
 | DEL-02 | done | `schUserMenu` removed; see "Schedule tools" above |
 | DEL-03 | done | schedule views, `meta:sched:*`, attachment downloads untouched |
-| ACC-01 | done | 계정 › 프로필: photo, name, 직책, e-mail; 사번 · 역할 · 소속 read only |
+| ACC-01 | done | 계정 › 프로필: photo, name, 직책, e-mail, 연락처 (phone, added 2026-11-23: shown with the e-mail on the member card that opens from an assignee's name); 사번 · 역할 · 소속 read only |
 | ACC-02 | done | upload / replace / remove; cut square to 256 px JPEG in the browser; stored as a file, id in `meta:members.<사번>.avatar` |
 | ACC-03 | part | format and duplicate check, shown as 미인증. No verification mail: there is no mail service |
 | ACC-04, ACC-05 | not done | SSO / OTP / passkeys need an identity provider; login stays 사번 only (owner decision 2026-11-12) |

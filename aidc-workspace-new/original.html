@@ -1487,15 +1487,20 @@ const pill=(p,extra='')=>`<span class="pill ${p.cls} ${extra}"><i class="sq"><sv
 const chipOf=(it,extra='',full=false,edit=false,field='')=>{ if(!it) return ''; const p=proj(it.proj); const rs=it.type==='research'; return `<span class="chip ${rs?'rs':p.cls} ${extra}" ${edit?'':`data-open="${it.id}"`}><i class="sq">${pict(it.type)}</i><span class="t">${esc(full?(it.title||'').split('\n').join(' '):(it.short||it.title))}</span>${edit?`<button class="x" data-unlink="${field}:${it.id}" title="연결 해제">×</button>`:''}</span>`; };
 const chipFull=(it,edit=false,field='')=>chipOf(it,'',true,edit,field);
 const linkChips=(it,field,E)=>{const ids=(it[field]||[]).filter(id=>item(id)); const h=ids.map(a=>chipFull(item(a),E,field)).join(''); return E?h+`<span class="chip add" title="연결할 항목 선택">+ 연결 추가</span>`:(h||'<span class="plain">없음</span>');};
-const fmtDateK=d=>{if(!d)return '';const [y,m,dd]=d.split('-').map(Number);return `${y}년 ${m}월 ${dd}일`;};
-const fmtDateDot=d=>{if(!d)return '';const [y,m,dd]=d.split('-').map(Number);return `${y}. ${m}. ${dd}`;};
+// One way to write a date while the preview is on (owner, 2026-11-23): yyyy. mm. dd. Every helper below follows it there; the
+// page as it was keeps its own forms. dateShow: what a row shows as its date (the stored dateTxt is in the old form).
+const dateDot=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||'');return m?`${m[1]}. ${m[2]}. ${m[3]}`:(d||'');};
+const dateDotN=n=>dateDot(ymd(n.getFullYear(),n.getMonth()+1,n.getDate()));
+const dateShow=r=>PREVIEW_ON&&r.date?dateDot(r.date):(r.dateTxt||fmtDateDot(r.date));
+const fmtDateK=d=>{if(!d)return '';if(PREVIEW_ON)return dateDot(d);const [y,m,dd]=d.split('-').map(Number);return `${y}년 ${m}월 ${dd}일`;};
+const fmtDateDot=d=>{if(!d)return '';if(PREVIEW_ON)return dateDot(d);const [y,m,dd]=d.split('-').map(Number);return `${y}. ${m}. ${dd}`;};
 const ymd=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 const localDate=iso=>{const n=new Date(iso);return isNaN(n)?'':ymd(n.getFullYear(),n.getMonth()+1,n.getDate());};
 const itemEnd=i=>i.end&&i.end>i.date?i.end:i.date;
-const fmtRangeK=i=>{if(!i.date)return '';const e=itemEnd(i);if(e===i.date)return fmtDateK(i.date);const [y,m,dd]=e.split('-').map(Number);return fmtDateK(i.date)+' ~ '+(e.slice(0,4)===i.date.slice(0,4)?`${m}월 ${dd}일`:fmtDateK(e));};
-const fmtDateCard=i=>{const a=(i.date||'').replace(/-/g,'.');const e=itemEnd(i);return e>i.date?a+' ~ '+e.slice(5).replace('-','.'):a;};
-const fmtStamp=n=>`${n.getFullYear()}. ${n.getMonth()+1}. ${n.getDate()} ${n.getHours()<12?'오전':'오후'} ${((n.getHours()+11)%12)+1}:${String(n.getMinutes()).padStart(2,'0')}`;
-const fmtStampShort=n=>`${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}.${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+const fmtRangeK=i=>{if(!i.date)return '';const e=itemEnd(i);if(e===i.date)return fmtDateK(i.date);if(PREVIEW_ON)return dateDot(i.date)+' ~ '+dateDot(e);const [y,m,dd]=e.split('-').map(Number);return fmtDateK(i.date)+' ~ '+(e.slice(0,4)===i.date.slice(0,4)?`${m}월 ${dd}일`:fmtDateK(e));};
+const fmtDateCard=i=>{const e=itemEnd(i);if(PREVIEW_ON)return e>i.date?dateDot(i.date)+' ~ '+dateDot(e):dateDot(i.date);const a=(i.date||'').replace(/-/g,'.');return e>i.date?a+' ~ '+e.slice(5).replace('-','.'):a;};
+const fmtStamp=n=>`${PREVIEW_ON?dateDotN(n):`${n.getFullYear()}. ${n.getMonth()+1}. ${n.getDate()}`} ${n.getHours()<12?'오전':'오후'} ${((n.getHours()+11)%12)+1}:${String(n.getMinutes()).padStart(2,'0')}`;
+const fmtStampShort=n=>`${PREVIEW_ON?dateDotN(n):`${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}.${String(n.getDate()).padStart(2,'0')}`} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
 const legacyMod=m=>{const x=/^(\d+)월 (\d+) (오전|오후) (\d+):(\d+)$/.exec(m||'');if(!x)return null;let h=+x[4]%12;if(x[3]==='오후')h+=12;return new Date(2026,+x[1]-1,+x[2],h,+x[5]);};
 const modDate=i=>{const n=i.updatedAt?new Date(i.updatedAt):legacyMod(i.mod);return n&&!isNaN(n)?n:null;};
 const modTxt=(i,short)=>{const n=modDate(i);return n?(short?fmtStampShort(n):fmtStamp(n)):(i.mod||'-');};
@@ -1517,7 +1522,12 @@ let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m; c
   if(PV){ const x=document.createElement('button');x.type='button';x.className='tx';x.title='닫기';x.setAttribute('aria-label','알림 닫기');x.textContent='✕';x.onclick=hide;t.appendChild(x); ms=Math.max(7000,ms*2.4); }
   const arm=()=>{clearTimeout(toastT);if(!keep)toastT=setTimeout(()=>t.classList.remove('on'),ms);};
   t.classList.toggle('pv',PV);t.classList.toggle('keep',keep);t.classList.add('on');arm(); toastPlace(); t.onmouseenter=PV?()=>clearTimeout(toastT):null; t.onmouseleave=PV?()=>{if(t.classList.contains('on'))arm();}:null;};
-const pager=(cur,total,cls='')=>{let h=`<div class="pager ${cls}"><button class="arr" data-pg="prev" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;for(let i=1;i<=total;i++)h+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;h+=`<button class="arr" data-pg="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;return h;};
+const pager=(cur,total,cls='')=>{ if(PREVIEW_ON){ // the first and the last page, one back and one on, the numbers ten at a time (owner, 2026-11-23)
+    const from=Math.floor((cur-1)/10)*10+1, to=Math.min(total,from+9), dbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
+    let p=`<div class="pager ${cls}" data-total="${total}"><button class="arr ends" data-pg="first" title="처음" aria-label="처음 쪽" ${cur<=1?'disabled':''}>${dbl(true)}</button><button class="arr" data-pg="prev" title="이전" aria-label="이전 쪽" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;
+    for(let i=from;i<=to;i++)p+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;
+    return p+`<button class="arr" data-pg="next" title="다음" aria-label="다음 쪽" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button><button class="arr ends" data-pg="last" title="마지막" aria-label="마지막 쪽" ${cur>=total?'disabled':''}>${dbl(false)}</button></div>`; }
+  let h=`<div class="pager ${cls}"><button class="arr" data-pg="prev" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;for(let i=1;i<=total;i++)h+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;h+=`<button class="arr" data-pg="next" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button></div>`;return h;};
 function downloadText(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 /* popovers */
 let popEl=null;
@@ -1546,13 +1556,13 @@ const dotsOf=it=>{const d=[]; if(isFresh(it)||(it.dots||[]).includes('g'))d.push
 const dotsHtml=(it,cls='dots')=>{const d=dotsOf(it); return d.length?`<span class="${cls}">${d.map(x=>`<i class="${x}"></i>`).join('')}</span>`:'';};
 /* which items show where */
 const isPub=i=>!i.status||i.status==='published'||i.status==='locked';
-const legacyListed=i=>!!(i.table||i.card||i.cal);                                        // demo drafts that the design shows in lists
+const legacyListed=i=>!!(i.table||i.card||i.cal)&&!i.authorId;                           // demo drafts that the design shows in lists; a draft somebody wrote is only theirs (owner, 2026-11-23: a recovered draft carried these flags and showed for everybody)
 const isLive=i=>(isPub(i)||(i.status==='draft'&&legacyListed(i)))&&!i.agent&&!i.arch&&!(i.own&&i.task&&!PREVIEW_ON);   // shown in lists, cards and the calendar (the notes of a schedule task, wt-…, only while the preview is on)
 const canSee=i=>i.status!=='trash'&&i.status!=='new'&&(i.status!=='draft'||legacyListed(i)||!i.authorId||i.authorId===sharedUser);
 const createdKey=i=>String(i.createdAt||'')||((i.created||i.date||'')+'T00:00:00');
 const newestFirst=(a,b)=>createdKey(b).localeCompare(createdKey(a));
 const liveItems=(type,pid)=>ITEMS.filter(i=>i.type===type&&isLive(i)&&(!pid||i.proj===pid));
-const hasFiles=it=>!!(it&&(it.body||'').includes('/api/file/'));   // only a file that is really attached counts (the fixtures' "file" flag showed a button with nothing behind it)
+const hasFiles=it=>!!(it&&(it.body||'').includes('/api/file/')&&itemFiles(it).length);   // the same rule the library goes by (itemFiles)   // only a file that is really attached counts (the fixtures' "file" flag showed a button with nothing behind it)
 const snippet=it=>{const t=(it.body||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();return t.length>62?t.slice(0,62)+'…':t;};
 const sortResearch=list=>list.slice().sort((a,b)=>{const g=x=>isFresh(x)?0:(/^\[REF\]/.test(x.title)?1:2); const ga=g(a),gb=g(b); return ga!==gb?ga-gb:newestFirst(a,b);});
 const PRI_RANK={high:0,mid:1,low:2};
@@ -1561,7 +1571,9 @@ function sortActs(list){const f=SORT_KEY[S.sort.k],dir=S.sort.dir||1;const base=
   return base.map((x,i)=>[x,i,f(x)]).sort((a,b)=>{const c=typeof a[2]==='number'?a[2]-b[2]:String(a[2]).localeCompare(String(b[2]),'ko');return c*dir||a[1]-b[1];}).map(x=>x[0]);}
 const norm=s=>String(s??'').toLowerCase().replace(/\s+/g,' ').trim();
 const matchQ=(q,...fields)=>{q=norm(q); if(!q)return true; return fields.some(f=>norm(f).includes(q));}; // line breaks and repeated spaces never block a match
-const searchBox=(k,ph)=>PREVIEW_ON?`<label class="srch box" title="${ph}">${svg('pic-search',15,15)}<input data-q="${k}" placeholder="검색" aria-label="${ph}" value="${esc(S.q[k]||'')}"></label>`:`<label class="srch">${svg('pic-search',13.5,13.5)}<input data-q="${k}" placeholder="${ph}" value="${esc(S.q[k]||'')}"></label>`;
+// An X at the right of a search box once something is typed (preview; schedule/ui/74-eleventh.js shows and hides it).
+const qx=v=>PREVIEW_ON?`<button type="button" class="q-x" data-qx tabindex="-1" title="검색어 지우기" aria-label="검색어 지우기" ${v?'':'hidden'}>${svg('i-x',8,8)}</button>`:'';
+const searchBox=(k,ph)=>PREVIEW_ON?`<label class="srch box" title="${ph}">${svg('pic-search',15,15)}<input data-q="${k}" placeholder="검색" aria-label="${ph}" value="${esc(S.q[k]||'')}">${qx(S.q[k])}</label>`:`<label class="srch">${svg('pic-search',13.5,13.5)}<input data-q="${k}" placeholder="${ph}" value="${esc(S.q[k]||'')}"></label>`;
 const perBox=()=>`<div class="tbl-tools" data-per>${S.actPer}개씩 보기 ${svg('i-chev-d',7.8,4,'color:currentColor')}</div>`;
 /* ===================== STATE ===================== */
 const NOW0=new Date();
@@ -1633,9 +1645,9 @@ function actionTable(rows,opts){ // opts: {noproj}
   const np=opts.noproj; const sk=S.sort.k, sd=S.sort.dir; const th=(k,t)=>`<span data-sort="${k}" class="${sk===k?'sorted':''}" title="눌러서 정렬"><em>${t}${sk===k?`<i class="sa">${sd>0?'▲':'▼'}</i>`:''}</em></span>`;
   let h=`<div class="tbl actions ${np?'noproj':''}"><div class="hd">${np?'':th('proj','프로젝트')}${th('who','담당자')}${th('title','제목')}${th('date','기한')}${th('pri','중요도')}${th('st','상태 ')}<span><em>URL</em></span>${th('mod','최종수정일자')}</div>`;
   rows.forEach(r=>{const p=proj(r.proj); const u=urlHref(r.url);
-    h+=`<div class="rw" data-open="${r.id}">${np?'':`<div>${pill(p,'nosq')}</div>`}<div class="who" style="margin-left:-1.3px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')}</div>
+    h+=`<div class="rw" data-open="${r.id}">${np?'':`<div>${pill(p,'nosq')}</div>`}<div class="who" style="margin-left:-1.3px">${(r.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</div>
       <div class="ttl" style="margin-left:-0.4px"><span class="tx">${esc((r.title||'').split('\n').join(' '))}</span><span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div>
-      <div class="d" style="margin-left:-1.3px">${esc(itemEnd(r)>r.date?fmtDateDot(itemEnd(r)):(r.dateTxt||fmtDateDot(r.date)))}</div><div class="pri pri-${r.pri||'mid'}" style="margin-left:-1px">${priTxt[r.pri||'mid']}</div><div class="stt" style="margin-left:-0.6px">${stIcon(r.st)}</div>
+      <div class="d" style="margin-left:-1.3px">${esc(itemEnd(r)>r.date?fmtDateDot(itemEnd(r)):(dateShow(r)))}</div><div class="pri pri-${r.pri||'mid'}" style="margin-left:-1px">${priTxt[r.pri||'mid']}</div><div class="stt" style="margin-left:-0.6px">${stIcon(r.st)}</div>
       <div class="url" style="margin-left:-0.4px">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.url)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="mod" style="margin-left:-0.4px">${esc(modTxt(r,true))}</div></div>`;});
   if(!rows.length)h+=`<div class="none">${S.q.action?'검색 결과가 없습니다.':'등록된 '+ACT+'이 없습니다.'}</div>`;
   h+=`<div class="ft"></div></div>`; return h;
@@ -1645,7 +1657,7 @@ const cardTitle=t=>{t=(t||'').trim();const m=t.match(/^([\[(][^\])\n]{1,24}[\])]
 function resCardTitle(r){ const ls=(cardTitle(r.title)||'(제목 없음)').split('\n'), tag=ls.length>1&&/^[\[(][^\])]{1,24}[\])]$/.test(ls[0].trim())?ls.shift().trim():'', rest=ls.map(x=>x.trim()).filter(Boolean).join(' ');
   return `<div class="tt two" title="${esc((tag?tag+' ':'')+rest)}">${tag?`<span class="tg">${esc(tag)}</span>`:''}<span class="t2">${esc(rest)}</span></div>`; }
 function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide:null; S._slide=null; const cls=`rgrid${sl?' slide':''}`, st=sl?` style="--rg-dx:${sl.dir>0?44:-44}px"`:''; if(!rows.length)return `<div class="${cls}"${st}><div class="none">${S.q.research?'검색 결과가 없습니다.':PREVIEW_ON&&Object.keys(S.rf||{}).some(k=>k!=='sort')?'조건에 맞는 리서치가 없습니다.':'등록된 리서치가 없습니다.'}</div></div>`;return `<div class="${cls}"${st}>${rows.map(r=>{const f=hasFiles(r), ds=r.desc||(r.card?'':snippet(r));return `<div class="rcard ${ds?'':'nodesc'} ${f?'':'nobtn'} ${!PREVIEW_ON&&(r.title||'').split('\n').length>=4?'t4':''}" data-open="${r.id}">
-  ${dotsHtml(r)}<div class="dt">${esc(r.dateTxt||fmtDateDot(r.date))}</div>${PREVIEW_ON?resCardTitle(r):`<div class="tt">${esc(cardTitle(r.title)||'(제목 없음)')}</div>`}${ds?`<div class="ds">${esc(ds)}</div>`:''}
+  ${dotsHtml(r)}<div class="dt">${esc(dateShow(r))}</div>${PREVIEW_ON?resCardTitle(r):`<div class="tt">${esc(cardTitle(r.title)||'(제목 없음)')}</div>`}${ds?`<div class="ds">${esc(ds)}</div>`:''}
   ${f?`<button class="ln-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#3d3d3d')}</button>`:''}</div>`;}).join('')}</div>`;}
 const partnerMeeting=pt=>(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))?item(pt.meet):null)||liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0]||null;
 
@@ -1763,6 +1775,7 @@ function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><sp
   h+=`<div class="ft"></div></div>`; return h;}
 // Project cards read the project overview (PHEAD), so editing the overview updates the card.
 const scaleOf=(h,i,fb)=>{const s=h&&h.scale&&h.scale[i];return (s&&s[1])||fb||'';};
+const SCALE_FB=['area','it','power','server'];   // the project's own fields the card fell back on: the overview reads them the same way and writes both, so card and overview cannot differ
 const siteOf=(p,h)=>mapQuery(h&&h.loc)||((h&&h.loc)||'').split('\n')[0].trim()||p.site||'';
 function projectCards(){const ids=PREVIEW_ON?schProjFilter(orderedProjects()):orderedProjects(); if(PREVIEW_ON&&!ids.length)return '<div class="none" style="height:120px;color:#939393;font-size:14px;display:flex;align-items:center">조건에 맞는 프로젝트가 없습니다.</div>';
   return ids.map(k=>{const p=PROJECTS[k], h=PHEAD[k]||{};return `<div class="pcard" data-go="project:${k}"><div class="img" style="height:${PREVIEW_ON?schCardImgH(p):p.imgH}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><div class="grad" style="height:${p.id==='busan'?78:90}px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${p.stColor}"><i></i>${esc(p.status)}</span></div>
@@ -1847,7 +1860,7 @@ function renderProject(pid){
       <div class="fr" style="margin-bottom:0"><b>대상위치</b><div><div class="v${EC}" style="line-height:21px;margin-top:-0.3px" ${edk('loc','주소')}>${esc(d.loc)}</div>${mapBox(d.loc,'margin-top:6.7px')}<div class="v${EC}" style="line-height:21px;margin-top:31.9px" ${edk('alt','대체부지')}>${esc(d.alt)}</div>${mapBox(d.alt,'margin-top:5.4px')}</div></div></div>
      <div class="col col2 ${SC?'sch':''}">${SC?schOpsRow(pid):''}<div class="fr"><b>용도지역</b><span class="v${EC}" ${edk('zone')}>${esc(d.zone)}</span></div><div class="fr"><b>사업형태</b><span class="v${EC}" ${edk('kind')}>${esc(d.kind)}</span></div><div class="fr"><b>사업시행자</b>${d.dev||E?lk(d.dev,'dev'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div><div class="fr"><b>토지소유자</b>${d.land||E?lk(d.land,'land'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div>
       <div class="fr"><b>자금조달</b><span class="v${EC}" ${edk('fund')}>${esc(d.fund)}</span></div><div class="fr"><b>총사업비</b><span class="v${EC}" ${edk('cost')}>${esc(d.cost)}</span></div><div class="fr"><b>자금조달방식</b><span class="v${EC}" ${edk('fundType')}>${esc(d.fundType)}</span></div>
-      <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(s[1])}</span></div>`).join('')}</div></div>
+      <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(scaleOf(d,i,p[SCALE_FB[i]]))}</span></div>`).join('')}</div></div>
       <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>${PV?'<small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>':''}`:''}</div></div></div>
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>
@@ -1879,6 +1892,7 @@ function rulerHtml(){const ys=[0,19.2,39,58.1,77.3,96.4,115.6,134.7,153.8,173,19
 const archList=tab=>ITEMS.filter(i=>i.arch===tab&&isPub(i)).sort(newestFirst).concat(ARCH_ROWS[tab]||[]);
 const hostOf=u=>{try{return new URL(urlHref(u)).hostname.replace(/^www\./,'');}catch{return '';}};
 function renderArchive(){
+  if(PREVIEW_ON&&typeof schArchRender==='function'){schArchRender();return;}   // search and kinds at the top, documents and sites as two views (schedule/ui/76-archive.js)
   if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||'';
   const rows=archList(S.archTab); const total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
   let h=`<div class="arch-title">자료실</div><div style="padding-top:194.2px">`;
@@ -1896,7 +1910,7 @@ function renderArchive(){
   h+=`<button class="sh-btn newsec" data-newsec>구분 새로 만들기</button>
    <div class="tabs" style="margin-top:197.3px;--tabn:${ARCH_TABS.length};--tabidx:${Math.max(0,ARCH_TABS.indexOf(S.archTab))}">${plusBtn('addtab','이 구분에 자료 추가').replace('class="sh-btn','data-addrow class="sh-btn')}<button class="tabmenu" data-tabmenu title="탭 추가 · 이름 변경 · 삭제">${svg('i-more2',2.5,13.7)}</button><ul style="height:53.5px">${ARCH_TABS.map(t=>`<li class="${t===S.archTab?'on':''}" data-tab="${esc(t)}">${esc(t)}</li>`).join('')}</ul><div class="bar"><i style="left:calc(100%/${ARCH_TABS.length}*${Math.max(0,ARCH_TABS.indexOf(S.archTab))})"></i></div></div>
    <div class="tbl archive" style="margin-top:56px"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>최종수정일자</em></span><span><em>출처</em></span></div>
-   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${u&&!/^dropbox\.com\.{3,}$/.test((r.url||'').trim())?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc((r.title||'').split('\n').join(' '))}</a>`:`<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('')||'<span class="nil">-</span>'}</div><div class="d" style="margin-left:-1.3px">${esc(r.dateTxt||fmtDateDot(r.date))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
+   ${page.map(r=>{const u=urlHref(r.url);return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${u&&!/^dropbox\.com\.{3,}$/.test((r.url||'').trim())?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc((r.title||'').split('\n').join(' '))}</a>`:`<span class="tx">${esc((r.title||'').split('\n').join(' '))}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div><div class="who" style="margin-left:-2.5px">${(r.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')||'<span class="nil">-</span>'}</div><div class="d" style="margin-left:-1.3px">${esc(dateShow(r))}</div><div class="mod" style="margin-left:-0.5px">${esc(modTxt(r,true))}</div><div class="src" style="margin-left:-0.4px">${u?`<a data-stop href="${esc(u)}" target="_blank" rel="noopener">${esc(r.src||hostOf(r.url)||r.url)}</a>`:esc(r.src||'')}</div></div>`;}).join('')}
    ${page.length?'':'<div class="none">등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.</div>'}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:69.7px" class="pager')}${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}</div>`;
   $('#arch-pw').innerHTML=h;
 }
@@ -1923,7 +1937,9 @@ const editorName=it=>{const id=it.updatedBy||it.authorId||'';if(!id)return '';re
 const lastBy=it=>{const n=editorName(it);return n?`<span class="by">${av()}${esc(n)}</span>`:'';};
 const urlHref=u=>{u=(u||'').trim();if(!u||/^(javascript|data|vbscript):/i.test(u))return '';if(/^dropbox\.com\.{3,}$/.test(u))return 'https://www.dropbox.com/';return /^https?:\/\//i.test(u)?u:'https://'+u;};
 const urlField=(it,E,style='')=>E?`<span class="url" contenteditable="true" data-f="url" data-ph="주소 입력" data-stop style="${style}">${esc(it.url||'')}</span>`:(urlHref(it.url)?`<a class="url" href="${esc(urlHref(it.url))}" target="_blank" rel="noopener" data-stop style="${style}">${esc(it.url)}</a><button class="copy-url" data-copy="${esc(urlHref(it.url))}" title="주소 복사">${svg('i-copy',13,13)}</button>`:'<span class="plain" style="color:#c4c4c4">없음</span>');
-function readUrl(it){const u=$('[data-f="url"]',pinOf(it));if(u&&u.isContentEditable){const v=u.textContent.trim();if(v!==(it.url||'')){it.url=v;it.dirty=true;}}}
+function readUrl(it){const u=$('[data-f="url"]',pinOf(it));if(u&&u.isContentEditable){const v=u.textContent.trim();if(v!==(it.url||'')){it.url=v;it.dirty=true;}}
+  const d=$('[data-f="dbx"]',pinOf(it));if(d&&d.isContentEditable){const v=d.textContent.trim();if(v!==(it.dbx||'')){if(v)it.dbx=v;else delete it.dbx;it.dirty=true;}}}
+const dbxField=(it,E)=>E?`<span class="url" contenteditable="true" data-f="dbx" data-ph="드롭박스 주소 입력" data-stop>${esc(it.dbx||'')}</span>`:(urlHref(it.dbx)?`<a class="url" href="${esc(urlHref(it.dbx))}" target="_blank" rel="noopener" data-stop>${esc(it.dbx)}</a><button class="copy-url" data-copy="${esc(urlHref(it.dbx))}" title="주소 복사">${svg('i-copy',13,13)}</button>`:'<span class="plain" style="color:#c4c4c4">없음</span>');
 /* ===================== BODY EDITOR v2 (editor/ bundle) ===================== */
 // One editor per item being edited. It survives redraws of the page around it (the pin is rebuilt, the editor is put back),
 // so the caret, the undo history and a move between panel and full page are kept.
@@ -1981,6 +1997,7 @@ function nbUpgrade(it,r,l){ const id=it.id, old=r.inst; if(old.pending()){ setTi
 function nbConfigure(){ if(!window.AIDCEditor)return; const first=t=>normT(t||'').split('\n')[0];
   const seeable=x=>x.status!=='trash'&&x.status!=='new'&&(typeof canSee!=='function'||canSee(x));
   AIDCEditor.configure({
+    dateText:PREVIEW_ON?dateDotN:null,
     users:()=>Object.keys(PEOPLE).map(k=>({id:k,name:PEOPLE[k]})),
     userName:(id,fb)=>PEOPLE[id]||fb||id,
     userIdByName:n=>Object.keys(PEOPLE).find(k=>PEOPLE[k]===n)||null,
@@ -2018,7 +2035,7 @@ function nbDocExtra(it){ const out=[];
   const back=ITEMS.filter(x=>x.id!==it.id&&nbSeeable(x)&&(x.body||'').includes('data-item="'+it.id+'"'));
   out.push({label:`이 글을 링크한 글 ${back.length}개`,icon:'⤶',disabled:!back.length,children:back.slice(0,30).map(x=>({label:nbFirst(x.title)||'제목 없음',hint:typeName(x),run:()=>openPanel(x.id)}))});
   return out; }
-function nbHistory(it){ AIDCEditor.history({title:nbFirst(it.title),current:{title:it.title||'',body:it.body||''},load:()=>sharedFlush(true).then(()=>sharedVersions(it.id)),get:n=>sharedVersion(n),
+function nbHistory(it){ AIDCEditor.history({title:nbFirst(it.title),current:{title:it.title||'',body:it.body||''},load:()=>ITEMS.includes(it)?sharedFlush(true).then(()=>sharedVersions(it.id)):Promise.resolve([]),get:n=>sharedVersion(n),
   restore:v=>{ if(it.editing){toast('수정 중에는 되돌릴 수 없습니다. 저장하거나 취소한 뒤 다시 시도하세요.',3200);return false;} if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return false;}
     if(v.title)it.title=v.title; it.body=v.body||''; if(v.ed===2)it.ed=2; else delete it.ed; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser;
     rerenderItem(it.id); render(true); toast('선택한 버전으로 되돌렸습니다. 되돌리기 전 내용도 버전 기록에 남습니다.',3600); }}); }
@@ -2064,7 +2081,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}"${typeof schTitleAttr==='function'?schTitleAttr(it):''}>${titleEmpty?ph:esc(E?it.title:it.title.split('\n').join(' '))}</div>`;
   const V=(k,inner,cls='')=>`<div class="pr"><span class="k">${k}</span><span class="v ${cls} ${E?'pk':''}" data-pf="${k}">${inner}</span></div>`;
   const none=t=>`<span class="plain" style="color:#c4c4c4">${t}</span>`;
-  const who=ppl=>(ppl||[]).length?ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join(''):none(PREVIEW_ON?'미지정':E?'선택':'없음');
+  const who=ppl=>(ppl||[]).length?ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):none(PREVIEW_ON?'미지정':E?'선택':'없음');
   // preview: the project is a plain tag (no pictogram); while editing a click on it lists the projects as tags and the x beside it takes the project off
   const PT=PREVIEW_ON?'nosq':'';
   const projV=E?(PREVIEW_ON?`<span class="proj-pick">${pill(p,PT).replace('class="pill','data-pick="proj" title="프로젝트 선택" class="pill')}${PROJECTS[it.proj]?`<button class="px" data-pick="proj-x" title="사업명 지우기" aria-label="사업명 지우기">${svg('i-x',8,8)}</button>`:''}</span>`:pill(p).replace('class="pill','data-pick="proj" class="pill')):(PROJECTS[it.proj]?pill(p,PT).replace('class="pill',`data-go="project:${esc(it.proj)}" title="프로젝트 페이지로 이동" class="pill`):pill(p,PT));
@@ -2086,7 +2103,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
       V('상태',typeof schPreview==='function'&&schPreview()?`<span class="st sch" ${pk('st')}>${schStIcon(it.st==='done'?'완료':'진행')}</span>`:`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
       V('중요도',`<span class="pri pri-${it.pri||'mid'}" ${pk('pri')}>${priTxt[it.pri||'mid']}</span>`),
       V('담당자',`<span class="people" ${pk('people')}>${who(it.people)}</span>`),
-      V(tab?'출처 URL':'URL',urlField(it,E)),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
+      V(tab?'출처 URL':'URL',urlField(it,E)),...(PREVIEW_ON&&tab?[V('드롭박스 URL',dbxField(it,E))]:[]),...(PREVIEW_ON&&!tab&&it.type==='research'&&typeof schCatsField==='function'?[V('구분',schCatsField(it,E))]:[]),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
     props=(typeof schItemProps==='function'?schItemProps(it,E,full):null)||(PREVIEW_ON&&it.type==='action'&&!tab&&typeof schActionProps==='function'?schActionProps(it,E,full,{projV,who,pk}):null)||`<div class="props" style="grid-template-columns:449px"><div>${rows.join('')}</div></div>`;
   }
   const cmtTop=full?(meeting?463.4:540.9-18.3):(meeting?481.7:540.9); const hrTop=cmtTop+30.3; const bodyTop=hrTop+(full?64.6:80.2)-1.3;
@@ -2103,7 +2120,9 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
 async function listAttachments(){ if(typeof sharedListFiles==='function')return sharedListFiles(); const out=[]; ITEMS.forEach(it=>{const re=/<a class="file"[^>]*data-name="([^"]*)"[^>]*data-fid="([^"]*)"/g;let m;while((m=re.exec(it.body||'')))out.push({id:m[2],name:m[1],item:it.id,at:it.updatedAt||''});}); return out; }
 async function openLibrary(type){ const label=type==='meeting'?'미팅':type==='action'?ACT:'리서치'; if(S.panel&&guardLeave(()=>openLibrary(type),'panel'))return; closePop(); S.panel='lib:'+type; S.trail=[]; S.ctx='panel'; const pin=$('#panel-pin'); pin.dataset.id=''; const hd=m=>`<div class="lib-view"><div class="libhd"><b>${label} 라이브러리</b><span class="m">${m}</span></div>`; pin.innerHTML=hd('불러오는 중…')+'</div>'; $('#panel').classList.add('on'); $('#panel').scrollTop=0; $('#app').classList.add('panel-open'); dropEmptyNew(); crumbsFor(); sbState(); afterNav();
   let files=[]; try{ files=await listAttachments(); }catch(e){ if(S.panel==='lib:'+type)pin.innerHTML=hd(esc(e.message||'목록을 가져오지 못했습니다.'))+'</div>'; return; } if(S.panel!=='lib:'+type)return;
-  const rows=files.filter(f=>{const it=item(f.item);return it&&it.type===type&&canSee(it);}).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+  // what a body links to is what counts (owner, 2026-11-23): a file taken out of its body is not listed any more, and a file a body shows is listed whatever item it was uploaded for
+  const meta=new Map(files.map(f=>[f.id,f])), rows=[], seen=new Set(); ITEMS.forEach(it=>{ if(it.type!==type||!canSee(it)||it.agent||it.status==='new')return; itemFiles(it).forEach(f=>{ const key=it.id+'|'+f.id; if(seen.has(key))return; seen.add(key); const m=meta.get(f.id); rows.push({...(m||{}),id:f.id,name:(m&&m.name)||f.name,item:it.id,at:(m&&m.at)||it.updatedAt||it.createdAt||''}); }); });
+  rows.sort((a,b)=>(b.at||'').localeCompare(a.at||''));
   const groups=[]; rows.forEach(f=>{const d=(f.at||'').slice(0,10)||'날짜 없음'; let g=groups[groups.length-1]; if(!g||g.d!==d){g={d,items:[]};groups.push(g);} g.items.push(f);});
   const who=f=>f.employee?(typeof userName==='function'?userName(f.employee):f.employee):'';
   if(PREVIEW_ON&&typeof schLibDraw==='function'){schLibDraw(pin,type,label,rows);return;}
@@ -2295,10 +2314,11 @@ function downloadFiles(fs,anchor){ if(!fs.length){toast('첨부된 파일이 없
   const p=openPop(anchor,`<div class="hd"><svg class="pict" aria-hidden="true"><use href="#i-clip"/></svg> 첨부 파일 ${fs.length}개</div>${fs.map(f=>`<a class="it" href="/api/file/${esc(f.id)}" download="${esc(f.name)}" data-stop>${fileIcon(f.name)}<span>${esc(f.name)}</span></a>`).join('')}<div class="sep"></div><div class="it" data-dlall>모두 다운로드</div>`,{right:true,cls:'files'});
   p.querySelector('[data-dlall]').onclick=()=>{closePop();fs.forEach((f,i)=>setTimeout(()=>saveFile(f),i*400));toast(fs.length+'개 파일 다운로드를 시작했습니다.');};}
 /* sidebar search: every match, 12 at a time, with ↑ ↓ Enter */
-function openSearch(el){const p=openPop(el,`<div class="srch"><input id="srch-in" placeholder="페이지, 미팅, ${ACT}, 리서치, 협력업체 검색" autocomplete="off"><div class="res" id="srch-res"></div></div>`,{cls:'srch'}); p.style.width='420px'; const inp=$('#srch-in'); inp.focus(); let limit=12, sel=0, hits=[];
+function openSearch(el){const p=openPop(el,`<div class="srch"><label class="srch-inw"><input id="srch-in" placeholder="페이지, 미팅, ${ACT}, 리서치, 협력업체 검색" autocomplete="off">${qx('')}</label><div class="res" id="srch-res"></div></div>`,{cls:'srch'}); p.style.width='420px'; const inp=$('#srch-in'); inp.focus(); let limit=12, sel=0, hits=[];
   const find=v=>{const out=[]; [['main','메인 페이지'],['archive','자료실']].forEach(x=>{if(norm(x[1]).includes(v))out.push({t:x[1],go:x[0],m:'페이지'});});
     orderedProjects().forEach(k=>{const P=PROJECTS[k]; if(norm(P.full).includes(v)||norm(P.tag).includes(v))out.push({t:P.full,go:'project:'+k,m:'프로젝트'});});
     ITEMS.filter(i=>canSee(i)&&norm(i.title).includes(v)).sort(newestFirst).forEach(i=>out.push({t:(i.title||'').split('\n').join(' '),open:i.id,m:typeName(i)}));
+    if(PREVIEW_ON&&typeof schPids==='function')for(const pid of schPids()){ if(!schReady(pid))continue; const m=schModel(pid); if(!m)continue; for(const t of m.plan.tasks)if(norm(t.name).includes(v)||norm(schTaskTitle(t)).includes(v))out.push({t:schTaskTitle(t),open:schItemId(t.id),m:ACT+' · '+pname(PROJECTS[pid])}); }
     Object.keys(ARCH_ROWS).forEach(t=>(ARCH_ROWS[t]||[]).forEach(r=>{if(norm(r.title).includes(v))out.push({t:r.title,open:r.id,m:'자료실 · '+t});}));
     PARTNERS.filter(x=>!x.trash&&norm(x.name).includes(v)).forEach(x=>out.push({t:x.name,open:x.id,m:'협력업체'}));
     const seen=new Set(); return out.filter(h=>{const k=h.go?'g:'+h.go:'o:'+h.open; if(seen.has(k))return false; seen.add(k); return true;});};   // one line per page or item
@@ -2363,7 +2383,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} openPanel(el.dataset.open);return;}
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
   if(el=q('[data-pg]')){const pg=el.closest('.pager'); const v=el.dataset.pg; const key=pg.classList.contains('pg-act')?'actPage':pg.classList.contains('pg-res')?'resPage':pg.classList.contains('pg-pt')?'ptPage':pg.classList.contains('pg-arch')?'archPage':'memPage';
-    const tot=$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
+    const tot=+pg.dataset.total||$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=tot; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
     if(key==='memPage'){renderPane('members');} else if(key==='archPage'){render(true);} else {if(key==='resPage'&&S[key]!==prev)S._slide={key,dir:S[key]>prev?1:-1}; refreshSec(key==='actPage'?'action':key==='resPage'?'research':'partner');} return;}
   if(el=q('[data-car]')){const [k,dir]=el.dataset.car.split(':'); moveCarousel(k,+dir); return;}
   if(el=q('.new-proj')){if(PREVIEW_ON&&typeof schNewProject==='function'){schNewProject();return;}openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${['계획중','진행중','완료'].map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
@@ -2513,7 +2533,7 @@ const mapQuery=t=>{t=(t||'').trim();if(!t)return '';const m=t.match(/\(([^()]{4,
 const mapBox=(t,style)=>{const q=mapQuery(t);return q?`<iframe class="map" style="${style}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&hl=ko&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${esc(q)}"></iframe>`:`<div class="ph-img" style="${style}"></div>`;};
 // Reads the overview fields being edited into the project. The short name (약칭) is its own field and is never derived from the long name.
 function saveProjectHead(){const pw=$('#proj-pw'); if(!pw||!S.editProj)return; const h=PHEAD[S.proj], p=PROJECTS[S.proj]; if(!h||!p)return;
-  $$('[data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){h.scale[+k.split(':')[1]][1]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else h[k]=v;});
+  $$('[data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){const si=+k.split(':')[1]; h.scale[si][1]=v; if(SCALE_FB[si])p[SCALE_FB[si]]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else h[k]=v;});
   h.partners=h.partners.filter(x=>x!==''); p.owner=h.owner; if(h.cost)p.cost=h.cost; }
 const STAGES=['사업규모 확정','부지 검토','인허가 검토','운영방법 검토','서버 구입가능성 검토','자금조달 검토','착공','운영 개시'];
 const toYMD=s=>{const m=s.match(/^(\d\d)\.(\d\d)\.(\d\d)$/); return m?`20${m[1]}-${m[2]}-${m[3]}`:s;};
@@ -2522,7 +2542,7 @@ function roadPicker(anchor){ const pid=S.proj||'pangyo'; const mine=roadOf(pid).
   const cands=ITEMS.filter(i=>!used.has(i.id)&&isLive(i)&&i.proj===pid&&TYPE_NAME[i.type]&&(i.date>=last)).sort((a,b)=>a.date<b.date?-1:1).slice(0,40);
   const tname=t=>t==='meeting'?'미팅':t==='action'?ACT:'리서치';
   const p=openPop(anchor,`<div class="road-pick"><div class="hd" style="padding-left:0">로드맵 항목 추가 · ${esc(proj(pid).tag)} · ${esc(lastR?lastR.date+' 이후':'전체')}의 미팅·액션아이템·리서치</div>
-    <div class="cands">${cands.length?cands.map(i=>`<label><input type="checkbox" value="${i.id}"><span class="chip ${i.type==='research'?'rs':proj(i.proj).cls}" style="pointer-events:none"><i class="sq">${pict(i.type)}</i>${esc(tname(i.type))}</span><span>${esc(i.title.split('\n')[0])}</span><span class="m">${esc(i.dateTxt||fmtDateDot(i.date))}${(i.files&&i.files.length)||i.file?' · 첨부':''}</span></label>`).join(''):'<div class="msg">이 구간에 게시된 항목이 없습니다. 제목과 내용을 직접 입력해 추가할 수 있습니다.</div>'}</div>
+    <div class="cands">${cands.length?cands.map(i=>`<label><input type="checkbox" value="${i.id}"><span class="chip ${i.type==='research'?'rs':proj(i.proj).cls}" style="pointer-events:none"><i class="sq">${pict(i.type)}</i>${esc(tname(i.type))}</span><span>${esc(i.title.split('\n')[0])}</span><span class="m">${esc(dateShow(i))}${(i.files&&i.files.length)||i.file?' · 첨부':''}</span></label>`).join(''):'<div class="msg">이 구간에 게시된 항목이 없습니다. 제목과 내용을 직접 입력해 추가할 수 있습니다.</div>'}</div>
     <div class="row"><b>업무진행도</b><select id="rp-stage">${STAGES.map(s=>`<option ${s===(lastR?lastR.cat:'')?'selected':''}>${s}</option>`).join('')}</select></div>
     <div class="row"><b>날짜</b><input id="rp-date" value="${toRoadDate(TODAY)}"></div>
     <div class="row"><b>제목</b><input id="rp-title" placeholder="선택한 항목의 제목이 자동 입력됩니다"></div>
@@ -2558,7 +2578,7 @@ async function loadUpdates(){const box=$('#upd-list'); if(!box)return;
     const evs=r.events.filter(ev=>['create','edit','publish','comment'].includes(ev.kind)&&(ev.type==='item'||ev.type==='project')&&ev.title); const out=[];
     for(const ev of evs){const l=out[out.length-1]; if(l&&l.rid===ev.rid&&l.employee===ev.employee&&l.kind===ev.kind)continue; out.push(ev);}
     const verb={create:'페이지를 새로 만들었습니다.',edit:'페이지를 편집했습니다.',publish:'페이지를 게시했습니다.',comment:'페이지에 댓글을 달았습니다.'}; const show=out.slice(0,60);
-    box.innerHTML=show.length?show.map((ev,i)=>`<div class="u"><div class="dt">${esc(localDate(ev.at))}<span>${esc(relTime(ev.at))} · ${esc(ev.name||ev.employee)} · ${esc(evType(ev))}</span></div><div class="ti"><b data-mopen="${esc(ev.type==='item'?ev.rid.slice(5):ev.rid)}">${esc((ev.title||'').split('\n').join(' '))}</b><span> ${verb[ev.kind]}</span></div></div>${i<show.length-1?'<div class="hr" style="margin:4px 1.8px 18px"></div>':''}`).join('')+'<div style="height:80px"></div>':'<div class="u" style="color:#939393">아직 업데이트가 없습니다.</div>';
+    box.innerHTML=show.length?show.map((ev,i)=>`<div class="u"><div class="dt">${esc(PREVIEW_ON?dateDot(localDate(ev.at)):localDate(ev.at))}<span>${esc(relTime(ev.at))} · ${esc(ev.name||ev.employee)} · ${esc(evType(ev))}</span></div><div class="ti"><b data-mopen="${esc(ev.type==='item'?ev.rid.slice(5):ev.rid)}">${esc((ev.title||'').split('\n').join(' '))}</b><span> ${verb[ev.kind]}</span></div></div>${i<show.length-1?'<div class="hr" style="margin:4px 1.8px 18px"></div>':''}`).join('')+'<div style="height:80px"></div>':'<div class="u" style="color:#939393">아직 업데이트가 없습니다.</div>';
   }catch(err){box.innerHTML=`<div class="u" style="color:#939393">${esc(err.message||'업데이트를 가져오지 못했습니다.')}</div>`;}}
 function renderPaneBase(pane){$$('#mnav .item').forEach(i=>i.classList.toggle('on',i.dataset.pane===pane)); updateBadges(); const role=$('#mnav .me .role'); if(role)role.textContent=roleOf(sharedUser); const adm=canAdmin();
   const B=$('#mbody'); let h='';

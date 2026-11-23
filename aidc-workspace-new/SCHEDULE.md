@@ -332,6 +332,52 @@ Frame and lists:
   on letting go and used to put the chart back a few pixels, because the scroll event had not arrived yet).
 - tests/schedule-8.cjs has these; tests/schedule-1.cjs checks the new starting point of a relation.
 
+## Eleventh round (owner, 2026-11-23, a list of 23 points)
+
+For everybody (faults):
+
+- A draft is only its writer's. The old fixture flags (`table` / `card` / `cal`) keep a draft listed only when nobody wrote it
+  (`legacyListed` needs `!authorId`); the Worker's `privateDraft` no longer looks at the flags. A recovered draft ("[복구 초안]")
+  used to copy the flags of what it was recovered from and was sent to everybody; the copy drops them now.
+- The global search of the sidebar also finds the tasks of the schedules (a task has an item only after somebody wrote in it).
+- A project's scale is one value: the overview reads `scaleOf(h, i, p[SCALE_FB[i]])` like the card and writes both.
+- Versions of something the server was never given (an archive row, a task nobody wrote in): `sharedVersions` answers [] on a
+  404 and the window says there are none; another fault shows what the server said (`userMessage`).
+- "Has a file" is what the body links to (`hasFiles` = `itemFiles(it).length`), and the library lists exactly those files
+  (it used the server's list of uploads, which keeps a file that was taken out of its body).
+
+With the preview on:
+
+- Dates are written yyyy. mm. dd everywhere (`dateDot`; schD, fmtDateDot, fmtDateK, fmtStamp(Short), the editor's stamps through
+  `ctx.dateText`). `dateShow(r)` is what a row shows: the stored `dateTxt` is in the old form and is used only without the preview.
+  The gantt table is 540 wide by default (was 508) so that two full dates fit.
+- Action lists: 시작일 and 완료일 are two columns without the arrow, "-" where there is no finish (a milestone, an action
+  without an end). `fin` is a sort key of its own.
+- Resting on "n일 지연" shows why (`[data-tip]`, 74-eleventh.js): what a member wrote as the reason (`why` on the task override or
+  on the action item, a field of the panel while something is late) and what the schedule says (schLateWhy / schLateWhyItem).
+- Pages: first / last ("<<", ">>") and the numbers ten at a time (pager of original.html, schPager).
+- Search boxes show an X once something is typed (`qx()`).
+- The member card (schUserCard): pressing an assignee (`[data-user]`) where the value is not being edited, or resting on it for
+  a second. Name, title, role, team, e-mail, phone (`phone` is a new field of 마이페이지 › 프로필). The 사번 is not shown.
+- Help: an "i" (`schInfo('dates' | 'status' | 'all')`) beside 예상 기한, 상태, the gantt's summary and the lists.
+- Excel in the action section: "현재 검색 결과 내보내기" (only what the search and the filters show: schXlsxSection(pid, tab,
+  'view')) and "프로젝트 전체 내보내기" beside it.
+- The project's delete pictogram is 35 (2.5 times); the closed notice bar's arrow points down; the main calendar's project tags
+  wrap and never run into 미팅 · 리서치.
+- Archive (76-archive.js; renderArchive hands over): search and the kinds of document at the top, 문서 목록 and 참고사이트 as
+  two views. The table shows 중요도, a link pictogram beside a title that opens a site, and 드롭박스 URL (the item's `dbx`, or its
+  address when that is a Dropbox one) as the last column; the detail has 드롭박스 URL as a field.
+- Research: 구분 = `cats` on the item (chosen in the detail below URL, new ones can be typed) together with the [..] of the
+  title; every one in use can be filtered by, several at once (`S.rf.tags`, schMultiPop). The 작성자 filter is 담당자 (people).
+  Cards keep their text inside (clamped, equal height in a row).
+- Library: previews of what a browser can show itself (PDF in an iframe, video, sound, the first lines of a text file); kinds
+  by file format (이미지 · PDF · PPT · WORD · 한글 · 엑셀 · 기타). PowerPoint, Word, 한글 and Excel files cannot be shown
+  without a converter and stay a sheet with the name of their format.
+- Export: headings are read from the content (schExpHeads: a bold line, a line ending in a colon, a line with a heading mark, a
+  short line above a list / table / long paragraph, [..]), never a sentence or a "name: value" line. One font: Pretendard for
+  everything; the Word file carries a font table with one fallback (맑은 고딕) for a PC without Pretendard.
+- tests/schedule-9.cjs covers the round.
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): relations between tasks of different projects.

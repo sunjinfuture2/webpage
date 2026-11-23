@@ -1,5 +1,6 @@
 // The only things the editor knows about the app around it. The app fills these in once (AIDCEditor.configure).
 export const ctx = {
+  dateText: null,                  // (Date) => the page's own way of writing a date, when it has one
   users: () => [],                 // [{id, name}]
   userName: (id, fallback) => fallback || id,
   userIdByName: () => null,

@@ -15,11 +15,12 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span><span class="sf" data-schp="link-task">${t?esc(schTaskTitle(t)):'업무 선택'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
-  const L=[V('사업명',h.projV),V('예상 기한',dates+(it.st==='done'?'':schDdayHtml(end,false))),
+  const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schDdayHtml(end,false,schLateWhyItem(it)))),
     V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schD(it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
+    ...(it.why||schLateWhyItem(it)?[V('지연 사유',f('why',it.why?`<span class="plain wrap">${esc(it.why)}</span>`:ph('사유 입력'),'지연 사유'),'wide')]:[]),
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
-  const R=[V('담당자',`<span class="people" ${h.pk('people')}>${h.who(it.people)}</span>`),V('상태',f('stx',schStIcon(schItemSt(it)),'상태 변경')),V('중요도',f('pri',`<span class="pri pri-${it.pri||'mid'}">${priTxt[it.pri||'mid']}</span>`,'중요도 변경')),V('URL',urlField(it,E,'margin-left:0'))];
+  const R=[V('담당자',`<span class="people" ${h.pk('people')}>${h.who(it.people)}</span>`),V('상태'+schInfo('status'),f('stx',schStIcon(schItemSt(it)),'상태 변경')),V('중요도',f('pri',`<span class="pri pri-${it.pri||'mid'}">${priTxt[it.pri||'mid']}</span>`,'중요도 변경')),V('URL',urlField(it,E,'margin-left:0'))];
   return `<div class="props sch-props act-props ${E?'ed':''}">${tabs}<div class="sp-grid"><div>${L.join('')}</div><div class="rcol">${R.join('')}</div></div></div>`; }
 
 // A value pressed while the panel is being edited (called first by the page's own handler of data-pick). true: taken care of here.
@@ -33,8 +34,11 @@ function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
     if(k==='agenda'){ ask('주요안건',meetParts(it).agenda,'예: GPU 수급 관련 확답 논의',v=>{meetWrite(it,{agenda:v});again();}); return true; }
     if(k==='extAtt'){ ask('상대 참여자',meetParts(it).guests,'예: 홍길동 부장, 김철수 차장',v=>{meetWrite(it,{guests:v});again();}); return true; }
     return false; }
+  if(it.type==='research'&&k==='cats'){ schCatsPick(el,it); return true; }
+  if(it.type==='research'&&k==='uncat'){ const l=schResCats(it).filter(x=>x!==el.dataset.k); if(l.length)it.cats=l; else delete it.cats; it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); return true; }
   if(it.type!=='action'||schOwn(it))return false;
   if(k==='stx'){ menuPop(el,SCH_STATUSES.map((s,i)=>({t:s,html:schStIcon(s),k:'s'+i,sel:schItemSt(it)===s,fn:()=>{ if(s==='완료'){it.st='done';delete it.stx;} else{it.st='prog';if(s==='진행')delete it.stx;else it.stx=s;} again(); }})),{cls:'sch-colmenu'}); return true; }
+  if(k==='why'){ ask('지연 사유',it.why||'','예: 발주처 회신 지연',v=>{ if(v)it.why=v; else delete it.why; again(); }); return true; }
   if(k==='ms'){ menuPop(el,[{t:'아니오 (기간이 있는 업무)',k:'n',sel:!it.ms,fn:()=>{delete it.ms;again();}},{t:'예 (하루짜리 기준점)',k:'y',ico:'<i class="sch-ms" style="margin:0 8px 1px 1px"></i>',sel:!!it.ms,fn:()=>{it.ms=true;delete it.end;if(it.actualStart)it.actualFinish=it.actualStart;again();}}]); return true; }
   if(k==='actualStart'){ datePick(el,it.actualStart||it.date||TODAY,v=>{ if(v){it.actualStart=v;if(it.ms)it.actualFinish=v;else if(it.actualFinish&&it.actualFinish<v)it.actualFinish=v;} else{delete it.actualStart;delete it.actualFinish;} again(); },{clear:'실제 시작 없음'}); return true; }
   if(k==='actualFinish'){ datePick(el,it.actualFinish||TODAY,v=>{ if(v){it.actualFinish=v;if(!it.actualStart||it.actualStart>v)it.actualStart=v;} else delete it.actualFinish; again(); },{min:it.actualStart||undefined,clear:'실제 완료 없음'}); return true; }

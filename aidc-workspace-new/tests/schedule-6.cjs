@@ -86,7 +86,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   check('the meeting tag of a partner stands on the row\'s middle line (no offset since the tenth round) and opens that meeting', cy === '0px' && await ev(id => S.panel === id, mid.m), cy);
   await ev(() => closePanel(true));
   const tb = await ev(() => { const t = document.querySelector('#page-main .tbl.sch-list.sch-all'), ttl = document.querySelector('#sec-actions .sec-title').getBoundingClientRect(); return t ? { hd: [...t.querySelectorAll('.hd span')].map(s => s.textContent.trim()), left: Math.round(t.getBoundingClientRect().left - ttl.left), per: !!document.querySelector('#sec-actions .sec-title [data-per]'), perRow: !!document.querySelector('#sec-actions .sch-filters [data-per]') } : null; });
-  check('the action table is the project page\'s list with 프로젝트 in front', tb && JSON.stringify(tb.hd) === JSON.stringify(['프로젝트', 'WBS', '업무명', '관리일정', '중요도', '상태', '담당자', '기한', 'URL']) && Math.abs(tb.left) < 6 && !tb.per && tb.perRow, tb);
+  check('the action table is the project page\'s list with 프로젝트 in front', tb && JSON.stringify(tb.hd) === JSON.stringify(['프로젝트', 'WBS', '업무명', '시작일', '완료일', '중요도', '상태', '담당자', '기한', 'URL']) && Math.abs(tb.left) < 6 && !tb.per && tb.perRow, tb);
   await ev(t => { newItem('action', { title: t, proj: 'pangyo', status: 'published', pri: 'high' }); render(true); }, '6차 높음 ' + sfx); await sleep(300);   // the demo actions are gone: one of our own to filter for
   await a.click('#page-main [data-mcol="pri"]'); await sleep(250); await a.click('.pop .it:has(.pri-high)'); await sleep(400);
   const fl = await ev(() => { const rows = [...document.querySelectorAll('#page-main .tbl.sch-list.sch-all .rw')], c = document.querySelector('#sec-actions .sch-chiprow .sch-chip'), ttl = document.querySelector('#sec-actions .sec-title').getBoundingClientRect(), tbl = document.querySelector('#page-main .tbl.sch-list.sch-all').getBoundingClientRect(), cr = c && c.getBoundingClientRect();
@@ -110,10 +110,10 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   await a.waitForFunction(() => !!schModel('pangyo'), null, { timeout: 15000 }); await ev(() => render(true)); await sleep(300);
   const card = () => ev(() => { const c = document.querySelector('#proj-inner .pcard[data-go="project:pangyo"] .info'), rows = [...c.children].map(d => d.textContent.trim()); return { first: rows[0], second: rows[1], fs: getComputedStyle(c).fontSize, want: schD(schModel('pangyo').res.operationDate), other: [...document.querySelectorAll('#proj-inner .pcard:not([data-go="project:pangyo"]) .info .ops')].map(x => x.textContent) }; });
   const c0 = await card();
-  check('a project card names the expected operation date above 담당자; type half a point larger', c0.first.startsWith('운영개시 예상') && c0.first.includes(c0.want) && c0.want === '28.09.28' && c0.second.startsWith('담당자') && c0.fs === '12.5px' && c0.other.every(t => /미정/.test(t)), c0);
+  check('a project card names the expected operation date above 담당자; type half a point larger', c0.first.startsWith('운영개시 예상') && c0.first.includes(c0.want) && c0.want === '2028. 09. 28' && c0.second.startsWith('담당자') && c0.fs === '12.5px' && c0.other.every(t => /미정/.test(t)), c0);
   const w78 = await ev(() => { const t = schModel('pangyo').byWbs.get('W7.8'); schEditTask('pangyo', t.id, '검사', x => { x.delay = (x.delay || 0) + 1; }, true); render(true); return t.id; }); await sleep(400);
   const c1 = await card();
-  check('…and follows the schedule when that date moves', c1.first.includes('28.09.29'), c1.first);
+  check('…and follows the schedule when that date moves', c1.first.includes('2028. 09. 29'), c1.first);
   await ev(id => { schEditTask('pangyo', id, '검사 되돌림', x => { x.delay = Math.max(0, (x.delay || 0) - 1); }, true); render(true); }, w78); await sleep(300);
   // the window that makes a project
   await a.click('#page-main .new-proj'); await sleep(300);

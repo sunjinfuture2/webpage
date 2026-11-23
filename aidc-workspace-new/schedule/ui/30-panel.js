@@ -26,14 +26,15 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
   const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schD(r.finish)}</span>`:f('plannedFinish',schD(r.finish),E?'완료일 변경\n'+why:why))}</span>`;
   const refs=schRefs(pid,t.id);
   const L=[V('사업명',pill(proj(pid),'nosq').replace('class="pill',`data-go="project:${esc(pid)}" title="프로젝트 페이지로 이동" class="pill`)),
-    V('예상 기한',dates+(done?'':schDdayHtml(r.finish,false))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
+    V('예상 기한'+schInfo('dates'),dates+(done?'':schDdayHtml(r.finish,false,schLateWhy(m,t)))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
     V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schD(t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
+    ...(t.why||schLateWhy(m,t)?[V('지연 사유',f('why',t.why?`<span class="plain wrap">${esc(t.why)}</span>`:ph('사유 입력'),'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),
     V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`),
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-schp="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-schp="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const ppl=schPeople(t);
-  const R=[V('담당자',f('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>','담당 멤버')),
-    V('상태',f('status',schStIcon(schStatus(t)))),V('중요도',f('pri',schPriHtml(m,t))),
+  const R=[V('담당자',f('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>','담당 멤버')),
+    V('상태'+schInfo('status'),f('status',schStIcon(schStatus(t)))),V('중요도',f('pri',schPriHtml(m,t))),
     V('URL',t.url&&urlHref(t.url)?`<a class="url" href="${esc(urlHref(t.url))}" target="_blank" rel="noopener" data-stop>${esc(t.url)}</a>${E?`<button class="copy-url" data-schp="f" data-k="url" title="주소 변경">${schChev()}</button>`:''}`:f('url',ph('주소 입력')))];
   let more='';
   if(SCHP.more){ const txt=(k,label,p2)=>V(label,f(k,t[k]?`<span class="plain wrap">${esc(t[k])}</span>`:ph(p2)),'wide');
@@ -84,6 +85,7 @@ function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule
   if(k==='url'){askInput('URL',t.url||'',v=>{v=(v||'').trim();edit(v?'URL 입력':'URL 지움',q=>{if(v)q.url=v;else delete q.url;});});return;}
   if(k==='kind'){ if(t.finishRule){toast('검수 완료 후 개월 수로 정해지는 업무는 마일스톤으로 바꿀 수 없습니다.',3600);return;}
     menuPop(el,[{t:'아니오 (기간이 있는 업무)',k:'n',sel:!ms,fn:()=>{if(ms)editCard('일반 업무로 변경',x=>{x.kind='task';});}},{t:'예 (하루짜리 기준점)',k:'y',ico:'<i class="sch-ms" style="margin:0 8px 1px 1px"></i>',sel:ms,fn:()=>{if(!ms)editCard('마일스톤으로 변경',x=>{x.kind='milestone';x.plannedFinish=x.plannedStart;if(x.actualStart)x.actualFinish=x.actualStart;});}}]);return;}
+  if(k==='why'){askInput('지연 사유',t.why||'',v=>edit('지연 사유 입력',q=>{q.why=(v||'').replace(/\s+/g,' ').trim();}));return;}
   if(k==='criteria'||k==='conditions'||k==='evidence'){const lb={criteria:'완료 기준',conditions:'조건·확약',evidence:'증빙'}[k];askInput(lb,t[k]||'',v=>edit(lb+' 수정',q=>{q[k]=(v||'').trim();}));return;} }
 // what can be done with one relation: its kind, its gap, leaving it out of the calculation, deleting it
 function schRelMenu(el,pid,relId){ const m=schModel(pid), A=AIDCSchedule, rel=m&&m.plan.dependencies.find(x=>x.id===relId); if(!rel)return; const a=m.byId.get(rel.from), b=m.byId.get(rel.to), nm=`${schWbs(a.wbs)} → ${schWbs(b.wbs)}`;

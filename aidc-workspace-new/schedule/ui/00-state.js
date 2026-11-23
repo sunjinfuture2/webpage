@@ -95,7 +95,7 @@ function schKeepScroll(){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-sc
 function schRestoreScroll(k){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-scroll');if(g&&k.gx!=null){g.scrollLeft=k.gx;g.scrollTop=k.gy;}if(n&&k.nx!=null){n.scrollLeft=k.nx;n.scrollTop=k.ny;}}
 
 /* ---------- formatters ---------- */
-const schD=d=>d?d.slice(2).replace(/-/g,'.'):'';                                   // 2026-11-02 -> 26.11.02
+const schD=d=>d?dateDot(d):'';                                                     // 2026-11-02 -> 2026. 11. 02 (owner, 2026-11-23: one way to write a date everywhere)
 const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schD(b)}</span></span>`;
 const schWbs=w=>String(w||'').replace(/^W/,'').replace('.','-');                    // W1.1 -> 1-1 (display only)
 const schPhaseNo=c=>String(c||'').replace(/^W/,'');
@@ -115,13 +115,13 @@ const schStatus=t=>{const P=AIDCSchedule.progress;return P.isDone(t)?'완료':(t
 const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
 // D-day of a task that is not finished: against its forecast finish. Late ones read "n일 지연".
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
-const schDdayHtml=(finish,done)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}">${d.txt}</span>`:'';};
+const schDdayHtml=(finish,done,why)=>{const d=schDday(finish,done);return d?`<span class="sch-dd ${d.hot?'hot':''} ${d.late?'late':''}"${why&&d.late?` data-tip="${esc(why)}" data-tiph="지연 사유"`:''}>${d.txt}</span>`:'';};   // why: shown when the pointer rests on a late one
 const schPri=(m,t)=>t.pri||AIDCSchedule.progress.defaultPriority(m.res,t.id);
 const schPriHtml=(m,t)=>{const p=schPri(m,t);return `<span class="pri pri-${p}" ${t.pri?'':'title="아직 지정하지 않아 일정 여유로 정한 값입니다 (운영개시 경로와 근접 업무는 높음)"'}>${priTxt[p]}</span>`;};
 const schPeople=t=>Array.isArray(t.people)?t.people:[];
 // Assignees: members once they are set, else the role that carries the task out in the source plan, in grey.
 const schRole=t=>((t.roles||{}).R||'').trim();
-function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==='stack'?avstack(ppl,3):ppl.map(k=>`<span>${av()}${esc(userName(k))}</span>`).join('');
+function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==='stack'?avstack(ppl,3):ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('');
   return '<span class="sch-role none">미지정</span>'; }   // owner, 2026-11-19: nothing else is written where nobody is assigned
 // the whole page knows that the preview is on (styles of the item panel that only the preview changes hang on this)
 if(schPreview())document.documentElement.classList.add('sch-on');

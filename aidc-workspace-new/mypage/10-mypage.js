@@ -83,7 +83,7 @@ function mpFormState(form){ const box=$(`[data-mpstate="${form}"]`), btn=$(`[dat
   $$(`[data-mperr^="${form}."]`).forEach(n=>{const m=err[n.dataset.mperr.split('.')[1]]||''; n.textContent=m; const inp=$(`[data-mpf="${n.dataset.mperr}"]`); if(inp)inp.setAttribute('aria-invalid',m?'true':'false');});
   const dot=$(`#mnav [data-mp="go:${form==='ws'?'settings.general':'account.profile'}"]`); if(dot){const has=!!$('.dty',dot); if(has!==dirty)mpNav();} }
 const mpClean=v=>String(v||'').replace(/\s+/g,' ').trim();
-function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||''])),holidays:(Array.isArray(SETTINGS.holidays)?SETTINGS.holidays:[]).join(', ')}; }
+function mpOrigin(form){ const me=MEMBERS_META[sharedUser]||{}; return form==='profile'?{name:sharedName||'',title:me.title||'',email:me.email||'',phone:me.phone||''}:{wsName:SETTINGS.wsName||'',org:SETTINGS.org||'',dropboxUrl:SETTINGS.dropboxUrl||'',...Object.fromEntries(MP_LINKS.map(([k])=>['lk_'+k,(SETTINGS.links||{})[k]||''])),holidays:(Array.isArray(SETTINGS.holidays)?SETTINGS.holidays:[]).join(', ')}; }
 // The company's places the footer links to (설정 › 워크스페이스 › 일반).
 const mpDays=v=>{ const parts=String(v||'').split(/[\s,]+/).filter(Boolean), ok=parts.filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(new Date(x+'T00:00:00'))); return {days:[...new Set(ok)].sort(),bad:ok.length!==parts.length}; };
 const MP_LINKS=[['groupware','그룹웨어'],['home','회사 홈페이지'],['youtube','YouTube'],['instagram','Instagram'],['facebook','Facebook']];
@@ -92,6 +92,7 @@ function mpDirty(form){ const d=MP.draft[form]; if(!d)return false; const o=mpOr
 function mpErrors(form){ const d=MP.draft[form]||mpOrigin(form), e={};
   if(form==='profile'){ const n=mpClean(d.name); if(!n)e.name='이름을 입력하세요.'; else if(n.length>40)e.name='이름은 40자까지 쓸 수 있습니다.'; else if(/[\u0000-\u001f\u007f]/.test(String(d.name)))e.name='이름에 쓸 수 없는 문자가 있습니다.';
     if(mpClean(d.title).length>40)e.title='직책은 40자까지 쓸 수 있습니다.';
+    { const ph=mpClean(d.phone); if(ph&&!/^[0-9+\-() .]{7,30}$/.test(ph))e.phone='전화번호 형식이 아닙니다. (예: 010-1234-5678)'; }
     const em=mpClean(d.email).toLowerCase(); if(em){ if(em.length>80||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))e.email='이메일 주소 형식이 아닙니다. (예: name@sunjin.co.kr)'; else if(Object.entries(MEMBERS_META).some(([id,m])=>id!==sharedUser&&m&&String(m.email||'').toLowerCase()===em))e.email='다른 멤버가 쓰고 있는 주소입니다.'; } }
   else { if(!mpClean(d.wsName))e.wsName='워크스페이스 이름을 입력하세요.'; else if(mpClean(d.wsName).length>30)e.wsName='30자까지 쓸 수 있습니다.'; if(mpClean(d.org).length>60)e.org='60자까지 쓸 수 있습니다.';
     const u=mpClean(d.dropboxUrl); if(u&&!/^https:\/\/[^\s]+$/.test(u))e.dropboxUrl='https:// 로 시작하는 주소를 입력하세요.';
@@ -103,9 +104,9 @@ const mpFixed=(label,val,o={})=>`<div class="fl ro" ${o.row?`data-row="${o.row}"
 async function mpSave(form){ if((MP.state[form]||{}).k==='saving'||!mpDirty(form)||Object.keys(mpErrors(form)).length)return; const d=mpDraft(form), ids=form==='profile'?['meta:members']:['meta:settings'];
   if(form==='ws'&&!canAdmin()){toast('워크스페이스 설정은 소유자·관리자만 바꿀 수 있습니다.');return;}
   MP.state[form]={k:'saving'}; mpFormState(form);
-  try{ if(form==='profile'){ const name=mpClean(d.name), title=mpClean(d.title), email=mpClean(d.email).toLowerCase(), cur=MEMBERS_META[sharedUser]||{};
+  try{ if(form==='profile'){ const name=mpClean(d.name), title=mpClean(d.title), email=mpClean(d.email).toLowerCase(), phone=mpClean(d.phone), cur=MEMBERS_META[sharedUser]||{};
         if(name!==sharedName)await sharedSetName(name);                                                   // the Worker checks the name itself and answers with the stored one
-        if(title!==(cur.title||'')||email!==(cur.email||'')){ const next={...cur,title,email}; if(!title)delete next.title; if(!email)delete next.email; MEMBERS_META[sharedUser]=next; } }
+        if(title!==(cur.title||'')||email!==(cur.email||'')||phone!==(cur.phone||'')){ const next={...cur,title,email,phone}; if(!title)delete next.title; if(!email)delete next.email; if(!phone)delete next.phone; MEMBERS_META[sharedUser]=next; } }
       else { SETTINGS.wsName=mpClean(d.wsName); SETTINGS.org=mpClean(d.org); SETTINGS.dropboxUrl=mpClean(d.dropboxUrl);
         const links=Object.fromEntries(MP_LINKS.map(([k])=>[k,mpClean(d['lk_'+k])]).filter(([,v])=>v)); if(JSON.stringify(links)!==JSON.stringify(SETTINGS.links||{}))SETTINGS.links=links;
         const hd=mpDays(d.holidays).days; if(JSON.stringify(hd)!==JSON.stringify(SETTINGS.holidays||[]))SETTINGS.holidays=hd; }
@@ -120,6 +121,7 @@ function mpProfile(){ const me=MEMBERS_META[sharedUser]||{}, ws=me.ws||[];
   <div class="mp-av" data-row="avatar">${avOf(sharedUser,'big')}<div><div class="bts"><button class="mp-btn sec" data-mp="avatar">사진 ${me.avatar?'바꾸기':'올리기'}</button>${me.avatar?'<button class="mp-btn sec" data-mp="avatar-x">사진 지우기</button>':''}<input type="file" id="mp-avf" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div><small>JPG · PNG · WebP · GIF, 10MB 이하. 가운데를 정사각형으로 잘라 256px로 저장합니다.</small></div></div>
   <div class="mp-form">${mpField('profile','name','이름',{max:40})}${mpField('profile','title','직책',{max:40,ph:'예: 책임 · 팀장'})}
     ${mpField('profile','email','이메일',{max:80,ph:'name@sunjin.co.kr',type:'email',note:me.email?'<i class="tag">미인증</i> 인증 메일을 보내는 기능이 없어 주소 형식과 중복만 확인합니다.':'알림 메일은 보내지 않습니다. 연락처로만 표시됩니다.'})}
+    ${mpField('profile','phone','연락처',{max:30,ph:'010-0000-0000',note:'담당자 이름을 눌렀을 때 뜨는 멤버 정보에 이메일과 함께 표시됩니다.'})}
     ${mpFixed('사번',`${esc(sharedUser)} <button class="mp-link" data-mp="copy-id">복사</button>`,{note:'로그인에 쓰는 고유 번호라 바꿀 수 없습니다.'})}
     ${mpFixed('역할',esc(roleOf(sharedUser)),{note:hasOwner()?'역할은 소유자가 설정 › 멤버에서 바꿉니다.':'아직 소유자가 지정되지 않았습니다.'})}
     ${mpFixed('소속',esc(SETTINGS.org||'—')+(ws.length?` · ${ws.map(esc).join(', ')}`:''),{note:'팀스페이스 소속은 소유자·관리자가 지정합니다.'})}</div>
