@@ -282,10 +282,13 @@ Frame and lists:
 - Toasts with the preview stay at least 7 s, wait while the pointer rests on them, have an x and may carry a way there
   (`go`), e.g. 열기 after saving on the way out.
 - Sidebar: the top block is sticky with a soft edge; name + arrow of a row are one link underlined as a whole (`.sb-lk`).
-- Holidays: red dates without names. schHolBuilt (fixed dates, the lunar ones of SCH_LUNAR, substitute days by rule) plus
-  what the Worker finds (/api/holidays: date.nager.at, asked at most once a month, kept in table `holidays`; only the year is
-  sent) plus SETTINGS.holidays (설정 › 워크스페이스 › 일반). The outside service cannot be reached from the build environment:
-  only the built-in part is covered by the test.
+- Holidays: red dates and, since the owner's own change of 2026-11-23 (commit d7c453f, HOLIDAYS.md), their names beside
+  them in the preview's calendars (schHolidayDate / schHolidayName; they were dates only before). schHolBuilt (fixed dates,
+  the lunar ones of SCH_LUNAR, substitute days by rule, each with its name) plus what the Worker finds (/api/holidays through
+  holiday-service.mjs: the official KASI service when the secret KASI_SERVICE_KEY is set, otherwise date.nager.at; kept for
+  a day in table `holidays`; only the year is sent) plus SETTINGS.holidays (설정 › 워크스페이스 › 일반). The outside services
+  cannot be reached from the build environment: the built-in part is covered by tests/schedule-8.cjs, the names and the
+  Worker's reading by tests/holiday-labels.test.mjs (node --test, no server).
 - Research: a period of one's own on a two-month calendar (schRangePick); no sort picker; a title never takes more than two
   lines below its tag.
 - Project cards: pickers 분류 · 담당자 · 정렬 (schProjBar); a picture's height follows its shape between 150 and 부산's 296.2
