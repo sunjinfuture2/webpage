@@ -135,23 +135,25 @@ function schItemRow(x,cls,wbs){ const done=x.st==='done', end=itemEnd(x), u=urlH
 // Sizes are those of the design file (261118, page 9), measured on a 4x render: the outline is 508 wide, the header 40.75
 // (months 24.25, days 16.5), a phase row 36.4 (30 when its tasks follow), a task row 33.25, a bar 22 high, a day 13.45 wide.
 const SG={left:508,head:40.75,padTop:1.3,ph:36.4,phOpen:30,tk:33.25,padAfter:9.7,bar:22,day:13.45,port:21.5,ms:13.25};
-// A relation is drawn the way the design draws it: it leaves the earlier task from its lower edge at that task's starting
-// point (21.5 from the left, the middle of a short bar, the lower corner of a milestone), runs down to the later task's row
-// and turns into that task's left edge. When there is no room for that turn (the later task starts at or before the line)
-// the line ends on the later task's upper edge instead: straight down when it already stands over the task, otherwise with
-// one sideways step in the gap above it. Every piece is vertical, horizontal or a round turn; nothing is slanted. A later
-// task that is drawn above mirrors all of this. Every relation of one task shares the same starting point.
-function schLinkPath(a,b){ const down=b.cy>=a.cy, s=down?1:-1, px=a.port, py=down?a.bottom:a.top, tip=b.x1-2, dot=[px,py], f=n=>Math.round(n*100)/100;
-  if(tip-px>=3){ const dy=Math.abs(b.cy-py), r=Math.max(.5,Math.min(dy>100?12:6,dy,tip-px));
-    return {d:`M${f(px)},${f(py)} L${f(px)},${f(b.cy-s*r)} Q${f(px)},${f(b.cy)} ${f(px+r)},${f(b.cy)} L${f(tip)},${f(b.cy)}`,head:`M${f(tip-3.6)},${f(b.cy-3)} L${f(tip)},${f(b.cy)} L${f(tip-3.6)},${f(b.cy+3)}`,dot,into:'left'}; }
-  // onto the upper edge. Where the two tasks stand over each other the line is simply straight: it may leave up to 7 beside the
-  // starting point for that (a milestone is left and entered on its slanted edge near the corner).
-  const edge=down?b.top:b.bottom, aLo=a.ms?a.cx-6:a.x1+2, aHi=a.ms?a.cx+6:a.x2-2, bLo=b.ms?b.cx-5:b.x1+2, bHi=b.ms?b.cx+5:b.x2-2, lo=Math.max(aLo,bLo,px-7), hi=Math.min(aHi,bHi,px+7);
-  const aY=x=>a.ms?py-s*Math.abs(x-a.cx):py, bY=x=>(b.ms?edge+s*Math.abs(x-b.cx):edge)-s*1.5, arrow=(x,y)=>`M${f(x-3)},${f(y-s*3.6)} L${f(x)},${f(y)} L${f(x+3)},${f(y-s*3.6)}`;
-  if(lo<=hi){ const x=Math.min(hi,Math.max(lo,px)); return {d:`M${f(x)},${f(aY(x))} L${f(x)},${f(bY(x))}`,head:arrow(x,bY(x)),dot:[x,aY(x)],into:'edge'}; }
-  // otherwise one sideways step in the gap above the later task
-  const ins=b.ms?0:Math.min(6,(b.x2-b.x1)/2), ex=b.ms?b.cx:Math.min(b.x2-ins,Math.max(b.x1+ins,px)), ey=bY(ex), jy=ey-s*4.8, dir=ex>px?1:-1, r=Math.max(.3,Math.min(4,Math.abs(ex-px)/2,Math.abs(jy-py)));
-  return {d:`M${f(px)},${f(py)} L${f(px)},${f(jy-s*r)} Q${f(px)},${f(jy)} ${f(px+dir*r)},${f(jy)} L${f(ex-dir*r)},${f(jy)} Q${f(ex)},${f(jy)} ${f(ex)},${f(jy+s*r)} L${f(ex)},${f(ey)}`,head:arrow(ex,ey),dot,into:'step'}; }
+// A relation joins two tasks the way the relation map does (owner, 2026-11-23): out of the END of the earlier task (its right
+// edge, level with its middle) and into the START of the later one (its left edge). A relation of another kind uses the ends its
+// kind names (SS: start to start, FF: end to end, SF: start to end). The line keeps the chart's rule: level and upright pieces
+// joined by round turns, an open arrowhead, a point where it starts; nothing is slanted. It leaves by a short stub, runs up or
+// down along one upright line (shared by every relation of that end of the task, so they read as one branching line) and turns
+// into the other task. When the other task's end lies behind that line (the later task starts before the earlier one is over)
+// the line goes round: along the gap between the rows beside the later task and into it from its own side.
+// a, b: {x1, x2, cy, ...} of the two bars (a milestone: its left and right corners); a.so sets the stub further out.
+function schLinkPath(a,b,type){ type=/^(FS|SS|FF|SF)$/.test(type||'')?type:'FS'; const f=n=>Math.round(n*100)/100, STUB=9, out=type[0]==='F'?1:-1, inn=type[1]==='S'?1:-1;
+  const ax=out>0?a.x2:a.x1, ay=a.cy, by=b.cy, tip=inn>0?b.x1-2:b.x2+2, s=by>=ay?1:-1, t1=ax+out*(STUB+(a.so||0)); let pts;
+  if(out!==inn){ const t=out>0?Math.max(t1,tip+STUB):Math.min(t1,tip-STUB); pts=[[ax,ay],[t,ay],[t,by],[tip,by]]; }              // end to end / start to start: one upright line beyond both
+  else if((tip-t1)*inn>=4)pts=[[ax,ay],[t1,ay],[t1,by],[tip,by]];                                                                   // room for the turn
+  else { const gy=by-s*((b.rh||SG.tk)/2), t2=tip-inn*STUB; pts=[[ax,ay],[t1,ay],[t1,gy],[t2,gy],[t2,by],[tip,by]]; }                // round the later task
+  let d=`M${f(pts[0][0])},${f(pts[0][1])}`;
+  for(let i=1;i<pts.length-1;i++){ const p=pts[i-1], c=pts[i], n=pts[i+1], l1=Math.hypot(c[0]-p[0],c[1]-p[1]), l2=Math.hypot(n[0]-c[0],n[1]-c[1]), r=Math.min(5,l1/2,l2/2);
+    if(!(r>=.4)){ d+=` L${f(c[0])},${f(c[1])}`; continue; }
+    d+=` L${f(c[0]-(c[0]-p[0])/l1*r)},${f(c[1]-(c[1]-p[1])/l1*r)} Q${f(c[0])},${f(c[1])} ${f(c[0]+(n[0]-c[0])/l2*r)},${f(c[1]+(n[1]-c[1])/l2*r)}`; }
+  d+=` L${f(tip)},${f(by)}`;
+  return {d,head:`M${f(tip-inn*3.6)},${f(by-3)} L${f(tip)},${f(by)} L${f(tip-inn*3.6)},${f(by+3)}`,dot:[ax,ay],into:inn>0?'left':'right'}; }
 // Width of a piece of text in the chart's type (for deciding whether a name fits inside its bar).
 function schTextW(text,weight){ const c=schTextW.c||(schTextW.c=document.createElement('canvas').getContext('2d')); if(!schTextW.f)schTextW.f=getComputedStyle(document.body).fontFamily||'sans-serif';
   c.font=`${weight||400} 12px ${schTextW.f}`; return c.measureText(text).width-text.length*.144; }
@@ -210,11 +212,11 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
     R+=`<div class="sg-bar ${cls} ${late?'late':''}" style="left:${x1}px;top:${top}px;width:${w}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}">${inside?`<span class="lb">${label}</span>`:''}${mark}${prog?`<i class="pc" style="width:${Math.round(prog*100)}%"></i>`:''}${w>=18?'<s class="rz l" title="끌어서 시작일 변경"></s><s class="rz r" title="끌어서 종료일 변경"></s>':''}<u class="pt l" data-port="s" title="끌어서 다른 업무에 연결 (이 업무의 시작)"></u><u class="pt r" data-port="f" title="끌어서 다른 업무에 연결 (이 업무의 끝)"></u></div>`;
     if(!inside)R+=`<span class="sg-tx ${isSel?'sel':''}" style="left:${x1+w+6}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}">${label}</span>`; }
   if(addY>=0)L+=`<div class="sg-row add" style="top:${addY}px;height:${SG.ph}px" data-sch="newphase" title="개발 단계 추가">${svg('i-plus',9,9)}<span>개발 단계 추가</span>${rows.length?'':'<em>단계를 만들고, 그 줄의 + 로 업무를 추가합니다</em>'}</div>`;
-  { // where a task's relations start: 21.5 from its left edge; tasks whose points would fall on one vertical line are set 5 apart
-    const used=[]; for(const r of rows){ if(r.k!=='tk'||r.x1===undefined)continue; if(r.ms){r.port=r.cx;continue;} const w=r.x2-r.x1; let x=w<SG.port*2?r.x1+w/2:r.x1+SG.port;
-      if(m.succ.get(r.t.id).some(e=>rowOf.has(e.to))){ let n=0; while(used.some(u=>Math.abs(u-x)<4)&&n<6&&x+5<r.x2-4){x+=5;n++;} used.push(x); } r.port=x; } }
+  { // one upright line per task: tasks whose lines would fall on one another get stubs 4 longer each
+    const used=[]; for(const r of rows){ if(r.k!=='tk'||r.x1===undefined)continue; r.so=0; if(!m.succ.get(r.t.id).some(e=>rowOf.has(e.to)&&e.type[0]==='F'))continue;
+      let x=r.x2+9, n=0; while(used.some(u=>Math.abs(u-x)<3.5)&&n<5){x+=4;n++;} used.push(x); r.so=x-(r.x2+9); } }
   if(SCHU.links){ let hot=''; for(const e of m.plan.dependencies){ const a=rowOf.get(e.from), b=rowOf.get(e.to); if(!a||!b||a.x1===undefined||b.x1===undefined)continue; const isHot=e.from===sel||e.to===sel; if(!e.active&&!isHot)continue;
-      const c=schLinkPath(a,b), g=`<g class="${isHot?'hot':''} ${e.active?'':'off'}" data-link="${e.id}"><path class="hit" d="${c.d}"/><path d="${c.d}"/><path d="${c.head}"/></g>`; if(isHot)hot+=g; else links+=g;
+      const c=schLinkPath(a,b,e.type), g=`<g class="${isHot?'hot':''} ${e.active?'':'off'}" data-link="${e.id}"><path class="hit" d="${c.d}"/><path d="${c.d}"/><path d="${c.head}"/></g>`; if(isHot)hot+=g; else links+=g;
       dots+=`<circle class="${isHot?'hot':''} ${e.active?'':'off'}" cx="${c.dot[0]}" cy="${c.dot[1]}" r="${isHot?2.7:1.7}"/>`; }   // where a relation starts: drawn above the bars (it sits on a bar's edge and was half hidden behind it)
     links+=hot; }
   // "30% / 60% / 90%": the row after which that share of the whole schedule's weight is done (same weights as the progress figures)

@@ -305,6 +305,25 @@ Frame and lists:
 - Relation map: nobody assigned is an empty face (`.avatar.nil`), members show their own pictures.
 - tests/schedule-8.cjs has these (77 checks now).
 
+## Tenth round (owner, 2026-11-23, four points with pictures)
+
+- Relation lines of the gantt join two tasks the way the relation map does: out of the END of the earlier task (its right
+  edge, level with its middle) and into the START of the later one (its left edge); SS / FF / SF use the ends their kind
+  names. The line keeps the chart's own rule (schLinkPath(a, b, type)): level and upright pieces, round turns (5 at most), an
+  open arrowhead, a point where it starts. It leaves by a stub of 9, runs along one upright line and turns into the other
+  task; when the other task's end lies behind that line it goes round along the gap between the rows. Tasks whose upright
+  lines would fall on one another get stubs 4 longer each (`so` on the row). The old rule (from the lower edge, 21.5 from the
+  left, `port`) is gone. The line pulled by hand and the small chart of the relation window draw the same thing.
+- Partner list (preview): every row 42 high (more only when the classes need a second line), the row's line at its very
+  bottom, every cell's content on one middle line (an underlined link is balanced by the same room above its text); the line
+  under a class 3 higher; column titles, logo and chips start where the lines start.
+- Main action table: the project tag's text sits in the middle of its box again (it had lost that when the tag became a
+  block for the … in the ninth round).
+- Project calendar: the notice beside today's count is a circle (11 x 11); "9+" gets smaller type (`.w`).
+- Pulling the ground of the gantt writes the scroll position into SCH.gs at once (a redraw held back during the pull runs
+  on letting go and used to put the chart back a few pixels, because the scroll event had not arrived yet).
+- tests/schedule-8.cjs has these; tests/schedule-1.cjs checks the new starting point of a relation.
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): relations between tasks of different projects.

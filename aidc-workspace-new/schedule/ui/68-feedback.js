@@ -72,12 +72,12 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
     if(target&&target!==hit)target.classList.remove('target','ts','tf'); target=hit&&hit.dataset.bar!==from?hit:null;
     if(!tip){tip=document.createElement('div');tip.className='sg-tip';document.body.appendChild(tip);} tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px';
     if(target){ const r=target.getBoundingClientRect(), ta=m.byId.get(from), tb=m.byId.get(target.dataset.bar); toEnd=target.classList.contains('sg-msb')||ev.clientX<=r.left+r.width/2?'s':'f'; target.classList.add('target'); target.classList.toggle('ts',toEnd==='s'); target.classList.toggle('tf',toEnd==='f');
-      // exactly the line the chart will draw for this pair (whatever the kind: the chart draws every relation by one rule)
-      const ga=host._rows.get(from), gb=host._rows.get(target.dataset.bar), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined?schLinkPath(ga,gb):null;
+      // exactly the line the chart will draw for this pair and this kind (out of the end that was pulled, into the half under the pointer)
+      const ga=host._rows.get(from), gb=host._rows.get(target.dataset.bar), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined?schLinkPath(ga,gb,kind()):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else { const tx=(toEnd==='s'?r.left:r.right)-b.left, ty=r.top+r.height/2-b.top; line.setAttribute('d',`M${x0},${y0} L${tx/z},${ty/z}`); head.setAttribute('d',''); }
       tip.innerHTML=`<b>${kind()}</b>${esc(schWbs(ta.wbs))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schWbs(tb.wbs))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
     else { // not on a bar yet: the same rule towards the pointer (down from the task, a round turn, into where the pointer is)
-      const ga=host._rows.get(from), c=ga&&ga.x1!==undefined?schLinkPath(ga,{cy:my,cx:mx+3,x1:mx+2,x2:mx+8,top:my-1,bottom:my+1,ms:false}):null;
+      const ga=host._rows.get(from), c=ga&&ga.x1!==undefined?schLinkPath(ga,{cy:my,cx:mx,x1:mx+2,x2:mx-2,top:my-11,bottom:my+11,ms:false},fromEnd==='f'?'FS':'SS'):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else {line.setAttribute('d',`M${x0},${y0} L${mx},${my}`); head.setAttribute('d','');}
       tip.textContent='연결할 업무의 막대에 놓으세요 (왼쪽 반 = 시작에, 오른쪽 반 = 끝에)'; } };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; line.remove(); head.remove(); if(tip)tip.remove(); bar.classList.remove('linking'); host.classList.remove('linking'); swallowClick(); if(!target)return; target.classList.remove('target','ts','tf');
@@ -93,7 +93,7 @@ function schLinkPull(e,g){ const pid=S.proj, m=schModel(pid), rel=m&&m.plan.depe
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
 // The ground of the chart (where no bar is) can be pulled to move the view, like the relation map.
 function schGanttPan(e){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const x0=e.clientX, y0=e.clientY, sl=host.scrollLeft, st=host.scrollTop, z=LAYOUT.zoom||1; let on=false;
-  const move=ev=>{ const dx=ev.clientX-x0, dy=ev.clientY-y0; if(!on){ if(Math.hypot(dx,dy)<5)return; on=true; SCH.drag=true; host.classList.add('pan'); document.body.style.userSelect='none'; } host.scrollLeft=sl-dx/z; host.scrollTop=st-dy/z; };
+  const move=ev=>{ const dx=ev.clientX-x0, dy=ev.clientY-y0; if(!on){ if(Math.hypot(dx,dy)<5)return; on=true; SCH.drag=true; host.classList.add('pan'); document.body.style.userSelect='none'; } host.scrollLeft=sl-dx/z; host.scrollTop=st-dy/z; if(host._key)SCH.gs={key:host._key,x:host.scrollLeft,y:host.scrollTop}; };   /* remembered at once: a redraw held back during the pull runs on letting go, before the scroll event has told the chart where it stands */
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); if(!on)return; SCH.drag=false; host.classList.remove('pan'); document.body.style.userSelect=''; swallowClick(); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
 document.addEventListener('mousedown',e=>{ if(e.button!==0||!e.target.closest)return; const port=e.target.closest('#sch-gantt [data-port]'); if(port){schLinkDrag(e,port);return;} const bar=e.target.closest('#sch-gantt [data-bar]'); if(bar){schBarDrag(e,bar);return;}

@@ -25,7 +25,7 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
         :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schWbs(b.wbs))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
       body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(b.wbs))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
         <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${schD(r0.operationDate)}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?(opD>0?'+':'')+opD+'일':'변화 없음'}</em></div></div>
-        ${schProposeChart(m,cur,shown,o.kind==='new'||!o.gone?[a.id,b.id]:null)}
+        ${schProposeChart(m,cur,shown,o.kind==='new'||!o.gone?[a.id,b.id]:null,o.kind==='new'?type:((plan.dependencies.find(x=>x.from===a.id&&x.to===b.id)||{}).type||'FS'))}
         <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
         ${moved.length?`<div class="pp-tbl"><div class="hd"><span>업무</span><span>변경 전 → 변경 후</span><span>완료일 차이</span></div>${moved.map(t=>{const x=r0.tasks[t.id], y=res.tasks[t.id], dl=D.diffDays(y.finish,x.finish);
           return `<div class="rw"><span class="nm"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
@@ -37,14 +37,14 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; const k=bt.dataset.pp; if(k==='x')close(); else if(k==='ok')ok(); else if(k==='ty'){type=bt.dataset.k;cur=calc();draw();} });
   document.addEventListener('keydown',key,true); draw(); }
 // The small chart of the dialog: one row per task, where it stood (dashed) and where it will stand (solid); the relation in question as a line.
-function schProposeChart(m,cur,tasks,rel){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, LW=214, TW=590, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
+function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, LW=214, TW=590, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
   for(const t of tasks)for(const r of [r0.tasks[t.id],r1.tasks[t.id]]){ if(!r)continue; lo=Math.min(lo,D.dayNumber(r.start)); hi=Math.max(hi,D.dayNumber(r.finish)); }
   lo-=3; hi+=4; const px=TW/Math.max(1,hi-lo+1), X=d=>(D.dayNumber(d)-lo)*px, H=top+tasks.length*RH+6, geo=new Map(); let rows='', ax='';
   { let d=D.fromDay(lo).slice(0,8)+'01'; const step=px*30<34?(px*30<12?6:3):1; for(let n=0;n<400&&D.dayNumber(d)<=hi;n++){ const x=X(d); if(x>=0&&x<TW-20&&((+d.slice(5,7)-1)%step===0))ax+=`<i class="mo" style="left:${LW+x}px">${d.slice(2,4)}.${+d.slice(5,7)}</i>`; d=D.addMonths(d,1); } }
   tasks.forEach((t,i)=>{ const a=r0.tasks[t.id], b=r1.tasks[t.id], ms=t.kind==='milestone', ch=!a||a.start!==b.start||a.finish!==b.finish, cy=top+i*RH+RH/2, bar=(r,cls)=>{ const x1=X(r.start), w=Math.max(3,X(r.finish)+px-x1);
       return ms?`<i class="ms ${cls}" style="left:${LW+x1-5}px;top:${cy-5}px"></i>`:`<i class="br ${cls}" style="left:${LW+x1}px;top:${cy-7}px;width:${w}px"></i>`; };
-    const x1=X(b.start), w=Math.max(3,X(b.finish)+px-x1); geo.set(t.id,ms?{ms:true,cx:x1,cy,x1:x1-6,x2:x1+6,top:cy-6,bottom:cy+6,port:x1}:{x1,x2:x1+w,cy,top:cy-7,bottom:cy+7,port:x1+Math.min(w/2,14)});
+    const x1=X(b.start), w=Math.max(3,X(b.finish)+px-x1); geo.set(t.id,ms?{ms:true,cx:x1,cy,x1:x1-6,x2:x1+6,top:cy-6,bottom:cy+6,rh:RH}:{x1,x2:x1+w,cy,top:cy-7,bottom:cy+7,rh:RH});
     rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
-  let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1])); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
+  let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1]),relType); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
   const nx=today>=D.fromDay(lo)&&today<=D.fromDay(hi)?`<i class="td" style="left:${LW+X(today)+px/2}px;top:${top-4}px;height:${H-top+2}px"></i>`:'';
   return `<div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div>`; }

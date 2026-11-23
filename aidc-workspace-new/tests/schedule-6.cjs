@@ -83,7 +83,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const chip = `#page-main .tbl.partners .rw[data-partner="${mid.p}"] .mt .chip`;
   const cy = await ev(sel => { const c = document.querySelector(sel); return c ? getComputedStyle(c).top : null; }, chip);
   await a.click(chip); await sleep(500);
-  check('the meeting tag of a partner sits 2 lower and opens that meeting', cy === '2px' && await ev(id => S.panel === id, mid.m), cy);
+  check('the meeting tag of a partner stands on the row\'s middle line (no offset since the tenth round) and opens that meeting', cy === '0px' && await ev(id => S.panel === id, mid.m), cy);
   await ev(() => closePanel(true));
   const tb = await ev(() => { const t = document.querySelector('#page-main .tbl.sch-list.sch-all'), ttl = document.querySelector('#sec-actions .sec-title').getBoundingClientRect(); return t ? { hd: [...t.querySelectorAll('.hd span')].map(s => s.textContent.trim()), left: Math.round(t.getBoundingClientRect().left - ttl.left), per: !!document.querySelector('#sec-actions .sec-title [data-per]'), perRow: !!document.querySelector('#sec-actions .sch-filters [data-per]') } : null; });
   check('the action table is the project page\'s list with 프로젝트 in front', tb && JSON.stringify(tb.hd) === JSON.stringify(['프로젝트', 'WBS', '업무명', '관리일정', '중요도', '상태', '담당자', '기한', 'URL']) && Math.abs(tb.left) < 6 && !tb.per && tb.perRow, tb);

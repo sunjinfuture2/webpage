@@ -1062,3 +1062,23 @@
 .sch-on .sb .recent .r2 .dot{left:17px}
 .sch-on .sb .recent .r0{margin-top:14px}
 .sch-on .sb .recent .r0:first-child{margin-top:0}
+
+/* ================= tenth round (owner, 2026-11-23) ================= */
+/* 2. partner list. Every row is as high as the next (42, more only when the classes need a second line), its line is the very
+   bottom of the row (the padding that pushed the line 6 up is gone), and what a cell holds stands in the middle between the two
+   lines: name, address, class, note and meeting share one middle line. A link's underline is balanced by the same room above
+   the text, so the text (not the box with its line) is what gets centred. Labels, logo and chips start where the lines start. */
+.sch-on .tbl.partners .rw,.sch-on .tbl.partners .rw:first-of-type,.sch-on .tbl.partners .rw:has(.cat .pc-value){height:auto;min-height:42px;padding:0}
+.sch-on .tbl.partners .hd span em{left:0}
+.sch-on .tbl.partners .rw .nm .lg.mono{margin:0 8px 0 0}
+.sch-on .tbl.partners .rw .hp a{padding-top:1px}
+.sch-on .tbl.partners .rw .cat,.sch-on .tbl.partners .rw .cat:has(.pc-value){display:flex;flex-wrap:wrap;align-items:center;align-content:center;gap:6px 12px;padding:5px 0}
+/* the line under a class: 3 higher than it was (its lower edge 6 under the letters' box, now 3) */
+.sch-on .tbl.partners .rw .cat a,.sch-on .tbl.partners .rw .cat a.pc-value{display:inline-block;margin:0;padding:2px 0 0;line-height:17px;border-bottom:2px solid #555}
+.sch-on .tbl.partners .rw .mt .chip,.sch-on .tbl.partners .rw .mt .chip.rs,.sch-on .tbl.partners .rw .mt .chip.pj-k{top:0;margin-left:0}
+/* 3. the project tag of the main action table: its text in the middle of the box (the tag became a block for the … in the ninth
+   round and lost the centring of the ordinary tag). Measured on the letters themselves: 4.3 above them, 4.4 below. */
+.tbl.sch-list.sch-all .rw .pj .pill{box-sizing:border-box;height:19.6px;padding-top:1.3px;line-height:18.3px}
+/* 4. the notice beside today's count is a circle, not a lozenge */
+.cal .cell .acnt .nd i{width:11px;min-width:0;height:11px;padding:0;box-sizing:border-box;border-radius:50%;flex:none}
+.cal .cell .acnt .nd i.w{font-size:5.5px;letter-spacing:-.2px}

@@ -236,6 +236,33 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   check('relation map: nobody assigned is an empty face, not the word', await ev(() => { const w = [...document.querySelectorAll('#sch-net .sn-node .who')]; return w.length > 0 && w.every(x => !x.querySelector('.sch-role') && !!x.querySelector('.avatar')); }));
   await ev(() => { SCHU.tab = 'gantt'; schRefresh(); });
 
+  console.log('— tenth round (2026-11-23)');
+  await sleep(600);
+  const l10 = await ev(() => { const host = document.querySelector('#sch-gantt .sg-scroll'), m = schModel('pangyo'), f = n => Math.round(n * 100) / 100, out = { n: 0, bad: 0, round: 0, slant: 0, first: '' };
+    for (const e of m.plan.dependencies) { const g = document.querySelector('#sch-gantt .sg-links g[data-link="' + e.id + '"] path:not(.hit)'), ra = host._rows.get(e.from), rb = host._rows.get(e.to); if (!g || !ra || !rb || ra.x1 === undefined || rb.x1 === undefined) continue; const d = g.getAttribute('d'), k = /^(FS|SS|FF|SF)$/.test(e.type || '') ? e.type : 'FS';
+      const ax = k[0] === 'F' ? ra.x2 : ra.x1, tip = k[1] === 'S' ? rb.x1 - 2 : rb.x2 + 2; out.n++;
+      if (!(d.startsWith('M' + f(ax) + ',' + f(ra.cy) + ' ') && d.endsWith('L' + f(tip) + ',' + f(rb.cy)))) { out.bad++; out.first = out.first || k + ' ' + d; }
+      if ((d.match(/Q/g) || []).length >= 4) out.round++;
+      let x = 0, y = 0; for (const mm of d.matchAll(/([MLQ])\s*(-?[\d.]+),(-?[\d.]+)(?:\s+(-?[\d.]+),(-?[\d.]+))?/g)) { if (mm[1] === 'L' && Math.abs(+mm[2] - x) > 0.02 && Math.abs(+mm[3] - y) > 0.02) out.slant++; if (mm[1] === 'Q') { x = +mm[4]; y = +mm[5]; } else { x = +mm[2]; y = +mm[3]; } } }
+    const A = { x1: 100, x2: 200, cy: 50 }, B = { x1: 150, x2: 260, cy: 90, rh: 30 }; out.fs = schLinkPath(A, { x1: 300, x2: 380, cy: 90 }, 'FS').d; out.back = schLinkPath(A, B, 'FS').d; out.ss = schLinkPath(A, B, 'SS').d; out.ff = schLinkPath(A, B, 'FF').d; return out; });
+  check('gantt: every relation leaves the end its kind names (FS: the end of the earlier bar, level with its middle) and enters the other bar from the side (FS: its left edge), without a slanted piece', l10.n > 5 && l10.bad === 0 && l10.slant === 0, l10);
+  check('gantt: the rule itself — end to start with room: out, one upright line, in; a later task that starts earlier is gone round; start to start leaves and enters on the left, end to end on the right', l10.fs.startsWith('M200,50 L') && l10.fs.endsWith('L298,90') && (l10.fs.match(/Q/g) || []).length === 2 && l10.back.startsWith('M200,50 L') && l10.back.endsWith('L148,90') && (l10.back.match(/Q/g) || []).length === 4 && l10.ss.startsWith('M100,50 L') && l10.ss.endsWith('L148,90') && l10.ff.startsWith('M200,50 L') && l10.ff.endsWith('L262,90'), l10);
+  await ev(() => { const c = document.querySelector('#page-project .cal .cell'); c.insertAdjacentHTML('beforeend', '<span class="acnt" id="t10"><b>3</b><span class="nd"><i class="g">1</i><i class="r w">9+</i></span></span>'); }); await sleep(100);
+  const d10 = await ev(() => { const o = [...document.querySelectorAll('#t10 .nd i')].map(i => { const b = i.getBoundingClientRect(); return [Math.round(b.width * 100) / 100, Math.round(b.height * 100) / 100, getComputedStyle(i).borderRadius, i.scrollWidth <= i.clientWidth + 1]; }); document.querySelector('#t10').remove(); return o; });
+  check('project calendar: the notice beside today\'s count is a circle (as wide as high), also with 9+', d10.length === 2 && d10.every(x => x[0] === x[1] && x[0] === 11 && x[2] === '50%' && x[3]), d10);
+  await ev(() => go('main')); await sleep(700);
+  const p10 = await ev(() => { const r1 = n => Math.round(n * 10) / 10, tb = document.querySelector('#sec-partners .tbl.partners'), txt = el => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { if (!n.nodeValue.trim() || n.parentElement.closest('.acts,.lg')) continue; const g = document.createRange(); g.selectNodeContents(n); const r = g.getBoundingClientRect(); if (r.height) return r; } return null; };
+    const rows = [...tb.querySelectorAll('.rw')].filter(rw => rw.querySelectorAll('.cat a').length === 1).slice(0, 8).map(rw => { const R = rw.getBoundingClientRect(), mid = R.top + (R.height - 1) / 2, o = { h: r1(R.height), line: 0, dy: [], ul: null };
+      for (const c of rw.children) { const b = c.getBoundingClientRect(); o.line = Math.max(o.line, Math.abs(r1(R.bottom - b.bottom))); const chip = c.querySelector('.chip'), t = c.classList.contains('mt') ? (chip ? chip.getBoundingClientRect() : null) : txt(c); if (t) o.dy.push(r1(t.top + t.height / 2 - mid)); if (c.classList.contains('cat') && t) o.ul = r1(c.querySelector('a').getBoundingClientRect().bottom - t.bottom); }
+      return o; });
+    const hd = [...tb.querySelectorAll('.hd span')].map(s => r1(s.querySelector('em').getBoundingClientRect().left - s.getBoundingClientRect().left)), lg = tb.querySelector('.rw .nm .lg'), pill = document.querySelector('#sec-actions .tbl.sch-all .rw .pj .pill'), pt = pill ? txt(pill) : null, pb = pill ? pill.getBoundingClientRect() : null;
+    return { rows, hd, lg: lg ? r1(lg.getBoundingClientRect().left - lg.closest('.nm').getBoundingClientRect().left) : null, pill: pill ? [r1(pt.top - pb.top), r1(pb.bottom - pt.bottom), r1(pb.height)] : null }; });
+  check('partner list: every row is equally high and its line is the very bottom of the row', p10.rows.length > 1 && p10.rows.every(r => r.h === p10.rows[0].h && r.line === 0), p10.rows);
+  check('partner list: name, address, class, note and meeting stand on one middle line, in the middle between the lines above and below', p10.rows.every(r => r.dy.length >= 4 && r.dy.every(d => Math.abs(d) <= 0.75)), p10.rows);
+  check('partner list: the line under a class is 3 under the letters (it was 6), the column titles and the logo start where the lines start', p10.rows.every(r => r.ul === 3) && p10.hd.every(x => x === 0) && p10.lg === 0, p10);
+  check('main action table: the project tag\'s text is in the middle of its box', !!p10.pill && Math.abs(p10.pill[0] - p10.pill[1]) <= 1.5 && p10.pill[2] === 19.6, p10.pill);
+  await goP();
+
   console.log('— without the preview nothing of this shows');
   const C = await newUser(browser, 'R8C' + sfx, '여덟 삼'), c = C.page; await sleep(600);
   const np0 = await c.evaluate(() => ({ pv: PREVIEW_ON, hol: document.querySelectorAll('.cal .cell.hol').length, pill: (document.querySelector('.cal .filters .pill') || {}).textContent, pfil: !!document.querySelector('.projects .pfil'), foot: !!document.querySelector('#pfoot') }));

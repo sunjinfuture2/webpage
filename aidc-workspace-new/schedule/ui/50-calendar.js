@@ -27,7 +27,7 @@ function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schH
 // and how many of mine have changed (red).
 function schCalBadge(pid,date,count){ let dots='';
   if(date===TODAY){ const rows=schDayRows(pid,date), g=rows.filter(x=>x.green).length, r=rows.filter(x=>x.red).length;
-    dots=(g?`<i class="g" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
+    dots=(g?`<i class="g${g>9?' w':''}" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r${r>9?' w':''}" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=pid?TODAY:(S.selDate||TODAY), /* a project's list is always today's: its calendar does not select days */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'), rss=by('research'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
