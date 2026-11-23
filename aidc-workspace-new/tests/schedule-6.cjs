@@ -140,7 +140,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const up = async () => ev(() => { const box = document.querySelector('#sch-lower .sch-tabs.lead'), on = box.querySelector('button.on').getBoundingClientRect(), add = box.querySelector('.sch-evadd.up').getBoundingClientRect(), lib = document.querySelector('#sch-lower .sec-title .lib'); return { dx: Math.round(Math.abs((add.left + add.right) / 2 - (on.left + on.right) / 2)), above: add.bottom <= on.top + 4, lib: !!lib, k: SCHU.sec }; });
   await ev(() => { SCHU.sec = 'proc'; schLowerRefresh(); }); await sleep(400); const u0 = await up();
   await a.click('#sch-lower [data-sch="sec"][data-k="evid"]'); await sleep(500); const u1 = await up();
-  check('the + stands above the open tab and follows it; 라이브러리 stays', u0.dx <= 2 && u0.above && u1.dx <= 2 && u1.above && u1.k === 'evid' && u0.lib, { u0, u1 });
+  check('the + stands above the open tab and follows it; the section has no 라이브러리 button (taken out on 2026-11-23)', u0.dx <= 2 && u0.above && u1.dx <= 2 && u1.above && u1.k === 'evid' && !u0.lib && !u1.lib, { u0, u1 });
   await a.click('#sch-lower .sch-evadd.up'); await sleep(300);
   check('…and still adds to that tab', await ev(() => !!document.querySelector('.pop, #dlg, #panel.on .ititle')));
   await ev(() => { closePop(); const d = document.querySelector('#dlg'); if (d) d.remove(); if (S.panel) closePanel(true); SCHU.sec = 'proc'; schLowerRefresh(); }); await sleep(300);
