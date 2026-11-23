@@ -1,9 +1,6 @@
 name: Guard ver3 reset client recovery
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/ver3-reset-client-guard.yml'
 permissions:
   contents: read
 concurrency:
