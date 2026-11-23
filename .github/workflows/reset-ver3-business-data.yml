@@ -1,9 +1,6 @@
 name: Reset ver3 business data with verified backup
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/reset-ver3-business-data.yml'
 permissions:
   contents: read
 concurrency:
