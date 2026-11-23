@@ -1607,7 +1607,7 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     const ws=w*7-startDow+1, we=ws+6; let cells='';
     for(let c=0;c<7;c++){const idx=ws+c; let n,out=false;
       if(idx<1){n=prevDim+idx;out=true;}else if(idx>dim){n=idx-dim;out=true;}else n=idx;
-      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''} ${!out&&typeof schIsHoliday==='function'&&schIsHoliday(ymd(Y,M,n))?'hol':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}><span class="n">${n}</span>${!out&&cnt&&cnt[n]?schCalBadge(opts.proj,ymd(Y,M,n),cnt[n]):''}${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
+      cells+=`<div class="cell ${c===0?'sun':''} ${c===6?'sat':''} ${out?'out':''} ${(!out&&n===today)?'today':''} ${(!out&&n===sel)?'sel':''} ${!out&&typeof schIsHoliday==='function'&&schIsHoliday(ymd(Y,M,n))?'hol':''}" data-day="${out?'':n}" ${out?'':`data-date="${ymd(Y,M,n)}"`}>${PV&&!out&&typeof schHolidayDate==='function'?schHolidayDate(ymd(Y,M,n),n,!!(cnt&&cnt[n])):`<span class="n">${n}</span>`}${!out&&cnt&&cnt[n]?schCalBadge(opts.proj,ymd(Y,M,n),cnt[n]):''}${out?'':plusBtn('add','이 날짜에 새 미팅')}</div>`;}
     // events of this week: longer spans first, then meetings before action items before research; lanes are filled first-fit
     const lo=Math.max(ws,1), hi=Math.min(we,dim);
     const wk=evs.filter(x=>!(x.en<lo||x.s>hi)).map(x=>({e:x.e,s:Math.max(x.s,lo),en:Math.min(x.en,hi),contL:x.s<lo,contR:x.en>hi}));
