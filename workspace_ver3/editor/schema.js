@@ -15,6 +15,7 @@ import { Button } from './templates.js';
 import { Synced, ItemList } from './blocks2.js';
 import { isChangeOrigin } from './collab.js';
 import { Ins, Del } from './suggest.js';
+import { ParagraphIndent } from './indent.js';
 
 export const ID_TYPES = ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem', 'taskList', 'taskItem', 'blockquote', 'codeBlock', 'horizontalRule',
   'details', 'callout', 'table', 'image', 'file', 'bookmark', 'embed', 'columns', 'column', 'toc', 'raw', 'mathBlock', 'button', 'synced', 'itemList'];
@@ -184,6 +185,7 @@ const Toggle = Details.extend({
 export function buildExtensions(opts = {}) {
   const nv = opts.nodeViews || {}; const V = (ext, f) => f ? ext.extend({ addNodeView() { return f; } }) : ext;
   return [
+    ParagraphIndent,
     StarterKit.configure({
       ...(opts.collab ? { undoRedo: false } : {}), // a shared document brings its own undo stack
       blockquote: false, heading: { levels: [1, 2, 3] },

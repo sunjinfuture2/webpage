@@ -1,5 +1,6 @@
 // One editor instance for one document body. The app only sees: create(host, opts) -> { getHTML, changed, pending, attach, focus, insertFiles, destroy }.
 import { Editor, Extension } from '@tiptap/core';
+import { indentBlocks } from './indent.js';
 import { Plugin, PluginKey, NodeSelection, TextSelection, Selection } from '@tiptap/pm/state';
 import { DOMParser as PMDOMParser } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
@@ -142,7 +143,7 @@ function rangePlugin(inst) {
         if (e.key === 'Backspace' || e.key === 'Delete') { deleteBlocks(ed, r); return true; }
         if (e.shiftKey && !isMod(e) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { growRange(inst, r, e.key === 'ArrowDown' ? 1 : -1); return true; }
         if (e.key === 'Enter') { const b = blocksIn(view.state.doc, r.from, r.to)[0]; if (b) { const s = Selection.findFrom(view.state.doc.resolve(b.pos + 1), 1, true); if (s) view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, s.$from.end())).setMeta('nbRange', null)); } return true; }
-        if (e.key === 'Tab') { e.preventDefault(); return false; }
+        if (e.key === 'Tab') { e.preventDefault(); return indentBlocks(ed, e.shiftKey ? -1 : 1, r); }
         return false; } } });
 }
 function setRange(inst, r) { const { state, view } = inst.editor; inst.anchor = r; const tr = state.tr; try { tr.setSelection(selFor(state.doc, r)); } catch {} view.dispatch(tr.setMeta('nbRange', r)); view.focus(); }

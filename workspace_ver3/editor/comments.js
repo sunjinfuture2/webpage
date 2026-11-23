@@ -8,7 +8,7 @@ import { ctx } from './host.js';
 
 const all = itemId => { try { return (ctx.comments && itemId ? ctx.comments(itemId) : []) || []; } catch { return []; } };
 export function openCounts(itemId) { const m = new Map(); all(itemId).forEach(c => { if (c.block && !c.resolved) m.set(c.block, (m.get(c.block) || 0) + 1); }); return m; }
-const stamp = iso => { const d = new Date(iso); if (!iso || isNaN(d)) return ''; return `${d.getMonth() + 1}. ${d.getDate()} ${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const stamp = iso => { const d = new Date(iso); if (!iso || isNaN(d)) return ''; return `${ctx.dateText ? ctx.dateText(d) : `${d.getMonth() + 1}. ${d.getDate()}`} ${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${String(d.getMinutes()).padStart(2, '0')}`; };
 export const quoteOf = text => String(text || '').replace(/\s+/g, ' ').trim().slice(0, 80);
 
 export function openThread(itemId, blockId, rect, opt = {}) {

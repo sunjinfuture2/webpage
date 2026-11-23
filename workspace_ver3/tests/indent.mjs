@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { Schema } from '@tiptap/pm/model';
+import { EditorState, TextSelection } from '@tiptap/pm/state';
+import { history, undo } from '@tiptap/pm/history';
+import { indentBlocks } from '../editor/indent.js';
+const attr = { indent: { default: 0 } };
+const schema = new Schema({ nodes: { doc: { content: 'block+' }, text: { group: 'inline' }, paragraph: { group: 'block', content: 'inline*', attrs: attr }, heading: { group: 'block', content: 'inline*', attrs: attr }, bulletList: { group: 'block', content: 'listItem+' }, listItem: { content: 'paragraph block*', attrs: attr }, codeBlock: { group: 'block', content: 'text*', code: true }, table: { group: 'block', content: 'paragraph+' } } });
+const p = t => schema.nodes.paragraph.create(null, t ? schema.text(t) : null);
+function editor(nodes, from, to = from) { const doc = schema.nodes.doc.create(null, nodes); const ed = { state: EditorState.create({ doc, selection: TextSelection.create(doc, from, to), plugins: [history()] }) }; ed.view = { dispatch: tr => { ed.state = ed.state.apply(tr); } }; return ed; }
+let ed = editor([p('A. 핵심 주장'), p('· 전력 검토'), p('마지막')], 1);
+assert.equal(indentBlocks(ed, 1), true); assert.equal(ed.state.doc.firstChild.attrs.indent, 1);
+assert.equal(ed.state.selection.from, 1); undo(ed.state, ed.view.dispatch); assert.equal(ed.state.doc.firstChild.attrs.indent, 0);
+ed = editor([p('A'), p('B'), p('C')], 1, 7); indentBlocks(ed, 1);
+assert.deepEqual(Array.from({length:3},(_,i)=>ed.state.doc.child(i).attrs.indent), [1,1,0]);
+indentBlocks(ed,-1); indentBlocks(ed,-1); assert.equal(ed.state.doc.firstChild.attrs.indent,0);
+const li = schema.nodes.listItem.create(null, p('항목'));
+ed = editor([schema.nodes.bulletList.create(null,[li,li])],3); indentBlocks(ed,1);
+assert.equal(ed.state.doc.firstChild.firstChild.attrs.indent,1); assert.equal(ed.state.doc.firstChild.firstChild.firstChild.attrs.indent,0);
+ed = editor([schema.nodes.codeBlock.create(null,schema.text('code'))],1); assert.equal(indentBlocks(ed,1),false);
+ed = editor([schema.nodes.table.create(null,p('cell'))],2); assert.equal(indentBlocks(ed,1),false);
+ed = editor([p('')],1); indentBlocks(ed,1); assert.equal(ed.state.doc.firstChild.attrs.indent,1);
+console.log('PASS: paragraph, multi-selection boundary, list unit, undo, cursor, empty paragraph, bounds, table/code exclusions');
