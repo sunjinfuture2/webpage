@@ -20,13 +20,13 @@ const dir=path.resolve('.ver3-live');
 await fs.mkdir(dir,{recursive:true});
 for(const m of srcModules){const f=path.resolve(dir,m.name);if(!f.startsWith(dir+'/'))throw Error('Unsafe module name');await fs.mkdir(path.dirname(f),{recursive:true});await fs.writeFile(f,m.bytes);}
 async function walk(d){let files=[];for(const e of await fs.readdir(d,{withFileTypes:true})){const p=path.join(d,e.name);files.push(...(e.isDirectory()?await walk(p):[p]));}return files;}
-const publicDir=path.resolve('aidc-workspace-new/public'), assets=path.join(dir,'public');
+const publicDir=path.resolve('aidc-workspace-new/public'), assets=path.resolve('.ver3-live-assets');
 await fs.mkdir(assets,{recursive:true});
 const assetHashes={};
 for(const f of await walk(publicDir)){const rel=path.relative(publicDir,f).split(path.sep).join('/');if(rel.startsWith('.')||rel==='_headers'||rel==='_redirects')continue;const url='https://'+source+'.sunjinfuture2.workers.dev/'+(rel==='index.html'?'?v=2':rel);const r=await fetch(url);if(!r.ok)throw Error('Asset '+rel+' HTTP '+r.status);const b=Buffer.from(await r.arrayBuffer());if(rel!=='index.html'&&/text\/html/.test(r.headers.get('content-type')||'')&&!rel.endsWith('.html'))throw Error('Asset fallback '+rel);await fs.mkdir(path.dirname(path.join(assets,rel)),{recursive:true});await fs.writeFile(path.join(assets,rel),b);assetHashes[rel]=hash(b);}
 const main=srcModules.find(m=>m.name===srcSettings.main_module)||srcModules.find(m=>/javascript/.test(m.type));
 if(!main)throw Error('Missing entrypoint');
-const cfg={name:target,account_id:account,main:main.name,no_bundle:true,compatibility_date:srcSettings.compatibility_date||'2026-11-06',compatibility_flags:srcSettings.compatibility_flags||[],workers_dev:true,keep_vars:true,assets:{directory:'./public',binding:'ASSETS',not_found_handling:'single-page-application',run_worker_first:['/api/*']},durable_objects:{bindings:[{name:'WORKSPACE',class_name:'Workspace'}]},rules:srcModules.filter(m=>m!==main&&!/javascript/.test(m.type)).map(m=>({type:m.type.includes('text')||m.name.endsWith('.json')?'Text':'Data',globs:[m.name],fallthrough:true}))};
+const cfg={name:target,account_id:account,main:main.name,no_bundle:true,compatibility_date:srcSettings.compatibility_date||'2026-11-06',compatibility_flags:srcSettings.compatibility_flags||[],workers_dev:true,keep_vars:true,assets:{directory:'../.ver3-live-assets',binding:'ASSETS',not_found_handling:'single-page-application',run_worker_first:['/api/*']},durable_objects:{bindings:[{name:'WORKSPACE',class_name:'Workspace'}]},rules:srcModules.filter(m=>m!==main&&!/javascript/.test(m.type)).map(m=>({type:m.type.includes('text')||m.name.endsWith('.json')?'Text':'Data',globs:[m.name.replace(/^\.\//,'')],fallthrough:false}))};
 const scripts=await (await fetch('https://api.cloudflare.com/client/v4/accounts/'+account+'/workers/scripts',{headers})).json();
 const existing=scripts.result.find(s=>s.id===target);
 if(!existing?.migration_tag)throw Error('Missing target migration tag');
