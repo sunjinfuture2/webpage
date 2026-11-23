@@ -1,4 +1,5 @@
 import seedText from './seed.json';
+import { fetchHolidays } from './holiday-service.mjs';
 import { mergeUpdates } from 'yjs'; // editing one body together: the Worker only relays and merges the editors' updates
 const seed = JSON.parse(seedText);
 const toB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
@@ -73,7 +74,8 @@ export default {
 };
 
 export class Workspace {
-  constructor(ctx) {
+  constructor(ctx, env) {
+    this.env = env;
     this.ctx = ctx; this.sql = ctx.storage.sql; this.lastPurge = 0;
     this.sql.exec('CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS users (employee TEXT PRIMARY KEY, name TEXT NOT NULL)');
@@ -227,23 +229,21 @@ export class Workspace {
     return { events: out, next: rows.length === limit ? rows[rows.length - 1].id : null };
   }
 
-  // Public holidays (Korea) of a year: asked from a public calendar service at most once a month and kept (dates only, no names).
+  // Korean holiday dates and names: official KASI when configured, otherwise the existing public feed. Daily cache.
   // Nothing about the workspace or its members is sent, only the year. When the service cannot be reached the page uses its own rules.
   async holidays(y) {
     const row = this.sql.exec('SELECT days, at FROM holidays WHERE year=?', y).toArray()[0], now = Date.now(), kept = row ? JSON.parse(row.days) : null;
-    if (row && now - row.at < 30 * 864e5) return { year: y, days: kept, src: 'kept' };
+    const source = this.env?.KASI_SERVICE_KEY ? 'kasi' : 'nager';
+    const cached = kept?.format === 2 ? kept : { year: y, days: Array.isArray(kept) ? kept : [], names: {} };
+    if (row && kept?.format === 2 && kept.source === source && now - row.at < 864e5) return { ...cached, src: 'kept' };
     const tried = (this.holTried ||= {});
-    if (tried[y] && now - tried[y] < 6 * 36e5) return { year: y, days: kept, src: kept ? 'stale' : 'none' };
+    if (tried[y] && now - tried[y] < 5 * 60e3) return { ...cached, src: kept ? 'stale' : 'none' };
     tried[y] = now;
     try {
-      const r = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${y}/KR`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(6000) });
-      if (!r.ok) throw new Error('status ' + r.status);
-      const list = await r.json();
-      const days = [...new Set((Array.isArray(list) ? list : []).filter(h => h && (!Array.isArray(h.types) || h.types.includes('Public'))).map(h => String(h.date || '').slice(0, 10)).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d.startsWith(y + '-')))].sort();
-      if (!days.length) throw new Error('empty');
-      this.sql.exec('INSERT INTO holidays (year, days, at) VALUES (?,?,?) ON CONFLICT(year) DO UPDATE SET days=excluded.days, at=excluded.at', y, JSON.stringify(days), now);
-      return { year: y, days, src: 'fetched' };
-    } catch (e) { return { year: y, days: kept, src: kept ? 'stale' : 'none' }; }
+      const data = await fetchHolidays(y, this.env?.KASI_SERVICE_KEY);
+      this.sql.exec('INSERT INTO holidays (year, days, at) VALUES (?,?,?) ON CONFLICT(year) DO UPDATE SET days=excluded.days, at=excluded.at', y, JSON.stringify(data), now);
+      return { ...data, src: 'fetched' };
+    } catch (e) { return { ...cached, src: kept ? 'stale' : 'none' }; }
   }
 
   async fetch(req) {
