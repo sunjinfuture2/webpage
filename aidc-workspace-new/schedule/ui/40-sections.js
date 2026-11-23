@@ -32,7 +32,7 @@ function schLowChips(){ const out=[], chip=(k,label)=>out.push(`<button class="s
   if(SCHU.sec==='proc'&&SCHU.procState)chip('procState','확약 상태: '+SCHU.procState); if(SCHU.sec==='evid'&&SCHU.evState)chip('evState','상태: '+SCHU.evState); return out.join(''); }
 function schLowerSection(pid){ const tabs=[['proc','외부설비 조달'],['gate','승인게이트'],['evid','근거 및 확약']];
   return `<div class="sec sch-sec" id="sch-lower" style="margin-top:128px"><div class="sec-title sch-title" style="margin-left:-2.8px"><span class="sch-tabs lead" style="margin-left:0">${tabs.map(([k,t],i)=>`${i?'<i>·</i>':''}<button class="${SCHU.sec===k?'on':''}" data-sch="sec" data-k="${k}">${t}</button>`).join('')}<span data-sch="lowadd" class="sch-evadd up" title="${esc((tabs.find(x=>x[0]===SCHU.sec)||tabs[0])[1])}에 추가">${plusBtn('','추가')}</span></span>
-      <button class="sh-btn lib" data-open="st-${pid}-lib" title="조달 · 승인게이트 · 근거 및 확약 전체 목록" style="margin-left:14px">라이브러리</button><label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}">${qx(SCHU.lq)}</label></div>
+      <label class="srch box">${svg('pic-search',15,15)}<input data-schq="lq" placeholder="검색" value="${esc(SCHU.lq||'')}">${qx(SCHU.lq)}</label></div>
     <div class="sch-chipwrap"><div class="sch-chiprow" data-chips="low">${schLowChips()}</div></div><div data-sec="sch-low">${schLowerBody(pid)}</div></div>`; }
 // The + of the lower section stands above the middle of the tab that is open.
 function schLowAddPlace(){ const box=$('#sch-lower .sch-tabs.lead'), on=box&&$('button.on',box), add=box&&$('.sch-evadd.up',box); if(!on||!add)return; add.style.left=(on.offsetLeft+on.offsetWidth/2)+'px'; }

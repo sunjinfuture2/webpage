@@ -441,6 +441,7 @@ Preview only. tests/schedule-10.cjs covers it.
   that takes the pointer is `max(16, 11 / zoom)` wide (`--snz` on `.sn-zoom`; it was 12 times the zoom).
 - The text of a calendar entry (`.cal .ev .lb`, top 1.67) and of a chip in the partner list's 미팅 column (`.mt .chip .t`, top 1)
   stands 1 lower than before; the pictogram beside it does not move.
+- The lower section (외부설비 조달 · 승인게이트 · 근거 및 확약) has no 라이브러리 button any more (owner: not needed there).
 - For the gantt (found through a test that failed now and then): the chart and the scroll bar below it follow each other; a
   position one was just given by the other is not handed back (`_echo`). Handing it back a frame later, after the chart had
   been moved on, made the view jump back a step while it was pulled.
@@ -464,9 +465,13 @@ Preview only. tests/schedule-10.cjs covers it.
 
 ## My place in an item (owner, 2026-11-23: "노션처럼")
 
-schedule/ui/78-mine.js, preview only. An entry that carries my red mark (hasMention: a comment calls me), when pressed, opens its
-panel at that comment: the first one that calls me and that I have not read, else the newest. A notice of the inbox opens at the
-comment it is about, or, for a notice about my name in a text, at that mention. The place is scrolled into view and lights up for
+schedule/ui/78-mine.js, preview only. The red mark of an entry (hasMention -> mineRed) means: something in this item concerns
+me and I have not seen it yet — a comment that calls me, a comment of somebody else on what is mine (I wrote it or am assigned),
+my name in its text. These are exactly the unread notices of the inbox for that item (reminders apart), so the mark goes when the
+item is opened from an entry or from the inbox (mineOpen marks them read). Before, the mark was only "a comment calls me" and
+never went; the owner then asked for the two other cases, and a mark that never goes would have covered everything a member ever
+wrote. Without the preview the old rule stands. Pressed, such an entry opens its panel where I am called first: the first unseen
+comment that calls me, else my name in the text, else the first unseen comment on what is mine. A notice of the inbox opens at the comment it is about, or, for a notice about my name in a text, at that mention. The place is scrolled into view and lights up for
 2.6 seconds (`.mine-hit`; kept as `SCH.mine` so that a redraw of the panel does not put it out). The page's handler of
 `[data-open]` and the my page's `in-open` call mineOpen instead of openPanel. An entry without a red mark opens as before.
 tests/schedule-10.cjs has both ways in.

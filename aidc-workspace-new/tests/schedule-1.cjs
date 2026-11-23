@@ -126,7 +126,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.click('#sch-actions [data-sch="tab"][data-k="gantt"]'); await sleep(300);
   const lo = await ev(a, () => ({ rows: document.querySelectorAll('#sch-lower .tbl.sch-proc .rw').length, first: document.querySelector('#sch-lower .tbl.sch-proc .rw .nm').textContent }));
   check('외부설비 조달 lists the 16 packages', lo.rows === 16 && lo.first === '수전반·보호계전', lo);
-  check('the lower section has "+" and 라이브러리; 라이브러리 lists everything of the three tabs', await ev(a, () => { const ok = !!document.querySelector('#sch-lower [data-sch="lowadd"]') && !!document.querySelector('#sch-lower .lib'); openPanel('st-pangyo-lib'); const n = document.querySelectorAll('#panel-pin .sch-lib .lr').length; closePanel(true); return ok && n > 250; }));
+  check('the lower section has "+" and no 라이브러리 button (the owner took it out)', await ev(a, () => !!document.querySelector('#sch-lower [data-sch="lowadd"]') && !document.querySelector('#sch-lower [data-open$="-lib"]') && ![...document.querySelectorAll('#sch-lower button')].some(b => /라이브러리/.test(b.textContent))));
   await a.click('#sch-lower .rw >> nth=0 >> [data-schc="pdelay"]'); await sleep(250); await a.fill('#ask-in', '30'); await a.keyboard.press('Enter'); await sleep(700);
   const pd = await ev(a, () => ({ d: schModel('pangyo').plan.procurement[0].delay, panel: S.panel, cell: document.querySelector('#sch-lower .rw [data-schc="pdelay"]').textContent, ov: !!SCHED.pangyo['p:설비01'] }));
   check('a PO delay typed in the row applies (and does not open the panel)', pd.d === 30 && !pd.panel && pd.cell === '30일' && pd.ov, pd);

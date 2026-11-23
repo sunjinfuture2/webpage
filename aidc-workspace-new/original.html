@@ -1554,7 +1554,7 @@ window.addEventListener('resize',onLayout);
 let ME='최원 기사';
 const dayDiff=(a,b)=>Math.round((new Date(a)-new Date(b))/86400000);
 const isFresh=it=>dayDiff(TODAY,it.created||it.date)<=3&&dayDiff(TODAY,it.created||it.date)>=0;
-const hasMention=it=>(it.comments||[]).some(c=>(c.text||'').includes('@'+ME.split(' ')[0]))||(it.dots||[]).includes('r');
+const hasMention=it=>PREVIEW_ON&&typeof mineRed==='function'?mineRed(it):((it.comments||[]).some(c=>(c.text||'').includes('@'+ME.split(' ')[0]))||(it.dots||[]).includes('r'));   // preview: what concerns me and I have not seen yet (78-mine.js)
 const dotsOf=it=>{const d=[]; if(isFresh(it)||(it.dots||[]).includes('g'))d.push('g'); if(hasMention(it))d.push('r'); return d;};
 const dotsHtml=(it,cls='dots')=>{const d=dotsOf(it); return d.length?`<span class="${cls}">${d.map(x=>`<i class="${x}"></i>`).join('')}</span>`:'';};
 /* which items show where */
