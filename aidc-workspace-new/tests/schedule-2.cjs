@@ -13,19 +13,17 @@ const sfx = Date.now().toString(36).slice(-5);
   await ev(async () => { for (const it of ITEMS.filter(x => /^견적 비교 /.test(x.title || ''))) await trashItem(it); }); await sleep(600);   // left by a run that stopped half-way
   console.log('— an action item and its task');
   const id = await ev(t => { const it = newItem('action'); it.title = t; it.proj = 'pangyo'; openPanel(it.id); return it.id; }, '견적 비교 ' + sfx); await sleep(500);
-  const r0 = await ev(() => ({ stage: !!document.querySelector('#panel-pin [data-schp="link-phase"]'), task: !!document.querySelector('#panel-pin [data-schp="link-task"]'), keys: [...document.querySelectorAll('#panel-pin .props .k')].map(k => k.textContent) }));
-  check('a new action item of a project with a schedule has 개발 단계 with a phase and a task to choose', r0.stage && r0.task && r0.keys.includes('개발 단계'), r0);
+  const r0 = await ev(() => ({ stage: !!document.querySelector('#panel-pin [data-schp="link-phase"]'), task: !!document.querySelector('#panel-pin [data-schp="link-task"]'), more: !!document.querySelector('#panel-pin .act-props .sp-toggle[data-schp="more"]'), keys: [...document.querySelectorAll('#panel-pin .props .k')].map(k => k.textContent) }));
+  check('a new action of a project has 개발 단계 as one picker (no second one) and "일정 상세", like a task of the schedule', r0.stage && !r0.task && r0.more && r0.keys.includes('개발 단계'), r0);
   await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(200);
   const phMenu = await ev(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
   await a.click('.pop .it:has-text("4) 계약·금융")'); await sleep(400);
-  const ph1 = await ev(i => ({ phase: item(i).phase, task: item(i).task || '', label: document.querySelector('#panel-pin [data-schp="link-phase"]').textContent.trim() }), id);
-  check('a phase alone can be chosen (and a new phase can be added from the same menu)', ph1.phase === 'W4' && !ph1.task && /^4\) /.test(ph1.label) && phMenu.some(x => /새 단계 추가/.test(x)), { ph1, phMenu });
-  await a.click('#panel-pin [data-schp="link-task"]'); await sleep(300);
-  const menu = await ev(() => [...document.querySelectorAll('.sch-tm .it')].map(x => x.textContent).slice(0, 3)), extra = await ev(() => [...document.querySelectorAll('.pop .it.ex')].map(x => x.textContent));
-  check('then the tasks of that phase are offered, with a way to add a new task to it', menu.length === 3 && menu.every(x => /^4-/.test(x)) && extra.some(x => /새 업무 추가/.test(x)), { menu, extra });
-  await a.fill('#sch-tm-q', '수전반'); await sleep(250); await a.click('.sch-tm .it:has-text("계약서명")'); await sleep(500);
-  const r1 = await ev(i => { const it = item(i), m = schModel('pangyo'), t = m.byId.get(it.task); return { wbs: t && t.wbs, keys: [...document.querySelectorAll('#panel-pin .props .k')].map(k => k.textContent), due: (document.querySelector('#panel-pin .props .sch-rg') || document.querySelector('#panel-pin .props .sch-v .plain') || {}).textContent }; }, id);
-  check('the item is linked to the task and shows the task\'s forecast date', r1.wbs === 'W4.24' && r1.keys.includes('예상 기한'), r1);
+  const ph1 = await ev(i => ({ phase: item(i).phase, task: item(i).task || '', label: document.querySelector('#panel-pin [data-schp="link-phase"]').textContent.trim(), auto: (document.querySelector('#panel-pin .wbno.auto') || {}).textContent || '', x: !!document.querySelector('#panel-pin [data-schp="unlink"]') }), id);
+  check('a phase is chosen (a new one can be added from the same menu): the number it will get stands beside it, with an x', ph1.phase === 'W4' && !ph1.task && /^4\) /.test(ph1.label) && /^4-\d+\)$/.test(ph1.auto) && ph1.x && phMenu.some(x => /새 단계 추가/.test(x)), { ph1, phMenu });
+  // an action that hangs under a task (made before the eighteenth round; there is no picker for it any more) still shows and lists that way
+  await ev(i => { const m = schModel('pangyo'), t = m.byWbs.get('W4.24'), it = item(i); it.task = t.id; it.phase = t.phase; it.dirty = true; rerenderItem(i); }, id); await sleep(400);
+  const r1 = await ev(i => { const it = item(i), m = schModel('pangyo'), t = m.byId.get(it.task); return { wbs: t && t.wbs, up: (document.querySelector('#panel-pin .wbno.up') || {}).textContent || '', keys: [...document.querySelectorAll('#panel-pin .props .k')].map(k => k.textContent) }; }, id);
+  check('an action that hangs under a task shows that task beside its phase', r1.wbs === 'W4.24' && /↳ 4-24\)/.test(r1.up) && r1.keys.includes('예상 기한'), r1);
   await a.click('#panel-pin [data-ed="publish"]'); await sleep(1200);
   await ev(() => closePanel(true)); await sleep(300);
   await ev(() => { SCHU.tab = 'list'; SCHU.phase = 'W4'; SCHU.per = 50; schRefresh(); }); await sleep(400);

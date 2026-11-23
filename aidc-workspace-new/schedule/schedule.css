@@ -1446,3 +1446,12 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .pop.sch-multi .it:hover .rn{visibility:visible}
 .pop.sch-multi .it .rn:hover{color:#1c1c1c}
 .pc-menu .pc-history-rename{flex:0 0 22px;width:22px;padding:4px 0;text-align:center;font-size:12px;line-height:1;color:#888}
+
+/* the phase pickers: an x on every row removes that phase; an action that hangs under a task shows it beside the phase (eighteenth round) */
+.pop.sch-phpick .it{display:flex;align-items:center;gap:14px}
+.pop.sch-phpick .it .phn{flex:1 1 auto;min-width:0}
+.pop.sch-phpick .it .phx{flex:none;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#b5b5b5;visibility:hidden}
+.pop.sch-phpick .it:hover .phx{visibility:visible}
+.pop.sch-phpick .it .phx:hover{background:#f0f0f0;color:#d30000}
+.sch-stage a.wbno.up{font-weight:500;color:#4f4f4f;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.sch-stage a.wbno.up:hover{text-decoration:underline}

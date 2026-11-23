@@ -1861,7 +1861,18 @@ function renderMain(){ if(schPreview())schPids().forEach(schLoad);
 }
 function partnerSection(extraStyle){
   return `<div class="sec" id="sec-partners" style="${extraStyle||''}"><div class="sec-title" style="margin-left:-2.8px">협력업체 목록${plusBtn('new-partner','협력업체 추가')}${S.partnerCat&&!PREVIEW_ON?`<button class="sh-btn lib" data-catclear style="color:#4f4f4f">구분: ${esc(S.partnerCat)} ✕</button>`:''}${searchBox('partner','협력업체 검색')}</div>
-     ${PREVIEW_ON?`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="partner">${schPartnerChips()}</div></div>`:''}<div data-sec="partner">${partnerSecHtml()}</div></div>`;}
+     ${PREVIEW_ON?`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="partner">${schPartnerChips()}</div></div>`:''}<div data-sec="partner"${S.ptHold?` style="min-height:${S.ptHold}px"`:''}>${partnerSecHtml()}</div></div>`;}
+/* The partner list is the last thing on its page. When it got shorter the page did too and the screen slid to another place,
+   and choosing a 구분 pulled the title of the list to the very top of the screen (owner, 2026-11-24: "화면이 이상한 데로
+   고정되거나 튄다"). What the list shows now changes in place: where the page would be too short to stay where it is, the
+   list keeps as much room as that takes (S.ptHold, a min-height of its box, worked out again with every such change), and the
+   screen moves only when the head of the list is above it. Everything here is in the page's own px (scroll offsets are;
+   what getBoundingClientRect says is divided by the zoom). */
+function ptKeep(fn){ const c=$('#content'), z=LAYOUT.zoom||1, st=c.scrollTop; S.ptHold=0; fn();
+  const b=$('.page.on [data-sec="partner"]'); if(!b)return; b.style.minHeight='';
+  const lack=st-(c.scrollHeight-c.clientHeight);
+  if(lack>0){S.ptHold=Math.ceil(b.getBoundingClientRect().height/z+lack); b.style.minHeight=S.ptHold+'px';}
+  c.scrollTop=st; const up=b.closest('.sec').getBoundingClientRect().top-c.getBoundingClientRect().top; if(up<0)c.scrollTop+=up/z; }
 // The overview record of a project, completed if a field (or the whole record) is missing.
 function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]={}); const def={cls:p.status||'',prog:'',owner:p.owner||'',loc:p.site||'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:p.cost||'',fundType:'',struct:'',main:''};
   for(const k of Object.keys(def))if(typeof h[k]!=='string')h[k]=def[k]; if(!Array.isArray(h.partners))h.partners=[]; if(!Array.isArray(h.scale)||!h.scale.length||!h.scale.every(s=>Array.isArray(s)&&s.length>=2))h.scale=['공사면적:','IT 용량:','총 수전용량 :','서버:'].map((l,i)=>{const s=Array.isArray(h.scale)?h.scale[i]:null;return Array.isArray(s)?[s[0]||l,s[1]||'']:[l,''];}); return h;}
@@ -2255,6 +2266,7 @@ function go(where,keepScroll,force){ if(!force&&guardLeave(()=>go(where,keepScro
   if(k==='project'&&!PROJECTS[v]){toast('없는 프로젝트입니다.');return;}
   if(S.editProj){const id=S.proj;restoreProjectSnap();S.editProj=false;sharedRelease('project:'+id);}
   if(k==='main'){S.page='main';S.proj=null;} else if(k==='project'){if(S.proj!==v)S.car.meet=0;S.page='project';S.proj=v;} else if(k==='archive'){S.page='archive';}
+  S.ptHold=0;
   S.full=null; S.panel=null; S.editSimple=null; S.ctx='panel'; $('#app').classList.remove('panel-open'); $('#panel').classList.remove('on'); $('#notice').style.display=''; dropEmptyNew(); trackRecent(pageKey());
   render(); if(!keepScroll)$('#content').scrollTop=0; }
 function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content').scrollTop:null; const rb=$('#road-box'); if(rb&&$('#page-project').classList.contains('on')&&S._roadProj===S.proj)S._roadScroll=rb.scrollTop;
@@ -2408,15 +2420,15 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-act]')){const a=el.dataset.act,id=el.dataset.id; e.stopPropagation();
     if(a==='open'||a==='partner'){openPanel(id);} else if(a==='dl'){downloadFiles(itemFiles(item(id)),el);}
     else if(a==='dlroad'){const r=ROADMAP[id];const fs=[],seen=new Set();((r&&r.items)||[]).forEach(x=>itemFiles(item(x)).forEach(f=>{if(!seen.has(f.id)){seen.add(f.id);fs.push(f);}}));downloadFiles(fs,el);} return;}
-  if(el=q('[data-cat]')){S.partnerCat=S.partnerCat===el.dataset.cat?null:el.dataset.cat;S.ptPage=1;render(true);const s=$('.page.on #sec-partners');s&&s.scrollIntoView({block:'start'});return;}
-  if(el=q('[data-catclear]')){S.partnerCat=null;render(true);return;}
+  if(el=q('[data-cat]')){const c=el.dataset.cat;ptKeep(()=>{S.partnerCat=S.partnerCat===c?null:c;S.ptPage=1;render(true);});return;}
+  if(el=q('[data-catclear]')){ptKeep(()=>{S.partnerCat=null;render(true);});return;}
   if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-trail]')){e.stopPropagation();const tid=el.dataset.trail; if(tid===S.full)closePanel(); else if(tid.startsWith('lib:'))openLibrary(tid.slice(4)); else openPanel(tid); return;}
   if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} if(PREVIEW_ON&&typeof mineOpen==='function')mineOpen(el.dataset.open); else openPanel(el.dataset.open); return;}   // preview: an entry with my red mark opens at the comment that calls me (78-mine.js)
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
   if(el=q('[data-pg]')){const pg=el.closest('.pager'); const v=el.dataset.pg; const key=pg.classList.contains('pg-act')?'actPage':pg.classList.contains('pg-res')?'resPage':pg.classList.contains('pg-pt')?'ptPage':pg.classList.contains('pg-arch')?'archPage':'memPage';
     const tot=+pg.dataset.total||$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=tot; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
-    if(key==='memPage'){renderPane('members');} else if(key==='archPage'){render(true);} else {if(key==='resPage'&&S[key]!==prev)S._slide={key,dir:S[key]>prev?1:-1}; refreshSec(key==='actPage'?'action':key==='resPage'?'research':'partner');} return;}
+    if(key==='memPage'){renderPane('members');} else if(key==='archPage'){render(true);} else {if(key==='resPage'&&S[key]!==prev)S._slide={key,dir:S[key]>prev?1:-1}; if(key==='ptPage')ptKeep(()=>refreshSec('partner')); else refreshSec(key==='actPage'?'action':'research');} return;}
   if(el=q('[data-car]')){const [k,dir]=el.dataset.car.split(':'); moveCarousel(k,+dir); return;}
   if(el=q('.new-proj')){if(PREVIEW_ON&&typeof schNewProject==='function'){schNewProject();return;}openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${['계획중','진행중','완료'].map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
   if(el=q('[data-npst]')){$$('#np-st button').forEach(b=>b.classList.toggle('on',b===el));return;}
@@ -2784,7 +2796,7 @@ function startComment(el,it){ if(el.querySelector('input'))return; el.innerHTML=
 
 /* section search boxes (live filter) */
 // Only the list under the box is redrawn: the box itself stays, so Korean (IME) typing is never interrupted and nothing else on the page moves.
-document.addEventListener('input',e=>{const t=e.target; if(!(t.matches&&t.matches('input[data-q]')))return; const k=t.dataset.q; S.q[k]=t.value; if(k==='action')S.actPage=1; if(k==='research')S.resPage=1; if(k==='partner')S.ptPage=1; refreshSec(k);});
+document.addEventListener('input',e=>{const t=e.target; if(!(t.matches&&t.matches('input[data-q]')))return; const k=t.dataset.q; S.q[k]=t.value; if(k==='action')S.actPage=1; if(k==='research')S.resPage=1; if(k==='partner'){S.ptPage=1; ptKeep(()=>refreshSec(k)); return;} refreshSec(k);});
 /* ===================== BLOCK EDITOR (Notion-like) ===================== */
 const BLOCKS=[
   {k:'p',t:'텍스트',d:'일반 문단',ic:'T'},{k:'h1',t:'제목 1',d:'큰 제목',ic:'H1'},{k:'h2',t:'제목 2',d:'중간 제목',ic:'H2'},{k:'h3',t:'제목 3',d:'작은 제목',ic:'H3'},

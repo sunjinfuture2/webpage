@@ -26,10 +26,20 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const pickPhase = async label => { await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click(`.pop .it:has-text("${label}")`); await sleep(400); };
   await goP(); await goP(b); await gantt(); await ev(() => { SCHU.open = []; schRefresh(); }); await sleep(300);
 
+  console.log('— 연결된 액션 stands in the middle');
+  const lk = async wbs => { await ev(w => { const t = schModel('pangyo').byWbs.get(w); SCHP.tab = 'links'; openPanel(schItemId(t.id)); }, wbs); await sleep(600);
+    return ev(() => { const map = document.querySelector('#panel-pin .sl-map'), wrap = document.querySelector('#panel-pin .sl-wrap'), pin = document.querySelector('#panel-pin'), m = map.getBoundingClientRect(), ns = [...map.querySelectorAll('.sl-node')].map(n => n.getBoundingClientRect()), l = Math.min(...ns.map(r => r.left)), r = Math.max(...ns.map(r => r.right)), cur = map.querySelector('.sl-node.cur').getBoundingClientRect(), cs = getComputedStyle(pin), box = pin.getBoundingClientRect();
+      return { n: ns.length, left: Math.round(l - m.left), right: Math.round(m.right - r), curMid: Math.round((cur.left + cur.right) / 2 - (m.left + m.right) / 2), over: wrap.scrollWidth - wrap.clientWidth, inside: m.left >= box.left + parseFloat(cs.paddingLeft) - 1 && m.right <= box.right - parseFloat(cs.paddingRight) + 1 }; }); };
+  const lk1 = await lk('W1.1');
+  check('a task with followers only: the task and its followers stand in the middle together, nothing sticks out', lk1.n >= 3 && Math.abs(lk1.left - lk1.right) <= 2 && lk1.left > 40 && lk1.curMid < -40 && lk1.over <= 0 && lk1.inside, lk1);
+  const lk2 = await lk('W2.2');
+  check('a task with both sides takes the whole width, itself in the middle', lk2.n >= 3 && lk2.left <= 2 && lk2.right <= 2 && Math.abs(lk2.curMid) <= 2 && lk2.over <= 0, lk2);
+  await ev(() => { SCHP.tab = 'info'; closePanel(true); }); await sleep(300);
+
   console.log('— a phase can be renamed and removed');
   const pm = await ev(() => { const r = document.querySelector('#sch-gantt .sg-left .sg-row.ph[data-k="W1"]'), p = r.querySelector('.pm'); return { has: !!p, hidden: getComputedStyle(p).display === 'none', title: p.title }; });
   await rowMenu('W1'); const m1 = await pops();
-  check('a phase row of the gantt has a "⋮" beside its + (shown with it), with 이름 바꾸기; a phase that holds tasks offers no 삭제', pm.has && pm.hidden && /이름 바꾸기/.test(pm.title) && m1.length === 1 && /“1\) 사업정의·RFP” 이름 바꾸기/.test(m1[0]), { pm, m1 });
+  check('a phase row of the gantt has a "⋮" beside its + (shown with it), with 이름 바꾸기 and 단계 삭제', pm.has && pm.hidden && /이름 바꾸기/.test(pm.title) && m1.length === 2 && /“1\) 사업정의·RFP” 이름 바꾸기/.test(m1[0]) && /단계 삭제/.test(m1[1]), { pm, m1 });
   await a.click('.pop .it:has-text("이름 바꾸기")'); await sleep(250);
   check('the window asks with the name as it is (without the number)', await ev(() => document.querySelector('#ask-in').value === '사업정의·RFP'));
   await ask('사업정의 ' + sfx);
@@ -50,11 +60,12 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const id1 = await newAction('단계 액션 ' + sfx);
   await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click('.pop .it:has-text("새 단계 추가")'); await sleep(300); await ask('시험 단계 ' + sfx);
   const code = await ev(i => item(i).phase, id1), no = code.slice(1);
-  const p1 = await ev(c => ({ row: (document.querySelector(`#sch-gantt .sg-left .sg-row.ph[data-k="${c}"] .tt`) || {}).textContent, auto: (document.querySelector('#panel-pin .wbno.auto') || {}).textContent, sub: document.querySelector('#panel-pin [data-schp="link-task"]').textContent.trim(), free: !ITEMS.some(i => i.proj === 'pangyo' && i.phase === c && i.status !== 'new') }), code);
+  const p1 = await ev(c => ({ row: (document.querySelector(`#sch-gantt .sg-left .sg-row.ph[data-k="${c}"] .tt`) || {}).textContent, auto: (document.querySelector('#panel-pin .wbno.auto') || {}).textContent, sub: !!document.querySelector('#panel-pin [data-schp="link-task"]'), x: !!document.querySelector('#panel-pin [data-schp="unlink"]'), free: !ITEMS.some(i => i.proj === 'pangyo' && i.phase === c && i.status !== 'new') }), code);
   check('a phase made while an action is being written stands in the gantt at once', p1.row === `${no}) 시험 단계 ${sfx}`, p1);
-  check('the action shows the WBS number it will get, and the second picker says what it is for', p1.auto === `${no}-1)` && p1.sub === '업무 아래에 붙이기', p1);
+  check('the action shows the WBS number it will get beside its phase, with an x; there is no second picker', p1.auto === `${no}-1)` && p1.sub === false && p1.x, p1);
   await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); const m3 = await pops();
-  check('the picker offers to rename and to remove the phase that is chosen (it holds no task yet)', m3.some(x => x === `“${no}) 시험 단계 ${sfx}” 이름 바꾸기`) && m3.some(x => x === `“${no}) 시험 단계 ${sfx}” 단계 삭제`), m3);
+  const xs = await ev(() => ({ rows: document.querySelectorAll('.pop.sch-phpick .it[data-k^="W"]').length, x: document.querySelectorAll('.pop.sch-phpick .it[data-k^="W"] [data-phx]').length, hidden: getComputedStyle(document.querySelector('.pop.sch-phpick .it [data-phx]')).visibility }));
+  check('the picker offers to rename the phase that is chosen, and every phase of the list has an x (shown under the pointer)', m3.some(x => x === `“${no}) 시험 단계 ${sfx}” 이름 바꾸기`) && xs.rows >= 9 && xs.x === xs.rows && xs.hidden === 'hidden', { m3, xs });
   await a.click('.pop .it:has-text("이름 바꾸기")'); await sleep(250); await ask('고친 단계 ' + sfx);
   check('renamed from the picker: the panel and the gantt follow', await ev(([c, s, n]) => document.querySelector('#panel-pin [data-schp="link-phase"]').textContent.trim() === `${n}) 고친 단계 ${s}` && document.querySelector(`#sch-gantt .sg-left .sg-row.ph[data-k="${c}"] .tt`).textContent === `${n}) 고친 단계 ${s}`, [code, sfx, no]));
 
@@ -80,7 +91,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   check('pressed in the gantt (twice) it opens that same item', await ev(i => S.panel === i, id1));
   await ev(() => closePanel(true)); await sleep(200);
   await rowMenu(code); const m4 = await pops(); await ev(() => closePop());
-  check('its phase now holds a task: 삭제 is no longer offered', m4.length >= 1 && !m4.some(x => /단계 삭제/.test(x)), m4);
+  check('the "⋮" of a phase row offers 이름 바꾸기 and 단계 삭제', m4.some(x => /이름 바꾸기/.test(x)) && m4.some(x => /단계 삭제/.test(x)), m4);
 
   console.log('— undo and redo of that step');
   await ev(() => schUndo()); await sleep(500);
@@ -92,7 +103,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
 
   console.log('— what does not become a task');
   const id2 = await newAction('붙인 액션 ' + sfx); await pickPhase('1) 사업정의·RFP');
-  await a.click('#panel-pin [data-schp="link-task"]'); await sleep(300); await a.click('.sch-tm .it >> nth=0'); await sleep(400);
+  await ev(i => { const m = schModel('pangyo'), t = m.phases[0].tasks[0], it = item(i); it.task = t.id; it.phase = t.phase; it.dirty = true; rerenderItem(i); }, id2); await sleep(400);   // hung under a task as before the eighteenth round
   await a.click('#panel-pin [data-ed="publish"]'); await sleep(1200);
   const k2 = await ev(i => { const it = item(i); return { own: !!it.own, task: !!it.task, n: schModel('pangyo').plan.tasks.length, auto: !!document.querySelector('#panel-pin .wbno.auto') }; }, id2);
   check('an action hung under an existing task stays an action of that task', !k2.own && k2.task && k2.n === n0 + 1, k2);
@@ -111,13 +122,31 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await ev(() => { SCHU.sort = 'wbs'; SCHU.dir = 1; SCHU.page = 999; schRefresh(); }); await sleep(300);
   check('actions of no phase stand under "일정 미연결"', await ev(() => [...document.querySelectorAll('#sch-actions .tbl.sch-list .gr')].some(g => g.textContent.startsWith('일정 미연결'))));
 
+  console.log('— a phase that holds a task goes with it');
+  await gantt(); await ev(c => { if (!SCHU.open.includes(c)) SCHU.open.push(c); schRefresh(); }, code); await sleep(300);
+  const before = await ev(() => schModel('pangyo').plan.tasks.length);
+  await rowMenu(code); await a.click('.pop .it:has-text("단계 삭제")'); await sleep(300);
+  const dq2 = await ev(() => (document.querySelector('#dlg .m') || {}).textContent || ''); await a.click('#dlg button.pri'); await sleep(600);
+  const dd = await ev(([c, i]) => ({ n: schModel('pangyo').plan.tasks.length, phase: schModel('pangyo').phases.some(g => g.code === c), rec: !!SCHED.pangyo['ph:' + c], toast: (document.querySelector('#toast') || {}).textContent, undo: SCH.undo[SCH.undo.length - 1].label }), [code, id1]);
+  check('the question says how many actions go with the phase; removed, they are gone together', /이 단계의 액션 1건과 거기에 걸린 관계도 함께 지워집니다/.test(dq2) && dd.n === before - 1 && !dd.phase && !dd.rec && /단계를 삭제했습니다.*되돌리기/.test(dd.toast), { dq2, dd });
+  await ev(() => schUndo()); await sleep(500);
+  check('one 되돌리기 brings the phase and its action back', await ev(([c, n]) => schModel('pangyo').plan.tasks.length === n && schModel('pangyo').phases.some(g => g.code === c) && !!SCHED.pangyo['ph:' + c], [code, before]));
+
+  console.log('— an action that carried a phase from before');
+  const oldId = await ev(s => { const it = newItem('action'); Object.assign(it, { title: '예전 단계 액션 ' + s, proj: 'pangyo', phase: 'W3', status: 'published', authorId: sharedUser, createdAt: new Date().toISOString(), date: TODAY }); delete it.sessionNew; SCH.legacy = {}; return it.id; }, sfx); made.push(oldId);
+  await ev(() => schRefresh()); await sleep(1500);
+  const lg = await ev(i => { const it = item(i), m = schModel('pangyo'), t = it.task && m.byId.get(it.task); return { own: !!it.own, wbs: t && t.wbs, toast: (document.querySelector('#toast') || {}).textContent }; }, oldId);
+  check('it gets its WBS number by itself on its writer\'s page, and the toast says so', lg.own && /^W3\.\d+$/.test(lg.wbs || '') && /개발 단계가 있던 액션 1건에 WBS 번호를 붙였습니다/.test(lg.toast), lg);
+  await ev(() => schUndo()); await sleep(500); await ev(() => { SCH.legacy = {}; schRefresh(); }); await sleep(1500);
+  check('taken back, it is not turned again by itself', await ev(i => { const it = item(i); return !it.own && !it.task && it.phase === 'W3' && it.wbsOff === 1; }, oldId));
+
   console.log('— removing a phase');
   await gantt();
   const id4 = await newAction('버릴 액션 ' + sfx);
   await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click('.pop .it:has-text("새 단계 추가")'); await sleep(300); await ask('버릴 단계 ' + sfx);
   const code2 = await ev(i => item(i).phase, id4);
   check('a new phase does not take a number that is in use', code2 !== code && +code2.slice(1) > +code.slice(1), { code, code2 });
-  await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click('.pop .it:has-text("단계 삭제")'); await sleep(300);
+  await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.hover(`.pop.sch-phpick .it[data-k="${code2}"]`); await sleep(120); await a.click(`.pop.sch-phpick .it[data-k="${code2}"] [data-phx]`); await sleep(300);
   const dl = await ev(() => (document.querySelector('#dlg .m') || {}).textContent || ''); await a.click('#dlg button.pri'); await sleep(500);
   const d1 = await ev(([i, c]) => ({ phase: item(i).phase || '', rec: SCHED.pangyo['ph:' + c] || null, row: !!document.querySelector(`#sch-gantt .sg-left .sg-row.ph[data-k="${c}"]`), label: document.querySelector('#panel-pin [data-schp="link-phase"]').textContent.trim() }), [id4, code2]);
   check('removed after a question: the record is gone, the action has no phase, the gantt has no such row', /단계를 삭제할까요/.test(dl) && !d1.phase && !d1.rec && !d1.row && d1.label === '단계 선택', { dl, d1 });

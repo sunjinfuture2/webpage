@@ -618,3 +618,33 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   cannot be corrected by an admin and members cannot be removed, files taken out of a body stay on the server, recent items
   cannot be removed one by one.
 - tests/schedule-14.cjs (23 checks); the window is in tests/schedule-12.cjs (43).
+
+## One action panel, an x on every phase, the chart in the middle; the partner list stays (owner, 2026-11-24, the eighteenth round)
+
+- **One panel for an action, wherever it is opened** (액션 일정 · 리스트 · 관계도): an ordinary action shows what a task shows.
+  While it is edited the row 개발 단계 is `schStageEdit`: one picker ("단계 선택"), beside it the WBS number the action gets
+  when it is saved (`.wbno.auto`) and an x that takes the phase off again. "일정 상세" opens 완료 기준 · 조건·확약 · 증빙
+  for it too; they are fields of the item (`criteria`, `conditions`, `evidence`) and go into the task when the action
+  becomes one (schActionToTask).
+  "업무 아래에 붙이기" is gone: a new action cannot be hung under a task any more. One that hangs there from before shows that
+  task (`a.wbno.up`, opens it) and can be taken off (`unlink`); it stays list-only as before.
+- **An x on every phase**: the phase picker of an action and of a task is `schPhasePick` (menu `.pop.sch-phpick`): each row
+  carries an x (`.phx[data-phx]`), the "⋮" of a phase row in the gantt has 단계 삭제 (`withDel`). schPhaseDelete asks first
+  and says how many actions go with the phase: its tasks and their relations are removed with it (AIDCSchedule.removeTasks),
+  ordinary actions that only named the phase stay as 일정 미연결. Everything is one undo step (`schUndoJoin` joins the
+  steps made since a mark into one raw step). Not while a scenario is shown.
+- **An action that was given a phase before the sixteenth round** (published, a phase, no task) gets its WBS number by
+  itself: `schLegacyToTasks(pid)`, once per project and session, 0.7 s after the schedule section was drawn, only on the page
+  of its writer (so two pages never turn the same action), all in one undo step with a toast. An action that was taken back
+  on purpose (undo of the step) carries `wbsOff` and is not turned again by itself.
+- **연결된 액션 stands in the middle**: schLinksHtml gives room only to the sides that hold something and centres what is
+  drawn (with followers only, the task used to stand in the middle and its followers at the right edge); the chart is as
+  wide as the panel allows (`--panelw` − 236, at most 898).
+- **The partner list stays where it is** (for everybody; original.html `ptKeep`): choosing a 구분 pulled the title of the
+  list to the top of the screen (an unconditional scrollIntoView), and because the list is the last thing on its page a
+  shorter list let the page slide to another place. A 구분 chosen or taken off, a search and a page of the list now go
+  through ptKeep: the scroll offset is kept, the list's box keeps as much room as the page lacks to stay there
+  (`S.ptHold`, a min-height, worked out again with every such change, dropped on another page), and the screen moves only
+  when the head of the list is above it. Never bring a scrollIntoView back there.
+- tests: schedule-13 (57 checks: the picker's x, a phase with its task and one 되돌리기, the legacy action, the chart in the
+  middle), schedule-2 (31), schedule-14 (30: the partner list with and without the preview).

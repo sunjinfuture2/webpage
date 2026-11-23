@@ -2,7 +2,7 @@
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
   if(k==='reload'){schLoad(pid);schRefresh();return;}
   if(k==='newphase'&&m){e.stopPropagation();schNewPhase(pid,m,code=>{if(!SCHU.open.includes(code))SCHU.open.push(code);schRefresh();});return;}
-  if(k==='phmenu'&&m){ e.stopPropagation(); const g=m.phases.find(x=>x.code===v); if(g)menuPop(el,schPhaseEditItems(pid,m,g,()=>schRefresh()).slice(1)); return; }   // the "⋮" of a phase row: rename, remove
+  if(k==='phmenu'&&m){ e.stopPropagation(); const g=m.phases.find(x=>x.code===v); if(g)menuPop(el,schPhaseEditItems(pid,m,g,()=>schRefresh(),true).slice(1)); return; }   // the "⋮" of a phase row: rename, remove
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
   if(k==='xlsx'){e.stopPropagation();schXlsxSection(pid,v,el.dataset.part||'');return;}
   if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v), g=m.phases.find(x=>x.code===v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);if(g&&!g.tasks.length)t.phaseLabel=g.label;if(t.order==null)t.order=Math.max(0,...d.tasks.map(x=>+x.order||0))+1;d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}

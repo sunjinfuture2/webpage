@@ -2,7 +2,8 @@
 //  - a notice can be edited by its writer (or an admin);
 //  - the image of a project card can be taken away;
 //  - a section of the 자료실 goes to the trash with its cards (restoring a card brings it back), an empty one is simply removed;
-//  - a research 구분 and a partner 구분 can be renamed everywhere at once.
+//  - a research 구분 and a partner 구분 can be renamed everywhere at once;
+//  - choosing a partner 구분 (or searching the partners) leaves the screen where it is (2026-11-24).
 // (The upload window with one master field and six rows is in tests/schedule-12.cjs.)
 // Needs wrangler dev on 127.0.0.1:8787.
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
@@ -115,8 +116,37 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   await ev(() => { S.editSimple = null; closePanel(true); render(true); }); await sleep(400);
   check('되돌리기 puts every partner back', await ev(was => JSON.stringify(PARTNERS.filter(p => !p.trash).map(p => [p.id, p.cat])) === JSON.stringify(was), pc.was));
 
+  console.log('— choosing a partner 구분 leaves the screen where it is');
+  // (owner, 2026-11-24: the list's title was pulled to the very top of the screen, and a shorter list let the page slide.)
+  const C = await newUser(browser, 'RZC' + sfx, '열넷 삼', { url: 'http://127.0.0.1:8787/?v=1' });
+  for (const [tag, pg] of [['preview', a], ['without the preview', C.page]]) {
+    const pe = (f, x) => pg.evaluate(f, x), CAT = '자리시험' + sfx;
+    await pe(() => go('main')); await sleep(700);
+    await pe(c => { PARTNERS.filter(p => !p.trash).filter((p, i) => i === 3 || i === 14 || i === 25).forEach(p => { p._was = p.cat; p.cat = c; }); render(true); }, CAT); await sleep(300);
+    const at = () => pe(() => { const c = document.querySelector('#content'), s = document.querySelector('.page.on #sec-partners'), b = s.querySelector('[data-sec="partner"]');
+      return { top: Math.round(c.scrollTop), sec: Math.round(s.getBoundingClientRect().top - c.getBoundingClientRect().top), rows: s.querySelectorAll('.rw[data-partner]').length, cat: S.partnerCat, hold: b.style.minHeight, end: Math.round(c.scrollHeight - c.clientHeight - c.scrollTop) }; });
+    const put = y => pe(y => { const c = document.querySelector('#content'), s = document.querySelector('.page.on #sec-partners'); c.scrollTop += (s.getBoundingClientRect().top - c.getBoundingClientRect().top - y) / (LAYOUT.zoom || 1); }, y);
+    const press = sel => pe(q => document.querySelector('.page.on #sec-partners ' + q).click(), sel);   // (not Playwright's click: it scrolls first)
+    await put(180); await sleep(200); const p0 = await at();
+    await press(`[data-cat="${CAT}"]`); await sleep(400); const p1 = await at();
+    check(`${tag}: three partners are left and the list has not moved (the page keeps the room that takes)`, p0.rows === 10 && p1.rows === 3 && p1.cat === CAT && p1.sec === p0.sec && p1.top === p0.top && p0.sec > 100 && /px$/.test(p1.hold) && p1.end <= 1, { p0, p1 });
+    await press('[data-catclear]'); await sleep(400); const p2 = await at();
+    check(`${tag}: taken off again, it is where it was and holds nothing`, p2.rows === 10 && !p2.cat && p2.sec === p0.sec && p2.top === p0.top && p2.hold === '', p2);
+    await pg.fill('.page.on #sec-partners input[data-q="partner"]', CAT); await sleep(400); const p3 = await at();
+    const typing = await pe(() => document.activeElement && document.activeElement.dataset.q === 'partner');
+    await pg.fill('.page.on #sec-partners input[data-q="partner"]', ''); await sleep(400); const p4 = await at();
+    check(`${tag}: a search that leaves three does not move it either, and the box keeps the caret`, p3.rows === 3 && p3.sec === p0.sec && typing && p4.rows === 10 && p4.sec === p0.sec && p4.hold === '', { p3, p4, typing });
+    // the head of the list above the screen: only then the screen moves, as far as the head
+    await pe(() => { const c = document.querySelector('#content'); c.scrollTop = c.scrollHeight; }); await sleep(200); const p5 = await at();
+    if (p5.sec < 0) { await press(`[data-cat="${CAT}"]`); await sleep(400); const p6 = await at();
+      check(`${tag}: with the head of the list above the screen it comes down to the head, no further`, p6.rows === 3 && Math.abs(p6.sec) <= 1, { p5, p6 });
+      await press('[data-catclear]'); await sleep(300); }
+    await pe(() => { PARTNERS.forEach(p => { if ('_was' in p) { p.cat = p._was; delete p._was; } }); S.ptHold = 0; render(true); }); await sleep(500);
+  }
+  await C.page.evaluate(() => sharedFlush(true)); await sleep(800);
+
   await ev(() => sharedFlush(true)); await sleep(1000);
-  const errs = [...A.errs, ...B.errs];
+  const errs = [...A.errs, ...B.errs, ...C.errs];
   check('no script errors', errs.length === 0, errs);
   await browser.close(); done();
 })().catch(e => { console.error(e); process.exit(1); });

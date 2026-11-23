@@ -12,7 +12,7 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
   const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
-    :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${g&&!t?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}<span class="sf sub" data-schp="link-task" title="이미 있는 업무 아래에 붙일 때만 고릅니다. 고르지 않으면 이 액션이 새 WBS가 됩니다">${t?esc(schTaskTitle(t)):'업무 아래에 붙이기'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
+    :E?schStageEdit(m,g,t)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
@@ -21,7 +21,9 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const R=[V('담당자',`<span class="people" ${h.pk('people')}>${h.who(it.people)}</span>`),V('상태'+schInfo('status'),f('stx',schStIcon(schItemSt(it)),'상태 변경')),V('중요도',f('pri',`<span class="pri pri-${it.pri||'mid'}">${priTxt[it.pri||'mid']}</span>`,'중요도 변경')),V('URL',urlField(it,E,'margin-left:0'))];
-  return `<div class="props sch-props act-props ${E?'ed':''}">${tabs}<div class="sp-grid"><div>${L.join('')}</div><div class="rcol">${R.join('')}</div></div></div>`; }
+  let more=''; if(SCHP.more){ const txt=(k,label)=>V(label,f(k,it[k]?`<span class="plain wrap">${esc(it[k])}</span>`:ph('입력'),label),'wide');
+    more=`<div class="sp-more"><div>${V('운영개시 여유',none(g&&!t?'WBS 번호를 받으면 계산됩니다':'개발 단계를 고르면 계산됩니다'))}${V('역할',none('-'))}</div><div class="rc">${txt('criteria','완료 기준')}${txt('conditions','조건·확약')}${txt('evidence','증빙')}</div></div>`; }
+  return `<div class="props sch-props act-props ${E?'ed':''}">${tabs}<div class="sp-grid"><div>${L.join('')}</div><div class="rcol">${R.join('')}</div></div><button class="sp-toggle" data-schp="more">${SCHP.more?'일정 상세 접기':'일정 상세'} ${svg('i-chev-d',8,4,SCHP.more?'transform:rotate(180deg)':'')}</button>${more}</div>`; }
 
 // A value pressed while the panel is being edited (called first by the page's own handler of data-pick). true: taken care of here.
 function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
@@ -37,6 +39,7 @@ function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
   if(it.type==='research'&&k==='cats'){ schCatsPick(el,it); return true; }
   if(it.type==='research'&&k==='uncat'){ const l=schResCats(it).filter(x=>x!==el.dataset.k); if(l.length)it.cats=l; else delete it.cats; it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); return true; }
   if(it.type!=='action'||schOwn(it))return false;
+  if(k==='criteria'||k==='conditions'||k==='evidence'){ const lb={criteria:'완료 기준',conditions:'조건·확약',evidence:'증빙'}[k]; askInput(lb,it[k]||'',v=>{ v=(v||'').trim(); if(v)it[k]=v; else delete it[k]; again(); }); return true; }
   if(k==='stx'){ menuPop(el,SCH_STATUSES.map((s,i)=>({t:s,html:schStIcon(s),k:'s'+i,sel:schItemSt(it)===s,fn:()=>{ if(s==='완료'){it.st='done';delete it.stx;} else{it.st='prog';if(s==='진행')delete it.stx;else it.stx=s;} again(); }})),{cls:'sch-colmenu'}); return true; }
   if(k==='why'){ ask('지연 사유',it.why||'','예: 발주처 회신 지연',v=>{ if(v)it.why=v; else delete it.why; again(); }); return true; }
   if(k==='ms'){ menuPop(el,[{t:'아니오 (기간이 있는 업무)',k:'n',sel:!it.ms,fn:()=>{delete it.ms;again();}},{t:'예 (하루짜리 기준점)',k:'y',ico:'<i class="sch-ms" style="margin:0 8px 1px 1px"></i>',sel:!!it.ms,fn:()=>{it.ms=true;delete it.end;if(it.actualStart)it.actualFinish=it.actualStart;again();}}]); return true; }

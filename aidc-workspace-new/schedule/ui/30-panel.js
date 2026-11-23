@@ -10,7 +10,7 @@ const schChev=()=>svg('i-chev-d',8,4);
 // rows the panel of an ordinary action gets in a project with a schedule: the phase and, if chosen, the task it belongs to
 function schItemRows(it,E,V){ if(!it||it.type!=='action'||it.own||!schReady(it.proj)||archTabOf(it))return []; const m=schModel(it.proj), t=it.task&&m.byId.get(it.task), none=x=>`<span class="plain" style="color:#c4c4c4">${x}</span>`;
   const g=m.phases.find(x=>x.code===(t?t.phase:it.phase));
-  const stage=E?`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${g&&!t?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}<span class="sf sub" data-schp="link-task" title="이미 있는 업무 아래에 붙일 때만 고릅니다. 고르지 않으면 이 액션이 새 WBS가 됩니다">${t?esc(schTaskTitle(t)):'업무 아래에 붙이기'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
+  const stage=E?schStageEdit(m,g,t)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const rows=[V('개발 단계',stage,'sch-v')]; if(t){const r=m.res.tasks[t.id];rows.push(V('예상 기한',`<span class="plain">${t.kind==='milestone'?schD(r.start):schRange(r.start,r.finish)}</span>`,'sch-v'));} return rows; }
 function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj, m=schModel(pid), A=AIDCSchedule, P=A.progress, t=m.byId.get(it.task), r=m.res.tasks[t.id], g=m.phases.find(x=>x.code===t.phase), ms=t.kind==='milestone'; E=!!it.editing;
@@ -46,13 +46,15 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
 const schRefs=(pid,taskId)=>(((SCHED[pid]||{})['c:'+taskId]||{}).ids||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
 function schLinksHtml(pid,m,t,full,E){ const A=AIDCSchedule, pre=m.pred.get(t.id).slice().sort((a,b)=>m.byId.get(a.from).order-m.byId.get(b.from).order), suc=m.succ.get(t.id).slice().sort((a,b)=>m.byId.get(a.to).order-m.byId.get(b.to).order);
   // as wide as the panel (or the full page) allows
-  const avail=full?Math.min(898,($('#item-pin')||{}).clientWidth||898):(parseFloat(getComputedStyle($('#app')).getPropertyValue('--panelw'))||1031.9)-205, W=Math.round(Math.max(600,Math.min(898,avail)));
-  const RH=34, n=Math.max(pre.length,suc.length,1), H=n*RH, cy=H/2, GAP=44, LW=Math.floor((W-2*GAP)*0.335), CW=W-2*GAP-2*LW, CX=LW+GAP, RX=CX+CW+GAP;
+  const avail=full?Math.min(898,($('#item-pin')||{}).clientWidth||898):(parseFloat(getComputedStyle($('#app')).getPropertyValue('--panelw'))||1031.9)-236, W=Math.round(Math.max(560,Math.min(898,avail)));   // (the panel's side margins and its scroll bar: the chart used to stick out on the right of a narrow panel)
+  // Only the sides that hold something take room, and what is drawn stands in the middle (owner, 2026-11-24: with nothing before
+  // it the task stood in the middle and its followers were pushed to the right edge).
+  const RH=34, n=Math.max(pre.length,suc.length,1), H=n*RH, cy=H/2, GAP=44, LW=Math.floor((W-2*GAP)*0.335), CW=W-2*GAP-2*LW, used=(pre.length?LW+GAP:0)+CW+(suc.length?GAP+LW:0), LX=Math.round((W-used)/2), CX=LX+(pre.length?LW+GAP:0), RX=CX+CW+GAP;
   const yOf=(i,k)=>(H-k*RH)/2+i*RH+RH/2; let sv='', h='';
   const node=(e,other,x,y,side)=>{const o=m.byId.get(other), lb=e.type+(e.lag?(e.lag>0?'+':'')+e.lag:'');
     return `<div class="sl-node ${e.active?'':'off'}" style="left:${x}px;top:${y-13}px;width:${LW}px" data-open="${schItemId(o.id)}" title="${esc(schTaskTitle(o)+'\n'+A.relationshipSentence(e.type,side==='pre'?o.name:t.name,side==='pre'?t.name:o.name)+(e.active?'':'\n(조건부 · 지금은 계산에 쓰지 않음)'))}"><b>${schWbs(o.wbs)})</b><span>${esc(o.name)}</span>${E?`<button class="rel" data-schp="rel" data-k="${e.id}" title="관계 수정">${lb}</button>`:`<em class="rel">${lb}</em>`}</div>`;};
   const elbow=(x1,y1,x2,y2)=>{const mx=(x1+x2)/2, r=Math.min(6,Math.abs(y2-y1)/2), s=Math.sign(y2-y1);return y1===y2?`M${x1},${y1} L${x2},${y2}`:`M${x1},${y1} L${mx-r},${y1} Q${mx},${y1} ${mx},${y1+s*r} L${mx},${y2-s*r} Q${mx},${y2} ${mx+r},${y2} L${x2},${y2}`;};
-  pre.forEach((e,i)=>{const y=yOf(i,pre.length);h+=node(e,e.from,0,y,'pre');sv+=`<path class="${e.active?'':'off'}" d="${elbow(LW,y,CX-1,cy)}" marker-end="url(#sl-arrow)"/>`;});
+  pre.forEach((e,i)=>{const y=yOf(i,pre.length);h+=node(e,e.from,LX,y,'pre');sv+=`<path class="${e.active?'':'off'}" d="${elbow(LX+LW,y,CX-1,cy)}" marker-end="url(#sl-arrow)"/>`;});
   suc.forEach((e,i)=>{const y=yOf(i,suc.length);h+=node(e,e.to,RX,y,'suc');sv+=`<path class="${e.active?'':'off'}" d="${elbow(CX+CW,cy,RX-1,y)}" marker-end="url(#sl-arrow)"/>`;});
   h+=`<div class="sl-node cur" style="left:${CX}px;top:${cy-13}px;width:${CW}px"><b>${schWbs(t.wbs)})</b><span>${esc(t.name)}</span></div>`;
   return `<div class="sp-links"><div class="sl-wrap" style="width:${W}px"><div class="sl-map" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}"><defs><marker id="sl-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1l6 3-6 3" fill="none" stroke="#4f4f4f" stroke-width="1.1"/></marker></defs>${sv}</svg>${h}</div>${pre.length||suc.length?'':'<div class="sl-none">이 업무와 선후 관계로 이어진 액션이 없습니다. 일정이나 관계도에서 막대·카드를 끌어다 놓으면 연결됩니다.</div>'}</div></div>`; }
@@ -74,16 +76,30 @@ function schMoveToPhase(d,x,code,label){ const inPh=d.tasks.filter(q=>q.phase===
 function schPhaseRename(pid,code,done){ const m=schModel(pid), g=m&&m.phases.find(x=>x.code===code); if(!g)return; const cur=(SCHED[pid]||{})['ph:'+code]||{}, was=schPhaseName(g.label);
   askInput(`${schPhaseNo(code)}) 단계 이름`,was,v=>{ v=(v||'').replace(/\s+/g,' ').trim(); if(!v||v===was)return;
     schSet(pid,'ph:'+code,{...cur,label:v,by:cur.by||sharedUser,at:cur.at||new Date().toISOString()},`${schPhaseNo(code)}) 단계 이름을 “${v}”(으)로 바꿨습니다`); if(done)done(code); }); }
-function schPhaseDelete(pid,code,done){ const m=schModel(pid), g=m&&m.phases.find(x=>x.code===code); if(!g)return;
-  if(g.tasks.length){ toast(`업무가 ${g.tasks.length}건 있는 단계는 지울 수 없습니다. 업무를 다른 단계로 옮기거나 지운 뒤 삭제하세요.`,4600); return; }
-  const n=liveItems('action',pid).filter(i=>!i.own&&!i.task&&i.phase===code).length;
-  confirmDlg(`“${schPhaseLabel(g)}” 단계를 삭제할까요?${n?` 이 단계에 둔 액션 ${n}건은 ‘일정 미연결’로 남습니다.`:''} (삭제 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'삭제',pri:true,fn:()=>{
-    if(SCHU.phase===code)SCHU.phase=''; SCHU.open=SCHU.open.filter(c=>c!==code); schSet(pid,'ph:'+code,null,`${schPhaseLabel(g)} 단계를 삭제했습니다`); if(done)done(code,true); }},{t:'취소',fn:()=>{}}]); }
+function schPhaseDelete(pid,code,done){ const m=schModel(pid), g=m&&m.phases.find(x=>x.code===code); if(!g)return; const A=AIDCSchedule, n=g.tasks.length, na=liveItems('action',pid).filter(i=>!i.own&&!i.task&&i.phase===code).length;
+  if(schScenario(pid)){toast('시나리오를 보는 중에는 단계를 지울 수 없습니다.',3200);return;}
+  // a phase that holds tasks goes with them (owner, 2026-11-24: an x on every phase); the question says how many, one undo brings all back
+  confirmDlg(`“${schPhaseLabel(g)}” 단계를 삭제할까요?${n?` 이 단계의 액션 ${n}건과 거기에 걸린 관계도 함께 지워집니다.`:''}${na?` 이 단계에 둔 일반 액션 ${na}건은 ‘일정 미연결’로 남습니다.`:''} (삭제 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'삭제',pri:true,fn:()=>{
+    const label=`${schPhaseLabel(g)} 단계를 삭제했습니다`, u0=SCH.undo.length;
+    if(n&&!schCommit(pid,d=>A.removeTasks(d,g.tasks.map(t=>t.id)),'',true,true))return;
+    if(SCHU.phase===code)SCHU.phase=''; SCHU.open=SCHU.open.filter(c=>c!==code); if(g.tasks.some(t=>t.id===SCHU.sel))SCHU.sel='';
+    if((SCHED[pid]||{})['ph:'+code]!==undefined)schSet(pid,'ph:'+code,null);
+    schUndoJoin(pid,u0,label); toast(label,5200,{t:'되돌리기',fn:schUndo,keep:true}); schRedraw(true); if(done)done(code,true); }},{t:'취소',fn:()=>{}}]); }
+// The undo steps made since `from` become one (a phase with its tasks, the actions that got their numbers together).
+function schUndoJoin(pid,from,label){ const parts=SCH.undo.splice(from); if(!parts.length)return; if(parts.length===1||parts.some(u=>u.sc)){ parts[parts.length-1].label=label; SCH.undo.push(...parts); return; }
+  const one={pid,sc:'',raw:true,before:{},after:{},label,tag:''}; for(const u of parts){ for(const k of Object.keys(u.before))if(!(k in one.before))one.before[k]=u.before[k]; Object.assign(one.after,u.after); } SCH.undo.push(one); }
 // what a phase picker offers for the phase that is chosen now; a phase of the workbook that was renamed can have its name back
-function schPhaseEditItems(pid,m,g,after){ if(!g)return []; const rec=(SCHED[pid]||{})['ph:'+g.code], src=((SCH.base[pid]||{}).tasks||[]).find(t=>t.phase===g.code), own=src&&src.phaseLabel, out=['-',{t:`“${schPhaseLabel(g)}” 이름 바꾸기`,k:'ph-ren',fn:()=>schPhaseRename(pid,g.code,after)}];
+function schPhaseEditItems(pid,m,g,after,withDel){ if(!g)return []; const rec=(SCHED[pid]||{})['ph:'+g.code], src=((SCH.base[pid]||{}).tasks||[]).find(t=>t.phase===g.code), own=src&&src.phaseLabel, out=['-',{t:`“${schPhaseLabel(g)}” 이름 바꾸기`,k:'ph-ren',fn:()=>schPhaseRename(pid,g.code,after)}];
   if(rec&&rec.label&&own&&schPhaseName(own)!==schPhaseName(rec.label))out.push({t:`원래 이름으로 (${schPhaseName(own)})`,k:'ph-reset',fn:()=>{schSet(pid,'ph:'+g.code,null,`${schPhaseNo(g.code)}) 단계 이름을 되돌렸습니다`);if(after)after(g.code);}});
-  if(!g.tasks.length)out.push({t:`“${schPhaseLabel(g)}” 단계 삭제`,k:'ph-del',danger:true,fn:()=>schPhaseDelete(pid,g.code,after)});
+  if(withDel)out.push({t:`“${schPhaseLabel(g)}” 단계 삭제`,k:'ph-del',danger:true,fn:()=>schPhaseDelete(pid,g.code,after)});
   return out; }
+// The list of phases of a picker: a press chooses one; the x of a row removes that phase; below it "new" and the rename of the chosen one.
+function schPhasePick(el,pid,m,sel,pick,after){ const p=menuPop(el,m.phases.map(g=>({k:g.code,sel:sel===g.code,html:`<span class="phn">${esc(schPhaseLabel(g))}</span><button type="button" class="phx" data-phx="${esc(g.code)}" title="이 단계 삭제" aria-label="${esc(schPhaseLabel(g))} 단계 삭제">${svg('i-x',8,8)}</button>`,fn:()=>pick(g.code,g.label)}))
+    .concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>pick(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===sel),after)),{cls:'sch-phpick'});
+  p.addEventListener('click',e=>{ const x=e.target.closest('[data-phx]'); if(!x)return; e.stopPropagation(); e.preventDefault(); closePop(); schPhaseDelete(pid,x.dataset.phx,after); },true); return p; }
+// 개발 단계 of an action that is not a task yet, while it is edited: the same as a task's row (the phase, the number beside it) with an x that
+// takes the phase off again. An action that hangs under a task from before shows that task instead of the number.
+const schStageEdit=(m,g,t)=>`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${t?`<a class="wbno up" data-open="${schItemId(t.id)}" title="이 업무 아래에 붙어 있습니다 · 눌러서 열기">↳ ${esc(schTaskTitle(t))}</a>`:g?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}${g||t?`<button class="x" data-schp="unlink" title="${t?'업무 연결 해제':'개발 단계 지우기'}">${svg('i-x',8,8)}</button>`:''}</span>`;
 function schNewPhase(pid,m,done){ askInput('새 개발 단계 이름','',v=>{ v=(v||'').trim(); if(!v)return; const no=Math.max(0,...m.phases.map(g=>Number(schPhaseNo(g.code))||0),...ITEMS.filter(i=>i.proj===pid&&i.phase).map(i=>Number(schPhaseNo(i.phase))||0))+1, code='W'+no; schSet(pid,'ph:'+code,{label:v,by:sharedUser,at:new Date().toISOString()},`${no}) ${v} 단계를 추가했습니다`); done(code,v); }); }
 function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule, D=A.dates, t=m.byId.get(it.task), r=m.res.tasks[t.id], k=el.dataset.k, id=t.id, name=schWbs(t.wbs), ms=t.kind==='milestone';
   const edit=(label,fn)=>schTagged(it,()=>schEditTask(pid,id,`${name} ${label}`,fn));
@@ -125,14 +141,14 @@ function schRefMenu(el,it,pid,t){ const cur=((SCHED[pid]||{})['c:'+t.id]||{}).id
   draw(); inp.oninput=draw; inp.focus(); p.addEventListener('click',e=>{const x=e.target.closest('.it[data-r]');if(!x)return;e.stopPropagation();closePop();schTagged(it,()=>schSet(pid,'c:'+t.id,{ids:cur.concat(x.dataset.r)},'참고 자료를 연결했습니다'));}); }
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-schp]'); if(!el)return; const it=curItem(); if(!it)return;
   if(el.dataset.schp==='atab'){ SCHP.tab=el.dataset.k; rerenderItem(it.id); return; }   // the tabs of an ordinary action (it may have no project yet)
+  if(el.dataset.schp==='more'&&!schOwn(it)){ SCHP.more=!SCHP.more; rerenderItem(it.id); return; }   // "일정 상세" of an ordinary action
   if(!schReady(it.proj))return; const k=el.dataset.schp, pid=it.proj, m=schModel(pid), A=AIDCSchedule;
   if(k==='tab'){SCHP.tab=el.dataset.k;if(it.editing)schPropsRefresh(it);else rerenderItem(it.id);return;}
-  if(k==='more'){SCHP.more=!SCHP.more;if(it.editing)schPropsRefresh(it);else rerenderItem(it.id);return;}
+  if(k==='more'){SCHP.more=!SCHP.more;if(it.editing&&schOwn(it))schPropsRefresh(it);else rerenderItem(it.id);return;}
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.
   if(k==='link-phase'||k==='link-task'){ if(!canEditItem(it))return; e.stopPropagation(); const cur=it.task&&m.byId.get(it.task), again=()=>{it.dirty=true;rerenderItem(it.id);};
     const setPhase=code=>{ it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
-    if(k==='link-phase'){ const now=m.phases.find(g=>g.code===(cur?cur.phase:it.phase));
-      menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:(cur?cur.phase:it.phase)===g.code,fn:()=>setPhase(g.code)})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,code=>setPhase(code))}],schPhaseEditItems(pid,m,now,(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();})));return;}
+    if(k==='link-phase'){ schPhasePick(el,pid,m,(cur?cur.phase:it.phase)||'',code=>setPhase(code),(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();}); return; }
     const ph=(cur&&cur.phase)||it.phase||'', g=ph&&m.phases.find(x=>x.code===ph), extra=[];
     if(g){ if(it.task)extra.push({t:`${schPhaseLabel(g)} 단계에만 두기 (업무 선택 해제)`,fn:()=>{delete it.task;again();}});
       extra.push({t:`＋ ${schPhaseNo(g.code)}) 단계에 새 업무 추가`,fn:()=>askInput('새 업무 이름','',v=>{v=(v||'').trim();if(!v)return;let nid='';if(schCommit(pid,d=>{const x=A.newTask(d,g.code);x.name=v;x.phaseLabel=g.label;x.plannedStart=x.referenceStart=it.date||schToday();x.plannedFinish=x.referenceFinish=A.dates.addDays(x.plannedStart,4);schMoveToPhase(d,x,g.code,g.label);d.tasks.push(x);nid=x.id;},`${v} 업무를 추가했습니다`)){it.task=nid;it.phase=g.code;again();}})}); }
@@ -145,7 +161,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='f'){e.stopPropagation();schFieldEdit(el,it);return;}
   if(k==='phase-move'){ e.stopPropagation(); if(t.wbs==='W8.6'){toast('운영개시 기준 업무는 다른 단계로 옮길 수 없습니다.',3600);return;}
     const move=(code,label)=>{ const snap=schSnap(pid), ttl=`${schWbs(t.wbs)} 단계 이동`; if(schTagged(it,()=>schEditTask(pid,t.id,ttl,(x,d)=>schMoveToPhase(d,x,code,label),true)))schChangeCard(pid,snap,{title:ttl,focus:t.id,note:`${schPhaseNo(code)}) ${schPhaseName(label)} 단계로 옮겼습니다.`}); };
-    menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:t.phase===g.code,fn:()=>{if(t.phase!==g.code)move(g.code,g.label);}})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>move(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===t.phase),()=>schPropsRefresh(it))));return;}
+    schPhasePick(el,pid,m,t.phase,(code,label)=>{if(t.phase!==code)move(code,label);},(code,gone)=>{ if(gone&&!schOwn(it)){closePanel(true);return;} schPropsRefresh(it); }); return;}
   if(k==='rel'){e.stopPropagation();e.preventDefault();schRelMenu(el,pid,el.dataset.k);return;}
   if(k==='addref'){e.stopPropagation();schRefMenu(el,it,pid,t);return;}
   if(k==='unref'){e.stopPropagation();const cur=((SCHED[pid]||{})['c:'+t.id]||{}).ids||[];const nx=cur.filter(x=>x!==el.dataset.k);schTagged(it,()=>schSet(pid,'c:'+t.id,nx.length?{ids:nx}:null,'참고 자료 연결을 해제했습니다'));return;}
@@ -157,7 +173,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
 // what it was (same id: body, comments, files and links to it are untouched) and is from then on the task's own item (own + task).
 // Undoing the step takes the task away again and the item reads as an ordinary action once more. true: it became a task.
 const schNextWbs=(m,code)=>code+'.'+(Math.max(0,...m.plan.tasks.filter(t=>t.phase===code).map(t=>Number(String(t.wbs).split('.')[1])||0))+1);
-function schActionToTask(it){ if(!schPreview()||!it||it.type!=='action'||it.own||it.task||!it.phase||it.status!=='published'||!PROJECTS[it.proj]||!schReady(it.proj)||archTabOf(it))return false;
+function schActionToTask(it,quiet){ if(!schPreview()||!it||it.type!=='action'||it.own||it.task||!it.phase||it.status!=='published'||!PROJECTS[it.proj]||!schReady(it.proj)||archTabOf(it))return false;
   const pid=it.proj, m=schModel(pid), g=m.phases.find(x=>x.code===it.phase); if(!g||schScenario(pid))return false;
   const A=AIDCSchedule, ms=!!it.ms, today=schToday(), start=it.date||today, e0=itemEnd(it), end=ms?start:(e0&&e0>start?e0:start), st=it.st==='done'?'완료':(SCH_STATUSES.includes(it.stx)?it.stx:(start<=today?'진행':'계획')); let nid='';
   const ok=schCommit(pid,d=>{ const x=A.newTask(d,g.code); x.name=(it.title||'').split('\n').join(' ').trim()||'제목 없음'; x.kind=ms?'milestone':'task'; x.plannedStart=x.referenceStart=start; x.plannedFinish=x.referenceFinish=end;
@@ -166,12 +182,13 @@ function schActionToTask(it){ if(!schPreview()||!it||it.type!=='action'||it.own|
       if(st==='완료'){ if(!as)as=start<=today?start:today; if(!af)af=ms?as:(today>=as?today:as); }
       else{ af=null; if(st==='진행'&&!as&&!ms)as=start<=today?start:today; if(st==='계획'||st==='확인 전'||st==='조건부 미발동')as=null; }
       if(ms&&as&&st==='완료')af=as; x.actualStart=as; x.actualFinish=af;
-      if((it.people||[]).length)x.people=it.people.slice(); if(it.pri&&it.pri!=='std')x.pri=it.pri; if(it.url)x.url=it.url; if(it.why)x.why=it.why; d.tasks.push(x); nid=x.id; },'',true,true);
+      if((it.people||[]).length)x.people=it.people.slice(); if(it.pri&&it.pri!=='std')x.pri=it.pri; if(it.url)x.url=it.url; if(it.why)x.why=it.why;
+      for(const k of ['criteria','conditions','evidence'])if(it[k])x[k]=String(it[k]); d.tasks.push(x); nid=x.id; },'',true,true);
   if(!ok||!nid)return false;
-  it.own=true; it.task=nid; schOwnIds.c=null; SCH.memo[pid]=null;
+  it.own=true; it.task=nid; delete it.wbsOff; schOwnIds.c=null; SCH.memo[pid]=null;
   if((it.refs||[]).length)schWrite(pid,{['c:'+nid]:{ids:it.refs.slice()}});
-  if(!SCHU.open.includes(g.code))SCHU.open.push(g.code); SCHU.sel=nid; schUiSave();
-  (SCH.conv||(SCH.conv={}))[nid]=it.id; SCH.convSay=it.id;   // remembered for undo / redo (schConvSettle) and for the toast of this save (schSavedSay)
+  (SCH.conv||(SCH.conv={}))[nid]=it.id; if(quiet)return true;
+  if(!SCHU.open.includes(g.code))SCHU.open.push(g.code); SCHU.sel=nid; schUiSave(); SCH.convSay=it.id;   // remembered for undo / redo (schConvSettle) and for the toast of this save (schSavedSay)
   return true; }
 // The toast of 게시 / 저장: an action that has just become a task says under which number it now stands.
 function schSavedSay(it,text){ if(!it||SCH.convSay!==it.id)return null; SCH.convSay=''; const t=schOwn(it)&&schModel(it.proj).byId.get(it.task); if(!t)return null;
@@ -180,6 +197,12 @@ function schSavedSay(it,text){ if(!it||SCH.convSay!==it.id)return null; SCH.conv
 // task it is an ordinary action again (it still carries its phase, so it is listed with it), with it the task's own item.
 function schConvSettle(pid){ const c=SCH.conv; if(!c||!schReady(pid))return; const m=schModel(pid); let ch=false;
   for(const [tid,iid] of Object.entries(c)){ const it=ITEMS.find(x=>x.id===iid); if(!it||it.proj!==pid)continue; const has=m.byId.has(tid);
-    if(has&&!it.own){it.own=true;it.task=tid;ch=true;} else if(!has&&it.own&&it.task===tid){delete it.own;delete it.task;ch=true;} }
+    if(has&&!it.own){it.own=true;it.task=tid;delete it.wbsOff;ch=true;} else if(!has&&it.own&&it.task===tid){delete it.own;delete it.task;it.wbsOff=1;ch=true;} }   // wbsOff: taken back on purpose, not to be turned again by itself
   if(ch){schOwnIds.c=null;SCH.memo[pid]=null;} }
+// Actions that were given a phase before the sixteenth round (published, no task) get their WBS number now: once per project and
+// session, on the page of their writer (only their own, so two pages never turn the same action), all in one undo step.
+function schLegacyToTasks(pid){ if(!schPreview()||typeof sharedReady==='undefined'||!sharedReady||!PROJECTS[pid]||!schReady(pid)||schScenario(pid))return; const L=SCH.legacy||(SCH.legacy={}); if(L[pid])return; L[pid]=1;
+  const m=schModel(pid), list=liveItems('action',pid).filter(i=>!i.own&&!i.task&&i.phase&&!i.wbsOff&&i.status==='published'&&i.authorId===sharedUser&&!i.editing&&m.phases.some(g=>g.code===i.phase)&&!otherLock('item:'+i.id)); if(!list.length)return;
+  const u0=SCH.undo.length; let n=0; for(const it of list.sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||''))||String(a.id).localeCompare(String(b.id))))if(schActionToTask(it,true))n++;
+  if(!n)return; const label=`개발 단계가 있던 액션 ${n}건에 WBS 번호를 붙였습니다`; schUndoJoin(pid,u0,label); toast(label+' · 액션 일정 · 리스트 · 관계도에 올라갑니다.',6000,{t:'되돌리기',fn:schUndo,keep:true}); schRedraw(true); }
 function schAfterSave(it){ schEditKeep(it); if(schActionToTask(it))return; if(!schOwn(it))return; const m=schModel(it.proj), t=m.byId.get(it.task), name=(it.title||'').split('\n').join(' ').trim(); if(name&&name!==t.name)schEditTask(it.proj,t.id,schWbs(t.wbs)+' 업무명 변경',x=>{x.name=name;},true,true); } // the caller redraws
