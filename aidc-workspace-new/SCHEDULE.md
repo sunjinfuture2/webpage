@@ -550,3 +550,45 @@ schedule/xlsx.ts (the reading, in the Excel bundle), the loading of an uploaded 
   columns. It is recognised and refused in plain words. Old stored plans are kept (an undo needs them); nothing removes them
   but the purge of a deleted project.
 - tests/schedule-12.cjs (41 checks; the workbooks are made in the browser in the guide's shape).
+
+## WBS and 개발 단계 are one thing; asking before leaving (owner, 2026-11-23, the sixteenth round)
+
+Four requests of one afternoon. Preview only, except the fix of the address.
+
+- **A phase can be renamed and removed** ("만든 거 수정도 할 수 있어야지"). schPhaseRename / schPhaseDelete / schPhaseEditItems in
+  30-panel.js. The name of any phase is the record `ph:<code>` (schModel already read it); a phase of the workbook that was renamed
+  can have its own name back (the record is removed). Removing is offered only while the phase holds no task. Where: the "⋮" of a
+  phase row in the gantt (`data-sch="phmenu"`, shown with the +) and, for the phase that is chosen, the phase pickers of a panel.
+  Actions that stood in a removed phase keep its code and read "일정 미연결"; therefore schNewPhase never takes a number an action
+  still carries (and undo brings everything back).
+- **An action with a phase is a WBS entry** ("WBS랑 개발단계가 같은 말인데 서로 잘 안 엮이니까", "다른 데에서 만들어도 액션 일정에 바로
+  뜰 수 있게"). schActionToTask (30-panel.js), called from schAfterSave, which the 게시 handler now calls too: an ordinary action
+  that has a phase, is published and is not hung under another task becomes a task of the plan: the next WBS number of its phase
+  (schNextWbs), its dates, state, assignees, importance, address and reason go over, its references become `c:<task>`. So it
+  stands in 액션 일정 · 리스트 · 관계도 like every task, can be moved and related. While it is written the phase row shows the number
+  it will get (`.wbno.auto`); the second picker reads "업무 아래에 붙이기" (an action hung under a task stays that task's action;
+  one without a phase stays 일정 미연결; a draft is not turned).
+  - The item stays what it was: same id, so its body, comments, files and every link to it are untouched. It becomes the task's
+    own item (`own` + `task`). The pair task <-> item used to be the id alone ("wt-<task id>"); it is now also read from the item:
+    schItemId / schTaskIdOf go through schOwnIds (a map of the items that are `own` with an id of their own). Never build
+    "wt-" + id by hand.
+  - Undo takes the task away; schConvSettle (called by schStep) then makes the action an ordinary one again, and redo the task's
+    item again (remembered for the session in SCH.conv). Deleting the task from its panel is the delete of a task, as before.
+  - This replaces the fourth round's "an action may belong to a phase without a task" for what is published from now on; such
+    actions made before stay as they are until they are saved again.
+- **The list is grouped by phase** when it is in WBS order: one line (`.gr`) names the phase above its rows with how many it
+  holds, "일정 미연결" for the rest: the outline of the gantt.
+- **Leaving asks first** ("작성 중인 컨텐츠 창을 닫거나 다른 위치로 이동할 때, 저장 안 하고 닫을 거냐고 팝업"). This takes back, for the
+  preview, the owner's rule of 2026-11-18. guardLeave hands over to guardLeaveAsk while PREVIEW_ON: a window (`#dlg.leave-dlg`)
+  with 계속 작성 / 저장 안 함 / 저장 (초안으로 저장 for a new item). 저장 does what the silent leave did; 저장 안 함 drops a new
+  item (`_dropped`, taken away by dropEmptyNew) and puts an existing one, a project overview or a card back; Esc or a press beside
+  the window stays. Nothing changed: nothing is asked. Without the preview the leave still saves silently (tests/leave-1.cjs).
+- **A menu's own button pressed again closes it** ("필터 … 또 눌렀을 때 접히게"): openPop remembers its anchor; the press that
+  closes the menu (popOut) notes when it fell on the anchor, and the click that follows is swallowed in the capture phase of the
+  window, before any handler can open the menu anew. Not for anchors one types into.
+- From the audit of what cannot be changed or removed (the owner asked for the list): the title of a record a member added to
+  근거 및 확약 (`u:title`), and "올린 엑셀 빼기" in the upload window (schUpTakeOut: `src` removed, one undo step). The rest of the
+  list was reported, not built.
+- For everybody: a task named in the address stays in the address while its schedule loads (routeWant in shared-client.js). The
+  address used to lose it for that moment, and a reload in that moment lost it for good.
+- tests/schedule-13.cjs (50 checks); tests/schedule-4.cjs follows the new rule.

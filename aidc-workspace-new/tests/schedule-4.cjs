@@ -134,7 +134,7 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.click('#panel-pin [data-ed="publish"]'); await sleep(1300); await ev(() => closePanel(true)); await sleep(300);
   await ev(() => { SCHU.tab = 'list'; SCHU.phase = 'W9'; schRefresh(); }); await sleep(500);
   const l9 = await ev(s => [...document.querySelectorAll('#sch-actions .tbl.sch-list .rw')].map(r => r.querySelector('.w').textContent + '|' + (r.textContent.includes(s) ? 'mine' : '')), sfx);
-  check('an action put into a phase without a task is listed with that phase, after its tasks', l9.length === 2 && l9[0] === '9-1|' && l9[1] === '9|mine', l9);
+  check('an action put into a phase becomes the next WBS of that phase when it is published (sixteenth round: WBS and 개발 단계 are one thing)', l9.length === 2 && l9[0] === '9-1|' && l9[1] === '9-2|mine', l9);
   await ev(() => { SCHU.phase = 'none'; schRefresh(); }); await sleep(400);
   check('…and is not among 일정 미연결', await ev(s => ![...document.querySelectorAll('#sch-actions .tbl.sch-list .rw')].some(r => r.textContent.includes(s)), sfx));
 

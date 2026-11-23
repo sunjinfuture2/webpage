@@ -150,7 +150,7 @@ function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid
       <span>${n?'파일 더 올리기':'파일을 여기에 끌어다 놓거나 눌러서 선택'}</span></label>
     ${n?`<div class="up-files">${SCHUP.files.map(schUpFileHtml).join('')}</div>`:`<p class="up-hint">일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 한 번에 또는 따로 올릴 수 있습니다.</p>`}
     ${reading?'':schUpResultHtml(P)}${SCHUP.fail?`<p class="up-fail">${esc(SCHUP.fail)}</p>`:''}
-    ${cur&&cur.name?`<p class="up-cur">지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</p>`:''}
+    ${cur&&cur.name?`<p class="up-cur"><span>지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</span><button data-up="out" title="올린 엑셀을 빼고 올리기 전의 일정으로 돌아갑니다">올린 엑셀 빼기</button></p>`:''}
     <div class="bt"><button data-up="x">${n?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
   box.scrollTop=keep; }
 async function schUpAdd(list){ const run=SCHUP.run; if(!list.length||SCHUP.busy)return;
@@ -179,6 +179,11 @@ async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||
     const said=[]; if(P.has.tasks)said.push(`액션 ${P.n.tasks}건`); if(P.has.links)said.push(`관계 ${P.n.links}건`); if(P.has.proc)said.push(`외부설비 ${P.n.proc}건`); if(P.has.gates)said.push(`승인게이트 ${P.n.gates}건`); if(P.has.evid)said.push(`근거·확약 ${P.n.evid}건`);
     schUpClose(); toast('엑셀 내용을 반영했습니다'+(said.length?' · '+said.join(' · '):''),6000,{t:'되돌리기',fn:schUndo,keep:true}); schRedraw(true);
   }catch(e){ if(run!==SCHUP.run)return; SCHUP.busy=false; SCHUP.fail=String(e&&e.message||e); schUpDraw(); } }
+// An uploaded workbook can be taken out again (from the audit of what cannot be removed, 2026-11-23): the project goes back to the
+// plan it had before any upload (the built-in one of 판교, an empty one elsewhere). What members changed stays as overrides; those of
+// tasks only the workbook had no longer show. One undo step, like the upload.
+function schUpTakeOut(pid){ const cur=(SCHED[pid]||{}).src; if(!cur)return; schUpClose();
+  confirmDlg(`올린 엑셀(${cur.name||'이름 없음'})을 빼고 ${SCH_SOURCES[pid]?'처음의 기본 일정':'빈 일정'}으로 돌아갈까요? 엑셀에서 온 액션·관계·설비·승인게이트·근거가 화면에서 빠집니다. (뺀 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'빼기',pri:true,fn:()=>schSet(pid,'src',null,'올린 엑셀을 뺐습니다')},{t:'취소',fn:()=>{}}]); }
 function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
   closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up'; d.innerHTML='<div class="box" role="dialog" aria-label="엑셀 업로드"></div>'; document.body.appendChild(d);
@@ -187,7 +192,7 @@ function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){t
   SCHUP.off=()=>{document.removeEventListener('keydown',key,true);window.removeEventListener('dragover',stop);window.removeEventListener('drop',stop);};
   document.addEventListener('keydown',key,true); window.addEventListener('dragover',stop); window.addEventListener('drop',stop);
   d.addEventListener('click',e=>{ if(e.target===d){ if(!SCHUP.files.length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
-    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
+    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
   d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files]; i.value=''; schUpAdd(l); } });
   d.addEventListener('dragover',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.add('over'); });
   d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget)){const z=zone(); if(z)z.classList.remove('over');} });

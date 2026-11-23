@@ -103,6 +103,7 @@ function schStep(from,to,word){ const u=from.pop(); if(!u){toast(word==='undo'?'
   const values=word==='undo'?u.before:u.after;
   if(u.raw){const root=SCHED[u.pid]||(SCHED[u.pid]={});for(const [k,v] of Object.entries(values)){if(v===null)delete root[k];else root[k]=copy(v);}SCH.memo[u.pid]=null;}
   else{const keep=SCHU.scn;SCHU.scn=u.sc||'';schWrite(u.pid,values);SCHU.scn=keep;}
+  if(typeof schConvSettle==='function')schConvSettle(u.pid);
   to.push(u); toast((word==='undo'?'되돌렸습니다':'다시 적용했습니다')+(u.label?' · '+u.label:''),2600,word==='undo'?{t:'다시 적용',fn:schRedo}:null); schRedraw(true); }
 function schUndo(){schStep(SCH.undo,SCH.redo,'undo');}
 function schRedo(){schStep(SCH.redo,SCH.undo,'redo');}
@@ -165,8 +166,12 @@ const SCH_PROGRESS_TIP='진행률 = Σ(가중치 × 달성도) ÷ Σ가중치\n�
 // The body, comments and files of a task are an ordinary item ("wt-<task id>", type action) that comes into being the first
 // time somebody writes one; until then item() hands out this stand-in (same idea as the 자료실 rows, see adoptRow).
 // The schedule fields (dates, state, assignees, importance, address) are never kept in the item: they are overrides of the task.
-const schTaskIdOf=id=>typeof id==='string'&&id.startsWith('wt-')?id.slice(3):'';
-const schItemId=taskId=>'wt-'+taskId;
+// The pair "task <-> its item" is the id ("wt-<task id>"), except for an action that was written first and became a task when it was
+// given a development phase (schActionToTask, sixteenth round): that one keeps its own id, and the pair is read from the item (own + task).
+function schOwnIds(){ const c=schOwnIds.c, now=performance.now(); if(c&&c.n===ITEMS.length&&now-c.at<80)return c; const byTask=new Map(), byItem=new Map();
+  for(const i of ITEMS)if(i.own&&i.task&&typeof i.id==='string'&&!i.id.startsWith('wt-')){byTask.set(i.task,i.id);byItem.set(i.id,i.task);} return schOwnIds.c={n:ITEMS.length,at:now,byTask,byItem}; }
+const schTaskIdOf=id=>typeof id!=='string'?'':id.startsWith('wt-')?id.slice(3):(schOwnIds().byItem.get(id)||'');
+const schItemId=taskId=>schOwnIds().byTask.get(taskId)||'wt-'+taskId;
 function schProjOfTask(taskId){for(const pid of schPids()){const m=schModel(pid);if(m&&m.byId.has(taskId))return pid;}return null;}
 function schVirtualItem(id){ const taskId=schTaskIdOf(id); if(!taskId)return undefined; const pid=schProjOfTask(taskId); if(!pid)return undefined; const m=schModel(pid), t=m.byId.get(taskId), r=m.res.tasks[taskId];
   const v=SCH.virt[id]||(SCH.virt[id]={id,type:'action',task:taskId,own:true,status:'published',body:'',comments:[],created:r.start});

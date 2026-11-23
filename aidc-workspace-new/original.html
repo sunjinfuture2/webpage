@@ -1539,8 +1539,12 @@ function closePop(){if(popEl){popEl.remove();popEl=null;}}
 // where the pointer last went down: a window that has nothing to hang on (its anchor was redrawn meanwhile, or it never had one) opens there
 const LASTPT={x:0,y:0,at:0}; document.addEventListener('pointerdown',e=>{LASTPT.x=e.clientX;LASTPT.y=e.clientY;LASTPT.at=Date.now();},true);
 const anchorRect=anchor=>{ let r=anchor&&anchor.getBoundingClientRect&&document.contains(anchor)?anchor.getBoundingClientRect():null; if(!r||(!r.width&&!r.height)){ const x=LASTPT.at?LASTPT.x:innerWidth/2, y=LASTPT.at?LASTPT.y:innerHeight/3; r={left:x,right:x,top:y,bottom:y,width:0,height:0}; } return r; };
-function openPop(anchor,html,opt={}){closePop();const p=document.createElement('div');p.className='pop '+(opt.cls||'');p.innerHTML=html;document.body.appendChild(p);const r=anchorRect(anchor);let x=opt.right?r.right-p.offsetWidth:r.left, y=r.bottom+4;if(x+p.offsetWidth>window.innerWidth-8)x=window.innerWidth-8-p.offsetWidth;if(y+p.offsetHeight>window.innerHeight-8)y=r.top-p.offsetHeight-4;y=Math.max(8,Math.min(y,window.innerHeight-8-p.offsetHeight));x=Math.max(8,x);p.style.left=x+'px';p.style.top=y+'px';popEl=p;setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);return p;}
-function popOut(e){if(popEl&&!popEl.contains(e.target)){closePop();}else if(popEl){setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);}}
+function openPop(anchor,html,opt={}){closePop();const p=document.createElement('div');p.className='pop '+(opt.cls||'');p.innerHTML=html;document.body.appendChild(p);const r=anchorRect(anchor);let x=opt.right?r.right-p.offsetWidth:r.left, y=r.bottom+4;if(x+p.offsetWidth>window.innerWidth-8)x=window.innerWidth-8-p.offsetWidth;if(y+p.offsetHeight>window.innerHeight-8)y=r.top-p.offsetHeight-4;y=Math.max(8,Math.min(y,window.innerHeight-8-p.offsetHeight));x=Math.max(8,x);p.style.left=x+'px';p.style.top=y+'px';popEl=p;p._anchor=anchor&&anchor.nodeType===1?anchor:null;setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);return p;}
+// A menu's own button pressed again closes the menu instead of opening it anew (owner, 2026-11-23: "필터 … 또 눌렀을 때 접히게"; preview).
+// The press closes it here (mousedown); the click that follows on the same button is swallowed before any handler sees it.
+let popAgain=null;
+function popOut(e){if(popEl&&!popEl.contains(e.target)){const a=popEl._anchor; if(PREVIEW_ON&&a&&a.isConnected&&a.contains(e.target)&&!a.matches('input,textarea,[contenteditable="true"]'))popAgain={el:a,at:Date.now()}; closePop();}else if(popEl){setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);}}
+window.addEventListener('click',e=>{ const s=popAgain; popAgain=null; if(s&&!popEl&&Date.now()-s.at<800&&s.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); } },true);
 function menuPop(anchor,items,opt){const p=openPop(anchor,items.map(i=>i==='-'?'<div class="sep"></div>':(i.hd?`<div class="hd">${esc(i.hd)}</div>`:`<div class="it ${i.sel?'sel':''} ${i.danger?'danger':''}" data-k="${i.k||''}">${i.ico||''}${i.html!==undefined?i.html:esc(i.t)}${i.badge?`<span class="badge-red">${esc(String(i.badge))}</span>`:''}${i.sel&&opt&&opt.multi?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':''}</div>`)).join(''),opt);p.addEventListener('click',e=>{const it=e.target.closest('.it');if(!it)return;const f=items.find(x=>x&&x.k===it.dataset.k);closePop();f&&f.fn&&f.fn();});return p;}
 function notConnected(anchor,name){openPop(anchor,`<div class="hd">${esc(name)}</div><div class="msg">외부 서비스 연결 전입니다. 연결된 주소가 없어 이 시안에서는 이동하지 않습니다.</div>`);}
 
@@ -2449,9 +2453,9 @@ document.addEventListener('click',async e=>{
     if(k==='docmenu'&&it){nbDocMenu(it,el);return;}
     if(k==='join'&&it){await nbJoin(it);return;}
     if((k==='publish'||k==='save')&&it&&nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
-    if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); toast('게시했습니다.'); return;}
+    if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(typeof schAfterSave==='function')schAfterSave(it); if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'게시했습니다.'); if(say)toast(say.text,5200,say.act); else toast('게시했습니다.'); } return;}
     if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} delete it._co; if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
-    if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); toast('저장했습니다.'); return;}
+    if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'저장했습니다.'); if(say)toast(say.text,5200,say.act); else toast('저장했습니다.'); } return;}
     if(k==='cancel'&&it){const along=(NBP[it.id]||[]).length; if(typeof schEditCancel==='function')schEditCancel(it); revertItem(it); rerenderItem(it.id); if(along)toast('함께 수정하던 본문의 변경은 다른 멤버의 화면에 남아 있습니다.',3600); return;}
     if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
     if(k==='editpartner'||k==='editcard'){const id=S.panel; S.editSimple={id,kind:k==='editpartner'?'partner':'card'}; openPanel(id,true); const t=$('#panel-pin [data-sk="name"]'); if(t){t.focus();placeCaret(t,true);} return;}
@@ -2646,13 +2650,14 @@ async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.
   if(S.panel===it.id)closePanel(true); if(S.full===it.id){S.full=null;render();}else render(true);}
 function saveItem(it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&!t.classList.contains('empty')){const v=readTitle(t); if(v&&v!==normT(it.title))it.title=v;} readUrl(it); readBody(it); it.editing=false; it.dirty=false; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; delete it.snap; delete it._editOriginal; if(typeof schAfterSave==='function')schAfterSave(it);}
 function revertItem(it){const original=it._editOriginal;if(original){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,original);}else if(it.snap){Object.assign(it,JSON.parse(it.snap));}delete it.snap;delete it._editOriginal;it.editing=false;it.dirty=false;sharedRelease('item:'+it.id);}
-function itemDirty(it){ if(!it||!ITEMS.includes(it)||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
+function itemDirty(it){ if(!it||!ITEMS.includes(it)||it._dropped||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
   const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.editing){const s=it.snap?JSON.parse(it.snap):{}; return !!it.dirty||bodyNow!==(s.body||'')||titleNow!==(s.title||'');} return !!(titleNow||bodyNow||it.dirty);}
 /* leave guard. Nothing is asked: what was being edited is saved on the way out (owner, 2026-11-18).
    Returns true when the caller must stop: the move goes on by itself after the save, or it cannot be made yet (a toast says why). */
 // which: 'panel' (the side panel is closing or changing), 'full' (the full page is being replaced) or 'all' (leaving the page)
 function guardLeave(proceed,which){
+  if(PREVIEW_ON)return guardLeaveAsk(proceed,which);
   if(which!=='full'&&S.editSimple&&S.panel===S.editSimple.id){ // a partner / link card being edited in the panel
     if(simpleDirty()){ if(!saveSimple())return true; toast('저장했습니다.'); proceed(); render(true); return true; }
     S.editSimple=null;}
@@ -2661,6 +2666,28 @@ function guardLeave(proceed,which){
   if(!it){ ids.forEach(id=>{const x=id&&ITEMS.find(y=>y.id===id); if(x&&x.editing&&!otherLock('item:'+x.id))revertItem(x);}); return false; } // opened for editing, nothing changed: the lock goes back at once
   if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 다시 시도하세요.',2600);return true;}
   autoSaveItem(it); proceed(); render(true); return true;}
+/* Preview (owner, 2026-11-23: "작성 중인 컨텐츠 창을 닫거나 다른 위치로 이동할 때, 저장 안 하고 닫을 거냐고 팝업 띄워줘"): what was being
+   written is not saved silently on the way out any more, a window asks. 저장: what the leave did before (a new item becomes a draft, an
+   existing one is saved, a project overview or a card as with its 저장). 저장 안 함: the edit is thrown away (a new item is dropped, an
+   existing one goes back to what it was). 계속 작성, Esc or a press beside the window: nothing happens, the member stays. */
+function leaveAsk(isNew,save,drop){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg leave-dlg';
+  d.innerHTML=`<div class="box" role="dialog" aria-label="저장하지 않고 닫기"><div class="m"><b>작성 중인 내용이 있습니다.</b><span>저장하지 않고 닫을까요?</span></div><div class="bt"><button data-lv="stay">계속 작성</button><button data-lv="drop">저장 안 함</button><button data-lv="save" class="pri">${isNew?'초안으로 저장':'저장'}</button></div></div>`;
+  document.body.appendChild(d); const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} }, close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
+  document.addEventListener('keydown',key,true);
+  d.addEventListener('click',e=>{ if(e.target===d){close();return;} const b=e.target.closest('[data-lv]'); if(!b)return; close(); if(b.dataset.lv==='save')save(); else if(b.dataset.lv==='drop')drop(); });
+  d.querySelector('button.pri').focus(); }
+function leaveDrop(it){ if(it.status==='new'){ it._dropped=true; it.title=''; it.body=''; it.dirty=false; return; }   // never saved: dropEmptyNew takes it away once it is no longer open
+  if(typeof schEditCancel==='function')schEditCancel(it); revertItem(it); }
+function guardLeaveAsk(proceed,which){
+  if(which!=='full'&&S.editSimple&&S.panel===S.editSimple.id){
+    if(simpleDirty()){ leaveAsk(false,()=>{ if(!saveSimple())return; toast('저장했습니다.'); proceed(); render(true); },()=>{ S.editSimple=null; proceed(); render(true); }); return true; }
+    S.editSimple=null;}
+  if(which==='all'&&projDirty()){ leaveAsk(false,()=>{ sharedSaveProject().then(()=>{ if(!S.editProj)proceed(); }); },async()=>{ const id=S.proj; restoreProjectSnap(); S.editProj=false; await sharedRelease('project:'+id); proceed(); render(true); }); return true; }
+  const ids=which==='panel'?[S.panel]:which==='full'?[S.full]:[S.panel,S.full]; const it=ids.map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&itemDirty(x));
+  if(!it){ ids.forEach(id=>{const x=id&&ITEMS.find(y=>y.id===id); if(x&&x.editing&&!otherLock('item:'+x.id))revertItem(x);}); return false; }
+  if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 다시 시도하세요.',2600);return true;}
+  leaveAsk(it.status==='new',()=>{ autoSaveItem(it); proceed(); render(true); },()=>{ leaveDrop(it); proceed(); dropEmptyNew(); render(true); if(typeof preserveLocal==='function')preserveLocal(); toast('작성하던 내용을 저장하지 않았습니다.',2400); });
+  return true;}
 // Saves the item that is being left. A new one becomes a draft (only its writer sees drafts); an existing one is saved as with 저장.
 function autoSaveItem(it){ const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.status==='new'){ it.title=tv||'제목 없음'; readUrl(it); readBody(it); it.status='draft'; it.mod=nowTxt(); it.dirty=false; { const did=it.id; toast('초안으로 저장했습니다. 설정 > 작성 중인 초안에서 이어서 쓸 수 있습니다.',2800,{t:'초안 열기',go:true,fn:()=>openPanel(did)}); } return; }

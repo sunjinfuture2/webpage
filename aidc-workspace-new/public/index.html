@@ -2583,8 +2583,30 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .sch-up .up-wn{margin:7px 0 0;font-size:12.5px;line-height:18px;color:#b3261e}
 .sch-up .up-ft{margin:10px 0 0;font-size:12px;line-height:18px;color:#8e8e8e}
 .sch-up .up-fail{margin:12px 0 0;font-size:13px;line-height:19px;color:#d30000}
-.sch-up .up-cur{margin:12px 0 0;font-size:12px;color:#a3a3a3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-up .up-cur{margin:12px 0 0;font-size:12px;color:#a3a3a3;display:flex;align-items:center;gap:10px}
+.sch-up .up-cur span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-up .up-cur button{flex:none;font-size:12px;color:#8e8e8e;text-decoration:underline;text-underline-offset:2px}
+.sch-up .up-cur button:hover{color:#d30000}
 .sch-up .box .bt{margin-top:20px}
+
+/* a phase row's "⋮" (rename, remove): beside the + , shown with it (sixteenth round) */
+.sg-row.ph .add{margin-right:2px}
+.sg-row.ph .pm{margin-right:10px;width:20px;height:20px;border-radius:5px;display:none;align-items:center;justify-content:center;flex:none}
+.sg-row.ph:hover .pm{display:flex}
+.sg-row.ph .pm:hover{background:#ececec}
+
+/* WBS and 개발 단계 are one thing (sixteenth round): the list names the phase above its rows; an action being written shows the number it will get */
+.tbl.sch-list .gr{display:flex;align-items:center;gap:8px;height:30px;padding:0 0 0 2px;border-bottom:1px solid #ececec;font-size:12.5px;color:#000;position:sticky;top:0;background:#fff;z-index:1}
+.tbl.sch-list .gr b{font-weight:700;letter-spacing:-0.012em}
+.tbl.sch-list .gr em{font-style:normal;font-size:11px;color:#999}
+.sch-stage .wbno.auto{color:#1f8e00;font-weight:600}
+.sch-stage .sf.sub{color:#8e8e8e}
+
+/* the window that asks before something being written is left (sixteenth round; preview) */
+.dlg.leave-dlg .box{min-width:380px;padding:24px 26px 18px}
+.dlg.leave-dlg .m{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.dlg.leave-dlg .m b{font-size:15.5px;font-weight:700;color:#000}
+.dlg.leave-dlg .m span{font-size:14px;color:#4f4f4f}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3468,8 +3490,12 @@ function closePop(){if(popEl){popEl.remove();popEl=null;}}
 // where the pointer last went down: a window that has nothing to hang on (its anchor was redrawn meanwhile, or it never had one) opens there
 const LASTPT={x:0,y:0,at:0}; document.addEventListener('pointerdown',e=>{LASTPT.x=e.clientX;LASTPT.y=e.clientY;LASTPT.at=Date.now();},true);
 const anchorRect=anchor=>{ let r=anchor&&anchor.getBoundingClientRect&&document.contains(anchor)?anchor.getBoundingClientRect():null; if(!r||(!r.width&&!r.height)){ const x=LASTPT.at?LASTPT.x:innerWidth/2, y=LASTPT.at?LASTPT.y:innerHeight/3; r={left:x,right:x,top:y,bottom:y,width:0,height:0}; } return r; };
-function openPop(anchor,html,opt={}){closePop();const p=document.createElement('div');p.className='pop '+(opt.cls||'');p.innerHTML=html;document.body.appendChild(p);const r=anchorRect(anchor);let x=opt.right?r.right-p.offsetWidth:r.left, y=r.bottom+4;if(x+p.offsetWidth>window.innerWidth-8)x=window.innerWidth-8-p.offsetWidth;if(y+p.offsetHeight>window.innerHeight-8)y=r.top-p.offsetHeight-4;y=Math.max(8,Math.min(y,window.innerHeight-8-p.offsetHeight));x=Math.max(8,x);p.style.left=x+'px';p.style.top=y+'px';popEl=p;setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);return p;}
-function popOut(e){if(popEl&&!popEl.contains(e.target)){closePop();}else if(popEl){setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);}}
+function openPop(anchor,html,opt={}){closePop();const p=document.createElement('div');p.className='pop '+(opt.cls||'');p.innerHTML=html;document.body.appendChild(p);const r=anchorRect(anchor);let x=opt.right?r.right-p.offsetWidth:r.left, y=r.bottom+4;if(x+p.offsetWidth>window.innerWidth-8)x=window.innerWidth-8-p.offsetWidth;if(y+p.offsetHeight>window.innerHeight-8)y=r.top-p.offsetHeight-4;y=Math.max(8,Math.min(y,window.innerHeight-8-p.offsetHeight));x=Math.max(8,x);p.style.left=x+'px';p.style.top=y+'px';popEl=p;p._anchor=anchor&&anchor.nodeType===1?anchor:null;setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);return p;}
+// A menu's own button pressed again closes the menu instead of opening it anew (owner, 2026-11-23: "필터 … 또 눌렀을 때 접히게"; preview).
+// The press closes it here (mousedown); the click that follows on the same button is swallowed before any handler sees it.
+let popAgain=null;
+function popOut(e){if(popEl&&!popEl.contains(e.target)){const a=popEl._anchor; if(PREVIEW_ON&&a&&a.isConnected&&a.contains(e.target)&&!a.matches('input,textarea,[contenteditable="true"]'))popAgain={el:a,at:Date.now()}; closePop();}else if(popEl){setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);}}
+window.addEventListener('click',e=>{ const s=popAgain; popAgain=null; if(s&&!popEl&&Date.now()-s.at<800&&s.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); } },true);
 function menuPop(anchor,items,opt){const p=openPop(anchor,items.map(i=>i==='-'?'<div class="sep"></div>':(i.hd?`<div class="hd">${esc(i.hd)}</div>`:`<div class="it ${i.sel?'sel':''} ${i.danger?'danger':''}" data-k="${i.k||''}">${i.ico||''}${i.html!==undefined?i.html:esc(i.t)}${i.badge?`<span class="badge-red">${esc(String(i.badge))}</span>`:''}${i.sel&&opt&&opt.multi?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':''}</div>`)).join(''),opt);p.addEventListener('click',e=>{const it=e.target.closest('.it');if(!it)return;const f=items.find(x=>x&&x.k===it.dataset.k);closePop();f&&f.fn&&f.fn();});return p;}
 function notConnected(anchor,name){openPop(anchor,`<div class="hd">${esc(name)}</div><div class="msg">외부 서비스 연결 전입니다. 연결된 주소가 없어 이 시안에서는 이동하지 않습니다.</div>`);}
 
@@ -4378,9 +4404,9 @@ document.addEventListener('click',async e=>{
     if(k==='docmenu'&&it){nbDocMenu(it,el);return;}
     if(k==='join'&&it){await nbJoin(it);return;}
     if((k==='publish'||k==='save')&&it&&nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
-    if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); toast('게시했습니다.'); return;}
+    if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(typeof schAfterSave==='function')schAfterSave(it); if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'게시했습니다.'); if(say)toast(say.text,5200,say.act); else toast('게시했습니다.'); } return;}
     if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} delete it._co; if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
-    if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); toast('저장했습니다.'); return;}
+    if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'저장했습니다.'); if(say)toast(say.text,5200,say.act); else toast('저장했습니다.'); } return;}
     if(k==='cancel'&&it){const along=(NBP[it.id]||[]).length; if(typeof schEditCancel==='function')schEditCancel(it); revertItem(it); rerenderItem(it.id); if(along)toast('함께 수정하던 본문의 변경은 다른 멤버의 화면에 남아 있습니다.',3600); return;}
     if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
     if(k==='editpartner'||k==='editcard'){const id=S.panel; S.editSimple={id,kind:k==='editpartner'?'partner':'card'}; openPanel(id,true); const t=$('#panel-pin [data-sk="name"]'); if(t){t.focus();placeCaret(t,true);} return;}
@@ -5056,13 +5082,14 @@ async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.
   if(S.panel===it.id)closePanel(true); if(S.full===it.id){S.full=null;render();}else render(true);}
 function saveItem(it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&!t.classList.contains('empty')){const v=readTitle(t); if(v&&v!==normT(it.title))it.title=v;} readUrl(it); readBody(it); it.editing=false; it.dirty=false; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; delete it.snap; delete it._editOriginal; if(typeof schAfterSave==='function')schAfterSave(it);}
 function revertItem(it){const original=it._editOriginal;if(original){Object.keys(it).forEach(k=>delete it[k]);Object.assign(it,original);}else if(it.snap){Object.assign(it,JSON.parse(it.snap));}delete it.snap;delete it._editOriginal;it.editing=false;it.dirty=false;sharedRelease('item:'+it.id);}
-function itemDirty(it){ if(!it||!ITEMS.includes(it)||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
+function itemDirty(it){ if(!it||!ITEMS.includes(it)||it._dropped||otherLock('item:'+it.id))return false; if(!it.editing&&it.status!=='new')return false; const pin=pinOf(it); const shown=pin.dataset.id===it.id;
   const b=shown?$('.ibody[data-f="body"]',pin):null, t=shown?$('.ititle[data-f="title"]',pin):null; const bodyNow=b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||''); const titleNow=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.editing){const s=it.snap?JSON.parse(it.snap):{}; return !!it.dirty||bodyNow!==(s.body||'')||titleNow!==(s.title||'');} return !!(titleNow||bodyNow||it.dirty);}
 /* leave guard. Nothing is asked: what was being edited is saved on the way out (owner, 2026-11-18).
    Returns true when the caller must stop: the move goes on by itself after the save, or it cannot be made yet (a toast says why). */
 // which: 'panel' (the side panel is closing or changing), 'full' (the full page is being replaced) or 'all' (leaving the page)
 function guardLeave(proceed,which){
+  if(PREVIEW_ON)return guardLeaveAsk(proceed,which);
   if(which!=='full'&&S.editSimple&&S.panel===S.editSimple.id){ // a partner / link card being edited in the panel
     if(simpleDirty()){ if(!saveSimple())return true; toast('저장했습니다.'); proceed(); render(true); return true; }
     S.editSimple=null;}
@@ -5071,6 +5098,28 @@ function guardLeave(proceed,which){
   if(!it){ ids.forEach(id=>{const x=id&&ITEMS.find(y=>y.id===id); if(x&&x.editing&&!otherLock('item:'+x.id))revertItem(x);}); return false; } // opened for editing, nothing changed: the lock goes back at once
   if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 다시 시도하세요.',2600);return true;}
   autoSaveItem(it); proceed(); render(true); return true;}
+/* Preview (owner, 2026-11-23: "작성 중인 컨텐츠 창을 닫거나 다른 위치로 이동할 때, 저장 안 하고 닫을 거냐고 팝업 띄워줘"): what was being
+   written is not saved silently on the way out any more, a window asks. 저장: what the leave did before (a new item becomes a draft, an
+   existing one is saved, a project overview or a card as with its 저장). 저장 안 함: the edit is thrown away (a new item is dropped, an
+   existing one goes back to what it was). 계속 작성, Esc or a press beside the window: nothing happens, the member stays. */
+function leaveAsk(isNew,save,drop){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg leave-dlg';
+  d.innerHTML=`<div class="box" role="dialog" aria-label="저장하지 않고 닫기"><div class="m"><b>작성 중인 내용이 있습니다.</b><span>저장하지 않고 닫을까요?</span></div><div class="bt"><button data-lv="stay">계속 작성</button><button data-lv="drop">저장 안 함</button><button data-lv="save" class="pri">${isNew?'초안으로 저장':'저장'}</button></div></div>`;
+  document.body.appendChild(d); const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} }, close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
+  document.addEventListener('keydown',key,true);
+  d.addEventListener('click',e=>{ if(e.target===d){close();return;} const b=e.target.closest('[data-lv]'); if(!b)return; close(); if(b.dataset.lv==='save')save(); else if(b.dataset.lv==='drop')drop(); });
+  d.querySelector('button.pri').focus(); }
+function leaveDrop(it){ if(it.status==='new'){ it._dropped=true; it.title=''; it.body=''; it.dirty=false; return; }   // never saved: dropEmptyNew takes it away once it is no longer open
+  if(typeof schEditCancel==='function')schEditCancel(it); revertItem(it); }
+function guardLeaveAsk(proceed,which){
+  if(which!=='full'&&S.editSimple&&S.panel===S.editSimple.id){
+    if(simpleDirty()){ leaveAsk(false,()=>{ if(!saveSimple())return; toast('저장했습니다.'); proceed(); render(true); },()=>{ S.editSimple=null; proceed(); render(true); }); return true; }
+    S.editSimple=null;}
+  if(which==='all'&&projDirty()){ leaveAsk(false,()=>{ sharedSaveProject().then(()=>{ if(!S.editProj)proceed(); }); },async()=>{ const id=S.proj; restoreProjectSnap(); S.editProj=false; await sharedRelease('project:'+id); proceed(); render(true); }); return true; }
+  const ids=which==='panel'?[S.panel]:which==='full'?[S.full]:[S.panel,S.full]; const it=ids.map(id=>id&&ITEMS.find(x=>x.id===id)).find(x=>x&&itemDirty(x));
+  if(!it){ ids.forEach(id=>{const x=id&&ITEMS.find(y=>y.id===id); if(x&&x.editing&&!otherLock('item:'+x.id))revertItem(x);}); return false; }
+  if(nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 다시 시도하세요.',2600);return true;}
+  leaveAsk(it.status==='new',()=>{ autoSaveItem(it); proceed(); render(true); },()=>{ leaveDrop(it); proceed(); dropEmptyNew(); render(true); if(typeof preserveLocal==='function')preserveLocal(); toast('작성하던 내용을 저장하지 않았습니다.',2400); });
+  return true;}
 // Saves the item that is being left. A new one becomes a draft (only its writer sees drafts); an existing one is saved as with 저장.
 function autoSaveItem(it){ const t=$('.ititle[data-f="title"]',pinOf(it)); const tv=t&&t.isContentEditable?(t.classList.contains('empty')?'':readTitle(t)):normT(it.title);
   if(it.status==='new'){ it.title=tv||'제목 없음'; readUrl(it); readBody(it); it.status='draft'; it.mod=nowTxt(); it.dirty=false; { const did=it.id; toast('초안으로 저장했습니다. 설정 > 작성 중인 초안에서 이어서 쓸 수 있습니다.',2800,{t:'초안 열기',go:true,fn:()=>openPanel(did)}); } return; }
@@ -5369,6 +5418,7 @@ function schStep(from,to,word){ const u=from.pop(); if(!u){toast(word==='undo'?'
   const values=word==='undo'?u.before:u.after;
   if(u.raw){const root=SCHED[u.pid]||(SCHED[u.pid]={});for(const [k,v] of Object.entries(values)){if(v===null)delete root[k];else root[k]=copy(v);}SCH.memo[u.pid]=null;}
   else{const keep=SCHU.scn;SCHU.scn=u.sc||'';schWrite(u.pid,values);SCHU.scn=keep;}
+  if(typeof schConvSettle==='function')schConvSettle(u.pid);
   to.push(u); toast((word==='undo'?'되돌렸습니다':'다시 적용했습니다')+(u.label?' · '+u.label:''),2600,word==='undo'?{t:'다시 적용',fn:schRedo}:null); schRedraw(true); }
 function schUndo(){schStep(SCH.undo,SCH.redo,'undo');}
 function schRedo(){schStep(SCH.redo,SCH.undo,'redo');}
@@ -5431,8 +5481,12 @@ const SCH_PROGRESS_TIP='진행률 = Σ(가중치 × 달성도) ÷ Σ가중치\n�
 // The body, comments and files of a task are an ordinary item ("wt-<task id>", type action) that comes into being the first
 // time somebody writes one; until then item() hands out this stand-in (same idea as the 자료실 rows, see adoptRow).
 // The schedule fields (dates, state, assignees, importance, address) are never kept in the item: they are overrides of the task.
-const schTaskIdOf=id=>typeof id==='string'&&id.startsWith('wt-')?id.slice(3):'';
-const schItemId=taskId=>'wt-'+taskId;
+// The pair "task <-> its item" is the id ("wt-<task id>"), except for an action that was written first and became a task when it was
+// given a development phase (schActionToTask, sixteenth round): that one keeps its own id, and the pair is read from the item (own + task).
+function schOwnIds(){ const c=schOwnIds.c, now=performance.now(); if(c&&c.n===ITEMS.length&&now-c.at<80)return c; const byTask=new Map(), byItem=new Map();
+  for(const i of ITEMS)if(i.own&&i.task&&typeof i.id==='string'&&!i.id.startsWith('wt-')){byTask.set(i.task,i.id);byItem.set(i.id,i.task);} return schOwnIds.c={n:ITEMS.length,at:now,byTask,byItem}; }
+const schTaskIdOf=id=>typeof id!=='string'?'':id.startsWith('wt-')?id.slice(3):(schOwnIds().byItem.get(id)||'');
+const schItemId=taskId=>schOwnIds().byTask.get(taskId)||'wt-'+taskId;
 function schProjOfTask(taskId){for(const pid of schPids()){const m=schModel(pid);if(m&&m.byId.has(taskId))return pid;}return null;}
 function schVirtualItem(id){ const taskId=schTaskIdOf(id); if(!taskId)return undefined; const pid=schProjOfTask(taskId); if(!pid)return undefined; const m=schModel(pid), t=m.byId.get(taskId), r=m.res.tasks[taskId];
   const v=SCH.virt[id]||(SCH.virt[id]={id,type:'action',task:taskId,own:true,status:'published',body:'',comments:[],created:r.start});
@@ -5609,7 +5663,9 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   const head=`<div class="hd">${th('wbs','WBS')}${th('name','업무명')}${th('plan','시작일')}${th('fin','완료일')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   const urlCell=schUrlCell;
   let h=`<div class="tbl sch-list">${head}`;
-  for(const row of page){ if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
+  const grouped=SCHU.sort==='wbs', gOf=row=>row.t?row.t.phase:(row.i._ord<1e9?row.i.phase:'none'), gN=new Map(); if(grouped)for(const row of rows){const k=gOf(row);gN.set(k,(gN.get(k)||0)+1);} let gLast=null;
+  for(const row of page){ if(grouped){ const k=gOf(row); if(k!==gLast){ gLast=k; const g=m.phases.find(x=>x.code===k); h+=`<div class="gr" data-g="${esc(k)}"><b>${k==='none'?'일정 미연결':esc(g?schPhaseLabel(g):k)}</b><em>${gN.get(k)}</em></div>`; } }
+    if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
     h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schWbs(t.wbs)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${schD(t.plannedStart)}</div><div class="rg">${t.kind==='milestone'||!t.plannedFinish?'<span class="nil">-</span>':schD(t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false,schLateWhy(m,t))}</div><div class="url">${urlCell(t.url)}</div></div>`;
     for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schWbs(t.wbs)}`); }
@@ -5697,7 +5753,7 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   for(const r of rows){
     if(r.k==='ph'){ const g=r.g, pr=schProgress(m,g.tasks), pc=schPct(pr); let a=Infinity,b=-Infinity; for(const t of g.tasks){const x=m.res.tasks[t.id];a=Math.min(a,D.dayNumber(x.start));b=Math.max(b,D.dayNumber(x.finish));}
       L+=`<div class="sg-row ph ${r.open?'open':''}" style="top:${r.y}px;height:${SG.ph}px" data-sch="phase" data-k="${g.code}"><span class="tw">${svg('i-sch-tri',10,8.75)}</span><span class="tt">${esc(schPhaseLabel(g))}</span><span class="n">(${force?r.ts.length+'/':''}${g.tasks.length})</span>
-        <span class="pg ${pc?'has':''}" title="${esc(`완료 ${pr.done} / 대상 ${pr.total}${pr.started?' · 진행 '+pr.started:''}\n`+SCH_PROGRESS_TIP)}"><span class="bar"><i style="width:${Math.max(pc,pc?6:0)}%"></i></span>${pc}%</span><span class="add" data-sch="addtask" data-k="${g.code}" title="이 단계에 업무 추가">${svg('i-plus',9,9)}</span></div>`;
+        <span class="pg ${pc?'has':''}" title="${esc(`완료 ${pr.done} / 대상 ${pr.total}${pr.started?' · 진행 '+pr.started:''}\n`+SCH_PROGRESS_TIP)}"><span class="bar"><i style="width:${Math.max(pc,pc?6:0)}%"></i></span>${pc}%</span><span class="add" data-sch="addtask" data-k="${g.code}" title="이 단계에 업무 추가">${svg('i-plus',9,9)}</span><span class="pm" data-sch="phmenu" data-k="${g.code}" title="단계 이름 바꾸기 · 삭제">${svg('i-more',3,13)}</span></div>`;
       if(g.tasks.length){ const x1=Math.max(-20,Math.min(TW,(a-origin)*px)), x2=Math.max(0,Math.min(TW,(b-origin+1)*px)), w=Math.max(3,x2-x1), fin=D.fromDay(b);
         R+=`<div class="sg-sum ${w<52?'out':''}" style="left:${x1}px;top:${r.y+7.45}px;width:${w}px" data-sch="phase" data-k="${g.code}" title="${esc(schPhaseLabel(g))} · ${schD(D.fromDay(a))} → ${schD(fin)} · ${pc}%"><em>${schD(fin)}</em></div>`; }   // a phase a member added has no task yet: no bar
       if(!r.open)for(const t of g.tasks)if(t.kind==='milestone'){const x=X(m.res.tasks[t.id].start);if(x>=0&&x<=TW)R+=`<i class="sg-dia ${P.isDone(t)?'done':''} ${t.id===sel?'sel':''}" style="left:${x-3.6}px;top:${r.y+20.4}px" data-sch="pickrow" data-k="${t.id}" title="${esc(schTaskTitle(t))} · ${schD(m.res.tasks[t.id].start)}"></i>`;}
@@ -5844,7 +5900,7 @@ const schChev=()=>svg('i-chev-d',8,4);
 // rows the panel of an ordinary action gets in a project with a schedule: the phase and, if chosen, the task it belongs to
 function schItemRows(it,E,V){ if(!it||it.type!=='action'||it.own||!schReady(it.proj)||archTabOf(it))return []; const m=schModel(it.proj), t=it.task&&m.byId.get(it.task), none=x=>`<span class="plain" style="color:#c4c4c4">${x}</span>`;
   const g=m.phases.find(x=>x.code===(t?t.phase:it.phase));
-  const stage=E?`<span class="sch-stage"><span class="sf" data-schp="link-phase">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span><span class="sf" data-schp="link-task">${t?esc(schTaskTitle(t)):'업무 선택'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
+  const stage=E?`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${g&&!t?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}<span class="sf sub" data-schp="link-task" title="이미 있는 업무 아래에 붙일 때만 고릅니다. 고르지 않으면 이 액션이 새 WBS가 됩니다">${t?esc(schTaskTitle(t)):'업무 아래에 붙이기'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const rows=[V('개발 단계',stage,'sch-v')]; if(t){const r=m.res.tasks[t.id];rows.push(V('예상 기한',`<span class="plain">${t.kind==='milestone'?schD(r.start):schRange(r.start,r.finish)}</span>`,'sch-v'));} return rows; }
 function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj, m=schModel(pid), A=AIDCSchedule, P=A.progress, t=m.byId.get(it.task), r=m.res.tasks[t.id], g=m.phases.find(x=>x.code===t.phase), ms=t.kind==='milestone'; E=!!it.editing;
@@ -5902,7 +5958,23 @@ const schEditKeep=it=>{ if(it)for(const u of SCH.undo)if(u.tag===it.id)u.tag='';
 // the number of a task that joins a phase: one more than the highest there; its place: after that phase's last task
 function schMoveToPhase(d,x,code,label){ const inPh=d.tasks.filter(q=>q.phase===code&&q.id!==x.id), max=Math.max(0,...inPh.map(q=>Number(q.wbs.split('.')[1])||0)); x.phase=code; x.phaseLabel=inPh.length?inPh[0].phaseLabel:label; x.wbs=code+'.'+(max+1);
   const sorted=d.tasks.filter(q=>q.id!==x.id).sort((p,q)=>p.order-q.order), last=inPh.length?Math.max(...inPh.map(q=>q.order)):Math.max(0,...sorted.filter(q=>q.phase.localeCompare(code,undefined,{numeric:true})<0).map(q=>q.order)), next=sorted.find(q=>q.order>last); x.order=next?(last+next.order)/2:last+1; }
-function schNewPhase(pid,m,done){ askInput('새 개발 단계 이름','',v=>{ v=(v||'').trim(); if(!v)return; const no=Math.max(0,...m.phases.map(g=>Number(schPhaseNo(g.code))||0))+1, code='W'+no; schSet(pid,'ph:'+code,{label:v,by:sharedUser,at:new Date().toISOString()},`${no}) ${v} 단계를 추가했습니다`); done(code,v); }); }
+// A phase can be renamed (any phase: the record ph:<code> carries the name; a phase of the workbook can be given its own name back)
+// and, while it holds no task, removed (owner, 2026-11-23: "만든 거 수정도 할 수 있어야지"). Actions that stood in a removed phase
+// keep its code and read "일정 미연결"; that is why a new phase never takes a number an action still carries (undo brings them back).
+function schPhaseRename(pid,code,done){ const m=schModel(pid), g=m&&m.phases.find(x=>x.code===code); if(!g)return; const cur=(SCHED[pid]||{})['ph:'+code]||{}, was=schPhaseName(g.label);
+  askInput(`${schPhaseNo(code)}) 단계 이름`,was,v=>{ v=(v||'').replace(/\s+/g,' ').trim(); if(!v||v===was)return;
+    schSet(pid,'ph:'+code,{...cur,label:v,by:cur.by||sharedUser,at:cur.at||new Date().toISOString()},`${schPhaseNo(code)}) 단계 이름을 “${v}”(으)로 바꿨습니다`); if(done)done(code); }); }
+function schPhaseDelete(pid,code,done){ const m=schModel(pid), g=m&&m.phases.find(x=>x.code===code); if(!g)return;
+  if(g.tasks.length){ toast(`업무가 ${g.tasks.length}건 있는 단계는 지울 수 없습니다. 업무를 다른 단계로 옮기거나 지운 뒤 삭제하세요.`,4600); return; }
+  const n=liveItems('action',pid).filter(i=>!i.own&&!i.task&&i.phase===code).length;
+  confirmDlg(`“${schPhaseLabel(g)}” 단계를 삭제할까요?${n?` 이 단계에 둔 액션 ${n}건은 ‘일정 미연결’로 남습니다.`:''} (삭제 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'삭제',pri:true,fn:()=>{
+    if(SCHU.phase===code)SCHU.phase=''; SCHU.open=SCHU.open.filter(c=>c!==code); schSet(pid,'ph:'+code,null,`${schPhaseLabel(g)} 단계를 삭제했습니다`); if(done)done(code,true); }},{t:'취소',fn:()=>{}}]); }
+// what a phase picker offers for the phase that is chosen now; a phase of the workbook that was renamed can have its name back
+function schPhaseEditItems(pid,m,g,after){ if(!g)return []; const rec=(SCHED[pid]||{})['ph:'+g.code], src=((SCH.base[pid]||{}).tasks||[]).find(t=>t.phase===g.code), own=src&&src.phaseLabel, out=['-',{t:`“${schPhaseLabel(g)}” 이름 바꾸기`,k:'ph-ren',fn:()=>schPhaseRename(pid,g.code,after)}];
+  if(rec&&rec.label&&own&&schPhaseName(own)!==schPhaseName(rec.label))out.push({t:`원래 이름으로 (${schPhaseName(own)})`,k:'ph-reset',fn:()=>{schSet(pid,'ph:'+g.code,null,`${schPhaseNo(g.code)}) 단계 이름을 되돌렸습니다`);if(after)after(g.code);}});
+  if(!g.tasks.length)out.push({t:`“${schPhaseLabel(g)}” 단계 삭제`,k:'ph-del',danger:true,fn:()=>schPhaseDelete(pid,g.code,after)});
+  return out; }
+function schNewPhase(pid,m,done){ askInput('새 개발 단계 이름','',v=>{ v=(v||'').trim(); if(!v)return; const no=Math.max(0,...m.phases.map(g=>Number(schPhaseNo(g.code))||0),...ITEMS.filter(i=>i.proj===pid&&i.phase).map(i=>Number(schPhaseNo(i.phase))||0))+1, code='W'+no; schSet(pid,'ph:'+code,{label:v,by:sharedUser,at:new Date().toISOString()},`${no}) ${v} 단계를 추가했습니다`); done(code,v); }); }
 function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule, D=A.dates, t=m.byId.get(it.task), r=m.res.tasks[t.id], k=el.dataset.k, id=t.id, name=schWbs(t.wbs), ms=t.kind==='milestone';
   const edit=(label,fn)=>schTagged(it,()=>schEditTask(pid,id,`${name} ${label}`,fn));
   // what moves the schedule (dates, state, kind) says so in the card of the gantt, with 되돌리기
@@ -5949,7 +6021,8 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.
   if(k==='link-phase'||k==='link-task'){ if(!canEditItem(it))return; e.stopPropagation(); const cur=it.task&&m.byId.get(it.task), again=()=>{it.dirty=true;rerenderItem(it.id);};
     const setPhase=code=>{ it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
-    if(k==='link-phase'){menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:(cur?cur.phase:it.phase)===g.code,fn:()=>setPhase(g.code)})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,code=>setPhase(code))}]));return;}
+    if(k==='link-phase'){ const now=m.phases.find(g=>g.code===(cur?cur.phase:it.phase));
+      menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:(cur?cur.phase:it.phase)===g.code,fn:()=>setPhase(g.code)})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,code=>setPhase(code))}],schPhaseEditItems(pid,m,now,(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();})));return;}
     const ph=(cur&&cur.phase)||it.phase||'', g=ph&&m.phases.find(x=>x.code===ph), extra=[];
     if(g){ if(it.task)extra.push({t:`${schPhaseLabel(g)} 단계에만 두기 (업무 선택 해제)`,fn:()=>{delete it.task;again();}});
       extra.push({t:`＋ ${schPhaseNo(g.code)}) 단계에 새 업무 추가`,fn:()=>askInput('새 업무 이름','',v=>{v=(v||'').trim();if(!v)return;let nid='';if(schCommit(pid,d=>{const x=A.newTask(d,g.code);x.name=v;x.phaseLabel=g.label;x.plannedStart=x.referenceStart=it.date||schToday();x.plannedFinish=x.referenceFinish=A.dates.addDays(x.plannedStart,4);schMoveToPhase(d,x,g.code,g.label);d.tasks.push(x);nid=x.id;},`${v} 업무를 추가했습니다`)){it.task=nid;it.phase=g.code;again();}})}); }
@@ -5962,13 +6035,44 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='f'){e.stopPropagation();schFieldEdit(el,it);return;}
   if(k==='phase-move'){ e.stopPropagation(); if(t.wbs==='W8.6'){toast('운영개시 기준 업무는 다른 단계로 옮길 수 없습니다.',3600);return;}
     const move=(code,label)=>{ const snap=schSnap(pid), ttl=`${schWbs(t.wbs)} 단계 이동`; if(schTagged(it,()=>schEditTask(pid,t.id,ttl,(x,d)=>schMoveToPhase(d,x,code,label),true)))schChangeCard(pid,snap,{title:ttl,focus:t.id,note:`${schPhaseNo(code)}) ${schPhaseName(label)} 단계로 옮겼습니다.`}); };
-    menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:t.phase===g.code,fn:()=>{if(t.phase!==g.code)move(g.code,g.label);}})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>move(code,label))}]));return;}
+    menuPop(el,m.phases.map(g=>({t:schPhaseLabel(g),k:g.code,sel:t.phase===g.code,fn:()=>{if(t.phase!==g.code)move(g.code,g.label);}})).concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>move(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===t.phase),()=>schPropsRefresh(it))));return;}
   if(k==='rel'){e.stopPropagation();e.preventDefault();schRelMenu(el,pid,el.dataset.k);return;}
   if(k==='addref'){e.stopPropagation();schRefMenu(el,it,pid,t);return;}
   if(k==='unref'){e.stopPropagation();const cur=((SCHED[pid]||{})['c:'+t.id]||{}).ids||[];const nx=cur.filter(x=>x!==el.dataset.k);schTagged(it,()=>schSet(pid,'c:'+t.id,nx.length?{ids:nx}:null,'참고 자료 연결을 해제했습니다'));return;}
 },true);
 // Saving the panel of a task: a new title renames the task; what was changed in this edit stays.
-function schAfterSave(it){ schEditKeep(it); if(!schOwn(it))return; const m=schModel(it.proj), t=m.byId.get(it.task), name=(it.title||'').split('\n').join(' ').trim(); if(name&&name!==t.name)schEditTask(it.proj,t.id,schWbs(t.wbs)+' 업무명 변경',x=>{x.name=name;},true,true); } // the caller redraws
+// An action with a development phase is an entry of that phase (owner, 2026-11-23: WBS and 개발 단계 are one thing). When such an
+// action is saved as published and is not hung under another task, it becomes a task of the plan: the next WBS number of its phase,
+// its dates, state, assignees, importance, address and reason go over to the task, its references become the task's. The item stays
+// what it was (same id: body, comments, files and links to it are untouched) and is from then on the task's own item (own + task).
+// Undoing the step takes the task away again and the item reads as an ordinary action once more. true: it became a task.
+const schNextWbs=(m,code)=>code+'.'+(Math.max(0,...m.plan.tasks.filter(t=>t.phase===code).map(t=>Number(String(t.wbs).split('.')[1])||0))+1);
+function schActionToTask(it){ if(!schPreview()||!it||it.type!=='action'||it.own||it.task||!it.phase||it.status!=='published'||!PROJECTS[it.proj]||!schReady(it.proj)||archTabOf(it))return false;
+  const pid=it.proj, m=schModel(pid), g=m.phases.find(x=>x.code===it.phase); if(!g||schScenario(pid))return false;
+  const A=AIDCSchedule, ms=!!it.ms, today=schToday(), start=it.date||today, e0=itemEnd(it), end=ms?start:(e0&&e0>start?e0:start), st=it.st==='done'?'완료':(SCH_STATUSES.includes(it.stx)?it.stx:(start<=today?'진행':'계획')); let nid='';
+  const ok=schCommit(pid,d=>{ const x=A.newTask(d,g.code); x.name=(it.title||'').split('\n').join(' ').trim()||'제목 없음'; x.kind=ms?'milestone':'task'; x.plannedStart=x.referenceStart=start; x.plannedFinish=x.referenceFinish=end;
+      schMoveToPhase(d,x,g.code,g.label); if(!g.tasks.length)x.phaseLabel=g.label; x.status=st;
+      let as=it.actualStart||null, af=it.actualFinish||null; if(af&&!as)as=af<start?af:start; if(as&&af&&af<as)af=as;
+      if(st==='완료'){ if(!as)as=start<=today?start:today; if(!af)af=ms?as:(today>=as?today:as); }
+      else{ af=null; if(st==='진행'&&!as&&!ms)as=start<=today?start:today; if(st==='계획'||st==='확인 전'||st==='조건부 미발동')as=null; }
+      if(ms&&as&&st==='완료')af=as; x.actualStart=as; x.actualFinish=af;
+      if((it.people||[]).length)x.people=it.people.slice(); if(it.pri&&it.pri!=='std')x.pri=it.pri; if(it.url)x.url=it.url; if(it.why)x.why=it.why; d.tasks.push(x); nid=x.id; },'',true,true);
+  if(!ok||!nid)return false;
+  it.own=true; it.task=nid; schOwnIds.c=null; SCH.memo[pid]=null;
+  if((it.refs||[]).length)schWrite(pid,{['c:'+nid]:{ids:it.refs.slice()}});
+  if(!SCHU.open.includes(g.code))SCHU.open.push(g.code); SCHU.sel=nid; schUiSave();
+  (SCH.conv||(SCH.conv={}))[nid]=it.id; SCH.convSay=it.id;   // remembered for undo / redo (schConvSettle) and for the toast of this save (schSavedSay)
+  return true; }
+// The toast of 게시 / 저장: an action that has just become a task says under which number it now stands.
+function schSavedSay(it,text){ if(!it||SCH.convSay!==it.id)return null; SCH.convSay=''; const t=schOwn(it)&&schModel(it.proj).byId.get(it.task); if(!t)return null;
+  return {text:`${text.replace(/\.$/,'')} · ${schWbs(t.wbs)}) 번호로 액션 일정 · 리스트 · 관계도에 올렸습니다.`,act:{t:'되돌리기',fn:schUndo}}; }
+// After undo / redo: the step that made an action a task took the task away (or brought it back). The action follows: without its
+// task it is an ordinary action again (it still carries its phase, so it is listed with it), with it the task's own item.
+function schConvSettle(pid){ const c=SCH.conv; if(!c||!schReady(pid))return; const m=schModel(pid); let ch=false;
+  for(const [tid,iid] of Object.entries(c)){ const it=ITEMS.find(x=>x.id===iid); if(!it||it.proj!==pid)continue; const has=m.byId.has(tid);
+    if(has&&!it.own){it.own=true;it.task=tid;ch=true;} else if(!has&&it.own&&it.task===tid){delete it.own;delete it.task;ch=true;} }
+  if(ch){schOwnIds.c=null;SCH.memo[pid]=null;} }
+function schAfterSave(it){ schEditKeep(it); if(schActionToTask(it))return; if(!schOwn(it))return; const m=schModel(it.proj), t=m.byId.get(it.task), name=(it.title||'').split('\n').join(' ').trim(); if(name&&name!==t.name)schEditTask(it.proj,t.id,schWbs(t.wbs)+' 업무명 변경',x=>{x.name=name;},true,true); } // the caller redraws
 
 /* ---- schedule/ui/32-fields.js ---- */
 // Eighth round (owner, 2026-11-20): one panel for every action, and the fields of a meeting's three lines.
@@ -5985,7 +6089,7 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
   const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
-    :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span><span class="sf" data-schp="link-task">${t?esc(schTaskTitle(t)):'업무 선택'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
+    :E?`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${g&&!t?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}<span class="sf sub" data-schp="link-task" title="이미 있는 업무 아래에 붙일 때만 고릅니다. 고르지 않으면 이 액션이 새 WBS가 됩니다">${t?esc(schTaskTitle(t)):'업무 아래에 붙이기'}${schChev()}</span>${g||t?`<button class="x" data-schp="unlink" title="연결 해제">${svg('i-x',8,8)}</button>`:''}</span>`
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
@@ -6222,7 +6326,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
   if(!r)return ''; const name=(SCH_EV.find(q=>q[0]===kind)||['',''])[1], isUrl=v=>/^https?:\/\/\S+$/.test(String(v||'').trim());
   const rows=[R('상태',e('estate',r.st?schStateMark(r.st):ph('지정'))+(r.st0&&r.st!==r.st0?`<span class="plain" style="color:#8e8e8e;margin-left:10px">원본: ${esc(r.st0)}</span>`:''))];
   if(r.user){ const ue=(k,v,p)=>e('u:'+k,v?`<span class="plain wrap">${esc(v)}</span>`:ph(p));
-    rows.push(R('구분',ue('cat',r.cat,'입력')),R('연결 업무',r.link?`<span class="plain wrap">${schWbsLinks(m,r.link)}</span>${e('u:link',ph('변경'))}`:ue('link','','예: W4.24 또는 4-24'),true),R('확인 역할',ue('role',r.role,'입력')),R('기한',e('u:due',r.due?schD(r.due):ph('입력'))),R('내용',ue('body',r.body,'입력'),true),R('근거·URL',r.ref&&isUrl(r.ref)?`<a class="url" style="margin-left:0" href="${esc(r.ref)}" target="_blank" rel="noopener" data-stop>${esc(r.ref)}</a>${e('u:ref',ph('변경'))}`:ue('ref',r.ref,'입력'),true),
+    rows.push(R('제목',ue('title',r.title,'입력'),true),R('구분',ue('cat',r.cat,'입력')),R('연결 업무',r.link?`<span class="plain wrap">${schWbsLinks(m,r.link)}</span>${e('u:link',ph('변경'))}`:ue('link','','예: W4.24 또는 4-24'),true),R('확인 역할',ue('role',r.role,'입력')),R('기한',e('u:due',r.due?schD(r.due):ph('입력'))),R('내용',ue('body',r.body,'입력'),true),R('근거·URL',r.ref&&isUrl(r.ref)?`<a class="url" style="margin-left:0" href="${esc(r.ref)}" target="_blank" rel="noopener" data-stop>${esc(r.ref)}</a>${e('u:ref',ph('변경'))}`:ue('ref',r.ref,'입력'),true),
       R('작성',`<span class="plain">${esc(userName(r.by))} · ${esc(schD((r.at||'').slice(0,10)))}</span>`)); }
   else for(const [k,v] of Object.entries(r.fields)){ if(v==null||String(v).trim()==='')continue; const day=schDayOnly(v);
     rows.push(R(esc(k),isUrl(v)?`<a class="url" style="margin-left:0" href="${esc(String(v).trim())}" target="_blank" rel="noopener" data-stop>${esc(v)}</a>`:day&&/^\d{4}-\d{2}-\d{2}(T00:00:00)?$/.test(String(v))?`<span class="plain">${schD(day)}</span>`:`<span class="plain wrap">${/WBS|업무|위치/.test(k)?schWbsLinks(m,v):esc(String(v))}</span>`,true)); }
@@ -6273,7 +6377,8 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='estate'){schEvState(el,pid,key);return;}
   if(k==='enote'){askInput('메모',cur.note||'',v=>{const nx={...cur,note:(v||'').trim()};if(!nx.note)delete nx.note;schSet(pid,key,Object.keys(nx).length?nx:null,'메모를 저장했습니다');});return;}
   if(k==='u:del'){confirmDlg('이 항목을 삭제할까요?',[{t:'삭제',pri:true,fn:()=>{closePanel(true);schSet(pid,key,null,'항목을 삭제했습니다');}},{t:'취소',fn:()=>{}}]);return;}
-  if(k.startsWith('u:')){const f=k.slice(2), lb={cat:'구분',link:'연결 업무 (WBS)',role:'확인 역할',body:'내용',ref:'근거·URL'}[f];
+  if(k.startsWith('u:')){const f=k.slice(2), lb={title:'제목',cat:'구분',link:'연결 업무 (WBS)',role:'확인 역할',body:'내용',ref:'근거·URL'}[f];
+    if(f==='title'){askInput(lb,cur.title||'',v=>{v=(v||'').replace(/\s+/g,' ').trim();if(!v||v===cur.title)return;schSet(pid,key,{...cur,title:v},'제목을 바꿨습니다');});return;}
     if(f==='due'){datePick(el,cur.due||schToday(),v=>schSet(pid,key,{...cur,due:v||''},'기한을 바꿨습니다'),{clear:'기한 없음'});return;}
     askInput(lb,cur[f]||'',v=>{v=(v||'').trim();if(f==='link')v=v.replace(/(^|[^\dW.])(\d+)-(\d+)/g,'$1W$2.$3');schSet(pid,key,{...cur,[f]:v},lb+'을(를) 바꿨습니다');});return;}
 },true);
@@ -7614,7 +7719,7 @@ function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid
       <span>${n?'파일 더 올리기':'파일을 여기에 끌어다 놓거나 눌러서 선택'}</span></label>
     ${n?`<div class="up-files">${SCHUP.files.map(schUpFileHtml).join('')}</div>`:`<p class="up-hint">일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 한 번에 또는 따로 올릴 수 있습니다.</p>`}
     ${reading?'':schUpResultHtml(P)}${SCHUP.fail?`<p class="up-fail">${esc(SCHUP.fail)}</p>`:''}
-    ${cur&&cur.name?`<p class="up-cur">지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</p>`:''}
+    ${cur&&cur.name?`<p class="up-cur"><span>지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</span><button data-up="out" title="올린 엑셀을 빼고 올리기 전의 일정으로 돌아갑니다">올린 엑셀 빼기</button></p>`:''}
     <div class="bt"><button data-up="x">${n?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
   box.scrollTop=keep; }
 async function schUpAdd(list){ const run=SCHUP.run; if(!list.length||SCHUP.busy)return;
@@ -7643,6 +7748,11 @@ async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||
     const said=[]; if(P.has.tasks)said.push(`액션 ${P.n.tasks}건`); if(P.has.links)said.push(`관계 ${P.n.links}건`); if(P.has.proc)said.push(`외부설비 ${P.n.proc}건`); if(P.has.gates)said.push(`승인게이트 ${P.n.gates}건`); if(P.has.evid)said.push(`근거·확약 ${P.n.evid}건`);
     schUpClose(); toast('엑셀 내용을 반영했습니다'+(said.length?' · '+said.join(' · '):''),6000,{t:'되돌리기',fn:schUndo,keep:true}); schRedraw(true);
   }catch(e){ if(run!==SCHUP.run)return; SCHUP.busy=false; SCHUP.fail=String(e&&e.message||e); schUpDraw(); } }
+// An uploaded workbook can be taken out again (from the audit of what cannot be removed, 2026-11-23): the project goes back to the
+// plan it had before any upload (the built-in one of 판교, an empty one elsewhere). What members changed stays as overrides; those of
+// tasks only the workbook had no longer show. One undo step, like the upload.
+function schUpTakeOut(pid){ const cur=(SCHED[pid]||{}).src; if(!cur)return; schUpClose();
+  confirmDlg(`올린 엑셀(${cur.name||'이름 없음'})을 빼고 ${SCH_SOURCES[pid]?'처음의 기본 일정':'빈 일정'}으로 돌아갈까요? 엑셀에서 온 액션·관계·설비·승인게이트·근거가 화면에서 빠집니다. (뺀 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'빼기',pri:true,fn:()=>schSet(pid,'src',null,'올린 엑셀을 뺐습니다')},{t:'취소',fn:()=>{}}]); }
 function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
   closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up'; d.innerHTML='<div class="box" role="dialog" aria-label="엑셀 업로드"></div>'; document.body.appendChild(d);
@@ -7651,7 +7761,7 @@ function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){t
   SCHUP.off=()=>{document.removeEventListener('keydown',key,true);window.removeEventListener('dragover',stop);window.removeEventListener('drop',stop);};
   document.addEventListener('keydown',key,true); window.addEventListener('dragover',stop); window.addEventListener('drop',stop);
   d.addEventListener('click',e=>{ if(e.target===d){ if(!SCHUP.files.length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
-    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
+    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
   d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files]; i.value=''; schUpAdd(l); } });
   d.addEventListener('dragover',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.add('over'); });
   d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget)){const z=zone(); if(z)z.classList.remove('over');} });
@@ -7664,6 +7774,7 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
   if(k==='reload'){schLoad(pid);schRefresh();return;}
   if(k==='newphase'&&m){e.stopPropagation();schNewPhase(pid,m,code=>{if(!SCHU.open.includes(code))SCHU.open.push(code);schRefresh();});return;}
+  if(k==='phmenu'&&m){ e.stopPropagation(); const g=m.phases.find(x=>x.code===v); if(g)menuPop(el,schPhaseEditItems(pid,m,g,()=>schRefresh()).slice(1)); return; }   // the "⋮" of a phase row: rename, remove
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
   if(k==='xlsx'){e.stopPropagation();schXlsxSection(pid,v,el.dataset.part||'');return;}
   if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v), g=m.phases.find(x=>x.code===v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);if(g&&!g.tasks.length)t.phaseLabel=g.label;if(t.order==null)t.order=Math.max(0,...d.tasks.map(x=>+x.order||0))+1;d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}

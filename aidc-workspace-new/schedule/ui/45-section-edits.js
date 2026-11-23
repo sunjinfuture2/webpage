@@ -41,7 +41,8 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='estate'){schEvState(el,pid,key);return;}
   if(k==='enote'){askInput('메모',cur.note||'',v=>{const nx={...cur,note:(v||'').trim()};if(!nx.note)delete nx.note;schSet(pid,key,Object.keys(nx).length?nx:null,'메모를 저장했습니다');});return;}
   if(k==='u:del'){confirmDlg('이 항목을 삭제할까요?',[{t:'삭제',pri:true,fn:()=>{closePanel(true);schSet(pid,key,null,'항목을 삭제했습니다');}},{t:'취소',fn:()=>{}}]);return;}
-  if(k.startsWith('u:')){const f=k.slice(2), lb={cat:'구분',link:'연결 업무 (WBS)',role:'확인 역할',body:'내용',ref:'근거·URL'}[f];
+  if(k.startsWith('u:')){const f=k.slice(2), lb={title:'제목',cat:'구분',link:'연결 업무 (WBS)',role:'확인 역할',body:'내용',ref:'근거·URL'}[f];
+    if(f==='title'){askInput(lb,cur.title||'',v=>{v=(v||'').replace(/\s+/g,' ').trim();if(!v||v===cur.title)return;schSet(pid,key,{...cur,title:v},'제목을 바꿨습니다');});return;}
     if(f==='due'){datePick(el,cur.due||schToday(),v=>schSet(pid,key,{...cur,due:v||''},'기한을 바꿨습니다'),{clear:'기한 없음'});return;}
     askInput(lb,cur[f]||'',v=>{v=(v||'').trim();if(f==='link')v=v.replace(/(^|[^\dW.])(\d+)-(\d+)/g,'$1W$2.$3');schSet(pid,key,{...cur,[f]:v},lb+'을(를) 바꿨습니다');});return;}
 },true);
