@@ -14,7 +14,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
 
   console.log('— what is gone (DEL)');
   await EA(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 15000 }); await sleep(500);
-  await a.click('#tb-user'); await sleep(250);
+  await a.click('#tb-user .av'); await sleep(250);
   const menu = await EA(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
   check('user menu: 계정 · 수신함 · 설정 · 휴지통 · 로그아웃, no export, no schedule tools', JSON.stringify(menu) === JSON.stringify(['계정', '수신함', '설정', '휴지통', '로그아웃']), menu);
   await EA(() => closePop());
@@ -23,7 +23,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   await EA(() => go('main')); await sleep(400);
 
   console.log('— the window');
-  await a.click('#tb-user'); await sleep(200); await a.click('.pop .it:has-text("계정")'); await sleep(500);
+  await a.click('#tb-user .av'); await sleep(200); await a.click('.pop .it:has-text("계정")'); await sleep(500);
   const w0 = await EA(() => { const m = document.querySelector('#modal'); return { on: document.querySelector('#ovl').classList.contains('on'), role: m.getAttribute('role'), modal: m.getAttribute('aria-modal'), menus: [...document.querySelectorAll('#mnav .mi:not(.out)')].map(x => x.textContent.trim().replace(/\d+\+?$/, '')), out: !!document.querySelector('#mnav .mi.out'), tabs: [...document.querySelectorAll('#mnav .si')].map(x => x.textContent.trim()), h: document.querySelector('#mbody h2').textContent, focus: document.activeElement && document.activeElement.closest('#modal') ? 1 : 0 }; });
   check('four menus and 로그아웃; 계정 opens on 프로필', w0.on && JSON.stringify(w0.menus) === JSON.stringify(['계정', '수신함', '설정', '휴지통']) && w0.out && w0.h === '프로필' && JSON.stringify(w0.tabs) === JSON.stringify(['프로필', '로그인 · 기기', '내 활동']), w0);
   check('it is a dialog and takes the focus', w0.role === 'dialog' && w0.modal === 'true' && w0.focus === 1, w0);
@@ -172,7 +172,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   await EA(() => mpGo('settings.prefs')); await sleep(300);
   await a.click('[data-mp="prefv:cmtEnter=mod"]'); await sleep(600); await a.click('[data-row="calm"] .mp-sw'); await sleep(600);
   check('reduced motion applies at once', await EA(() => document.documentElement.classList.contains('mp-calm')));
-  check('theme / language / time zone are stated, not offered as switches', await EA(() => !document.querySelector('[data-row="theme"] button') && !document.querySelector('[data-row="locale"] button')));
+  check('language / time zone are stated, not offered as switches; the theme is a real choice since the dark mode (2026-11-23)', await EA(() => document.querySelectorAll('[data-row="theme"] button[role="radio"]').length === 3 && !document.querySelector('[data-row="locale"] button')));
   await EA(() => closeModal()); await EA(p => openPanel(p), pubA); await sleep(600);
   const before = await EA(p => (item(p).comments || []).length, pubA);
   await a.click('#panel-pin [data-cmt]'); await sleep(300);
@@ -242,7 +242,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
 
   console.log('— without the preview');
   const C = await newUser(browser, 'MPC' + sfx, '다온 삼'), c = C.page;
-  await c.click('#tb-user'); await sleep(250);
+  await c.click('#tb-user .av'); await sleep(250);
   const cm = await c.evaluate(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
   check('the old window stays, without export', JSON.stringify(cm) === JSON.stringify(['내 계정', '수신함', '설정', '휴지통', '로그아웃']), cm);
   await c.evaluate(() => { closePop(); openModal('trash'); }); await sleep(300);

@@ -378,6 +378,22 @@ With the preview on:
   everything; the Word file carries a font table with one fallback (맑은 고딕) for a PC without Pretendard.
 - tests/schedule-9.cjs covers the round.
 
+## Dark mode (owner, 2026-11-23)
+
+- light | dark | system: a member's own setting (`prefs.theme` in meta:inbox:<사번>, so it follows them to every device) and
+  this browser's copy of it (localStorage `aidc-theme`) for the time before the login has answered: a small script in the
+  head (`<script data-early>`, the attribute keeps the build from taking it for the page's own code) sets `html.dark` before
+  anything is painted. themeApply / themeSet / themeWant in original.html; only while the preview is on.
+- Where it is turned on: a moon / sun in the top bar, between the 미리보기 badge and the member's profile (schThemeBtn,
+  90-events.js; the owner asked for it exactly there, after first thinking of the profile menu) and 마이페이지 › 설정 › 기본 설정 › 테마.
+- The dark look is not a second set of colours (the page has well over a thousand colours written out): `html.dark` draws
+  the whole page through `invert(.93) hue-rotate(180deg)` - light becomes dark, hues stay - and what is a picture (img, video,
+  iframe, canvas, .avatar.pic, .lb-tile) is filtered once more so that it looks as it is. A filter on the root element does
+  not move fixed windows. Shadows become a hair line; the veils behind windows are written light so that they come out dark.
+- A new element that shows a photo by a background picture has to be added to that list in schedule.css, or it will look
+  like a negative in dark mode.
+- tests/schedule-9.cjs has the checks.
+
 ## Not done yet (say so when asked)
 
 - Links between projects (portfolio): relations between tasks of different projects.

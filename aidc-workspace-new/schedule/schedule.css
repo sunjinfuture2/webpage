@@ -1207,3 +1207,26 @@
 .lb-emb.text pre{margin:0;padding:34px 14px 0;height:100%;font:11px/16.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3d3d3d;white-space:pre-wrap;overflow-wrap:anywhere;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
 .lb-emb .lb-fmt{position:absolute;left:8px;top:8px;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.62);color:#fff}
 .lb-card.sh-video .lb-ov,.lb-card.sh-audio .lb-ov{top:auto;height:auto;bottom:calc(100% - 34px);background:transparent;justify-content:flex-end;padding:6px}
+
+/* ================= dark mode (owner, 2026-11-23) =================
+   The page has well over a thousand colours written out, so the dark look is not a second set of colours: the whole page is drawn
+   through one filter that turns light into dark (white becomes a soft black, black a soft white) and turns the hues back to what
+   they were, so green stays green and red stays red. What is a picture is filtered once more and so looks as it is: photos,
+   video, frames (maps, PDF, embeds), avatars, the canvas. `html.dark` is set by themeApply (original.html) and, before the page
+   has loaded, by the small script in the head. */
+html.dark{filter:invert(.93) hue-rotate(180deg);background:#fff;color-scheme:light}
+html.dark body{background:#fff}
+html.dark img,html.dark video,html.dark iframe,html.dark canvas,html.dark .avatar.pic,html.dark .lb-tile{filter:invert(1) hue-rotate(180deg)}
+/* shadows would become a light glow: a hair line carries the edge instead */
+html.dark .pop,html.dark .dlg .box,html.dark .toast,html.dark #sch-card,html.dark .sch-daypop{box-shadow:0 0 0 1px rgba(0,0,0,.14)}
+html.dark .sch-tip{box-shadow:none}
+/* the veil behind a window is written light here so that it comes out dark */
+html.dark .ovl{background:rgba(255,255,255,.62)}
+html.dark .dlg{background:rgba(255,255,255,.4)}
+html.dark .nb-modal{background:rgba(255,255,255,.5)}
+/* the moon / sun of the top bar, between the 미리보기 badge and the member's profile */
+.th-btn{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6f6f6f;margin:0 12px 0 -6px;flex:none;background:transparent}
+.th-btn:hover{background:#eee;color:#1c1c1c}
+.th-btn .sun{display:none}
+.th-btn.on .sun{display:block}
+.th-btn.on .moon{display:none}

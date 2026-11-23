@@ -56,6 +56,14 @@ function schPreviewBadge(){ if(!schPreview()||$('#sch-pv'))return; const host=$(
   b.addEventListener('click',e=>{e.stopPropagation();menuPop(b,[{hd:'일정 통합 화면 미리보기'},{t:'기존 화면으로 돌아가기',k:'off',fn:()=>{try{localStorage.removeItem('aidc-preview');}catch(x){}location.href=location.pathname+'?v=1'+location.hash;}},{t:'미리보기 주소 복사',k:'cp',fn:()=>{const u=location.origin+location.pathname+'?v=2'+location.hash;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('미리보기 주소를 복사했습니다.'),()=>toast(u,6000));}}],{right:true});});
   host.insertBefore(b,host.firstChild); }
 schPreviewBadge();
+// Dark mode at hand: a moon / sun in the top bar, beside the 미리보기 badge and the member's profile (owner, 2026-11-23), switches
+// between light and dark (the same setting as 마이페이지 › 설정 › 기본 설정 › 테마).
+function schThemeBtn(){ if(!schPreview()||$('#th-btn'))return; const host=$('#tb-user'); if(!host)return; const b=document.createElement('button'); b.id='th-btn'; b.className='th-btn'; b.type='button';
+  b.innerHTML='<svg class="moon" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M13.3 9.7A5.7 5.7 0 0 1 6.3 2.7a5.7 5.7 0 1 0 7 7z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><svg class="sun" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.4v1.8M8 12.8v1.8M1.4 8h1.8M12.8 8h1.8M3.3 3.3l1.3 1.3M11.4 11.4l1.3 1.3M3.3 12.7l1.3-1.3M11.4 4.6l1.3-1.3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  b.addEventListener('click',ev=>{ ev.stopPropagation(); const dark=document.documentElement.classList.contains('dark'); themeSet(dark?'light':'dark'); if(typeof mpRender==='function'&&typeof MP!=='undefined'&&MP.open)mpRender(); });
+  const badge=$('#sch-pv'); if(badge&&badge.parentElement===host)host.insertBefore(b,badge.nextSibling); else host.insertBefore(b,host.firstChild);   // right after the badge, before the avatar
+  themeApply(); }
+schThemeBtn();
 
 // The row under the pointer is marked across the outline and the time line.
 document.addEventListener('mouseover',e=>{ const g=e.target.closest&&e.target.closest('#sch-gantt .sg-body'); const band=$('#sch-gantt .sg-band'); if(!band)return; const el=g&&e.target.closest('[data-row]'), id=el?el.dataset.row:'';

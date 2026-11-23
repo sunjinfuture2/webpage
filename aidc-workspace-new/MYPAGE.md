@@ -73,7 +73,8 @@ Done = built and covered by `tests/mypage-1.cjs` (82 checks). Part = the part th
 | INB-10 | part | per kind in 설정 › 알림 (멘션 fixed on). No per-page subscription |
 | INB-11 | not done | mentions are still matched by name; needs mention ids in the editor and the comment field |
 | INB-12 | part | badges live across devices, 99+, empty / no-result states apart. The inbox is not a side panel |
-| SET-01, SET-03, SET-04, SET-05 | not done | no dark theme, one language, one date format, browser time zone: stated as such in 기본 설정 |
+| SET-01 | done (2026-11-23) | 테마: 라이트 · 다크 · 시스템 설정에 맞춤 (the member's own setting; also a moon / sun in the top bar beside the 미리보기 badge, which switches between light and dark) |
+| SET-03, SET-04, SET-05 | not done | one language, one date format, browser time zone: stated as such in 기본 설정 |
 | SET-02 | part | 화면 움직임 줄이기; visible keyboard focus. No high-contrast theme |
 | SET-06, SET-08, SET-09 | not done | P2 / nothing to configure yet |
 | SET-07 | done | Enter or Ctrl / ⌘ + Enter; never while an IME composition is open |
@@ -114,7 +115,7 @@ Done = built and covered by `tests/mypage-1.cjs` (82 checks). Part = the part th
   written inside `/api/change` for comments, mentions (by id), assignments and reminders, and a migration of the read state that
   is now keyed by derived ids. Worth doing as one piece, not in passing.
 - **Team-space ACL (ADM-05)**: every read path of the Worker would have to filter by membership.
-- **Dark theme / high contrast**: the page has about 1,100 colour values written out; it needs tokens first.
+- **High contrast**: not done. (The dark theme is done by drawing the page through one filter, see SCHEDULE.md; a high-contrast look would need colour tokens first: the page has about 1,100 colour values written out.)
 - **The v2 REST API of chapter 18**: the page still syncs through `/api/change`; the rules of the specification were put into
   that path instead of adding a second API beside it.
 - **Automatic purge**: not covered by a test (it runs at most hourly inside the Worker); read `purgeTrash()`.
