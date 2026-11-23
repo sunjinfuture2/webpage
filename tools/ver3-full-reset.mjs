@@ -46,7 +46,7 @@ if(method<0||end<0)throw Error('Unexpected constructor');
 let patched=code.slice(0,end)+RESET_INJECTION+code.slice(end);
 const fetchMatch=/async fetch\((\w+)\)\s*\{/.exec(patched.slice(patched.lastIndexOf('\n  put(')));
 if(!fetchMatch)throw Error('DO fetch not identified');
-const offset=patched.lastIndexOf('\n  put('))+fetchMatch.index+fetchMatch[0].length;
+const offset=patched.lastIndexOf('\n  put(')+fetchMatch.index+fetchMatch[0].length;
 const proof=crypto.randomUUID(),param=fetchMatch[1];
 const probe='if(new URL('+param+'.url).pathname==="/api/ver3-reset-check"&&'+param+'.headers.get("X-Ver3-Reset-Proof")==='+JSON.stringify(proof)+'){const report=JSON.parse(this.sql.exec("SELECT report FROM ver3_full_reset_manifest WHERE id=\\\'full_20261123\\\'").toArray()[0].report);const counts={};for(const t of ["users","live_sessions","files","versions","history","ydocs","edit_locks","co_locks","holidays"])counts[t]=this.sql.exec("SELECT COUNT(*) AS n FROM "+t).toArray()[0].n;return Response.json({report,counts,records:this.sql.exec("SELECT id FROM records").toArray().map(r=>r.id)});}';
 patched=patched.slice(0,offset)+probe+patched.slice(offset);
