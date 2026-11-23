@@ -71,7 +71,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
     const calLb = document.querySelector('#page-main .cal .ev .lb');
     return { n: meet.length, sameColour: meet.every(x => x.pict === x.text), full: meet.every(x => x.full && x.oneRow && x.inside && x.clip === 'clip'), short: sh ? { full: html.includes('>' + esc(oneLine(sh.title)) + '<'), cut: html.includes(esc(sh.short) + '<') } : null, under: a ? getComputedStyle(a).borderBottomWidth : '', cal: calLb ? getComputedStyle(calLb).textOverflow : '' }; }, made);
   check('a chip\'s pictogram carries its project\'s point colour (it was grey in a coloured chip)', ch.n > 0 && ch.sameColour, ch);
-  check('no shortened titles: the whole title on one line, cut where the room ends, without dots (chips and the calendar)', ch.full && (!ch.short || (ch.short.full && !ch.short.cut)) && ch.cal === 'clip', ch);
+  check('no shortened titles in chips: the whole title on one line, cut where the room ends, without dots; the calendar\'s own entries end in "…" when they do not fit', ch.full && (!ch.short || (ch.short.full && !ch.short.cut)) && ch.cal === 'ellipsis', ch);
   check('the line under a partner\'s 구분 is half as thick (1px)', ch.under === '1px', ch.under);
   const gap = async pg => { await ev(p => go(p), pg); await sleep(1000); return ev(() => { const c = document.querySelector('#content'); c.scrollTop = c.scrollHeight; const pg = document.querySelector('.page.on'), ps = [...pg.querySelectorAll('.pager')].filter(e => e.offsetParent), last = ps[ps.length - 1]; return Math.round(document.querySelector('#pfoot').getBoundingClientRect().top - last.getBoundingClientRect().bottom); }); };
   const gm = await gap('main'), ga = await gap('archive');

@@ -430,8 +430,9 @@ Preview only. tests/schedule-10.cjs covers it.
   only once there is a reason; there is no empty line asking for one.
 - Chips of items (chipOf): the pictogram takes the project's point colour (schCalPict; it was grey inside a coloured chip) and
   the title is always the whole title on one line, cut where the room ends, without dots (`text-overflow: clip`; the fixture
-  field `short` is not used). The owner: "줄여쓰기는 쓰지마. 길어지면 차라리 잘리게". The calendar's chips are cut the same way.
-  Titles in lists and tables keep their dots.
+  field `short` is not used). The owner: "줄여쓰기는 쓰지마. 길어지면 차라리 잘리게". That is for chips of items (partner list
+  and the like). The calendar's own entries end in "…" when they do not fit: they were cut the same way for a few hours and
+  the owner wanted the dots back there. Titles in lists and tables keep their dots too.
 - The line under a partner's 구분 is 1px (2 before). The archive ends with the partner list and nothing below it, so the footer
   stands 240 below as on the other pages (207 more before). The lines of the recent items that begin with a dot are 22 high (19).
 - Later the same day: the count beside 액션 in a project's list is black and stands 1 lower in its bubble; research cards are
