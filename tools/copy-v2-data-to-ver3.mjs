@@ -75,7 +75,7 @@ try{
  const patched='import ver3TransferText from "./'+moduleName+'";\n'+code.slice(0,end)+injection+code.slice(end);
  await fs.writeFile(path.resolve(dir,main.name),patched);
  execFileSync(process.execPath,['--check',path.resolve(dir,main.name)],{stdio:'inherit'});
- const tempCfg=structuredClone(cfg);tempCfg.rules.push({type:'Text',globs:[moduleName],fallthrough:false});
+ const tempCfg=structuredClone(cfg);const textRule=tempCfg.rules.find(r=>r.type==='Text');if(textRule)textRule.globs.push(moduleName);else tempCfg.rules.push({type:'Text',globs:[moduleName],fallthrough:false});
  await fs.writeFile(configPath,JSON.stringify(tempCfg,null,2));
  console.log('CAPTURED '+JSON.stringify({id,records:Object.keys(snapshot.records).length,files:files.length,fileBytes:files.reduce((s,f)=>s+f.size,0),capturedAt:snapshot.capturedAt,backup:'ver3_backup_* in target SQLite only'}));
  deploy();tempDeployed=true;
