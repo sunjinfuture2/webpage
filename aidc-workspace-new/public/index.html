@@ -2481,6 +2481,10 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 /* the text of a calendar entry and of a chip in the partner list's 미팅 column stands 1 lower; its pictogram stays where it is (owner, 2026-11-23) */
 .sch-on .cal .ev .lb{top:1.67px}
 .sch-on .tbl.partners .rw .mt .chip .t{position:relative;top:1px}
+
+/* ---- my place in an opened item lights up for a moment (78-mine.js): the comment that calls me, my name in the text ---- */
+@keyframes mineHit{0%,50%{background-color:#ffef9e;box-shadow:0 0 0 6px #ffef9e}100%{background-color:rgba(255,239,158,0);box-shadow:0 0 0 6px rgba(255,239,158,0)}}
+.mine-hit{animation:mineHit 2.6s ease-out both;border-radius:4px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4220,7 +4224,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-catclear]')){S.partnerCat=null;render(true);return;}
   if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-trail]')){e.stopPropagation();const tid=el.dataset.trail; if(tid===S.full)closePanel(); else if(tid.startsWith('lib:'))openLibrary(tid.slice(4)); else openPanel(tid); return;}
-  if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} openPanel(el.dataset.open);return;}
+  if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} if(PREVIEW_ON&&typeof mineOpen==='function')mineOpen(el.dataset.open); else openPanel(el.dataset.open); return;}   // preview: an entry with my red mark opens at the comment that calls me (78-mine.js)
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
   if(el=q('[data-pg]')){const pg=el.closest('.pager'); const v=el.dataset.pg; const key=pg.classList.contains('pg-act')?'actPage':pg.classList.contains('pg-res')?'resPage':pg.classList.contains('pg-pt')?'ptPage':pg.classList.contains('pg-arch')?'archPage':'memPage';
     const tot=+pg.dataset.total||$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=tot; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
@@ -7215,6 +7219,32 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return;
   const tab=e.target.closest('#arch-pw .tabs.searching [data-tab]'); if(tab){ SCH_ARCH.q=''; const i=$('#arch-pw input[data-arq]'); if(i){i.value='';const x=i.parentElement.querySelector('.q-x');if(x)x.hidden=true;} }   // the page's own handler then opens that kind
 },true);
 
+/* ---- schedule/ui/78-mine.js ---- */
+// Owner, 2026-11-23 ("노션처럼"): something that carries my red mark, when pressed, opens at the place that concerns me, and that
+// place lights up for a moment: the comment that calls me, or (from a notice of the inbox) exactly the comment or the mention the
+// notice is about. Preview only; the page's own handlers call mineOpen instead of openPanel where an entry is pressed.
+//  - an entry with a red mark (calendar chip, list row, card, the list beside the calendar): hasMention is true, i.e. a comment
+//    calls me. The first such comment I have not read yet, else the newest one.
+//  - a notice of the inbox: its own comment; a notice about my name in the text: that mention.
+function mineTarget(it,note){ if(!it||!sharedUser)return null; const me=sharedUser, first=(sharedName||'').split(' ')[0], cs=it.comments||[], cid=(c,ci)=>it.id+':'+(c.id||'c'+ci);
+  if(note){ if(note.kind==='body')return {kind:'body'}; if(note.kind!=='mention'&&note.kind!=='comment')return null; const ci=cs.findIndex((c,i)=>cid(c,i)===note.id); return ci>=0?{kind:'comment',ci}:null; }
+  if(!first)return null; const un=new Set(unreadNotes().filter(n=>n.item===it.id).map(n=>n.id)); let firstUnread=-1, last=-1;
+  cs.forEach((c,ci)=>{ if(c.authorId===me||!String(c.text||'').includes('@'+first))return; last=ci; if(firstUnread<0&&un.has(cid(c,ci)))firstUnread=ci; });
+  return firstUnread>=0?{kind:'comment',ci:firstUnread}:last>=0?{kind:'comment',ci:last}:null; }
+function mineJump(id,target,tries){ tries=tries||0; if(!target)return; const pin=[$('#panel-pin'),$('#item-pin')].find(p=>p&&p.dataset.id===id&&p.offsetParent); let el=null;
+  if(pin){ if(target.kind==='comment')el=pin.querySelector(`.cmt-list .c[data-ci="${target.ci}"]`);
+    else { const ms=[...pin.querySelectorAll('.ibody .mention')]; el=ms.find(m=>m.dataset.id===sharedUser)||ms.find(m=>m.textContent.trim()==='@'+sharedName)||null; } }
+  if(!el){ if(tries<16)setTimeout(()=>mineJump(id,target,tries+1),150); return; }   // the panel (and its editor) is still being put up
+  SCH.mine={id,target,until:Date.now()+2600}; mineMark(el,true); }
+// The mark is kept as data for its 2.6 seconds, so that a redraw of the panel (a save arriving, the editor mounting) does not put it out.
+function mineMark(el,scroll){ if(scroll)el.scrollIntoView({block:'center',behavior:typeof myPref==='function'&&myPref('calm')?'auto':'smooth'}); el.classList.remove('mine-hit'); void el.offsetWidth; el.classList.add('mine-hit');
+  clearTimeout(mineMark.t); mineMark.t=setTimeout(()=>{ SCH.mine=null; $$('.mine-hit').forEach(x=>x.classList.remove('mine-hit')); },Math.max(200,(SCH.mine?SCH.mine.until:0)-Date.now())); }
+function mineKeep(){ const M=SCH.mine; if(!M||Date.now()>M.until)return; const pin=[$('#panel-pin'),$('#item-pin')].find(p=>p&&p.dataset.id===M.id&&p.offsetParent); if(!pin||pin.querySelector('.mine-hit'))return;
+  const el=M.target.kind==='comment'?pin.querySelector(`.cmt-list .c[data-ci="${M.target.ci}"]`):[...pin.querySelectorAll('.ibody .mention')].find(m=>m.dataset.id===sharedUser||m.textContent.trim()==='@'+sharedName); if(el){ el.classList.add('mine-hit'); el.style.animationDelay=(M.until-2600-Date.now())+'ms'; } }
+// opens an item the way openPanel does and then goes to my place in it, if it has one
+function mineOpen(id,note){ const it=item(id), target=schPreview()?mineTarget(it,note||null):null; openPanel(id); if(target&&S.panel===id)setTimeout(()=>mineJump(id,target),380); }
+new MutationObserver(()=>{ if(SCH.mine)mineKeep(); }).observe(document.documentElement,{childList:true,subtree:true});
+
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
@@ -7589,7 +7619,7 @@ document.addEventListener('click',e=>{ if(!MP.open)return; const el=e.target.clo
     mpInboxDo(); return;}
   if(k==='in-readall'){const ids=notes().filter(n=>!n.read).map(n=>n.id); if(!ids.length)return; mpSetRead(ids,true); mpInboxDo(); toast(`${ids.length}건을 읽음으로 표시했습니다.`,5000,{t:'실행 취소',fn:()=>{mpSetRead(ids,false);mpInboxDo();}}); return;}
   if(k==='in-archread'){const ids=notes().filter(n=>n.read&&!n.arch).map(n=>n.id); if(!ids.length)return; mpSetArch(ids,true); I.sel.clear(); mpInboxDo(); toast(`읽은 알림 ${ids.length}건을 보관했습니다.`,5000,{t:'실행 취소',fn:()=>{mpSetArch(ids,false);mpInboxDo();}}); return;}
-  if(k==='in-open'){const n=mpNotes().find(x=>x.id===v); if(!n)return; const it=n.it; if(!it.id||!panelExists(it.id)||(ITEMS.includes(it)&&!canSee(it))){toast('삭제되었거나 볼 수 없는 항목입니다.');return;} mpSetRead([v],true); closeModal(); openPanel(it.id); return;}   // read only once it really opens
+  if(k==='in-open'){const n=mpNotes().find(x=>x.id===v); if(!n)return; const it=n.it; if(!it.id||!panelExists(it.id)||(ITEMS.includes(it)&&!canSee(it))){toast('삭제되었거나 볼 수 없는 항목입니다.');return;} mpSetRead([v],true); closeModal(); if(typeof mineOpen==='function')mineOpen(it.id,n); else openPanel(it.id); return;}   // read only once it really opens; it opens at the comment or the mention the notice is about
   if(k==='pref'){mpSetPref(v,!myPref(v));return;}
   if(k==='prefv'){const [pk,pv]=v.split('='); mpSetPref(pk,pv); return;}
   if(k==='pref-reset'){const old=INBOX_STATE.prefs; if(!old||!Object.keys(old).length)return; delete INBOX_STATE.prefs; myPrefsApply(); mpSaved('prefs'); mpRender(); render(true); toast('개인 설정을 처음 상태로 되돌렸습니다.',5000,{t:'실행 취소',fn:()=>{INBOX_STATE.prefs=old;myPrefsApply();mpSaved('prefs');mpRender();render(true);}}); return;}

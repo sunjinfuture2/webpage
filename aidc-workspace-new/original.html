@@ -2394,7 +2394,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-catclear]')){S.partnerCat=null;render(true);return;}
   if(el=q('[data-partner]')){const mt=T.closest('.mt [data-open]');openPanel(mt?mt.dataset.open:el.dataset.partner);return;}
   if(el=q('[data-trail]')){e.stopPropagation();const tid=el.dataset.trail; if(tid===S.full)closePanel(); else if(tid.startsWith('lib:'))openLibrary(tid.slice(4)); else openPanel(tid); return;}
-  if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} openPanel(el.dataset.open);return;}
+  if(el=q('[data-open]')){e.stopPropagation();{const pin=el.closest('#panel-pin,#item-pin'); S._from=pin?(pin.id==='panel-pin'?S.panel:S.full):null;} if(PREVIEW_ON&&typeof mineOpen==='function')mineOpen(el.dataset.open); else openPanel(el.dataset.open); return;}   // preview: an entry with my red mark opens at the comment that calls me (78-mine.js)
   if(el=q('[data-sort]')){const k=el.dataset.sort;if(S.sort.k!==k)S.sort={k,dir:1};else if(S.sort.dir>0)S.sort={k,dir:-1};else S.sort={k:'',dir:1};S.actPage=1;refreshSec('action');return;}
   if(el=q('[data-pg]')){const pg=el.closest('.pager'); const v=el.dataset.pg; const key=pg.classList.contains('pg-act')?'actPage':pg.classList.contains('pg-res')?'resPage':pg.classList.contains('pg-pt')?'ptPage':pg.classList.contains('pg-arch')?'archPage':'memPage';
     const tot=+pg.dataset.total||$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=tot; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);

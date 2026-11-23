@@ -279,7 +279,7 @@ document.addEventListener('click',e=>{ if(!MP.open)return; const el=e.target.clo
     mpInboxDo(); return;}
   if(k==='in-readall'){const ids=notes().filter(n=>!n.read).map(n=>n.id); if(!ids.length)return; mpSetRead(ids,true); mpInboxDo(); toast(`${ids.length}건을 읽음으로 표시했습니다.`,5000,{t:'실행 취소',fn:()=>{mpSetRead(ids,false);mpInboxDo();}}); return;}
   if(k==='in-archread'){const ids=notes().filter(n=>n.read&&!n.arch).map(n=>n.id); if(!ids.length)return; mpSetArch(ids,true); I.sel.clear(); mpInboxDo(); toast(`읽은 알림 ${ids.length}건을 보관했습니다.`,5000,{t:'실행 취소',fn:()=>{mpSetArch(ids,false);mpInboxDo();}}); return;}
-  if(k==='in-open'){const n=mpNotes().find(x=>x.id===v); if(!n)return; const it=n.it; if(!it.id||!panelExists(it.id)||(ITEMS.includes(it)&&!canSee(it))){toast('삭제되었거나 볼 수 없는 항목입니다.');return;} mpSetRead([v],true); closeModal(); openPanel(it.id); return;}   // read only once it really opens
+  if(k==='in-open'){const n=mpNotes().find(x=>x.id===v); if(!n)return; const it=n.it; if(!it.id||!panelExists(it.id)||(ITEMS.includes(it)&&!canSee(it))){toast('삭제되었거나 볼 수 없는 항목입니다.');return;} mpSetRead([v],true); closeModal(); if(typeof mineOpen==='function')mineOpen(it.id,n); else openPanel(it.id); return;}   // read only once it really opens; it opens at the comment or the mention the notice is about
   if(k==='pref'){mpSetPref(v,!myPref(v));return;}
   if(k==='prefv'){const [pk,pv]=v.split('='); mpSetPref(pk,pv); return;}
   if(k==='pref-reset'){const old=INBOX_STATE.prefs; if(!old||!Object.keys(old).length)return; delete INBOX_STATE.prefs; myPrefsApply(); mpSaved('prefs'); mpRender(); render(true); toast('개인 설정을 처음 상태로 되돌렸습니다.',5000,{t:'실행 취소',fn:()=>{INBOX_STATE.prefs=old;myPrefsApply();mpSaved('prefs');mpRender();render(true);}}); return;}

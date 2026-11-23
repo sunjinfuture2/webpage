@@ -1291,3 +1291,7 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 /* the text of a calendar entry and of a chip in the partner list's 미팅 column stands 1 lower; its pictogram stays where it is (owner, 2026-11-23) */
 .sch-on .cal .ev .lb{top:1.67px}
 .sch-on .tbl.partners .rw .mt .chip .t{position:relative;top:1px}
+
+/* ---- my place in an opened item lights up for a moment (78-mine.js): the comment that calls me, my name in the text ---- */
+@keyframes mineHit{0%,50%{background-color:#ffef9e;box-shadow:0 0 0 6px #ffef9e}100%{background-color:rgba(255,239,158,0);box-shadow:0 0 0 6px rgba(255,239,158,0)}}
+.mine-hit{animation:mineHit 2.6s ease-out both;border-radius:4px}

@@ -461,3 +461,12 @@ Preview only. tests/schedule-10.cjs covers it.
   does moving a task to another phase. The card is no longer shown for dates.
 - This replaces, for dates, the rule "a schedule change applies at once"; relations have been shown first since the fourth round.
 - Tests: schedule-2 (window, 취소, 적용 from the gantt), schedule-7 (pulling an end), schedule-8 (the panel).
+
+## My place in an item (owner, 2026-11-23: "노션처럼")
+
+schedule/ui/78-mine.js, preview only. An entry that carries my red mark (hasMention: a comment calls me), when pressed, opens its
+panel at that comment: the first one that calls me and that I have not read, else the newest. A notice of the inbox opens at the
+comment it is about, or, for a notice about my name in a text, at that mention. The place is scrolled into view and lights up for
+2.6 seconds (`.mine-hit`; kept as `SCH.mine` so that a redraw of the panel does not put it out). The page's handler of
+`[data-open]` and the my page's `in-open` call mineOpen instead of openPanel. An entry without a red mark opens as before.
+tests/schedule-10.cjs has both ways in.
