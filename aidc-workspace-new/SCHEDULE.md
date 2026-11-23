@@ -591,4 +591,6 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   list was reported, not built.
 - For everybody: a task named in the address stays in the address while its schedule loads (routeWant in shared-client.js). The
   address used to lose it for that moment, and a reload in that moment lost it for good.
-- tests/schedule-13.cjs (50 checks); tests/schedule-4.cjs follows the new rule.
+- Without the preview the item of a task is hidden (isLive); an action that became a task keeps its own id and stays listed there as
+  the action it was (its fields are those of the moment it became a task).
+- tests/schedule-13.cjs (51 checks); tests/schedule-4.cjs follows the new rule.

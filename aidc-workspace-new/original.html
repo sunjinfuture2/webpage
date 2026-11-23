@@ -1565,7 +1565,7 @@ const dotsHtml=(it,cls='dots')=>{const d=dotsOf(it); return d.length?`<span clas
 /* which items show where */
 const isPub=i=>!i.status||i.status==='published'||i.status==='locked';
 const legacyListed=i=>!!(i.table||i.card||i.cal)&&!i.authorId;                           // demo drafts that the design shows in lists; a draft somebody wrote is only theirs (owner, 2026-11-23: a recovered draft carried these flags and showed for everybody)
-const isLive=i=>(isPub(i)||(i.status==='draft'&&legacyListed(i)))&&!i.agent&&!i.arch&&!(i.own&&i.task&&!PREVIEW_ON);   // shown in lists, cards and the calendar (the notes of a schedule task, wt-…, only while the preview is on)
+const isLive=i=>(isPub(i)||(i.status==='draft'&&legacyListed(i)))&&!i.agent&&!i.arch&&!(i.own&&i.task&&!PREVIEW_ON&&String(i.id).startsWith('wt-'));   /* (an action that became a task keeps its own id and stays listed as an action without the preview) */   // shown in lists, cards and the calendar (the notes of a schedule task, wt-…, only while the preview is on)
 const canSee=i=>i.status!=='trash'&&i.status!=='new'&&(i.status!=='draft'||legacyListed(i)||!i.authorId||i.authorId===sharedUser);
 const createdKey=i=>String(i.createdAt||'')||((i.created||i.date||'')+'T00:00:00');
 const newestFirst=(a,b)=>createdKey(b).localeCompare(createdKey(a));

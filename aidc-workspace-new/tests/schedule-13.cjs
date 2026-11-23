@@ -204,6 +204,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const C = await newUser(browser, 'RYC' + sfx, '열셋 삼', { url: V1 }), c = C.page;
   const cid = await c.evaluate(t => { const it = newItem('action'); openPanel(it.id); return it.id; }, 0); await sleep(400);
   await c.click('#panel-pin .ititle'); await c.keyboard.type('미리보기 없이 ' + sfx); await sleep(150); await c.click('#panel-close'); await sleep(400);
+  check('an action that became a task is still listed as an action there (the item of a task of the workbook is not)', await c.evaluate(i => { const it = ITEMS.find(x => x.id === i); return !!it && it.own && isLive(it) && !isLive({ ...it, id: 'wt-' + it.task }); }, id1));
   check('leaving still saves without a question (a draft)', await c.evaluate(i => !document.querySelector('#dlg') && !S.panel && (ITEMS.find(x => x.id === i) || {}).status === 'draft', cid));
   await c.evaluate(async i => { const it = ITEMS.find(x => x.id === i); if (it) await trashItem(it); }, cid); await sleep(300);
 
