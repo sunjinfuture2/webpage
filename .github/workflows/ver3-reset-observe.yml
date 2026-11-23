@@ -1,9 +1,6 @@
 name: Observe ver3 reset completion
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/ver3-reset-observe.yml'
 permissions:
   contents: read
 concurrency:
