@@ -1,6 +1,7 @@
 // WorkSpace x Schedule (preview), eleventh part (owner, 2026-11-23, the "fourteenth round"): small movements (80-motion.js).
 // A phase of the gantt opens and closes, the bars slide after a change of dates, tabs, menus and windows that ask, the calendar's
-// month, light <-> dark; "화면 움직임 줄이기" turns all of it off; without the preview nothing moves.
+// month, light <-> dark; second set: cards rise under the pointer, the rows of a list fade in, a mark that has just come pops;
+// "화면 움직임 줄이기" turns all of it off; without the preview nothing moves.
 // Needs wrangler dev on 127.0.0.1:8787.
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
 const sfx = Date.now().toString(36).slice(-5);
@@ -52,6 +53,33 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const th2 = await ev(() => document.documentElement.classList.contains('th-anim')); await a.click('#th-btn'); await sleep(500);
   check('light <-> dark crosses over (the page\'s filter is in transition for a moment)', th.anim && /filter/.test(th.tr) && th.dark && !th2, { th, th2 });
 
+  console.log('— second set: cards, lists, a mark that has just come');
+  await ev(() => { go('main'); }); await sleep(900);
+  const lift = async sel => { const ok = await ev(q => { const e = document.querySelector(q); if (!e) return false; e.scrollIntoView({ block: 'center' }); return true; }, sel); if (!ok) return null; await sleep(250); await a.hover(sel); await sleep(320);
+    return ev(q => { const e = document.querySelector(q), r = e.getBoundingClientRect(); let p = e.parentElement, clip = null; while (p && p !== document.body) { const o = getComputedStyle(p); if (/hidden|auto|scroll|clip/.test(o.overflowY + o.overflowX)) { clip = p.getBoundingClientRect(); break; } p = p.parentElement; } return { tr: getComputedStyle(e).translate, cut: !!clip && r.top < clip.top - 0.5 }; }, sel); };
+  const l1 = await lift('#page-main .pcard'), l2 = await lift('#page-main .rcard'); await a.mouse.move(5, 400);
+  await ev(() => go('archive')); await sleep(700); await a.click('#arch-pw [data-arview="sites"]'); await sleep(500); const l3 = await lift('#ar-body .acard'); await a.mouse.move(5, 400);
+  check('cards rise 2 under the pointer (project, research, reference site) and are not cut by what holds them', [l1, l2, l3].every(x => x && /^0px -2px$/.test(x.tr) && !x.cut), { l1, l2, l3 });
+  await ev(() => go('main')); await sleep(800);
+  const pg = await ev(() => { const b = document.querySelector('.page.on #sec-partners .pager button[data-pg="2"]'); if (!b) return null; b.scrollIntoView({ block: 'center' }); b.click(); return true; }); await sleep(40);
+  const pf = await ev(() => { const rows = [...document.querySelectorAll('.page.on #sec-partners .tbl.partners .rw')]; return { n: rows.length, fade: rows.filter(r => r.classList.contains('j-fade')).length, head: document.querySelector('.page.on #sec-partners .tbl.partners .hd').classList.contains('j-fade'), page: S.ptPage }; });
+  check('another page of a list: its rows fade in once, the column titles stay', pg && pf.page === 2 && pf.n > 0 && pf.fade === pf.n && !pf.head, pf);
+  await ev(() => { S.ptPage = 1; render(true); }); await goP(); await ev(() => { SCHU.tab = 'list'; schRefresh(); document.querySelector('#sch-actions').scrollIntoView({ block: 'start' }); }); await sleep(500);
+  await a.click('#sch-actions .tbl .hd [data-sch="col"][data-k="pri"]'); await sleep(250); await a.click('.pop .it:has-text("높은 순")'); await sleep(40);
+  const sf = await ev(() => { const rows = [...document.querySelectorAll('[data-sec="sch-act"] .tbl .rw')]; return { n: rows.length, fade: rows.filter(r => r.classList.contains('j-fade')).length, sort: SCHU.sort }; });
+  check('another order chosen from a column\'s menu: the rows fade in once', sf.n > 0 && sf.fade === sf.n && sf.sort === 'pri', sf);
+  await ev(() => { SCHU.sort = ''; SCHU.tab = 'gantt'; schRefresh(); }); await sleep(300);
+  const B = await newUser(browser, 'RMB' + sfx, '열한 이', { url: V2 }), b = B.page; await sleep(400);
+  const me = await ev(() => ({ id: sharedUser, name: sharedName }));
+  const mt = await ev(s => { const it = newItem('meeting', { title: 'RM 톡 미팅 ' + s, status: 'published', date: TODAY, proj: 'pangyo', people: [sharedUser], body: '<p>메모</p>' }); render(true); return sharedFlush(true).then(() => it.id); }, sfx); await sleep(900);
+  await b.reload(); await b.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady, null, { timeout: 15000 }); await sleep(800);
+  await ev(() => { window._pop = { dot: 0, badge: 0 }; new MutationObserver(() => { if (document.querySelector('.dots i.r.j-pop, .sq .dt.j-pop')) window._pop.dot++; if (document.querySelector('#inbox-badge.j-pop')) window._pop.badge++; }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'], childList: true }); }); await sleep(600);
+  await b.evaluate(([id, name]) => { const it = item(id); it.comments = (it.comments || []).concat({ id: 'c' + Date.now().toString(36), authorId: sharedUser, text: '@' + name.split(' ')[0] + ' 확인 부탁드립니다', ts: new Date().toISOString() }); render(true); return sharedFlush(true); }, [mt, me.name]); await sleep(2600);
+  const pp = await ev(id => ({ ...window._pop, red: hasMention(item(id)), shown: !!document.querySelector(`#page-project [data-open="${id}"] .dots i.r, #page-project [data-open="${id}"] .sq .dt`) }), mt);
+  check('a red mark that has just come pops once on its entry, and the inbox\'s count pops as it grows', pp.red && pp.shown && pp.dot > 0 && pp.badge > 0, pp);
+  await sleep(900); check('…and is still again afterwards', await ev(() => !document.querySelector('.j-pop')));
+  await ev(id => { const it = item(id); if (it) { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } render(true); return sharedFlush(true); }, mt);
+
   console.log('— 화면 움직임 줄이기; without the preview');
   await ev(() => { INBOX_STATE.prefs = { ...(INBOX_STATE.prefs || {}), calm: true }; myPrefsApply(); }); await sleep(200);
   await a.click('#sch-gantt .sg-left .sg-row.ph[data-k="W2"] .tt'); await sleep(40);
@@ -62,6 +90,6 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const C = await newUser(browser, 'RMC' + sfx, '열한 삼', { url: V1 }), c = C.page; await sleep(500);
   await c.click('#tb-user .av'); await sleep(80); const off = await c.evaluate(() => { const p = document.querySelector('.pop'), r = { pv: PREVIEW_ON, pop: !!p, jin: !!p && p.classList.contains('j-in') }; closePop(); return r; });
   check('without the preview nothing of this is put on', off.pv === false && off.pop && !off.jin, off);
-  const errs = [...A.errs, ...C.errs]; check('no script errors', errs.length === 0, errs);
+  const errs = [...A.errs, ...B.errs, ...C.errs]; check('no script errors', errs.length === 0, errs);
   await browser.close(); done();
 })();

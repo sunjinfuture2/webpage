@@ -2524,6 +2524,17 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 /* light <-> dark: the page and the pictures that are turned back cross over together */
 html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){transition:filter .22s ease!important}
 @media (prefers-reduced-motion:reduce){ .j-fade,.j-in,.j-tab,.sg-j-in,.sg-j-shift,.sg-j-out,.j-open .tw svg,.j-cal-n,.j-cal-p,.dlg.j-in .box{animation:none!important} html.th-anim,html.th-anim *{transition:none!important} }
+
+/* ---- small movements, second set (owner, 2026-11-23) ---- */
+/* cards rise a little under the pointer (the row of project cards is cut at its box: 3 of room above, the cards stay where they are) */
+.sch-on .projects .track{top:117px;padding-top:3px}
+.sch-on .pcard,.sch-on .rcard,.sch-on .arch .acard{transition:translate .15s ease,box-shadow .15s ease,background .12s}
+.sch-on .pcard:hover,.sch-on .rcard:hover,.sch-on .arch .acard:hover{translate:0 -2px}
+.sch-on .rcard:hover,.sch-on .arch .acard:hover{box-shadow:0 6px 14px rgba(0,0,0,.07)}
+/* a mark that has just come */
+@keyframes jPop{0%{scale:1}45%{scale:1.9}100%{scale:1}}
+.j-pop{animation:jPop .42s ease-out}
+@media (prefers-reduced-motion:reduce){ .j-pop{animation:none!important} .sch-on .pcard,.sch-on .rcard,.sch-on .arch .acard{transition:none!important;translate:none!important} }
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -7305,8 +7316,12 @@ new MutationObserver(()=>{ if(SCH.mine)mineKeep(); }).observe(document.documentE
 //  - tabs: the line under the chosen tab grows from the side of the tab that was left, what the tab shows fades in
 //  - menus, small windows, the member card, tips come down a little; a window that asks (relation, dates, delete) grows a little
 //  - the calendar moves the way the month goes; light <-> dark crosses over
+//  - second set: cards rise a little under the pointer (styles only); the rows of a list fade in after another page, order or filter;
+//    a red or green mark that has just come pops once, and so does the inbox's count when it grows
 const schCalm=()=>(typeof myPref==='function'&&!!myPref('calm'))||!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const schJ=(el,cls,ms)=>{ if(!el)return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(()=>{ if(el.isConnected)el.classList.remove(cls); },ms||320); };
+// the same for many at once (the rows of a list): one look at the layout for all of them
+const schJAll=(list,cls,ms)=>{ list=[...list]; if(!list.length)return; for(const el of list)el.classList.remove(cls); void list[0].offsetWidth; for(const el of list)el.classList.add(cls); setTimeout(()=>{ for(const el of list)if(el.isConnected)el.classList.remove(cls); },ms||320); };
 
 /* ---------- gantt: a phase opens and closes ---------- */
 function schFoldParts(code){ const h=$('#sch-gantt .sg-scroll'), row=h&&[...h.querySelectorAll('.sg-left > .sg-row.ph')].find(r=>r.dataset.k===code); if(!row)return null;
@@ -7333,6 +7348,7 @@ function schBarSlide(G){ if(schCalm()||!G)return; const T=260, t=G.slideAt?(Date
   if(any&&!G.slideAt){ G.slideAt=Date.now(); right.querySelectorAll('.sg-links,.sg-dots').forEach(s=>schJ(s,'j-fade',360)); } }   // the lines are already where they will be: they come in while the bars arrive
 
 /* ---------- what a press sets off ---------- */
+let schMotionList=null;
 const SCH_TABS=[['#sch-actions','.sch-tabs','button','[data-sec="sch-act"]'],['#sch-lower','.sch-tabs','button','#sch-lower [data-sec="sch-low"]'],['#panel-pin','.sp-tabs','button','#panel-pin .sch-props .sp-grid, #panel-pin .sch-props .sp-links'],
   ['#item-pin','.sp-tabs','button','#item-pin .sch-props .sp-grid, #item-pin .sch-props .sp-links'],['#arch-pw','.ar-views','button','#ar-body'],['#arch-pw','.tabs','li','#ar-body .tbl.archive']];
 document.addEventListener('click',e=>{ if(!schPreview()||schCalm()||!e.target.closest)return; const T=e.target;
@@ -7341,6 +7357,12 @@ document.addEventListener('click',e=>{ if(!schPreview()||schCalm()||!e.target.cl
       if(strip==='.tabs'){ const ink=s2.querySelector('.bar i'), n=kids.length; if(ink&&was>=0){ ink.style.transition='none'; ink.style.left=`calc(100%/${n}*${was})`; void ink.offsetWidth; ink.style.transition=''; ink.style.left=`calc(100%/${n}*${to})`; } }
       else { on.classList.toggle('j-r',was>to); schJ(on,'j-tab',300); }
       $$(body).forEach(x=>schJ(x,'j-fade',300)); },0); break; }
+  // lists: another page, another order, a filter set or taken away -> the rows fade in once (not while typing in a search box)
+  { const fade=key=>setTimeout(()=>{ const box=key==='#ar-body'?$('#ar-body'):[...document.querySelectorAll('.page.on [data-sec]')].find(x=>x.dataset.sec===key); if(box)schJAll(box.querySelectorAll('.tbl .rw, .tbl .none, .rgrid > *'),'j-fade',300); },0);
+    const keyOf=el=>{ const box=el.closest('[data-sec], #ar-body')||((el.closest('.sec, #arch-pw')||document.createElement('i')).querySelector('[data-sec], #ar-body')); return box?(box.id==='ar-body'?'#ar-body':box.dataset.sec):''; };
+    if(T.closest('.pager button, [data-chips] .sch-chip')){ const k=keyOf(T); if(k)fade(k); }
+    else if(T.closest('.tbl .hd, .sf, .sch-resbar, .rf, [data-rf]')){ const k=keyOf(T); if(k)schMotionList={k,at:Date.now()}; }   // a menu opens from here: its choice redraws this list
+    else if(T.closest('.pop .it')&&schMotionList&&Date.now()-schMotionList.at<60000)fade(schMotionList.k); }
   const cal=T.closest('[data-cal="prev"],[data-cal="next"]'); if(cal){ const fwd=cal.dataset.cal==='next'; setTimeout(()=>schJ($('.page.on .cal .rows'),fwd?'j-cal-n':'j-cal-p',300),0); }
   const rec=T.closest('#sb-recent [data-rec]'); if(rec&&rec.getAttribute('aria-expanded')==='false'){ const k=rec.dataset.rec; setTimeout(()=>{ const row=[...document.querySelectorAll('#sb-recent [data-rec]')].find(x=>x.dataset.rec===k); for(let n=row&&row.nextElementSibling;n&&n.classList.contains('r2');n=n.nextElementSibling)schJ(n,'j-in',300); },0); }
   if(T.closest('#notice .head'))setTimeout(()=>{ const n=$('#notice'); if(n&&n.classList.contains('open'))schJ(n.querySelector('.list'),'j-in',300); },0);
@@ -7350,6 +7372,19 @@ document.addEventListener('click',e=>{ if(!schPreview()||schCalm()||!e.target.cl
 { const kind=n=>['pop','dlg','ucard','sch-daypop','sch-tip'].find(c=>n.classList&&n.classList.contains(c)), gone={};
   new MutationObserver(list=>{ if(!schPreview()||schCalm())return; for(const m of list){ for(const n of m.removedNodes){ const k=n.nodeType===1&&kind(n); if(k)gone[k]=Date.now(); }
       for(const n of m.addedNodes){ const k=n.nodeType===1&&kind(n); if(k&&Date.now()-(gone[k]||0)>90)n.classList.add('j-in'); } } }).observe(document.body,{childList:true}); }   // drawn again in place (a menu after a choice): not again
+
+/* ---------- a mark that has just come: it pops once ---------- */
+// The red and green marks of entries are drawn again with every draw, so "just come" is read from the data: the marks an item has now
+// against those it had at the last look (at most three looks a second). A mark that is new pops on every entry of that item that shows
+// it; the count of the inbox pops when it grows. Nothing pops on the first look, nor when a whole load of data arrives at once.
+{ let known=null, count=null, wait=0; const hot=new Map(), T=420;
+  const look=()=>{ wait=0; if(!schPreview()||schCalm()||typeof sharedReady==='undefined'||!sharedReady)return; const now=Date.now(), red=new Set(), green=new Set();
+    for(const it of ITEMS){ if(!isLive(it))continue; const d=dotsOf(it); if(d.includes('r'))red.add(it.id); if(d.includes('g'))green.add(it.id); }
+    if(known){ const fresh=[]; for(const id of red)if(!known.red.has(id))fresh.push('r:'+id); for(const id of green)if(!known.green.has(id))fresh.push('g:'+id); if(fresh.length<=8)for(const k of fresh)hot.set(k,now); }
+    known={red,green}; const n=unreadNotes().length; if(count!==null&&n>count)for(const b of ['#inbox-badge','#m-inbox-badge'])schJ($(b),'j-pop',T+60); count=n;
+    for(const [k,t] of hot){ if(now-t>T){hot.delete(k);continue;} const id=k.slice(2); for(const el of document.querySelectorAll('[data-open]')){ if(el.dataset.open!==id)continue; const dot=k[0]==='r'?el.querySelector('.dots i.r, .sq .dt'):el.querySelector('.dots i.g'); if(dot&&!dot.classList.contains('j-pop')){ dot.style.animationDelay=(t-now)+'ms'; dot.classList.add('j-pop'); } } }
+    if(hot.size){ clearTimeout(look.t); look.t=setTimeout(()=>{ for(const d of document.querySelectorAll('.dots i.j-pop, .sq .dt.j-pop')){ d.classList.remove('j-pop'); d.style.animationDelay=''; } },T+120); } };   // still again afterwards
+  new MutationObserver(()=>{ if(!wait)wait=setTimeout(look,hot.size?60:340); }).observe(document.documentElement,{childList:true,subtree:true}); }
 
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).

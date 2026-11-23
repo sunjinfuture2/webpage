@@ -1333,3 +1333,14 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 /* light <-> dark: the page and the pictures that are turned back cross over together */
 html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){transition:filter .22s ease!important}
 @media (prefers-reduced-motion:reduce){ .j-fade,.j-in,.j-tab,.sg-j-in,.sg-j-shift,.sg-j-out,.j-open .tw svg,.j-cal-n,.j-cal-p,.dlg.j-in .box{animation:none!important} html.th-anim,html.th-anim *{transition:none!important} }
+
+/* ---- small movements, second set (owner, 2026-11-23) ---- */
+/* cards rise a little under the pointer (the row of project cards is cut at its box: 3 of room above, the cards stay where they are) */
+.sch-on .projects .track{top:117px;padding-top:3px}
+.sch-on .pcard,.sch-on .rcard,.sch-on .arch .acard{transition:translate .15s ease,box-shadow .15s ease,background .12s}
+.sch-on .pcard:hover,.sch-on .rcard:hover,.sch-on .arch .acard:hover{translate:0 -2px}
+.sch-on .rcard:hover,.sch-on .arch .acard:hover{box-shadow:0 6px 14px rgba(0,0,0,.07)}
+/* a mark that has just come */
+@keyframes jPop{0%{scale:1}45%{scale:1.9}100%{scale:1}}
+.j-pop{animation:jPop .42s ease-out}
+@media (prefers-reduced-motion:reduce){ .j-pop{animation:none!important} .sch-on .pcard,.sch-on .rcard,.sch-on .arch .acard{transition:none!important;translate:none!important} }

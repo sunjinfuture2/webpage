@@ -502,6 +502,10 @@ reduced-motion setting turn every one of them off (schCalm for the parts that wa
   (a menu after a choice) does not move again.
 - The calendar moves the way the month goes; the recent items of a kind and the notice list come in when opened; light <-> dark
   crosses over (`html.th-anim` for 0.34 s gives the page's filter and the turned-back pictures the same transition).
-- Left for a second set, if the owner wants them: cards rising under the pointer, lists fading on filter / order / page, a
-  badge popping when it appears.
+- Second set (the owner asked for it the same day): cards rise 2 under the pointer (project, research, reference site: styles
+  only; the row of project cards got 3 of room above because its box cuts); the rows of a list fade in after another page, a
+  filter tag taken away, or a choice in a menu opened from a column title / filter (schMotionList remembers which list; not
+  while typing in a search box); a red or green mark that has just come pops once on every entry of its item, and the inbox's
+  count pops when it grows. "Just come" is read from the data (dotsOf per item, at most three looks a second), never from the
+  DOM, because entries are drawn again all the time; nothing pops on the first look or when a load of data arrives at once.
 - tests/schedule-11.cjs.
