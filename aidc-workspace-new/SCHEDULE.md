@@ -442,6 +442,9 @@ Preview only. tests/schedule-10.cjs covers it.
 - The text of a calendar entry (`.cal .ev .lb`, top 1.67) and of a chip in the partner list's 미팅 column (`.mt .chip .t`, top 1)
   stands 1 lower than before; the pictogram beside it does not move.
 - The lower section (외부설비 조달 · 승인게이트 · 근거 및 확약) has no 라이브러리 button any more (owner: not needed there).
+- The archive has a fourth importance, `std` = "Standard", above 높음 (PRI_RANK -1), in violet #6d28d9 and bold: the owner wanted
+  the colour that looks the most important without being red. priTxt and `.pri-std` are known to every page; the menu offers it
+  for documents of the archive while the preview is on (archTabOf).
 - For the gantt (found through a test that failed now and then): the chart and the scroll bar below it follow each other; a
   position one was just given by the other is not handed back (`_echo`). Handing it back a frame later, after the chart had
   been moved on, made the view jump back a step while it was pulled.

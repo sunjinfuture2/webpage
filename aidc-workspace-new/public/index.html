@@ -413,6 +413,7 @@ svg{display:block}
 .tbl.partners .mt .chip{position:relative;top:-2.3px}
 .tbl.archive .ft,.tbl.partners .ft{margin-top:-1px}
 .pri-high{color:#1acc00}.pri-mid{color:#31a7ff}.pri-low{color:#d89c60}
+.pri.pri-std,.tbl .rw .pri.pri-std,.props .pr .v .pri.pri-std{color:#6d28d9;font-weight:700}
 .st-prog{color:#939393}.st-done{color:#1acc00}
 .tbl.actions .hd,.tbl.actions .rw{grid-template-columns:154.6px 167.4px calc(437.7px + var(--d)) 103.2px 104px 75.3px 103.4px 135.6px}
 .tbl.actions.noproj .hd,.tbl.actions.noproj .rw{grid-template-columns:168.7px calc(540.4px + var(--d)) 103.2px 105.6px 105.7px 103.4px 161.1px}
@@ -3344,7 +3345,7 @@ const ACT=PREVIEW_ON?'액션':'액션'+'아이템';
 const TYPE_NAME={meeting:'미팅',action:ACT,research:'리서치'};
 const archTabOf=it=>it.arch||(ITEMS.includes(it)?null:(archRowOf(it.id)||{}).tab)||null;
 const typeName=it=>{if(!it)return '';const t=archTabOf(it);return t?'자료실 · '+t:(it.agent?'에이전트':(TYPE_NAME[it.type]||''));};
-const priTxt={high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};
+const priTxt={std:'Standard',high:'높음',mid:'중간',low:'낮음'}, stTxt={prog:'진행중',done:'완료'};   // std: the archive's own top level (owner, 2026-11-23)
 // with the schedule preview on, every status on the page is drawn with the one design of schedule/ (schStIcon)
 const stIcon=st=>typeof schPreview==='function'&&schPreview()?schStIcon(st==='done'?'완료':'진행'):st==='done'?`<span class="status-ic st-done">${svg('i-check',9.3,7.1)}완료</span>`:`<span class="status-ic st-prog">${svg('i-prog',10.5,10.5,'margin:-1px -1px 0 -1px')}진행중</span>`;
 // A toast stands above the card of a schedule change when that is up (the card stays until it is closed).
@@ -3398,7 +3399,7 @@ const liveItems=(type,pid)=>ITEMS.filter(i=>i.type===type&&isLive(i)&&(!pid||i.p
 const hasFiles=it=>!!(it&&(it.body||'').includes('/api/file/')&&itemFiles(it).length);   // the same rule the library goes by (itemFiles)   // only a file that is really attached counts (the fixtures' "file" flag showed a button with nothing behind it)
 const snippet=it=>{const t=(it.body||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();return t.length>62?t.slice(0,62)+'…':t;};
 const sortResearch=list=>list.slice().sort((a,b)=>{const g=x=>isFresh(x)?0:(/^\[REF\]/.test(x.title)?1:2); const ga=g(a),gb=g(b); return ga!==gb?ga-gb:newestFirst(a,b);});
-const PRI_RANK={high:0,mid:1,low:2};
+const PRI_RANK={std:-1,high:0,mid:1,low:2};
 const SORT_KEY={proj:i=>pname(proj(i.proj)),who:i=>userName((i.people||[])[0])||'',title:i=>norm(i.title),date:i=>itemEnd(i)||'',pri:i=>PRI_RANK[i.pri]??9,st:i=>i.st==='done'?1:0,mod:i=>{const n=modDate(i);return n?n.getTime():0;}};
 function sortActs(list){const f=SORT_KEY[S.sort.k],dir=S.sort.dir||1;const base=list.slice().sort(newestFirst);if(!f)return base;
   return base.map((x,i)=>[x,i,f(x)]).sort((a,b)=>{const c=typeof a[2]==='number'?a[2]-b[2]:String(a[2]).localeCompare(String(b[2]),'ko');return c*dir||a[1]-b[1];}).map(x=>x[0]);}
@@ -4299,7 +4300,7 @@ document.addEventListener('click',async e=>{
     if(k==='end'){datePick(el,itemEnd(it)>it.date?it.end:it.date,v=>{if(!v||v<=it.date)delete it.end;else it.end=v;rerenderItem();},{min:it.date,clear:'종료일 없음'});return;}
     if(k==='arch'){menuPop(el,ARCH_TABS.map((t,i)=>({t,k:'t'+i,sel:it.arch===t,fn:()=>{it.arch=t;rerenderItem();}})));return;}
     if(k==='st'){menuPop(el,[{t:'진행중',html:PREVIEW_ON?schStIcon('진행'):undefined,k:'prog',sel:it.st==='prog',fn:()=>{it.st='prog';rerenderItem();}},{t:'완료',html:PREVIEW_ON?schStIcon('완료'):undefined,k:'done',sel:it.st==='done',fn:()=>{it.st='done';rerenderItem();}}],PREVIEW_ON?{cls:'sch-colmenu'}:undefined);return;}
-    if(k==='pri'){menuPop(el,[['high','높음'],['mid','중간'],['low','낮음']].map(x=>({t:x[1],html:PREVIEW_ON?`<span class="pri pri-${x[0]}">${x[1]}</span>`:undefined,k:x[0],sel:it.pri===x[0],fn:()=>{it.pri=x[0];rerenderItem();}})),PREVIEW_ON?{cls:'sch-colmenu'}:undefined);return;}
+    if(k==='pri'){menuPop(el,(PREVIEW_ON&&archTabOf(it)?[['std','Standard']]:[]).concat([['high','높음'],['mid','중간'],['low','낮음']]).map(x=>({t:x[1],html:PREVIEW_ON?`<span class="pri pri-${x[0]}">${x[1]}</span>`:undefined,k:x[0],sel:it.pri===x[0],fn:()=>{it.pri=x[0];rerenderItem();}})),PREVIEW_ON?{cls:'sch-colmenu'}:undefined);return;}
     if(k==='people'){menuPop(el,[].concat(Object.keys(PEOPLE).map(id=>({t:PEOPLE[id],k:id,ico:av('av15'),sel:it.people.includes(id),fn:()=>{it.people=it.people.includes(id)?it.people.filter(x=>x!==id):it.people.concat(id);rerenderItem();}}))),{multi:true,cls:'multi'});return;}
     if(k==='partner'){const names=[...new Set(PARTNERS.filter(x=>!x.trash).map(x=>x.name).concat((PHEAD[it.proj]||{}).partners||[]).filter(Boolean))];if(it.partner&&!names.includes(it.partner))names.unshift(it.partner);
       menuPop(el,names.slice(0,60).map((n,i)=>({t:n,k:'p'+i,sel:it.partner===n,fn:()=>{it.partner=n;rerenderItem();}})).concat(['-',{t:'직접 입력…',k:'__new',fn:()=>askInput('협력업체 이름',it.partner||'',v=>{it.partner=(v||'').trim();it.dirty=true;rerenderItem();})},{t:'선택 해제',k:'__none',fn:()=>{it.partner='';rerenderItem();}}]),{cls:'link'});return;}
