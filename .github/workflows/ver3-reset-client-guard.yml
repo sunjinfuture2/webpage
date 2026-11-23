@@ -31,3 +31,5 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: node tools/ver3-reset-client-guard.mjs
+
+# Diagnose target runtime
