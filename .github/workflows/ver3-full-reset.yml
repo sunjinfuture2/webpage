@@ -1,6 +1,9 @@
 name: Full reset ver3 only
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/ver3-full-reset.yml'
 permissions:
   contents: read
 concurrency:
@@ -28,3 +31,5 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: node tools/ver3-full-reset.mjs
+
+# Verified syntax retry
