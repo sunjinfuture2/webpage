@@ -50,11 +50,12 @@ function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return; 
   SCH.loading[pid]=true; delete SCH.failed[pid];
   (want?schSrcFetch(want):fetch(SCH_SOURCES[pid]).then(r=>{if(!r.ok)throw new Error('일정 원본을 불러오지 못했습니다 ('+r.status+')');return r.json();}))
     .then(src=>{ SCH.arch[key]=src; SCH.loading[pid]=false; if(schSrcWant(pid)!==want){schLoad(pid);if(SCH.base[pid]){schRedraw();schOpenWanted();}return;}   // the record names another plan by now
-      if(use(src)){schRedraw();schOpenWanted();}else schRedraw(); })
-    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;schRedraw();}); }
+      use(src); schRedraw(); schOpenWanted(); })
+    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;schRedraw();schOpenWanted();}); }
 // An address that names a task (or a package / gate / record) of a schedule that has not arrived yet: remembered, opened after loading.
-function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schPids().every(p=>SCH.base[p]))continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
-function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady)return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }
+function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schSettled())continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
+const schSettled=()=>schPids().every(p=>SCH.base[p]||SCH.failed[p]);   // every project's plan is there, or will not come
+function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady||!schSettled())return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }
 // The overrides in force: the shared ones, or those of the scenario this browser is looking at.
 const schScenario=pid=>{const id=SCHU.scn;return id&&SCHED[pid]&&SCHED[pid]['sc:'+id]?id:'';};
 const schOv=pid=>{const root=SCHED[pid]||{};const sc=schScenario(pid);return sc?(root['sc:'+sc].ov||{}):root;};

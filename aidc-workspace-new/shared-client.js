@@ -445,8 +445,10 @@ function routeExtras(q){ const t=q.get('tab'); if(t&&ARCH_TABS.includes(t)){S.ar
  if(typeof SCHU==='undefined')return; const v=q.get('view'); if(['gantt','list','net'].includes(v))SCHU.tab=v; const s=q.get('sec'); if(['proc','gate','evid'].includes(s))SCHU.sec=s; }
 function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else openPanel(id,true);}
 function afterNav(){sharedUi();saveRoute();if(typeof schAfterNav==='function')schAfterNav();}
+// what the address named and is still waiting for its schedule to load (schDeferRoute): it stays in the address until it opens
+const routeWant=k=>(typeof SCH!=='undefined'&&SCH.want&&SCH.want[k])||null;
 function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
- const route={page:S.page,proj:S.proj,panel:S.panel,full:S.full,actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
+ const route={page:S.page,proj:S.proj,panel:S.panel||routeWant('panel'),full:S.full||routeWant('full'),actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
   q:S.q,filters:S.filters,typeOff:S.typeOff,partnerCat:S.partnerCat,actPer:S.actPer,selDate:S.selDate,sort:S.sort,scroll:$('#content').scrollTop,panelScroll:$('#panel').scrollTop,my:typeof mpRoute==='function'?mpRoute():null};
  sessionStorage.setItem('aidc-route:'+sharedUser,JSON.stringify(route));
  const hash=routeHash(route);if(hash===lastHash)return;
@@ -464,7 +466,7 @@ function applyRoute(r,force){
   S.page=r.page;S.proj=r.proj;S.full=r.full;S.panel=null;$('#panel').classList.remove('on');$('#app').classList.remove('panel-open');
   render();if(r.panel)openAny(r.panel);if(r.my&&typeof mpOpen==='function'&&PREVIEW_ON)mpOpen(r.my);
  }finally{routeApplying=false;}
- lastHash=routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel,my:typeof mpRoute==='function'?mpRoute():null});
+ lastHash=routeHash({page:S.page,proj:S.proj,full:S.full||routeWant('full'),panel:S.panel||routeWant('panel'),my:typeof mpRoute==='function'?mpRoute():null});
  if(location.hash!==lastHash)history.replaceState({aidc:1},'',location.pathname+location.search+lastHash);sharedUi();}
 // An address may end in &block=<id>: once the item is open, that block is scrolled to and flashed.
 function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).get('block');if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);}

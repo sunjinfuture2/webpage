@@ -5009,8 +5009,10 @@ function routeExtras(q){ const t=q.get('tab'); if(t&&ARCH_TABS.includes(t)){S.ar
  if(typeof SCHU==='undefined')return; const v=q.get('view'); if(['gantt','list','net'].includes(v))SCHU.tab=v; const s=q.get('sec'); if(['proc','gate','evid'].includes(s))SCHU.sec=s; }
 function openAny(id){if(id.startsWith('lib:'))openLibrary(id.slice(4));else openPanel(id,true);}
 function afterNav(){sharedUi();saveRoute();if(typeof schAfterNav==='function')schAfterNav();}
+// what the address named and is still waiting for its schedule to load (schDeferRoute): it stays in the address until it opens
+const routeWant=k=>(typeof SCH!=='undefined'&&SCH.want&&SCH.want[k])||null;
 function saveRoute(){if(!sharedReady||sharedRestoreRoute||routeApplying)return;
- const route={page:S.page,proj:S.proj,panel:S.panel,full:S.full,actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
+ const route={page:S.page,proj:S.proj,panel:S.panel||routeWant('panel'),full:S.full||routeWant('full'),actPage:S.actPage,resPage:S.resPage,ptPage:S.ptPage,archTab:S.archTab,archPage:S.archPage,calY:S.calY,calM:S.calM,calYp:S.calYp,calMp:S.calMp,
   q:S.q,filters:S.filters,typeOff:S.typeOff,partnerCat:S.partnerCat,actPer:S.actPer,selDate:S.selDate,sort:S.sort,scroll:$('#content').scrollTop,panelScroll:$('#panel').scrollTop,my:typeof mpRoute==='function'?mpRoute():null};
  sessionStorage.setItem('aidc-route:'+sharedUser,JSON.stringify(route));
  const hash=routeHash(route);if(hash===lastHash)return;
@@ -5028,7 +5030,7 @@ function applyRoute(r,force){
   S.page=r.page;S.proj=r.proj;S.full=r.full;S.panel=null;$('#panel').classList.remove('on');$('#app').classList.remove('panel-open');
   render();if(r.panel)openAny(r.panel);if(r.my&&typeof mpOpen==='function'&&PREVIEW_ON)mpOpen(r.my);
  }finally{routeApplying=false;}
- lastHash=routeHash({page:S.page,proj:S.proj,full:S.full,panel:S.panel,my:typeof mpRoute==='function'?mpRoute():null});
+ lastHash=routeHash({page:S.page,proj:S.proj,full:S.full||routeWant('full'),panel:S.panel||routeWant('panel'),my:typeof mpRoute==='function'?mpRoute():null});
  if(location.hash!==lastHash)history.replaceState({aidc:1},'',location.pathname+location.search+lastHash);sharedUi();}
 // An address may end in &block=<id>: once the item is open, that block is scrolled to and flashed.
 function sharedJumpBlock(){const b=new URLSearchParams(location.hash.slice(1)).get('block');if(b&&typeof nbJump==='function')setTimeout(()=>nbJump(b),450);}
@@ -5314,11 +5316,12 @@ function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return; 
   SCH.loading[pid]=true; delete SCH.failed[pid];
   (want?schSrcFetch(want):fetch(SCH_SOURCES[pid]).then(r=>{if(!r.ok)throw new Error('일정 원본을 불러오지 못했습니다 ('+r.status+')');return r.json();}))
     .then(src=>{ SCH.arch[key]=src; SCH.loading[pid]=false; if(schSrcWant(pid)!==want){schLoad(pid);if(SCH.base[pid]){schRedraw();schOpenWanted();}return;}   // the record names another plan by now
-      if(use(src)){schRedraw();schOpenWanted();}else schRedraw(); })
-    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;schRedraw();}); }
+      use(src); schRedraw(); schOpenWanted(); })
+    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;schRedraw();schOpenWanted();}); }
 // An address that names a task (or a package / gate / record) of a schedule that has not arrived yet: remembered, opened after loading.
-function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schPids().every(p=>SCH.base[p]))continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
-function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady)return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }
+function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schSettled())continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
+const schSettled=()=>schPids().every(p=>SCH.base[p]||SCH.failed[p]);   // every project's plan is there, or will not come
+function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady||!schSettled())return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }
 // The overrides in force: the shared ones, or those of the scenario this browser is looking at.
 const schScenario=pid=>{const id=SCHU.scn;return id&&SCHED[pid]&&SCHED[pid]['sc:'+id]?id:'';};
 const schOv=pid=>{const root=SCHED[pid]||{};const sc=schScenario(pid);return sc?(root['sc:'+sc].ov||{}):root;};
@@ -6222,7 +6225,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     rows.push(R('구분',ue('cat',r.cat,'입력')),R('연결 업무',r.link?`<span class="plain wrap">${schWbsLinks(m,r.link)}</span>${e('u:link',ph('변경'))}`:ue('link','','예: W4.24 또는 4-24'),true),R('확인 역할',ue('role',r.role,'입력')),R('기한',e('u:due',r.due?schD(r.due):ph('입력'))),R('내용',ue('body',r.body,'입력'),true),R('근거·URL',r.ref&&isUrl(r.ref)?`<a class="url" style="margin-left:0" href="${esc(r.ref)}" target="_blank" rel="noopener" data-stop>${esc(r.ref)}</a>${e('u:ref',ph('변경'))}`:ue('ref',r.ref,'입력'),true),
       R('작성',`<span class="plain">${esc(userName(r.by))} · ${esc(schD((r.at||'').slice(0,10)))}</span>`)); }
   else for(const [k,v] of Object.entries(r.fields)){ if(v==null||String(v).trim()==='')continue; const day=schDayOnly(v);
-    rows.push(R(esc(k),isUrl(v)?`<a class="url" style="margin-left:0" href="${esc(String(v).trim())}" target="_blank" rel="noopener" data-stop>${esc(v)}</a>`:day&&/T00:00:00$/.test(String(v))?`<span class="plain">${schD(day)}</span>`:`<span class="plain wrap">${/WBS|업무|위치/.test(k)?schWbsLinks(m,v):esc(String(v))}</span>`,true)); }
+    rows.push(R(esc(k),isUrl(v)?`<a class="url" style="margin-left:0" href="${esc(String(v).trim())}" target="_blank" rel="noopener" data-stop>${esc(v)}</a>`:day&&/^\d{4}-\d{2}-\d{2}(T00:00:00)?$/.test(String(v))?`<span class="plain">${schD(day)}</span>`:`<span class="plain wrap">${/WBS|업무|위치/.test(k)?schWbsLinks(m,v):esc(String(v))}</span>`,true)); }
   rows.push(R('메모',e('enote',r.note?`<span class="plain wrap">${esc(r.note)}</span>`:ph('입력')),true));
   return wrap('research','근거 및 확약 · '+esc(name),r.title||'(제목 없음)',rows,r.user?`<div style="padding-top:8px"><button class="sh-btn sp-del" data-schx="u:del">이 항목 삭제</button></div>`:''); }
 
