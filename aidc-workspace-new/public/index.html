@@ -2545,7 +2545,7 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .dlg.sch-dlg.sch-up .box{width:600px;padding:36px 40px 26px}
 .sch-up .up-ttl{margin:0;text-align:center;font-size:22px;font-weight:700;color:#000;letter-spacing:-0.02em}
 .sch-up .up-sub{margin:8px 0 0;text-align:center;font-size:13px;color:#8e8e8e}
-.sch-up .up-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:236px;margin-top:24px;border:1.6px dashed #bdbdbd;border-radius:20px;background:#fff;cursor:pointer;font-size:13.5px;color:#8e8e8e;outline:0}
+.sch-up .up-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:190px;margin-top:22px;border:1.6px dashed #bdbdbd;border-radius:20px;background:#fff;cursor:pointer;font-size:13.5px;color:#8e8e8e;outline:0}
 .sch-up .up-drop:hover,.sch-up .up-drop:focus-visible,.sch-up .up-drop.over{border-color:#1c1c1c;background:#f7f7f6;color:#3d3d3d}
 .sch-up .up-drop .up-pic{width:64px;height:50px;flex:none}
 .sch-up .up-drop.small{flex-direction:row;height:76px;gap:14px;border-radius:14px;margin-top:20px}
@@ -2607,6 +2607,36 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .dlg.leave-dlg .m{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
 .dlg.leave-dlg .m b{font-size:15.5px;font-weight:700;color:#000}
 .dlg.leave-dlg .m span{font-size:14px;color:#4f4f4f}
+
+/* the upload window: one large field for the master workbook, six long rows for one section each (seventeenth round, owner's sketch) */
+.sch-up .up-drop.has{height:auto;min-height:92px;align-items:stretch;justify-content:center;gap:10px;padding:14px 14px 14px 18px;border-style:solid;border-color:#d9d9d9;cursor:pointer}
+.sch-up .up-drop.has .up-tags{margin-top:0}
+.sch-up .up-div{display:flex;align-items:center;gap:12px;margin:18px 0 10px;font-size:12px;color:#a3a3a3}
+.sch-up .up-div:before,.sch-up .up-div:after{content:"";flex:1 1 0;height:1px;background:#e3e3e3}
+.sch-up .up-parts{display:flex;flex-direction:column;gap:7px}
+.sch-up .up-part{display:flex;align-items:center;gap:11px;height:44px;padding:0 9px 0 14px;border:1.4px dashed #c4c4c4;border-radius:12px;background:#fff;cursor:pointer;font-size:13px;color:#8e8e8e;min-width:0;outline:0}
+.sch-up .up-part:hover,.sch-up .up-part:focus-visible,.sch-up .up-part.over{border-color:#1c1c1c;background:#f7f7f6}
+.sch-up .up-part .up-pic{flex:none}
+.sch-up .up-part b{flex:none;width:90px;font-weight:600;color:#1c1c1c;white-space:nowrap}
+.sch-up .up-part em{font-style:normal;font-size:12px;color:#a3a3a3;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-up .up-part.has{border-style:solid;border-color:#d9d9d9}
+.sch-up .up-part.bad{border-color:#f0c4c0}
+.sch-up .up-part .fn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1c1c1c}
+.sch-up .up-part .cnt{flex:none;font-weight:700;color:#1c1c1c;font-variant-numeric:tabular-nums}
+.sch-up .up-part .rd{flex:none;font-size:12px;color:#1f8e00}
+.sch-up .up-part .rm{margin-left:auto;flex:none;width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#8e8e8e}
+.sch-up .up-part .rm:hover{background:#f0f0f0;color:#1c1c1c}
+.sch-up .up-parts .up-nt{margin:0 0 3px 14px}
+
+/* from the audit of what could not be changed (seventeenth round): a notice's 수정, a category's 이름 바꾸기 */
+.notice .list .nedit{flex:none;height:18px;padding:0 5px;margin-top:2px;border-radius:3px;color:#8e8e8e;font-size:11.5px;opacity:0;white-space:nowrap}
+.notice .list li:hover .nedit{opacity:1}
+.notice .list .nedit:hover{color:#1c1c1c;background:#ececec}
+.sch-on .notice .list li.nrow .nedit{margin-top:0}
+.pop.sch-multi .it .rn{margin-left:8px;flex:none;font-size:11px;color:#8e8e8e;text-decoration:underline;text-underline-offset:2px;visibility:hidden}
+.pop.sch-multi .it:hover .rn{visibility:visible}
+.pop.sch-multi .it .rn:hover{color:#1c1c1c}
+.pc-menu .pc-history-rename{flex:0 0 22px;width:22px;padding:4px 0;text-align:center;font-size:12px;line-height:1;color:#888}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3629,6 +3659,15 @@ function partnerCategories(value){
 function partnerCategoryOptions(){
   return [...new Set([...Object.values(partnerCategoryHistory),...PARTNERS.flatMap(p=>partnerCategories(p.cat))])].filter(c=>!partnerCategoryHidden[encodeURIComponent(c)]).sort((a,b)=>a.localeCompare(b,'ko'));
 }
+// A category renamed for every partner at once (owner, 2026-11-23: it could only be changed partner by partner). The partner that
+// is being edited follows in its editor; a filter set to the old name follows too.
+function partnerCategoryRename(old,root){ askInput(`“${old}” 구분의 새 이름 (모든 협력업체에 적용)`,old,v=>{ const nw=String(v||'').trim().replace(/\s+/g,' '); if(!nw||nw===old)return; const back=[]; let n=0;
+  for(const p of PARTNERS){ if(p.trash)continue; const cs=partnerCategories(p.cat); if(!cs.includes(old))continue; back.push([p.id,p.cat]); const nx=[...new Set(cs.map(c=>c===old?nw:c))]; p.cat=Array.isArray(p.cat)?nx:nx.join('\n'); n++; }
+  delete partnerCategoryHistory[encodeURIComponent(old)]; partnerCategoryRemember(nw);
+  if(root&&root.isConnected){ const vals=JSON.parse(root.dataset.pcValues||'[]'); if(vals.includes(old))partnerCategoryUpdate(root,[...new Set(vals.map(c=>c===old?nw:c))]); }
+  if(S.partnerCat===old)S.partnerCat=nw;
+  if(S.editSimple)sharedPendingRedraw=true; else render(true);
+  toast(`구분 “${old}”을(를) “${nw}”(으)로 바꿨습니다 · 협력업체 ${n}곳`,6000,{t:'되돌리기',fn:()=>{ for(const [id,cat] of back){const p=PARTNERS.find(q=>q.id===id); if(p)p.cat=cat;} delete partnerCategoryHistory[encodeURIComponent(nw)]; partnerCategoryRemember(old); if(S.partnerCat===nw)S.partnerCat=old; render(true); }}); }); }
 function partnerCategoryRemember(label){
   partnerCategoryHistory[encodeURIComponent(label)]=label;
 }
@@ -3667,7 +3706,7 @@ function partnerCategoryShow(root){
   const menu=document.createElement('div');menu.className='pc-menu';
   menu.setAttribute('aria-label','기존 구분 선택');
   menu.innerHTML='<div class="pc-menu-title">기존 구분</div>'+
-    (options.length?options.map(c=>'<div class="pc-option"><button type="button" class="pc-option-label" data-pc-choice="'+esc(c)+'"'+(selected.includes(c)?' disabled aria-label="'+esc(c)+' 선택됨"':'')+'>'+esc(c)+'</button><button type="button" class="pc-history-remove" data-pc-history-remove="'+esc(c)+'" aria-label="'+esc(c)+' 기존 구분 목록에서 삭제" title="목록에서 삭제">×</button></div>').join(''):'<div class="pc-menu-empty">'+(q?'Enter로 새 구분 추가':'등록된 구분이 없습니다')+'</div>');
+    (options.length?options.map(c=>'<div class="pc-option"><button type="button" class="pc-option-label" data-pc-choice="'+esc(c)+'"'+(selected.includes(c)?' disabled aria-label="'+esc(c)+' 선택됨"':'')+'>'+esc(c)+'</button>'+(PREVIEW_ON?'<button type="button" class="pc-history-rename" data-pc-history-rename="'+esc(c)+'" aria-label="'+esc(c)+' 이름 바꾸기" title="이름 바꾸기 (모든 협력업체에 적용)">✎</button>':'')+'<button type="button" class="pc-history-remove" data-pc-history-remove="'+esc(c)+'" aria-label="'+esc(c)+' 기존 구분 목록에서 삭제" title="목록에서 삭제">×</button></div>').join(''):'<div class="pc-menu-empty">'+(q?'Enter로 새 구분 추가':'등록된 구분이 없습니다')+'</div>');
   document.body.appendChild(menu);partnerCategoryMenu=menu;input.setAttribute('aria-expanded','true');
   const r=root.getBoundingClientRect(),width=Math.min(240,window.innerWidth-24);
   menu.style.width=width+'px';
@@ -3714,6 +3753,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('click',e=>{
   const choice=e.target.closest?.('[data-pc-choice]'),remove=e.target.closest?.('[data-pc-remove]');
   const historyRemove=e.target.closest?.('[data-pc-history-remove]');
+  { const rn=e.target.closest?.('[data-pc-history-rename]'); if(rn){ e.preventDefault(); e.stopImmediatePropagation(); const root=partnerCategoryActive; partnerCategoryClose(); partnerCategoryRename(rn.dataset.pcHistoryRename,root); return; } }
   if(historyRemove){e.preventDefault();e.stopImmediatePropagation();const label=historyRemove.dataset.pcHistoryRemove;partnerCategoryRemember(label);partnerCategoryHidden[encodeURIComponent(label)]=true;if(partnerCategoryActive?.isConnected)partnerCategoryShow(partnerCategoryActive);return;}
   if(choice&&partnerCategoryActive?.isConnected){e.preventDefault();e.stopImmediatePropagation();partnerCategoryAdd(partnerCategoryActive,choice.dataset.pcChoice);return;}
   if(remove){e.preventDefault();e.stopImmediatePropagation();const root=remove.closest('.pc-editor');partnerCategoryUpdate(root,JSON.parse(root.dataset.pcValues||'[]').filter(c=>c!==remove.dataset.pcRemove));root.querySelector('.pc-input').focus();partnerCategoryShow(root);return;}
@@ -3855,8 +3895,8 @@ function renderArchive(){
   if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||'';
   const rows=archList(S.archTab); const total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
   let h=`<div class="arch-title">자료실</div><div style="padding-top:194.2px">`;
-  ARCH_SECTIONS.forEach((sec,si)=>{
-    h+=`<div class="asec" style="${si===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
+  ARCH_SECTIONS.forEach((sec,si)=>{ if(sec.gone)return;   // in the trash with its cards (archSectionTrash)
+    h+=`<div class="asec" style="${!h.includes('class="asec"')?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
     const cells=[...sec.cards.filter(c=>!c.trash).map(c=>({c})),{add:true}]; const nrows=Math.ceil(cells.length/4);
     h+=`<div class="agrid">`;
     for(let r=0;r<nrows;r++){ for(let k=0;k<4;k++){const idx=r*4+k; const cell=cells[idx]; const full=(r*4+3<cells.length)&&!cells[r*4+3].add;
@@ -4315,7 +4355,7 @@ function restoreOne(k,id){ let how='';
   if(k==='item'){const it=ITEMS.find(x=>x.id===id); if(!it||it.status!=='trash')return ''; how=it.prevStatus?'':'draft'; it.status=it.prevStatus||'draft'; delete it.prevStatus; delete it.trashedAt; delete it.trashedBy; if(it.arch&&!ARCH_TABS.includes(it.arch)){ARCH_TABS.push(it.arch);if(!ARCH_ROWS[it.arch])ARCH_ROWS[it.arch]=[];}}
   else if(k==='partner'){const p=PARTNERS.find(x=>x.id===id); if(p){delete p.trash;delete p.trashedAt;delete p.trashedBy;}}
   else if(k==='project'){restoreProject(id);}
-  else{const [si,cid]=id.split(':'); const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid); if(c){delete c.trash;delete c.trashedAt;delete c.trashedBy;}}
+  else{const [si,cid]=id.split(':'); const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid); if(c){delete c.trash;delete c.trashedAt;delete c.trashedBy;delete c.withSec; if(ARCH_SECTIONS[si].gone)delete ARCH_SECTIONS[si].gone;}}   // a card of a section that went to the trash brings its section back
   return how||'ok'; }
 // A deleted project waits in the settings record (projTrash) for 30 days: out of PROJECTS, so every list forgets it, but whole.
 function trashProject(id){ const p=PROJECTS[id]; if(!p)return; SETTINGS.projTrash={...(SETTINGS.projTrash||{}),[id]:{project:copy(p),at:new Date().toISOString(),by:sharedUser}}; delete PROJECTS[id]; }
@@ -4328,7 +4368,10 @@ document.addEventListener('click',async e=>{
   if(!T.isConnected)return; // the click redrew its own popover (date / month picker, search): nothing else to do
   if(q('[data-stop]')){e.stopPropagation();return;}
   let el;
-  if(el=q('[data-pimg]')){const id=el.dataset.pimg;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;if(typeof schImgRatio==='function'){const r=await schImgRatio(f);if(r)PROJECTS[id].imgR=r;else delete PROJECTS[id].imgR;}render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
+  if(el=q('[data-pimg]')){const id=el.dataset.pimg;
+    if(PREVIEW_ON&&PROJECTS[id]&&PROJECTS[id].img&&!el.dataset.go1){ e.stopPropagation(); menuPop(el,[{t:'이미지 교체',k:'ch',fn:()=>{el.dataset.go1='1';el.click();}},{t:'이미지 빼기',k:'rm',danger:true,fn:()=>{ const was=PROJECTS[id].img, wasR=PROJECTS[id].imgR; delete PROJECTS[id].img; delete PROJECTS[id].imgR; render(true);
+        toast('프로젝트 이미지를 뺐습니다.',5000,{t:'되돌리기',fn:()=>{ if(!PROJECTS[id])return; PROJECTS[id].img=was; if(wasR)PROJECTS[id].imgR=wasR; render(true); }}); }}]); return; }   /* a card's image can be taken away too (owner, 2026-11-23) */
+    delete el.dataset.go1;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;if(typeof schImgRatio==='function'){const r=await schImgRatio(f);if(r)PROJECTS[id].imgR=r;else delete PROJECTS[id].imgR;}render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
   if(el=q('[data-copy]')){const v=el.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('주소를 복사했습니다.',1200),()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('주소를 복사했습니다.',1200);}catch{toast('복사하지 못했습니다.');}ta.remove();});if(el.closest('.pop'))closePop();return;}
   if(S.panel&&!T.closest('#panel,.topbar,.tb-panel-ic,.pop,.dlg,#ovl,#sb,.sb-resize,.panel-resize,.tb-logo,.sb-open,#toast,[data-open],[data-go],[data-lib],[data-partnername],.slash-menu,.ed-toolbar,.mention-pop')){closePanel();return;}
   if(el=q('[data-unlink]')){const [f,id]=el.dataset.unlink.split(':');const it=itemFromEvent();if(it&&canEditItem(it)&&(f==='actions'||f==='research')){it[f]=(it[f]||[]).filter(x=>x!==id);it.dirty=true;rerenderItem();}return;}
@@ -4381,7 +4424,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-partnername]')){const name=el.dataset.partnername.trim();if(!name)return;const pt=PARTNERS.find(x=>!x.trash&&norm(x.name)===norm(name));if(pt){openPanel(pt.id);}else{openPop(el,`<div class="hd">${esc(name)}</div><div class="msg" style="padding-top:0">협력업체 목록에 아직 등록되지 않은 업체입니다.<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="it" data-regpartner="${esc(name)}" style="background:#0f0f0f;color:#fff">협력업체로 등록</button></div></div>`);}return;}
   if(el=q('[data-regpartner]')){const pt={id:'pt'+Date.now(),name:el.dataset.regpartner,site:'',cat:'기타',desc:'',meet:null};PARTNERS.unshift(pt);closePop();render(true);openPanel(pt.id);toast('협력업체로 등록했습니다. 수정 버튼으로 정보를 채워 주세요.',2600);return;}
   // archive
-  if(el=q('[data-secmenu]')){const si=+el.dataset.secmenu;menuPop(el,[{t:'이름 바꾸기',k:'ren',fn:()=>{const n=$(`[data-secname="${si}"]`);n.setAttribute('contenteditable','true');n.focus();document.execCommand('selectAll',false,null);n.onblur=()=>{ARCH_SECTIONS[si].name=n.textContent.trim()||ARCH_SECTIONS[si].name;n.removeAttribute('contenteditable');renderArchive();};n.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();n.blur();}};}},{t:'위로 이동',k:'up',fn:()=>{if(si>0){[ARCH_SECTIONS[si-1],ARCH_SECTIONS[si]]=[ARCH_SECTIONS[si],ARCH_SECTIONS[si-1]];renderArchive();}}},'-',{t:'구분 삭제',k:'del',danger:true,fn:()=>{const s=ARCH_SECTIONS[si];if(!s)return;const n=s.cards.filter(c=>!c.trash).length;confirmDlg(`“${s.name}” 구분${n?`과 그 안의 자료 ${n}건`:''}을 삭제할까요? 삭제하면 되돌릴 수 없습니다.`,[{t:'삭제',pri:true,fn:()=>{const j=ARCH_SECTIONS.findIndex(x=>x===s||x.name===s.name);if(j>=0)ARCH_SECTIONS.splice(j,1);renderArchive();toast('구분을 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);}}]);return;}
+  if(el=q('[data-secmenu]')){const si=+el.dataset.secmenu;menuPop(el,[{t:'이름 바꾸기',k:'ren',fn:()=>{const n=$(`[data-secname="${si}"]`);n.setAttribute('contenteditable','true');n.focus();document.execCommand('selectAll',false,null);n.onblur=()=>{ARCH_SECTIONS[si].name=n.textContent.trim()||ARCH_SECTIONS[si].name;n.removeAttribute('contenteditable');renderArchive();};n.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();n.blur();}};}},{t:'위로 이동',k:'up',fn:()=>{if(si>0){[ARCH_SECTIONS[si-1],ARCH_SECTIONS[si]]=[ARCH_SECTIONS[si],ARCH_SECTIONS[si-1]];renderArchive();}}},'-',{t:'구분 삭제',k:'del',danger:true,fn:()=>{archSectionTrash(si);}}]);return;}
   if(el=q('[data-cardmenu]')){e.stopPropagation();const [si,cid]=el.dataset.cardmenu.split(':');const sec=ARCH_SECTIONS[si];const c=sec.cards.find(x=>x.id===cid);el.classList.add('on');const p=menuPop(el,[{t:'열기',k:'open',fn:()=>openPanel(si+':'+cid)},{t:'사이트 열기',k:'site',fn:()=>{const u=urlHref(c.url==='#'?'':c.url);if(u)window.open(u,'_blank','noopener');else toast('등록된 주소가 없습니다.');}},{t:'링크 복사',k:'copy',fn:()=>{navigator.clipboard&&navigator.clipboard.writeText(c.url);toast('링크를 복사했습니다.');}},'-',{t:'휴지통으로 보내기',k:'del',danger:true,fn:()=>confirmTrash(c.name,()=>{const cc=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid);if(!cc)return;cc.trash=true;cc.trashedAt=new Date().toISOString();cc.trashedBy=sharedUser;if(S.panel===si+':'+cid)closePanel(true);renderArchive();toast('휴지통으로 이동했습니다. 휴지통에서 30일 안에 복원할 수 있습니다.',2600);})}],{right:true});const obs=new MutationObserver(()=>{if(!document.body.contains(p)){el.classList.remove('on');obs.disconnect();}});obs.observe(document.body,{childList:true});return;}
   if(el=q('[data-acard]')){openPanel(el.dataset.acard);return;}
   if(el=q('[data-addrow]')){const tab=S.hoverTab&&ARCH_TABS.includes(S.hoverTab)?S.hoverTab:S.archTab;openPop(el,`<div class="hd">${esc(tab)}에 자료 추가</div><div class="msg" style="padding-top:0"><input id="ar-title" placeholder="제목"><input id="ar-url" placeholder="출처 URL (선택)" style="margin-top:6px"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-ar="cancel">취소</button><button class="it" data-ar="ok:${esc(tab)}" style="font-weight:600">추가</button></div></div>`);setTimeout(()=>$('#ar-title')?.focus(),0);return;}
@@ -5075,6 +5118,15 @@ sharedStart().catch(()=>sharedStatus('서버 연결을 확인해주세요.'));
 <script>
 /* ===================== EDIT MODEL HELPERS ===================== */
 const nowTxt=()=>{const d=new Date();return `${d.getMonth()+1}월 ${d.getDate()} ${d.getHours()<12?'오전':'오후'} ${((d.getHours()+11)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;};
+// A section of the 자료실 is not deleted for good any more (owner, 2026-11-23): it goes out of sight (`gone`) and its cards go to the
+// trash with it, so they can be restored for 30 days; restoring one of them brings the section back. An empty section is simply
+// removed. The Worker drops a section that is gone once its cards have been purged.
+function archSectionTrash(si){ const s=ARCH_SECTIONS[si]; if(!s)return; const n=s.cards.filter(c=>!c.trash).length;
+  if(!s.cards.length){ ARCH_SECTIONS.splice(si,1); renderArchive(); toast('구분을 삭제했습니다.'); return; }
+  confirmDlg(`“${s.name}” 구분${n?`과 그 안의 자료 ${n}건`:''}을 휴지통으로 보낼까요? 휴지통에서 30일 안에 복원할 수 있습니다.`,[{t:'휴지통으로 보내기',pri:true,fn:()=>{ const x=ARCH_SECTIONS[si]; if(!x||x.name!==s.name)return; const at=new Date().toISOString();
+    for(const c of x.cards)if(!c.trash){c.trash=true;c.trashedAt=at;c.trashedBy=sharedUser;c.withSec=at;} x.gone=at;
+    if(S.panel&&String(S.panel).startsWith(si+':'))closePanel(true); renderArchive();
+    toast('구분을 휴지통으로 보냈습니다.',6000,{t:'되돌리기',fn:()=>{ const y=ARCH_SECTIONS.find(q=>q.gone===at); if(!y)return; delete y.gone; for(const c of y.cards)if(c.withSec===at){delete c.trash;delete c.trashedAt;delete c.trashedBy;delete c.withSec;} renderArchive(); }}); }},{t:'취소',fn:()=>{}}]); }
 function confirmTrash(name,fn){confirmDlg(`“${name}”을(를) 휴지통으로 보낼까요?`,[{t:'휴지통으로 보내기',pri:true,fn},{t:'취소',fn:()=>{}}]);}
 async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.id))return; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal;
   if(it.status==='new'){const i=ITEMS.indexOf(it); if(i>=0)ITEMS.splice(i,1); toast('작성하던 내용을 버렸습니다.');} // never saved: nothing to keep
@@ -6580,7 +6632,7 @@ function schBackup(pid){ const root=SCHED[pid]||{}, A=AIDCSchedule, strip=o=>Obj
   return {schemaVersion:1,projectId:'pangyo-aidc',source:SCH.src[pid],scenarios:[base,...scs],activeId:'base',preferences:{view:'gantt',date:base.statusDate,scale:'month',collapsed:[...new Set(base.tasks.map(t=>t.phase))],masterTree:true,fitTimeline:true,showReference:true,showLinks:true,gridWidth:640},audit:[]}; }
 // The Excel reader / writer is a bundle of its own, fetched the first time it is needed.
 let schXlsxLoading=null;
-function schXlsx(){ return schXlsxLoading||(schXlsxLoading=new Promise((ok,no)=>{ if(window.AIDCScheduleXlsx){ok(window.AIDCScheduleXlsx);return;} const s=document.createElement('script'); s.src='/schedule-xlsx.js?v=c86f88f2faca';
+function schXlsx(){ return schXlsxLoading||(schXlsxLoading=new Promise((ok,no)=>{ if(window.AIDCScheduleXlsx){ok(window.AIDCScheduleXlsx);return;} const s=document.createElement('script'); s.src='/schedule-xlsx.js?v=3aaf68d2f21f';
     s.onload=()=>window.AIDCScheduleXlsx?ok(window.AIDCScheduleXlsx):no(new Error('엑셀 기능을 불러오지 못했습니다.')); s.onerror=()=>{schXlsxLoading=null;no(new Error('엑셀 기능을 불러오지 못했습니다. 연결을 확인해 주세요.'));}; document.head.appendChild(s); })); }
 // A plan from a file carries its own ids when the file was made from another copy of the workbook. Its tasks are then matched
 // to this project's by WBS number, its relations by the two tasks they join, so that the same task stays the same task.
@@ -6733,12 +6785,16 @@ function schNoticeDraw(){ const n=$('#notice'); if(!n)return; const act=document
   if(!$('.nplus',n))n.insertAdjacentHTML('beforeend',`<button class="nplus" data-nt="add" title="공지사항 쓰기" aria-label="공지사항 쓰기">${svg('i-plus',10,10)}</button>`);
   $('.lb',n).innerHTML=`공지사항${fresh?`<i class="nb" title="새 공지 ${fresh}건"></i>`:''}`;
   $('.msg',n).textContent=list.length?schNtTitle(list[0]):'등록된 공지사항이 없습니다.';
-  const form=ui.form?`<li class="nform"><input id="nt-title" placeholder="제목" maxlength="60" value="${esc(ui.title||'')}"><textarea id="nt-body" placeholder="내용" rows="3" maxlength="1000">${esc(ui.body||'')}</textarea><div class="bt"><button data-nt="cancel">취소</button><button class="pri" data-nt="save">등록</button></div></li>`:'';
+  const form=ui.form?`<li class="nform"><input id="nt-title" placeholder="제목" maxlength="60" value="${esc(ui.title||'')}"><textarea id="nt-body" placeholder="내용" rows="3" maxlength="1000">${esc(ui.body||'')}</textarea><div class="bt"><button data-nt="cancel">취소</button><button class="pri" data-nt="save">${ui.edit?'저장':'등록'}</button></div></li>`:'';
   $('.list',n).innerHTML=form+(list.map(x=>{ const on=ui.open===x.id, body=schNtBody(x);
-    return `<li class="nrow ${on?'on':''}" data-nt="open" data-id="${esc(x.id)}"><time>${esc(x.date)}</time><span class="nt">${schNtNew(x)?'<i class="nb" title="새 공지"></i>':''}${esc(schNtTitle(x))}</span><span class="by">${esc(x.by?userName(x.by):'')}</span>${canAdmin()||x.by===sharedUser?`<button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:'<span class="ndel"></span>'}</li>${on?`<li class="nbody">${body?esc(body):'<span class="none">내용이 없습니다.</span>'}</li>`:''}`; }).join('')||(form?'':'<li class="nnone">등록된 공지사항이 없습니다. + 버튼으로 첫 공지를 쓰세요.</li>')); }
+    return `<li class="nrow ${on?'on':''}" data-nt="open" data-id="${esc(x.id)}"><time>${esc(x.date)}</time><span class="nt">${schNtNew(x)?'<i class="nb" title="새 공지"></i>':''}${esc(schNtTitle(x))}</span><span class="by">${esc(x.by?userName(x.by):'')}</span>${canAdmin()||x.by===sharedUser?`<button class="nedit" data-nt="edit" data-id="${esc(x.id)}" title="공지 수정">수정</button><button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:'<span class="ndel"></span>'}</li>${on?`<li class="nbody">${body?esc(body):'<span class="none">내용이 없습니다.</span>'}</li>`:''}`; }).join('')||(form?'':'<li class="nnone">등록된 공지사항이 없습니다. + 버튼으로 첫 공지를 쓰세요.</li>')); }
 function schNoticeClose(){ const n=$('#notice'); if(!n||!n.classList.contains('open'))return; const ui=SCH.nt||{}; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}   // what was typed waits for the next opening
   n.classList.remove('open'); if(document.activeElement&&n.contains(document.activeElement))document.activeElement.blur(); }
 function schNoticeSave(){ const t=$('#nt-title'), b=$('#nt-body'), title=(t.value||'').replace(/\s+/g,' ').trim(), body=(b.value||'').trim(); if(!title){t.focus();toast('공지 제목을 입력하세요.');return;}
+  // a notice being edited (owner, 2026-11-23: a notice could only be deleted): its writer or an admin changes title and text in the same form
+  { const eid=(SCH.nt||{}).edit; if(eid){ if(!NOTICES.some(q=>q.id===eid)){SCH.nt={};schNoticeDraw();toast('삭제된 공지사항입니다.');return;}
+      NOTICES=NOTICES.map(q=>q.id===eid?Object.assign({},q,{title,body,text:title+(body?' — '+body.replace(/\s+/g,' '):''),editedAt:new Date().toISOString(),editedBy:sharedUser}):q);
+      SCH.nt={open:eid}; t.blur(); schNoticeDraw(); toast('공지사항을 수정했습니다.'); return; } }
   const id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
   NOTICES=NOTICES.concat({id,date:TODAY,at:new Date().toISOString(),title,body,text:title+(body?' — '+body.replace(/\s+/g,' '):''),by:sharedUser});
   SCH.nt={open:id}; t.blur(); schNoticeDraw(); toast('공지사항을 등록했습니다.'); }
@@ -6780,6 +6836,7 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   const n=$('#notice'); if(!n)return;
   if(el=T.closest('#notice [data-nt]')){ const k=el.dataset.nt, ui=SCH.nt||(SCH.nt={});
     if(k==='add'){ ui.form=true; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
+    if(k==='edit'){ const x=NOTICES.find(q=>q.id===el.dataset.id); if(!x||!(canAdmin()||x.by===sharedUser))return; SCH.nt={open:x.id,form:true,edit:x.id,title:schNtTitle(x),body:schNtBody(x)}; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
     if(k==='cancel'){ SCH.nt={open:ui.open}; schNoticeDraw(); return; }
     if(k==='save'){ schNoticeSave(); return; }
     if(k==='open'){ if(T.closest('.ndel'))return; const id=el.dataset.id; ui.open=ui.open===id?null:id; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}
@@ -6812,10 +6869,23 @@ function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of
 const schRfTags=c=>{ if(c.tag){c.tags=[c.tag];delete c.tag;} return Array.isArray(c.tags)?c.tags:[]; };   // the single choice of before becomes a list
 const schTagLabel=t=>t==='-'?'구분 없음':'['+t+']';
 // A list one can tick several of; it stays open. all: [[value, count|null]], isOn(value), toggle(value); tail: html below the list.
-function schMultiPop(el,title,all,isOn,toggle,tail,none){ const draw=()=>`<div class="hd">${esc(title)}</div>${none?`<div class="it ${all.some(([t])=>isOn(t))?'':'sel'}" data-none>${esc(none)}</div><div class="sep"></div>`:''}`+(all.map(([t,n])=>`<div class="it ${isOn(t)?'sel':''}" data-t="${esc(t)}"><i class="ck">${isOn(t)?svg('i-check',9,7.5):''}</i><b>${esc(schTagLabel(t))}</b>${n!=null?`<span class="n">${n}</span>`:''}</div>`).join('')||'<div class="msg">아직 쓰인 구분이 없습니다.</div>')+(tail||'');
+function schMultiPop(el,title,all,isOn,toggle,tail,none,rename){ const draw=()=>`<div class="hd">${esc(title)}</div>${none?`<div class="it ${all.some(([t])=>isOn(t))?'':'sel'}" data-none>${esc(none)}</div><div class="sep"></div>`:''}`+(all.map(([t,n])=>`<div class="it ${isOn(t)?'sel':''}" data-t="${esc(t)}"><i class="ck">${isOn(t)?svg('i-check',9,7.5):''}</i><b>${esc(schTagLabel(t))}</b>${n!=null?`<span class="n">${n}</span>`:''}${rename&&t!=='-'?`<button type="button" class="rn" data-rn="${esc(t)}" title="이 구분의 이름 바꾸기 (모든 리서치에 적용)">이름 바꾸기</button>`:''}</div>`).join('')||'<div class="msg">아직 쓰인 구분이 없습니다.</div>')+(tail||'');
   const p=openPop(el,draw(),{cls:'sch-colmenu sch-multi'}); p._draw=()=>{const y=p.scrollTop;p.innerHTML=draw();p.scrollTop=y;if(p._after)p._after();};
-  p.addEventListener('click',e=>{ const it=e.target.closest('.it[data-t]'), no=e.target.closest('.it[data-none]'); if(no){e.stopPropagation();toggle(null);closePop();return;} if(!it)return; e.stopPropagation(); toggle(it.dataset.t); p._draw(); }); return p; }
+  p.addEventListener('click',e=>{ const rn=rename&&e.target.closest('[data-rn]'); if(rn){e.stopPropagation();closePop();rename(rn.dataset.rn);return;} const it=e.target.closest('.it[data-t]'), no=e.target.closest('.it[data-none]'); if(no){e.stopPropagation();toggle(null);closePop();return;} if(!it)return; e.stopPropagation(); toggle(it.dataset.t); p._draw(); }); return p; }
 // The 구분 of a research note in its detail: chips, and while it is edited a list of those in use to tick and a box for a new one.
+// A 구분 renamed in every research note at once (owner, 2026-11-23: a wrong one could only be fixed note by note): the notes' own
+// lists and the [..] of their titles. A note somebody else is editing is left out and counted. One undo in the toast.
+function schCatRename(old,done){ askInput(`“${old}” 구분의 새 이름 (모든 리서치에 적용)`,old,v=>{ const nw=schTagNorm(v); if(!nw||nw===old)return; const back=[]; let n=0, skip=0;
+  for(const i of ITEMS){ if(i.type!=='research'||i.status==='trash')continue; const inC=schResCats(i).includes(old), inT=schResTitleTags(i).includes(old); if(!inC&&!inT)continue;
+    if(i.status==='draft'&&i.authorId&&i.authorId!==sharedUser)continue; if(otherLock('item:'+i.id)){skip++;continue;}
+    back.push([i.id,Array.isArray(i.cats)?i.cats.slice():null,i.title]);
+    if(inC)i.cats=[...new Set(schResCats(i).map(t=>t===old?nw:t))];
+    if(inT){ const lines=String(i.title||'').split('\n'); lines[0]=lines[0].replace(/\[([^\[\]\n]{1,16})\]/g,(m,t)=>schTagNorm(t)===old?'['+nw+']':m); i.title=lines.join('\n'); }
+    if(!i.editing){i.updatedAt=new Date().toISOString();i.updatedBy=sharedUser;} n++; }
+  const c=typeof schRf==='function'?schRf():null; if(c&&Array.isArray(c.tags)&&c.tags.includes(old))c.tags=[...new Set(c.tags.map(t=>t===old?nw:t))];
+  render(true); const cur=curItem(); if(cur&&cur.type==='research')rerenderItem(cur.id);
+  toast(`구분 “${old}”을(를) “${nw}”(으)로 바꿨습니다 · 리서치 ${n}건${skip?` (다른 멤버가 수정 중인 ${skip}건 제외)`:''}`,6000,{t:'되돌리기',fn:()=>{ for(const [id,cats,title] of back){const i=ITEMS.find(q=>q.id===id); if(!i)continue; if(cats)i.cats=cats; else delete i.cats; i.title=title;} render(true); const q=curItem(); if(q&&q.type==='research')rerenderItem(q.id); }});
+  if(done)done(nw); }); }
 function schCatsField(it,E){ const own=schResCats(it), auto=schResTitleTags(it).filter(t=>!own.includes(t));
   const chips=own.map(t=>`<span class="rc-tag">${esc(t)}${E?`<button type="button" data-pick="uncat" data-k="${esc(t)}" title="이 구분 빼기">${svg('i-x',7,7)}</button>`:''}</span>`).join('')+auto.map(t=>`<span class="rc-tag auto" title="제목의 [${esc(t)}] 에서 온 구분입니다">${esc(t)}</span>`).join('');
   return `<span class="rc-tags">${chips}${E?'<span class="chip add" data-pick="cats">+ 구분 선택</span>':(chips?'':'<span class="plain" style="color:#c4c4c4">없음</span>')}</span>`; }
@@ -6823,7 +6893,7 @@ function schCatsPick(el,it){ const redraw=()=>{ it.dirty=true; const box=$('.rc-
   const set=l=>{ if(l.length)it.cats=l; else delete it.cats; redraw(); }, has=t=>schResCats(it).includes(t);
   const all=()=>{ const m=new Map(schResTags(liveItems('research',null))); for(const t of schResCats(it))if(!m.has(t))m.set(t,null); return [...m]; };
   let list=all(); const p=schMultiPop(el,'구분 선택 (여러 개 가능)',list,has,t=>{ set(has(t)?schResCats(it).filter(x=>x!==t):schResCats(it).concat(t)); },
-    `<div class="msg rc-new"><input id="rc-new" maxlength="16" placeholder="새 구분 입력 후 Enter" autocomplete="off"></div>`);
+    `<div class="msg rc-new"><input id="rc-new" maxlength="16" placeholder="새 구분 입력 후 Enter" autocomplete="off"></div>`,null,old=>schCatRename(old));
   const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const t=schTagNorm(inp.value); if(!t)return; if(!has(t))set(schResCats(it).concat(t)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
   p._after=wire; wire(); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
@@ -6844,7 +6914,7 @@ function schResBar(pid){ const c=schRf();
 function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, go=()=>{S.resPage=1;refreshSec('research');};
   const fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}});
   const pool=liveItems('research',null); let items=[];
-  if(k==='tag'){ const has=t=>schRfTags(c).includes(t); schMultiPop(el,'구분 (여러 개 선택 가능)',schResTags(pool).concat([['-',pool.filter(i=>!schResTagsOf(i).length).length]]),has,t=>{ if(t===null)delete c.tags; else{ const l=has(t)?schRfTags(c).filter(x=>x!==t):schRfTags(c).concat(t); if(l.length)c.tags=l; else delete c.tags; } go(); },'','전체 구분'); return; }
+  if(k==='tag'){ const has=t=>schRfTags(c).includes(t); schMultiPop(el,'구분 (여러 개 선택 가능)',schResTags(pool).concat([['-',pool.filter(i=>!schResTagsOf(i).length).length]]),has,t=>{ if(t===null)delete c.tags; else{ const l=has(t)?schRfTags(c).filter(x=>x!==t):schRfTags(c).concat(t); if(l.length)c.tags=l; else delete c.tags; } go(); },'','전체 구분',old=>schCatRename(old)); return; }
   else if(k==='who')items=[fl('',{t:'전체 담당자'}),...[...new Set(pool.flatMap(i=>i.people||[]).filter(Boolean))].sort((x,y)=>userName(x).localeCompare(userName(y))).map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))];
   else items=[fl('',{t:k==='when'?'전체 기간':'첨부 전체'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   if(k==='when')items.push('-',{t:'직접 설정…',sel:c.when==='range',fn:()=>schRangePick(el,c.from||'',c.to||'',(a,b)=>{ if(a||b){c.when='range';c.from=a;c.to=b;} else{delete c.when;delete c.from;delete c.to;} go(); })});
@@ -7423,7 +7493,7 @@ function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), rows=q?found.docs:ar
     <div class="tbl archive pv"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>중요도</em></span><span><em>최종수정일자</em></span><span><em>드롭박스 URL</em></span></div>
     ${page.map(x=>schArchRow(x.r,x.t)).join('')}${page.length?'':`<div class="none">${q?'검색어에 맞는 문서가 없습니다.':'등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.'}</div>`}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:44px" class="pager')}`; }
 function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
-  ARCH_SECTIONS.forEach((sec,si)=>{ const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
+  ARCH_SECTIONS.forEach((sec,si)=>{ if(sec.gone)return; const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
     h+=`<div class="asec" style="${n++===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
     const N=5, cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/N); h+=`<div class="agrid g5">`;   // five in a row (owner's design, 2026-11-23)
     for(let r=0;r<nrows;r++)for(let k=0;k<N;k++){ const idx=r*N+k, cell=cells[idx], full=(r*N+N-1<cells.length)&&!cells[r*N+N-1].add;
@@ -7579,7 +7649,7 @@ document.addEventListener('click',e=>{ if(!schPreview()||schCalm()||!e.target.cl
 // plan, so they stay; only where the workbook itself changed a value does the workbook win (schUpReconcile). Tasks keep their ids by
 // WBS, so their bodies, comments and files stay attached. One undo step takes the whole upload back.
 // The reading is in the Excel bundle (schedule/xlsx.ts readSheets); nothing is written before 적용.
-const SCHUP={pid:'',files:[],plan:null,busy:false,fail:'',run:0,off:null};
+const SCHUP={pid:'',slots:{},plan:null,busy:false,fail:'',run:0,off:null};   // slots: 'master' and one per row of the window -> {name,size,file,reading,res,view,err}
 const SCH_UP_REC=[['procurementPackages','외부설비 조달대장'],['gates','승인게이트'],['commitmentReviews','보완·확약관리'],['assumptionsAndReferences','전제와참고자료'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS일정검토'],['offtakers','오프테이커 후보검토'],['sourceMappings','원자료대조']];
 const SCH_UP_EVK=['commitmentReviews','assumptionsAndReferences','responsibilityBoundaries','nvisScheduleReview','offtakers','sourceMappings'];
 // what the workbook says about a task, a relation, a package (everything else in an override is only known to the app: members, importance, address, reason)
@@ -7635,12 +7705,17 @@ function schUpReconcile(ov,oldBase,newBase,oldSrc,newSrc,has){ const out={}; let
 // The source plan the project would have, and what that does: nothing is written here.
 function schUpMerge(pid,reads){ const A=AIDCSchedule, D=A.dates, m=schModel(pid); if(!m)return {error:'일정을 불러오는 중입니다. 잠시 뒤에 다시 시도해주세요.'};
   const old=SCH.src[pid], oldBase=SCH.base[pid], root=SCHED[pid]||{}, src=schUpSlim(old), warn=[], R={}; let T=null, L=null, when='', sum=null;
-  const twice=(what,r)=>warn.push(`${what} 시트가 두 파일에 있습니다. “${r.name}” 기준으로 반영합니다.`);
+  const info=[], twice=(what,r)=>info.push(`${what} 시트는 마스터 파일에도 있습니다. 따로 올린 “${r.name}” 기준으로 반영합니다.`); let G=null;
   for(const r of reads){
-    if(r.tasks){ if(!T||(T.tasksPartial&&!r.tasksPartial))T=r; else if(T.tasksPartial===r.tasksPartial){twice('업무',r);T=r;} }
+    if(r.tasks){ if(r.gantt)G=r; else if(!T||(T.tasksPartial&&!r.tasksPartial))T=r; else if(T.tasksPartial===r.tasksPartial){twice('업무',r);T=r;} }
     if(r.links){ if(L)twice('업무연결',r); L=r; }
     for(const [k,label] of SCH_UP_REC)if(r.records&&r.records[k]){ if(R[k])twice(label,r); R[k]=r; }
     if(r.statusDate)when=r.statusDate; if(r.summary)sum=r.summary; }
+  // the row "액션 일정": alone it brings dates into the tasks there are; beside a task list (the master file, the row "액션 리스트") its dates go over that list's
+  if(G&&(!T||T.tasksPartial))T=G;
+  else if(G){ const by=new Map(G.tasks.map(g=>[g.wbs,g])), kinds=(G.taskCols||[]).some(k=>k==='kind'||k==='days'); let n=0;
+    T=Object.assign({},T,{tasks:T.tasks.map(t=>{const g=by.get(t.wbs); if(!g)return t; n++; by.delete(t.wbs); return Object.assign({},t,{start:g.start,finish:g.finish,fStart:null,fFinish:null},kinds?{kind:g.kind}:{});})});
+    if(by.size)warn.push(`액션 일정 파일에만 있는 WBS ${by.size}건은 넣지 않았습니다. 업무 목록은 리스트(단계별업무분장) 기준입니다.`); }
   const has={tasks:!!T,links:!!L,proc:!!R.procurementPackages,gates:!!R.gates,evid:SCH_UP_EVK.some(k=>R[k]),date:!!when&&when!==old.statusDate}; for(const k of SCH_UP_EVK)has['ev:'+k]=!!R[k];
   if(!(has.tasks||has.links||has.proc||has.gates||has.evid||when))return {none:true,warn,has};
   // the plan as it is now, without a scenario this browser may be looking at
@@ -7683,21 +7758,40 @@ function schUpMerge(pid,reads){ const A=AIDCSchedule, D=A.dates, m=schModel(pid)
   const common=l=>l.filter(t=>cur.tasks.some(x=>x.id===t.id)&&plan.tasks.some(x=>x.id===t.id)).map(t=>t.id).join(','), reordered=has.tasks&&common(cur.tasks)!==common(plan.tasks);
   let moved=0; for(const t of plan.tasks){const a=curRes.tasks[t.id], b=res.tasks[t.id]; if(a&&b&&(a.start!==b.start||a.finish!==b.finish))moved++;}
   const diff=c=>c.add+c.chg+c.del, total=diff(cT)+diff(cL)+diff(cP)+(has.gates?diff(cG):0)+diff(cE)+(has.date?1:0)+(reordered?1:0)+Object.keys(rec.changes).length;
-  return {src,has,warn,changes:rec.changes,replaced:rec.replaced,same:!total,partial:!!(T&&T.tasksPartial),moved,reordered,op0:curRes.operationDate||'',op1:res.operationDate||'',when,
+  return {src,has,warn,info,changes:rec.changes,replaced:rec.replaced,same:!total,partial:!!(T&&T.tasksPartial),moved,reordered,op0:curRes.operationDate||'',op1:res.operationDate||'',when,
     n:{tasks:plan.tasks.length,links:plan.dependencies.length,proc:plan.procurement.length,gates:src.gates.length,evid:cE.n},c:{tasks:cT,links:cL,proc:cP,gates:cG,evid:cE}}; }
 
 /* ---------- the window ---------- */
-function schUpPlan(){ SCHUP.plan=null; SCHUP.fail=''; const reads=SCHUP.files.filter(f=>f.res).map(f=>f.res); if(!reads.length)return; try{SCHUP.plan=schUpMerge(SCHUP.pid,reads);}catch(e){SCHUP.plan={error:String(e&&e.message||e),warn:[],has:{}};} }
-function schUpClose(){ const d=$('#dlg.sch-up'); if(d)d.remove(); if(SCHUP.off)SCHUP.off(); SCHUP.off=null; SCHUP.run++; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; }
-function schUpFileHtml(f,i){ const r=f.res, tags=[]; let notes='';
-  if(r){ if(r.tasks)tags.push([r.tasksPartial?'일정(날짜)':'일정 · 리스트',r.tasks.length]); if(r.links)tags.push(['관계도',r.links.length]);
-    for(const [k,label] of SCH_UP_REC)if(r.records[k])tags.push([k==='procurementPackages'?'외부설비':k==='gates'?'승인게이트':label,r.records[k].length]);
-    if(r.statusDate)tags.push(['기준일',schD(r.statusDate)]);
-    if(!tags.length&&!r.notes.some(n=>n.level==='error'))notes+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
-    for(const n of r.notes)notes+=`<div class="up-nt ${n.level==='error'?'err':''}">${n.sheet?`<b>${esc(n.sheet)}</b> `:''}${esc(n.text)}${n.level==='error'?' <i>이 시트는 반영하지 않습니다.</i>':''}</div>`; }
-  if(f.err)notes+=`<div class="up-nt err">${esc(f.err)}</div>`;
-  return `<div class="up-file ${f.err?'bad':''}"><div class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span>${f.reading?'<span class="rd">읽는 중…</span>':''}<button class="rm" data-up="rm" data-i="${i}" title="목록에서 빼기" aria-label="목록에서 빼기">${svg('i-x',9,9)}</button></div>
-    ${tags.length?`<div class="up-tags">${tags.map(t=>`<span>${esc(t[0])}<b>${esc(String(t[1]))}</b></span>`).join('')}</div>`:''}${notes}</div>`; }
+// The large field takes the master workbook (whichever of the guide's sheets it holds); below a line six long rows take a file for
+// one section each (owner, 2026-11-23: "큰 영역은 마스터파일 업로드 공간이고, 밑에 길게 6개를 빼서 각각 부분으로 업로드할 수 있는 공간").
+// A row uses only the sheets of its section, and what a row holds wins over the same section of the master file.
+const SCH_UP_SLOTS=[['gantt','액션 일정','마스터스케줄 시트 · 날짜 · 작업명 · 진척률',['마스터스케줄','단계별업무분장']],['list','액션 리스트','단계별업무분장 시트',['단계별업무분장']],['links','액션 관계도','업무연결 시트',['업무연결']],
+  ['proc','외부설비 조달','외부설비 조달대장 시트',['외부설비 조달대장']],['gates','승인게이트','승인게이트 시트',['승인게이트']],['evid','근거 및 확약','보완·확약관리 · 전제와참고자료 등 6개 시트',['보완·확약관리','전제와참고자료','책임경계','NVIS일정검토','오프테이커 후보검토','원자료대조']]];
+const SCH_UP_GCOLS=['name','start','finish','days','kind','progress','primary','secondary'];   // what the row "액션 일정" takes of a task
+const schUpFolder=(w,h)=>`<svg class="up-pic" width="${w}" height="${h}" viewBox="0 0 64 50" aria-hidden="true"><path d="M3 7a4 4 0 0 1 4-4h16.2a4 4 0 0 1 3 1.4L30 9h27a4 4 0 0 1 4 4v10H3z" fill="#a8a8a8"/><rect x="3" y="17" width="58" height="30" rx="4" fill="#2b2b2b"/></svg>`;
+// What one field uses of what was read: r (the part of the reading that counts, absent when nothing can be used), n (how many), notes, err.
+function schUpView(slot,r){ if(slot==='master')return {r,notes:r.notes};
+  const def=SCH_UP_SLOTS.find(s=>s[0]===slot), sheets=def[3], notes=r.notes.filter(n=>!n.sheet||sheets.includes(n.sheet)), bad=notes.some(n=>n.level==='error'), v={name:r.name,sha:r.sha,records:{},notes};
+  const none=what=>({notes,err:bad?'':`이 파일에는 ${what} 시트가 없습니다.`});
+  if(slot==='gantt'||slot==='list'){ if(!r.tasks||!sheets.includes(r.tasksFrom))return none(slot==='gantt'?'마스터스케줄(또는 단계별업무분장)':'단계별업무분장');
+    Object.assign(v,{tasks:r.tasks,tasksFrom:r.tasksFrom,tasksPartial:slot==='gantt'||!!r.tasksPartial,taskCols:slot==='gantt'?(r.taskCols||[]).filter(k=>SCH_UP_GCOLS.includes(k)):r.taskCols,gantt:slot==='gantt'}); return {r:v,notes,n:r.tasks.length}; }
+  if(slot==='links'){ if(!r.links)return none('업무연결'); v.links=r.links; return {r:v,notes,n:r.links.length}; }
+  const kinds=slot==='proc'?['procurementPackages']:slot==='gates'?['gates']:SCH_UP_EVK; let n=0, any=false; for(const k of kinds)if(r.records[k]){v.records[k]=r.records[k];n+=r.records[k].length;any=true;}
+  return any?{r:v,notes,n}:none(slot==='evid'?'근거 및 확약(보완·확약관리 등)':sheets[0]); }
+const schUpOrder=()=>['master'].concat(SCH_UP_SLOTS.map(s=>s[0]));
+const schUpReads=()=>schUpOrder().map(k=>SCHUP.slots[k]).filter(f=>f&&f.view&&f.view.r).map(f=>f.view.r);
+const schUpReading=()=>Object.values(SCHUP.slots).some(f=>f&&f.reading);
+function schUpPlan(){ SCHUP.plan=null; SCHUP.fail=''; const reads=schUpReads(); if(!reads.length){ if(Object.values(SCHUP.slots).some(f=>f&&(f.res||f.err)))SCHUP.plan={none:true,warn:[],has:{}}; return; }
+  try{SCHUP.plan=schUpMerge(SCHUP.pid,reads);}catch(e){SCHUP.plan={error:String(e&&e.message||e),warn:[],has:{}};} }
+function schUpClose(){ const d=$('#dlg.sch-up'); if(d)d.remove(); if(SCHUP.off)SCHUP.off(); SCHUP.off=null; SCHUP.run++; SCHUP.slots={}; SCHUP.plan=null; SCHUP.busy=false; }
+function schUpTagsHtml(r){ const tags=[]; if(r.tasks)tags.push([r.tasksPartial?'일정(날짜)':'일정 · 리스트',r.tasks.length]); if(r.links)tags.push(['관계도',r.links.length]);
+  for(const [k,label] of SCH_UP_REC)if(r.records[k])tags.push([k==='procurementPackages'?'외부설비':k==='gates'?'승인게이트':label,r.records[k].length]);
+  if(r.statusDate)tags.push(['기준일',schD(r.statusDate)]);
+  return tags.length?`<span class="up-tags">${tags.map(t=>`<span>${esc(t[0])}<b>${esc(String(t[1]))}</b></span>`).join('')}</span>`:''; }
+function schUpNotesHtml(slot,f){ let h=''; const r=f.res, v=f.view;
+  if(slot==='master'&&r&&!schUpTagsHtml(r)&&!r.notes.some(n=>n.level==='error'))h+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
+  for(const n of (v&&v.notes)||[])h+=`<div class="up-nt ${n.level==='error'?'err':''}">${n.sheet?`<b>${esc(n.sheet)}</b> `:''}${esc(n.text)}${n.level==='error'?' <i>이 시트는 반영하지 않습니다.</i>':''}</div>`;
+  if(v&&v.err)h+=`<div class="up-nt err">${esc(v.err)}</div>`; if(f.err)h+=`<div class="up-nt err">${esc(f.err)}</div>`; return h; }
 function schUpResultHtml(P){ if(!P)return '';
   if(P.none)return `<div class="up-res"><p class="up-say">반영할 수 있는 시트가 없습니다. 가이드 엑셀의 시트 이름과 머리글을 그대로 둔 파일을 올려주세요.</p></div>`;
   if(P.error)return `<div class="up-res bad"><h4>이대로는 반영할 수 없습니다</h4><p class="up-say">${esc(P.error)}</p>${(P.warn||[]).map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}</div>`;
@@ -7709,30 +7803,35 @@ function schUpResultHtml(P){ if(!P)return '';
     ${P.when?`<div class="up-row"><span>기준일</span><b></b><em>${schD(P.when)}${P.has.date?'':' · 변화 없음'}</em></div>`:''}
     <div class="up-row op ${d>0?'late':d<0?'early':''}"><span>운영개시 예상</span><b></b><em>${P.op0?schD(P.op0):'미정'}${P.op1!==P.op0?` → ${P.op1?schD(P.op1):'미정'}`:''}${d?` (${d>0?'+':''}${d}일)`:P.op1===P.op0?' · 변화 없음':''}${P.moved?` · 예상일이 바뀌는 액션 ${P.moved}건`:''}</em></div>
     ${P.same?'<p class="up-say">지금 프로젝트에 들어 있는 내용과 같습니다. 바뀌는 것이 없습니다.</p>':''}
-    ${P.replaced?`<p class="up-wn">앱에서 고친 값 가운데 ${P.replaced}건은 엑셀에서도 바뀐 칸이라 엑셀 값이 됩니다.</p>`:''}${P.warn.map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}
+    ${P.replaced?`<p class="up-wn">앱에서 고친 값 가운데 ${P.replaced}건은 엑셀에서도 바뀐 칸이라 엑셀 값이 됩니다.</p>`:''}${P.warn.map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}${(P.info||[]).map(w=>`<p class="up-ft inf">${esc(w)}</p>`).join('')}
     <p class="up-ft">올리지 않은 구역, 앱에서 고친 값과 직접 추가한 액션은 그대로 둡니다. 적용한 뒤에도 되돌릴 수 있습니다.</p></div>`; }
-function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid=SCHUP.pid, P=SCHUP.plan, n=SCHUP.files.length, reading=SCHUP.files.some(f=>f.reading), cur=(SCHED[pid]||{}).src;
+function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid=SCHUP.pid, P=SCHUP.plan, S0=SCHUP.slots, M=S0.master, reading=schUpReading(), cur=(SCHED[pid]||{}).src;
   const can=!!P&&!P.error&&!P.none&&!P.same&&!reading&&!SCHUP.busy, keep=box.scrollTop;
-  box.innerHTML=`<h3 class="up-ttl">엑셀 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 마스터 파일 하나 또는 구역별 파일 여러 개</p>
-    <label class="up-drop ${n?'small':''}" tabindex="0"><input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple hidden>
-      <svg class="up-pic" viewBox="0 0 64 50" aria-hidden="true"><path d="M3 7a4 4 0 0 1 4-4h16.2a4 4 0 0 1 3 1.4L30 9h27a4 4 0 0 1 4 4v10H3z" fill="#a8a8a8"/><rect x="3" y="17" width="58" height="30" rx="4" fill="#2b2b2b"/></svg>
-      <span>${n?'파일 더 올리기':'파일을 여기에 끌어다 놓거나 눌러서 선택'}</span></label>
-    ${n?`<div class="up-files">${SCHUP.files.map(schUpFileHtml).join('')}</div>`:`<p class="up-hint">일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 한 번에 또는 따로 올릴 수 있습니다.</p>`}
+  const inp=slot=>`<input type="file" data-slot="${slot}" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>`;
+  const rm=slot=>`<button class="rm" data-up="rm" data-slot="${slot}" title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button>`;
+  const part=([slot,label,cap])=>{ const f=S0[slot], v=f&&f.view, ok=!!(v&&v.r), bad=!!f&&!f.reading&&!ok;
+    return `<label class="up-part ${f?'has':''} ${bad?'bad':''}" data-slot="${slot}" tabindex="0">${inp(slot)}${schUpFolder(26,20)}<b>${label}</b>${f?`<span class="fn" title="${esc(f.name)}">${esc(f.name)}</span>${f.reading?'<span class="rd">읽는 중…</span>':ok?`<span class="cnt">${v.n}건</span>`:''}${rm(slot)}`:`<em>${esc(cap)}</em>`}</label>${f?schUpNotesHtml(slot,f):''}`; };
+  box.innerHTML=`<h3 class="up-ttl">엑셀 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 마스터 파일 하나로 올리거나, 아래 칸에 구역별로 따로 올립니다</p>
+    <label class="up-drop ${M?'has':''}" data-slot="master" tabindex="0">${inp('master')}${M?`<span class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(M.name)}">${esc(M.name)}</span><span class="sz">${fmtSize(M.size)}</span>${M.reading?'<span class="rd">읽는 중…</span>':''}${rm('master')}</span>${M.res?schUpTagsHtml(M.res):''}`
+      :`${schUpFolder(64,50)}<span>마스터 파일을 여기에 끌어다 놓거나 눌러서 선택</span>`}</label>${M?schUpNotesHtml('master',M):''}
+    <div class="up-div"><span>구역별로 따로 올리기</span></div>
+    <div class="up-parts">${SCH_UP_SLOTS.map(part).join('')}</div>
     ${reading?'':schUpResultHtml(P)}${SCHUP.fail?`<p class="up-fail">${esc(SCHUP.fail)}</p>`:''}
     ${cur&&cur.name?`<p class="up-cur"><span>지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</span><button data-up="out" title="올린 엑셀을 빼고 올리기 전의 일정으로 돌아갑니다">올린 엑셀 빼기</button></p>`:''}
-    <div class="bt"><button data-up="x">${n?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
+    <div class="bt"><button data-up="x">${Object.keys(S0).length?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
   box.scrollTop=keep; }
-async function schUpAdd(list){ const run=SCHUP.run; if(!list.length||SCHUP.busy)return;
-  for(const f of list){ const ent=/\.xlsx$/i.test(f.name)?{name:f.name,size:f.size,file:f,reading:true}:{name:f.name,size:f.size,err:'엑셀(.xlsx) 파일만 올릴 수 있습니다.'}; const at=SCHUP.files.findIndex(x=>x.name===f.name); if(at>=0)SCHUP.files[at]=ent; else SCHUP.files.push(ent); }
-  schUpDraw(); if(SCHUP.reading)return; SCHUP.reading=true;                                    // one file after the other (reading a large workbook takes a few seconds)
-  try{ for(;;){ const ent=SCHUP.files.find(f=>f.reading&&f.file); if(!ent||run!==SCHUP.run)break;
-      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file); }catch(e){ ent.err=String(e&&e.message||e); }
+async function schUpAdd(slot,list){ const run=SCHUP.run; if(!list.length||SCHUP.busy||!schUpOrder().includes(slot))return; const f=list[0];
+  if(list.length>1)toast('한 칸에는 파일을 하나씩 올립니다. 첫 파일만 넣었습니다.',3200);
+  SCHUP.slots[slot]=/\.xlsx$/i.test(f.name)?{name:f.name,size:f.size,file:f,reading:true}:{name:f.name,size:f.size,err:'엑셀(.xlsx) 파일만 올릴 수 있습니다.'};
+  schUpPlan(); schUpDraw(); if(SCHUP.queue)return; SCHUP.queue=true;                         // one file after the other (reading a large workbook takes a few seconds)
+  try{ for(;;){ const k=schUpOrder().find(q=>SCHUP.slots[q]&&SCHUP.slots[q].reading&&SCHUP.slots[q].file); if(!k||run!==SCHUP.run)break; const ent=SCHUP.slots[k];
+      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file,{tasks:k==='gantt'?'gantt':'list'}); ent.view=schUpView(k,ent.res); }catch(e){ ent.err=String(e&&e.message||e); }
       ent.reading=false; ent.file=null; if(run!==SCHUP.run)break; schUpPlan(); schUpDraw(); } }
-  finally{ SCHUP.reading=false; } }
+  finally{ SCHUP.queue=false; } }
 async function schGzip(text){ const raw=new TextEncoder().encode(text); if(typeof CompressionStream==='undefined')return {bytes:raw,gz:false};
   return {bytes:new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()),gz:true}; }
-async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||SCHUP.files.some(f=>f.reading))return; schUpPlan(); const P=SCHUP.plan; if(!P||P.error||P.none||P.same){schUpDraw();return;}
-  SCHUP.busy=true; schUpDraw(); const want=schSrcWant(pid), reads=SCHUP.files.filter(f=>f.res).map(f=>f.res);
+async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||schUpReading())return; schUpPlan(); const P=SCHUP.plan; if(!P||P.error||P.none||P.same){schUpDraw();return;}
+  SCHUP.busy=true; schUpDraw(); const want=schSrcWant(pid), reads=schUpReads();
   try{ const json=JSON.stringify(P.src), z=await schGzip(json);
     if(z.bytes.length>1887436)throw new Error('올린 내용이 저장 한도(1.8MB)를 넘습니다. 쓰지 않는 행을 줄인 뒤 다시 올려주세요.');
     const d=await sharedUploadFile(new File([z.bytes],`${pid}-일정원본-${TODAY}.json${z.gz?'.gz':''}`,{type:z.gz?'application/gzip':'application/json'}),'sched-src-'+pid);
@@ -7754,18 +7853,18 @@ async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||
 function schUpTakeOut(pid){ const cur=(SCHED[pid]||{}).src; if(!cur)return; schUpClose();
   confirmDlg(`올린 엑셀(${cur.name||'이름 없음'})을 빼고 ${SCH_SOURCES[pid]?'처음의 기본 일정':'빈 일정'}으로 돌아갈까요? 엑셀에서 온 액션·관계·설비·승인게이트·근거가 화면에서 빠집니다. (뺀 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'빼기',pri:true,fn:()=>schSet(pid,'src',null,'올린 엑셀을 뺐습니다')},{t:'취소',fn:()=>{}}]); }
 function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
-  closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
+  closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.slots={}; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up'; d.innerHTML='<div class="box" role="dialog" aria-label="엑셀 업로드"></div>'; document.body.appendChild(d);
-  const zone=()=>$('.up-drop',d), stop=e=>e.preventDefault();                       // a file let go beside the window must not open in the browser
-  const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();schUpClose();} else if(e.key==='Enter'&&e.target&&e.target.classList&&e.target.classList.contains('up-drop')){e.preventDefault();e.target.click();} };
+  const zoneOf=e=>e.target&&e.target.closest?e.target.closest('label[data-slot]'):null, clear=()=>d.querySelectorAll('label[data-slot].over').forEach(z=>z.classList.remove('over')), stop=e=>e.preventDefault();   // a file let go beside the window must not open in the browser
+  const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();schUpClose();} else if(e.key==='Enter'&&e.target&&e.target.matches&&e.target.matches('label[data-slot]')){e.preventDefault();e.target.click();} };
   SCHUP.off=()=>{document.removeEventListener('keydown',key,true);window.removeEventListener('dragover',stop);window.removeEventListener('drop',stop);};
   document.addEventListener('keydown',key,true); window.addEventListener('dragover',stop); window.addEventListener('drop',stop);
-  d.addEventListener('click',e=>{ if(e.target===d){ if(!SCHUP.files.length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
-    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
-  d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files]; i.value=''; schUpAdd(l); } });
-  d.addEventListener('dragover',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.add('over'); });
-  d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget)){const z=zone(); if(z)z.classList.remove('over');} });
-  d.addEventListener('drop',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.remove('over'); schUpAdd([...((e.dataTransfer&&e.dataTransfer.files)||[])]); });
+  d.addEventListener('click',e=>{ if(e.target===d){ if(!Object.keys(SCHUP.slots).length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
+    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); delete SCHUP.slots[b.dataset.slot]; schUpPlan(); schUpDraw(); } });
+  d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files], slot=i.dataset.slot; i.value=''; schUpAdd(slot,l); } });
+  d.addEventListener('dragover',e=>{ e.preventDefault(); clear(); const z=zoneOf(e)||d.querySelector('label[data-slot="master"]'); if(z)z.classList.add('over'); });
+  d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget))clear(); });
+  d.addEventListener('drop',e=>{ e.preventDefault(); clear(); const z=zoneOf(e); schUpAdd(z?z.dataset.slot:'master',[...((e.dataTransfer&&e.dataTransfer.files)||[])]); });   // beside the rows: the master field
   schUpDraw(); }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-schup]'); if(!b)return; e.preventDefault(); schUpOpen(S.proj); });
 

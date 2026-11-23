@@ -1678,6 +1678,15 @@ function partnerCategories(value){
 function partnerCategoryOptions(){
   return [...new Set([...Object.values(partnerCategoryHistory),...PARTNERS.flatMap(p=>partnerCategories(p.cat))])].filter(c=>!partnerCategoryHidden[encodeURIComponent(c)]).sort((a,b)=>a.localeCompare(b,'ko'));
 }
+// A category renamed for every partner at once (owner, 2026-11-23: it could only be changed partner by partner). The partner that
+// is being edited follows in its editor; a filter set to the old name follows too.
+function partnerCategoryRename(old,root){ askInput(`“${old}” 구분의 새 이름 (모든 협력업체에 적용)`,old,v=>{ const nw=String(v||'').trim().replace(/\s+/g,' '); if(!nw||nw===old)return; const back=[]; let n=0;
+  for(const p of PARTNERS){ if(p.trash)continue; const cs=partnerCategories(p.cat); if(!cs.includes(old))continue; back.push([p.id,p.cat]); const nx=[...new Set(cs.map(c=>c===old?nw:c))]; p.cat=Array.isArray(p.cat)?nx:nx.join('\n'); n++; }
+  delete partnerCategoryHistory[encodeURIComponent(old)]; partnerCategoryRemember(nw);
+  if(root&&root.isConnected){ const vals=JSON.parse(root.dataset.pcValues||'[]'); if(vals.includes(old))partnerCategoryUpdate(root,[...new Set(vals.map(c=>c===old?nw:c))]); }
+  if(S.partnerCat===old)S.partnerCat=nw;
+  if(S.editSimple)sharedPendingRedraw=true; else render(true);
+  toast(`구분 “${old}”을(를) “${nw}”(으)로 바꿨습니다 · 협력업체 ${n}곳`,6000,{t:'되돌리기',fn:()=>{ for(const [id,cat] of back){const p=PARTNERS.find(q=>q.id===id); if(p)p.cat=cat;} delete partnerCategoryHistory[encodeURIComponent(nw)]; partnerCategoryRemember(old); if(S.partnerCat===nw)S.partnerCat=old; render(true); }}); }); }
 function partnerCategoryRemember(label){
   partnerCategoryHistory[encodeURIComponent(label)]=label;
 }
@@ -1716,7 +1725,7 @@ function partnerCategoryShow(root){
   const menu=document.createElement('div');menu.className='pc-menu';
   menu.setAttribute('aria-label','기존 구분 선택');
   menu.innerHTML='<div class="pc-menu-title">기존 구분</div>'+
-    (options.length?options.map(c=>'<div class="pc-option"><button type="button" class="pc-option-label" data-pc-choice="'+esc(c)+'"'+(selected.includes(c)?' disabled aria-label="'+esc(c)+' 선택됨"':'')+'>'+esc(c)+'</button><button type="button" class="pc-history-remove" data-pc-history-remove="'+esc(c)+'" aria-label="'+esc(c)+' 기존 구분 목록에서 삭제" title="목록에서 삭제">×</button></div>').join(''):'<div class="pc-menu-empty">'+(q?'Enter로 새 구분 추가':'등록된 구분이 없습니다')+'</div>');
+    (options.length?options.map(c=>'<div class="pc-option"><button type="button" class="pc-option-label" data-pc-choice="'+esc(c)+'"'+(selected.includes(c)?' disabled aria-label="'+esc(c)+' 선택됨"':'')+'>'+esc(c)+'</button>'+(PREVIEW_ON?'<button type="button" class="pc-history-rename" data-pc-history-rename="'+esc(c)+'" aria-label="'+esc(c)+' 이름 바꾸기" title="이름 바꾸기 (모든 협력업체에 적용)">✎</button>':'')+'<button type="button" class="pc-history-remove" data-pc-history-remove="'+esc(c)+'" aria-label="'+esc(c)+' 기존 구분 목록에서 삭제" title="목록에서 삭제">×</button></div>').join(''):'<div class="pc-menu-empty">'+(q?'Enter로 새 구분 추가':'등록된 구분이 없습니다')+'</div>');
   document.body.appendChild(menu);partnerCategoryMenu=menu;input.setAttribute('aria-expanded','true');
   const r=root.getBoundingClientRect(),width=Math.min(240,window.innerWidth-24);
   menu.style.width=width+'px';
@@ -1763,6 +1772,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('click',e=>{
   const choice=e.target.closest?.('[data-pc-choice]'),remove=e.target.closest?.('[data-pc-remove]');
   const historyRemove=e.target.closest?.('[data-pc-history-remove]');
+  { const rn=e.target.closest?.('[data-pc-history-rename]'); if(rn){ e.preventDefault(); e.stopImmediatePropagation(); const root=partnerCategoryActive; partnerCategoryClose(); partnerCategoryRename(rn.dataset.pcHistoryRename,root); return; } }
   if(historyRemove){e.preventDefault();e.stopImmediatePropagation();const label=historyRemove.dataset.pcHistoryRemove;partnerCategoryRemember(label);partnerCategoryHidden[encodeURIComponent(label)]=true;if(partnerCategoryActive?.isConnected)partnerCategoryShow(partnerCategoryActive);return;}
   if(choice&&partnerCategoryActive?.isConnected){e.preventDefault();e.stopImmediatePropagation();partnerCategoryAdd(partnerCategoryActive,choice.dataset.pcChoice);return;}
   if(remove){e.preventDefault();e.stopImmediatePropagation();const root=remove.closest('.pc-editor');partnerCategoryUpdate(root,JSON.parse(root.dataset.pcValues||'[]').filter(c=>c!==remove.dataset.pcRemove));root.querySelector('.pc-input').focus();partnerCategoryShow(root);return;}
@@ -1904,8 +1914,8 @@ function renderArchive(){
   if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||'';
   const rows=archList(S.archTab); const total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
   let h=`<div class="arch-title">자료실</div><div style="padding-top:194.2px">`;
-  ARCH_SECTIONS.forEach((sec,si)=>{
-    h+=`<div class="asec" style="${si===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
+  ARCH_SECTIONS.forEach((sec,si)=>{ if(sec.gone)return;   // in the trash with its cards (archSectionTrash)
+    h+=`<div class="asec" style="${!h.includes('class="asec"')?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
     const cells=[...sec.cards.filter(c=>!c.trash).map(c=>({c})),{add:true}]; const nrows=Math.ceil(cells.length/4);
     h+=`<div class="agrid">`;
     for(let r=0;r<nrows;r++){ for(let k=0;k<4;k++){const idx=r*4+k; const cell=cells[idx]; const full=(r*4+3<cells.length)&&!cells[r*4+3].add;
@@ -2364,7 +2374,7 @@ function restoreOne(k,id){ let how='';
   if(k==='item'){const it=ITEMS.find(x=>x.id===id); if(!it||it.status!=='trash')return ''; how=it.prevStatus?'':'draft'; it.status=it.prevStatus||'draft'; delete it.prevStatus; delete it.trashedAt; delete it.trashedBy; if(it.arch&&!ARCH_TABS.includes(it.arch)){ARCH_TABS.push(it.arch);if(!ARCH_ROWS[it.arch])ARCH_ROWS[it.arch]=[];}}
   else if(k==='partner'){const p=PARTNERS.find(x=>x.id===id); if(p){delete p.trash;delete p.trashedAt;delete p.trashedBy;}}
   else if(k==='project'){restoreProject(id);}
-  else{const [si,cid]=id.split(':'); const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid); if(c){delete c.trash;delete c.trashedAt;delete c.trashedBy;}}
+  else{const [si,cid]=id.split(':'); const c=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid); if(c){delete c.trash;delete c.trashedAt;delete c.trashedBy;delete c.withSec; if(ARCH_SECTIONS[si].gone)delete ARCH_SECTIONS[si].gone;}}   // a card of a section that went to the trash brings its section back
   return how||'ok'; }
 // A deleted project waits in the settings record (projTrash) for 30 days: out of PROJECTS, so every list forgets it, but whole.
 function trashProject(id){ const p=PROJECTS[id]; if(!p)return; SETTINGS.projTrash={...(SETTINGS.projTrash||{}),[id]:{project:copy(p),at:new Date().toISOString(),by:sharedUser}}; delete PROJECTS[id]; }
@@ -2377,7 +2387,10 @@ document.addEventListener('click',async e=>{
   if(!T.isConnected)return; // the click redrew its own popover (date / month picker, search): nothing else to do
   if(q('[data-stop]')){e.stopPropagation();return;}
   let el;
-  if(el=q('[data-pimg]')){const id=el.dataset.pimg;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;if(typeof schImgRatio==='function'){const r=await schImgRatio(f);if(r)PROJECTS[id].imgR=r;else delete PROJECTS[id].imgR;}render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
+  if(el=q('[data-pimg]')){const id=el.dataset.pimg;
+    if(PREVIEW_ON&&PROJECTS[id]&&PROJECTS[id].img&&!el.dataset.go1){ e.stopPropagation(); menuPop(el,[{t:'이미지 교체',k:'ch',fn:()=>{el.dataset.go1='1';el.click();}},{t:'이미지 빼기',k:'rm',danger:true,fn:()=>{ const was=PROJECTS[id].img, wasR=PROJECTS[id].imgR; delete PROJECTS[id].img; delete PROJECTS[id].imgR; render(true);
+        toast('프로젝트 이미지를 뺐습니다.',5000,{t:'되돌리기',fn:()=>{ if(!PROJECTS[id])return; PROJECTS[id].img=was; if(wasR)PROJECTS[id].imgR=wasR; render(true); }}); }}]); return; }   /* a card's image can be taken away too (owner, 2026-11-23) */
+    delete el.dataset.go1;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const up=await uploadAttachment(f,null);if(!up.src)throw Error('이미지를 올리지 못했습니다.');PROJECTS[id].img=up.src;if(typeof schImgRatio==='function'){const r=await schImgRatio(f);if(r)PROJECTS[id].imgR=r;else delete PROJECTS[id].imgR;}render(true);toast('프로젝트 이미지를 바꿨습니다.');}catch(e){toast(e.message||'이미지를 올리지 못했습니다.',2600);}};inp.click();return;}
   if(el=q('[data-copy]')){const v=el.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('주소를 복사했습니다.',1200),()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('주소를 복사했습니다.',1200);}catch{toast('복사하지 못했습니다.');}ta.remove();});if(el.closest('.pop'))closePop();return;}
   if(S.panel&&!T.closest('#panel,.topbar,.tb-panel-ic,.pop,.dlg,#ovl,#sb,.sb-resize,.panel-resize,.tb-logo,.sb-open,#toast,[data-open],[data-go],[data-lib],[data-partnername],.slash-menu,.ed-toolbar,.mention-pop')){closePanel();return;}
   if(el=q('[data-unlink]')){const [f,id]=el.dataset.unlink.split(':');const it=itemFromEvent();if(it&&canEditItem(it)&&(f==='actions'||f==='research')){it[f]=(it[f]||[]).filter(x=>x!==id);it.dirty=true;rerenderItem();}return;}
@@ -2430,7 +2443,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-partnername]')){const name=el.dataset.partnername.trim();if(!name)return;const pt=PARTNERS.find(x=>!x.trash&&norm(x.name)===norm(name));if(pt){openPanel(pt.id);}else{openPop(el,`<div class="hd">${esc(name)}</div><div class="msg" style="padding-top:0">협력업체 목록에 아직 등록되지 않은 업체입니다.<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="it" data-regpartner="${esc(name)}" style="background:#0f0f0f;color:#fff">협력업체로 등록</button></div></div>`);}return;}
   if(el=q('[data-regpartner]')){const pt={id:'pt'+Date.now(),name:el.dataset.regpartner,site:'',cat:'기타',desc:'',meet:null};PARTNERS.unshift(pt);closePop();render(true);openPanel(pt.id);toast('협력업체로 등록했습니다. 수정 버튼으로 정보를 채워 주세요.',2600);return;}
   // archive
-  if(el=q('[data-secmenu]')){const si=+el.dataset.secmenu;menuPop(el,[{t:'이름 바꾸기',k:'ren',fn:()=>{const n=$(`[data-secname="${si}"]`);n.setAttribute('contenteditable','true');n.focus();document.execCommand('selectAll',false,null);n.onblur=()=>{ARCH_SECTIONS[si].name=n.textContent.trim()||ARCH_SECTIONS[si].name;n.removeAttribute('contenteditable');renderArchive();};n.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();n.blur();}};}},{t:'위로 이동',k:'up',fn:()=>{if(si>0){[ARCH_SECTIONS[si-1],ARCH_SECTIONS[si]]=[ARCH_SECTIONS[si],ARCH_SECTIONS[si-1]];renderArchive();}}},'-',{t:'구분 삭제',k:'del',danger:true,fn:()=>{const s=ARCH_SECTIONS[si];if(!s)return;const n=s.cards.filter(c=>!c.trash).length;confirmDlg(`“${s.name}” 구분${n?`과 그 안의 자료 ${n}건`:''}을 삭제할까요? 삭제하면 되돌릴 수 없습니다.`,[{t:'삭제',pri:true,fn:()=>{const j=ARCH_SECTIONS.findIndex(x=>x===s||x.name===s.name);if(j>=0)ARCH_SECTIONS.splice(j,1);renderArchive();toast('구분을 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);}}]);return;}
+  if(el=q('[data-secmenu]')){const si=+el.dataset.secmenu;menuPop(el,[{t:'이름 바꾸기',k:'ren',fn:()=>{const n=$(`[data-secname="${si}"]`);n.setAttribute('contenteditable','true');n.focus();document.execCommand('selectAll',false,null);n.onblur=()=>{ARCH_SECTIONS[si].name=n.textContent.trim()||ARCH_SECTIONS[si].name;n.removeAttribute('contenteditable');renderArchive();};n.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();n.blur();}};}},{t:'위로 이동',k:'up',fn:()=>{if(si>0){[ARCH_SECTIONS[si-1],ARCH_SECTIONS[si]]=[ARCH_SECTIONS[si],ARCH_SECTIONS[si-1]];renderArchive();}}},'-',{t:'구분 삭제',k:'del',danger:true,fn:()=>{archSectionTrash(si);}}]);return;}
   if(el=q('[data-cardmenu]')){e.stopPropagation();const [si,cid]=el.dataset.cardmenu.split(':');const sec=ARCH_SECTIONS[si];const c=sec.cards.find(x=>x.id===cid);el.classList.add('on');const p=menuPop(el,[{t:'열기',k:'open',fn:()=>openPanel(si+':'+cid)},{t:'사이트 열기',k:'site',fn:()=>{const u=urlHref(c.url==='#'?'':c.url);if(u)window.open(u,'_blank','noopener');else toast('등록된 주소가 없습니다.');}},{t:'링크 복사',k:'copy',fn:()=>{navigator.clipboard&&navigator.clipboard.writeText(c.url);toast('링크를 복사했습니다.');}},'-',{t:'휴지통으로 보내기',k:'del',danger:true,fn:()=>confirmTrash(c.name,()=>{const cc=(ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid);if(!cc)return;cc.trash=true;cc.trashedAt=new Date().toISOString();cc.trashedBy=sharedUser;if(S.panel===si+':'+cid)closePanel(true);renderArchive();toast('휴지통으로 이동했습니다. 휴지통에서 30일 안에 복원할 수 있습니다.',2600);})}],{right:true});const obs=new MutationObserver(()=>{if(!document.body.contains(p)){el.classList.remove('on');obs.disconnect();}});obs.observe(document.body,{childList:true});return;}
   if(el=q('[data-acard]')){openPanel(el.dataset.acard);return;}
   if(el=q('[data-addrow]')){const tab=S.hoverTab&&ARCH_TABS.includes(S.hoverTab)?S.hoverTab:S.archTab;openPop(el,`<div class="hd">${esc(tab)}에 자료 추가</div><div class="msg" style="padding-top:0"><input id="ar-title" placeholder="제목"><input id="ar-url" placeholder="출처 URL (선택)" style="margin-top:6px"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-ar="cancel">취소</button><button class="it" data-ar="ok:${esc(tab)}" style="font-weight:600">추가</button></div></div>`);setTimeout(()=>$('#ar-title')?.focus(),0);return;}
@@ -2643,6 +2656,15 @@ function swallowClick(){const stop=e=>{e.stopPropagation();e.preventDefault();};
 <script>
 /* ===================== EDIT MODEL HELPERS ===================== */
 const nowTxt=()=>{const d=new Date();return `${d.getMonth()+1}월 ${d.getDate()} ${d.getHours()<12?'오전':'오후'} ${((d.getHours()+11)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;};
+// A section of the 자료실 is not deleted for good any more (owner, 2026-11-23): it goes out of sight (`gone`) and its cards go to the
+// trash with it, so they can be restored for 30 days; restoring one of them brings the section back. An empty section is simply
+// removed. The Worker drops a section that is gone once its cards have been purged.
+function archSectionTrash(si){ const s=ARCH_SECTIONS[si]; if(!s)return; const n=s.cards.filter(c=>!c.trash).length;
+  if(!s.cards.length){ ARCH_SECTIONS.splice(si,1); renderArchive(); toast('구분을 삭제했습니다.'); return; }
+  confirmDlg(`“${s.name}” 구분${n?`과 그 안의 자료 ${n}건`:''}을 휴지통으로 보낼까요? 휴지통에서 30일 안에 복원할 수 있습니다.`,[{t:'휴지통으로 보내기',pri:true,fn:()=>{ const x=ARCH_SECTIONS[si]; if(!x||x.name!==s.name)return; const at=new Date().toISOString();
+    for(const c of x.cards)if(!c.trash){c.trash=true;c.trashedAt=at;c.trashedBy=sharedUser;c.withSec=at;} x.gone=at;
+    if(S.panel&&String(S.panel).startsWith(si+':'))closePanel(true); renderArchive();
+    toast('구분을 휴지통으로 보냈습니다.',6000,{t:'되돌리기',fn:()=>{ const y=ARCH_SECTIONS.find(q=>q.gone===at); if(!y)return; delete y.gone; for(const c of y.cards)if(c.withSec===at){delete c.trash;delete c.trashedAt;delete c.trashedBy;delete c.withSec;} renderArchive(); }}); }},{t:'취소',fn:()=>{}}]); }
 function confirmTrash(name,fn){confirmDlg(`“${name}”을(를) 휴지통으로 보낼까요?`,[{t:'휴지통으로 보내기',pri:true,fn},{t:'취소',fn:()=>{}}]);}
 async function trashItem(it){adoptRow(it); if(!await sharedBeginEdit('item:'+it.id))return; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal;
   if(it.status==='new'){const i=ITEMS.indexOf(it); if(i>=0)ITEMS.splice(i,1); toast('작성하던 내용을 버렸습니다.');} // never saved: nothing to keep

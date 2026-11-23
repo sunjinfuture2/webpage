@@ -194,7 +194,10 @@ export class Workspace {
       if (v.trash && v.trashedAt && v.trashedAt < limit) { this.sql.exec('DELETE FROM records WHERE id=?', r.id); gone[r.id] = null; }
     }
     const arch = this.get('meta:archive');
-    if (Array.isArray(arch)) { let ch = false; for (const s of arch) { if (!s || !Array.isArray(s.cards)) continue; const keep = s.cards.filter(c => !(c && c.trash && c.trashedAt && c.trashedAt < limit)); if (keep.length !== s.cards.length) { s.cards = keep; ch = true; } } if (ch) { this.put('meta:archive', arch); gone['meta:archive'] = arch; } }
+    if (Array.isArray(arch)) { let ch = false; for (const s of arch) { if (!s || !Array.isArray(s.cards)) continue; const keep = s.cards.filter(c => !(c && c.trash && c.trashedAt && c.trashedAt < limit)); if (keep.length !== s.cards.length) { s.cards = keep; ch = true; } }
+      // a section that was sent to the trash (`gone`) leaves once its cards have been purged
+      for (let i = arch.length - 1; i >= 0; i--) { const s = arch[i]; if (s && s.gone && Array.isArray(s.cards) && !s.cards.length) { arch.splice(i, 1); ch = true; } }
+      if (ch) { this.put('meta:archive', arch); gone['meta:archive'] = arch; } }
     const st = this.get('meta:settings');
     if (st && st.projTrash) { const keep = Object.fromEntries(Object.entries(st.projTrash).filter(([, t]) => !(t && t.at && t.at < limit))); if (Object.keys(keep).length !== Object.keys(st.projTrash).length) { for (const pid of Object.keys(st.projTrash)) if (!(pid in keep)) this.sql.exec('DELETE FROM files WHERE item=?', 'sched-src-' + pid);   /* the source plans a member uploaded for it (schedule/ui/82-upload.js) */ st.projTrash = keep; this.put('meta:settings', st); gone['meta:settings'] = st; } }
     if (Object.keys(gone).length) { this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', 'system', JSON.stringify({ event: 'auto-purge', title: Object.keys(gone).length + '건' }), new Date().toISOString()); this.broadcast({ records: gone }); }

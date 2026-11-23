@@ -34,12 +34,16 @@ function schNoticeDraw(){ const n=$('#notice'); if(!n)return; const act=document
   if(!$('.nplus',n))n.insertAdjacentHTML('beforeend',`<button class="nplus" data-nt="add" title="공지사항 쓰기" aria-label="공지사항 쓰기">${svg('i-plus',10,10)}</button>`);
   $('.lb',n).innerHTML=`공지사항${fresh?`<i class="nb" title="새 공지 ${fresh}건"></i>`:''}`;
   $('.msg',n).textContent=list.length?schNtTitle(list[0]):'등록된 공지사항이 없습니다.';
-  const form=ui.form?`<li class="nform"><input id="nt-title" placeholder="제목" maxlength="60" value="${esc(ui.title||'')}"><textarea id="nt-body" placeholder="내용" rows="3" maxlength="1000">${esc(ui.body||'')}</textarea><div class="bt"><button data-nt="cancel">취소</button><button class="pri" data-nt="save">등록</button></div></li>`:'';
+  const form=ui.form?`<li class="nform"><input id="nt-title" placeholder="제목" maxlength="60" value="${esc(ui.title||'')}"><textarea id="nt-body" placeholder="내용" rows="3" maxlength="1000">${esc(ui.body||'')}</textarea><div class="bt"><button data-nt="cancel">취소</button><button class="pri" data-nt="save">${ui.edit?'저장':'등록'}</button></div></li>`:'';
   $('.list',n).innerHTML=form+(list.map(x=>{ const on=ui.open===x.id, body=schNtBody(x);
-    return `<li class="nrow ${on?'on':''}" data-nt="open" data-id="${esc(x.id)}"><time>${esc(x.date)}</time><span class="nt">${schNtNew(x)?'<i class="nb" title="새 공지"></i>':''}${esc(schNtTitle(x))}</span><span class="by">${esc(x.by?userName(x.by):'')}</span>${canAdmin()||x.by===sharedUser?`<button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:'<span class="ndel"></span>'}</li>${on?`<li class="nbody">${body?esc(body):'<span class="none">내용이 없습니다.</span>'}</li>`:''}`; }).join('')||(form?'':'<li class="nnone">등록된 공지사항이 없습니다. + 버튼으로 첫 공지를 쓰세요.</li>')); }
+    return `<li class="nrow ${on?'on':''}" data-nt="open" data-id="${esc(x.id)}"><time>${esc(x.date)}</time><span class="nt">${schNtNew(x)?'<i class="nb" title="새 공지"></i>':''}${esc(schNtTitle(x))}</span><span class="by">${esc(x.by?userName(x.by):'')}</span>${canAdmin()||x.by===sharedUser?`<button class="nedit" data-nt="edit" data-id="${esc(x.id)}" title="공지 수정">수정</button><button class="ndel" data-ndel="${esc(x.id)}" title="공지 삭제">×</button>`:'<span class="ndel"></span>'}</li>${on?`<li class="nbody">${body?esc(body):'<span class="none">내용이 없습니다.</span>'}</li>`:''}`; }).join('')||(form?'':'<li class="nnone">등록된 공지사항이 없습니다. + 버튼으로 첫 공지를 쓰세요.</li>')); }
 function schNoticeClose(){ const n=$('#notice'); if(!n||!n.classList.contains('open'))return; const ui=SCH.nt||{}; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}   // what was typed waits for the next opening
   n.classList.remove('open'); if(document.activeElement&&n.contains(document.activeElement))document.activeElement.blur(); }
 function schNoticeSave(){ const t=$('#nt-title'), b=$('#nt-body'), title=(t.value||'').replace(/\s+/g,' ').trim(), body=(b.value||'').trim(); if(!title){t.focus();toast('공지 제목을 입력하세요.');return;}
+  // a notice being edited (owner, 2026-11-23: a notice could only be deleted): its writer or an admin changes title and text in the same form
+  { const eid=(SCH.nt||{}).edit; if(eid){ if(!NOTICES.some(q=>q.id===eid)){SCH.nt={};schNoticeDraw();toast('삭제된 공지사항입니다.');return;}
+      NOTICES=NOTICES.map(q=>q.id===eid?Object.assign({},q,{title,body,text:title+(body?' — '+body.replace(/\s+/g,' '):''),editedAt:new Date().toISOString(),editedBy:sharedUser}):q);
+      SCH.nt={open:eid}; t.blur(); schNoticeDraw(); toast('공지사항을 수정했습니다.'); return; } }
   const id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
   NOTICES=NOTICES.concat({id,date:TODAY,at:new Date().toISOString(),title,body,text:title+(body?' — '+body.replace(/\s+/g,' '):''),by:sharedUser});
   SCH.nt={open:id}; t.blur(); schNoticeDraw(); toast('공지사항을 등록했습니다.'); }
@@ -81,6 +85,7 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   const n=$('#notice'); if(!n)return;
   if(el=T.closest('#notice [data-nt]')){ const k=el.dataset.nt, ui=SCH.nt||(SCH.nt={});
     if(k==='add'){ ui.form=true; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
+    if(k==='edit'){ const x=NOTICES.find(q=>q.id===el.dataset.id); if(!x||!(canAdmin()||x.by===sharedUser))return; SCH.nt={open:x.id,form:true,edit:x.id,title:schNtTitle(x),body:schNtBody(x)}; n.classList.add('open'); schNoticeDraw(); const t=$('#nt-title'); if(t)t.focus(); return; }
     if(k==='cancel'){ SCH.nt={open:ui.open}; schNoticeDraw(); return; }
     if(k==='save'){ schNoticeSave(); return; }
     if(k==='open'){ if(T.closest('.ndel'))return; const id=el.dataset.id; ui.open=ui.open===id?null:id; if(ui.form){const t=$('#nt-title'),b=$('#nt-body'); ui.title=t?t.value:''; ui.body=b?b.value:'';}

@@ -594,3 +594,27 @@ Four requests of one afternoon. Preview only, except the fix of the address.
 - Without the preview the item of a task is hidden (isLive); an action that became a task keeps its own id and stays listed there as
   the action it was (its fields are those of the moment it became a task).
 - tests/schedule-13.cjs (51 checks); tests/schedule-4.cjs follows the new rule.
+
+## The upload window with rows; what could not be changed (owner, 2026-11-23, the seventeenth round)
+
+- **The upload window** (the owner's sketch): one large field for the master workbook and, below a line, six long rows that
+  each take a file for one section: 액션 일정 (the gantt sheet 마스터스케줄, else the schedule columns of 단계별업무분장), 액션 리스트
+  (단계별업무분장), 액션 관계도 (업무연결), 외부설비 조달, 승인게이트, 근거 및 확약 (its six sheets). `SCHUP.slots` holds one file per
+  field; schUpView cuts what a row uses out of what was read (a file without the row's sheet is told so); what a row holds wins
+  over the same section of the master file (said in grey). The row 액션 일정 alone brings dates into the tasks there are; beside
+  a task list its dates go over that list's. readSheets takes `{tasks:'gantt'}` to prefer the gantt sheet.
+  A cell that is merged into another one is read as empty: the guide's gantt sheet merges five rows per task, which read as the
+  same WBS five times (found with the real workbook; ExcelJS hands the master's value to every cell of a merge).
+- **A notice can be edited** by its writer or an admin: 수정 beside the × opens the form with what the notice says; saving keeps
+  the same notice (`editedAt` / `editedBy`). 65-shell.js.
+- **The image of a project card can be taken away**: with an image the button offers 이미지 교체 / 이미지 빼기 (undo in the toast).
+- **A section of the 자료실 goes to the trash** instead of being deleted for good (for everybody): archSectionTrash marks it `gone`
+  and sends its cards to the trash with it (`withSec`); a gone section is not drawn; restoring one of its cards brings it back;
+  the Worker drops it once its cards have been purged. An empty section is still removed at once.
+- **A category renamed everywhere at once**: a research 구분 from the list of 구분 (its picker in a note, the filter of the main
+  page: "이름 바꾸기" on a row; schCatRename changes the notes' lists and the [..] of their titles, leaves out a note somebody else
+  is editing) and a partner 구분 from the editor's list (✎; partnerCategoryRename). Both with 되돌리기.
+- Still open from that audit: templates cannot be renamed, a link card cannot be moved to another section, a member's 사번 / name
+  cannot be corrected by an admin and members cannot be removed, files taken out of a body stay on the server, recent items
+  cannot be removed one by one.
+- tests/schedule-14.cjs (23 checks); the window is in tests/schedule-12.cjs (43).

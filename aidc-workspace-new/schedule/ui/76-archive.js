@@ -20,7 +20,7 @@ function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), rows=q?found.docs:ar
     <div class="tbl archive pv"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>중요도</em></span><span><em>최종수정일자</em></span><span><em>드롭박스 URL</em></span></div>
     ${page.map(x=>schArchRow(x.r,x.t)).join('')}${page.length?'':`<div class="none">${q?'검색어에 맞는 문서가 없습니다.':'등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.'}</div>`}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:44px" class="pager')}`; }
 function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
-  ARCH_SECTIONS.forEach((sec,si)=>{ const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
+  ARCH_SECTIONS.forEach((sec,si)=>{ if(sec.gone)return; const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
     h+=`<div class="asec" style="${n++===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
     const N=5, cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/N); h+=`<div class="agrid g5">`;   // five in a row (owner's design, 2026-11-23)
     for(let r=0;r<nrows;r++)for(let k=0;k<N;k++){ const idx=r*N+k, cell=cells[idx], full=(r*N+N-1<cells.length)&&!cells[r*N+N-1].add;

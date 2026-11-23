@@ -34,10 +34,11 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
   const A = await newUser(browser, 'RXA' + sfx, '열두 일', { url: V2 }), a = A.page;
   const ev = (f, x) => a.evaluate(f, x);
   const book = sheets => ev(async s => { const X = await schXlsx(), u = new Uint8Array(await X.makeBook(s)); let bin = ''; for (let i = 0; i < u.length; i += 8192) bin += String.fromCharCode(...u.subarray(i, i + 8192)); return btoa(bin); }, sheets).then(b => Buffer.from(b, 'base64'));
-  const put = async (files, pg = a) => { await pg.setInputFiles('#dlg.sch-up input[type=file]', files.map(f => ({ name: f[0], mimeType: f[2] || XL, buffer: f[1] })));
+  // a file goes into the large field (the master workbook) or, with a fourth value, into the row of one section
+  const put = async (files, pg = a) => { for (const f of files) { await pg.setInputFiles(`#dlg.sch-up input[data-slot="${f[3] || 'master'}"]`, [{ name: f[0], mimeType: f[2] || XL, buffer: f[1] }]); await pg.waitForFunction(() => !document.querySelector('#dlg.sch-up .rd'), null, { timeout: 30000 }); await sleep(150); }
     await pg.waitForFunction(() => !document.querySelector('#dlg.sch-up .rd') && !!document.querySelector('#dlg.sch-up .up-res, #dlg.sch-up .up-nt.err'), null, { timeout: 30000 }); await sleep(200); };
   const win = () => ev(() => { const d = document.querySelector('#dlg.sch-up'); if (!d) return null; const P = SCHUP.plan || {}, t = e => [...e.childNodes].map(n => n.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ');   // the cells of a row, one space between
-    return { rows: [...d.querySelectorAll('.up-row')].map(t), off: d.querySelectorAll('.up-row.off').length, notes: [...d.querySelectorAll('.up-nt')].map(t), warn: [...d.querySelectorAll('.up-wn')].map(t), say: [...d.querySelectorAll('.up-say')].map(t).join(' '), ok: !d.querySelector('[data-up="ok"]').disabled, tags: [...d.querySelectorAll('.up-tags span')].map(t), files: d.querySelectorAll('.up-file').length, same: !!P.same, err: P.error || '', replaced: P.replaced || 0, small: !!d.querySelector('.up-drop.small') }; });
+    return { rows: [...d.querySelectorAll('.up-row')].map(t), off: d.querySelectorAll('.up-row.off').length, notes: [...d.querySelectorAll('.up-nt')].map(t), warn: [...d.querySelectorAll('.up-wn')].map(t), info: [...d.querySelectorAll('.up-ft.inf')].map(t), say: [...d.querySelectorAll('.up-say')].map(t).join(' '), ok: !d.querySelector('[data-up="ok"]').disabled, tags: [...d.querySelectorAll('.up-tags span')].map(t), files: d.querySelectorAll('.up-part.has').length + (d.querySelector('.up-drop.has') ? 1 : 0), parts: Object.fromEntries([...d.querySelectorAll('.up-part')].map(p => [p.dataset.slot, p.classList.contains('bad') ? 'bad' : (p.querySelector('.cnt') || {}).textContent || ''])), same: !!P.same, err: P.error || '', replaced: P.replaced || 0, small: !!d.querySelector('.up-drop.has') }; });
   const apply = async () => { await a.click('#dlg [data-up="ok"]'); await a.waitForFunction(() => !document.querySelector('#dlg'), null, { timeout: 20000 }); await sleep(500); };
   const openUp = async () => { await a.click('[data-schup]'); await sleep(350); };
   const st = (pg, p) => pg.evaluate(p => { const m = schReady(p) ? schModel(p) : null; if (!m) return null; const w = x => { const t = m.byWbs.get(x); return t ? { id: t.id, name: t.name, st: t.status, ps: t.plannedStart, pf: t.plannedFinish, rs: t.referenceStart, prog: t.progress, pri: t.pri || '', A: t.roles.A, kind: t.kind, ph: t.phaseLabel } : null; };
@@ -53,8 +54,8 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
   check('it is not there while the overview is being edited', whileEdit === false && await ev(() => !!document.querySelector('[data-schup]')));
   await openUp();
   const w0 = await ev(() => { const d = document.querySelector('#dlg.sch-up'), z = d && d.querySelector('.up-drop'); if (!z) return null; const c = getComputedStyle(z), t = d.querySelector('.up-ttl'), b = d.querySelector('.box').getBoundingClientRect(), tr = t.getBoundingClientRect();
-    return { title: t.textContent, centred: Math.abs((tr.left + tr.right) / 2 - (b.left + b.right) / 2) < 2, sub: d.querySelector('.up-sub').textContent, style: c.borderTopStyle, radius: c.borderTopLeftRadius, h: z.offsetHeight, pic: !!z.querySelector('svg.up-pic'), say: z.textContent.trim(), ok: d.querySelector('[data-up="ok"]').disabled, multi: z.querySelector('input').multiple, jin: d.classList.contains('j-in') }; });
-  check('the window follows the reference: a centred title, one grey line, a large dashed rounded field with a folder and one line', w0 && w0.title === '엑셀 업로드' && w0.centred && /마스터 파일 하나 또는 구역별 파일/.test(w0.sub) && w0.style === 'dashed' && w0.radius === '20px' && w0.h >= 220 && w0.pic && /끌어다 놓거나 눌러서 선택/.test(w0.say) && w0.ok === true && w0.multi === true, w0);
+    return { title: t.textContent, centred: Math.abs((tr.left + tr.right) / 2 - (b.left + b.right) / 2) < 2, sub: d.querySelector('.up-sub').textContent, style: c.borderTopStyle, radius: c.borderTopLeftRadius, h: z.offsetHeight, pic: !!z.querySelector('svg.up-pic'), say: z.textContent.trim(), ok: d.querySelector('[data-up="ok"]').disabled, multi: [...d.querySelectorAll('.up-parts .up-part b')].map(x => x.textContent).join(), jin: d.classList.contains('j-in') }; });
+  check('the window: a centred title, one grey line, a large dashed rounded field with a folder for the master file, and six long rows for one section each', w0 && w0.title === '엑셀 업로드' && w0.centred && /마스터 파일 하나로 올리거나, 아래 칸에 구역별로/.test(w0.sub) && w0.style === 'dashed' && w0.radius === '20px' && w0.h >= 170 && w0.pic && /끌어다 놓거나 눌러서 선택/.test(w0.say) && w0.ok === true && w0.multi === '액션 일정,액션 리스트,액션 관계도,외부설비 조달,승인게이트,근거 및 확약', w0);
   await put([['메모.txt', Buffer.from('x'), 'text/plain']]);
   const wTxt = await win();
   check('a file that is no workbook is told so and nothing can be applied', wTxt.files === 1 && wTxt.notes.some(n => /엑셀\(\.xlsx\) 파일만/.test(n)) && wTxt.ok === false, wTxt);
@@ -88,7 +89,7 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
 
   console.log('— one section alone');
   const gates = await book([gateSheet([[...G1.slice(0, 2), '타당성 최종 승인', ...G1.slice(3)], G2, ['G3', 'W2.5', '설치 검수', '2027-04-23', 'SAT 성적서', '사업총괄', '운영 보류', 'W2.4', '확인 전']])]);
-  await openUp(); await put([['승인게이트만.xlsx', gates]]); const w2 = await win();
+  await openUp(); await put([['승인게이트만.xlsx', gates, null, 'gates']]); const w2 = await win();
   check('a file with only 승인게이트: that row says what changes, the other four say "올리지 않음"', w2.rows.some(r => /승인게이트 3건 새로 1 · 바뀜 1/.test(r)) && w2.off === 4 && w2.rows.filter(r => /올리지 않음 · 그대로/.test(r)).length === 4 && w2.ok, w2.rows);
   await apply(); const s2 = await st(a, pid);
   check('applied: three gates, everything else as it was', s2.g.join() === 'G1:타당성 최종 승인,G2:설계 동결,G3:설치 검수' && s2.n === 8 && s2.l === 7 && s2.p === 1 && s2.ev === 2 && s2.op === s1.op && s2.src !== s1.src, s2);
@@ -99,7 +100,7 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
   await sleep(400); const s3 = await st(a, pid);
   check('(setup) a state, moved dates, an importance and a task added in the app', s3.w11.st === '진행' && s3.w21.ps === '2027-02-03' && s3.w22.pri === 'high' && s3.n === 9 && s3.w26 && s3.w26.name === '앱에서 추가한 업무', s3);
   const T2 = { ...TASKS, 'W1.2': ['타당성 검토(개정)', '2027-01-18', '2027-01-29'], 'W2.1': ['기본 설계', '2027-02-08', '2027-03-05'], 'W2.7': ['시운전', '2027-04-26', '2027-04-30'] }; delete T2['W2.5'];
-  await openUp(); await put([['일정만.xlsx', await book([taskSheet(T2)])]]); const w3 = await win();
+  await openUp(); await put([['일정만.xlsx', await book([taskSheet(T2)]), null, 'list']]); const w3 = await win();
   check('tasks alone: new / changed / gone are counted, and what goes with a task that is gone is told', w3.rows.some(r => /액션 일정 · 리스트 9건 새로 1 · 바뀜 2 · 없어짐 1/.test(r)) && w3.warn.some(x => /관계 2건이 함께 빠집니다/.test(x)) && w3.warn.some(x => /외부설비 1건은 연결 업무/.test(x)) && w3.off === 4, w3);
   check('a value changed in the app and in the workbook becomes the workbook\'s, and the window says how many', w3.replaced === 2 && w3.warn.some(x => /앱에서 고친 값 가운데 2건은 엑셀에서도 바뀐 칸/.test(x)), w3.warn);
   await apply(); const s4 = await st(a, pid);
@@ -108,8 +109,8 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
 
   console.log('— two files at once, a relation to a task that is not there');
   const T3 = { ...T2, 'W2.5': TASKS['W2.5'] }, L3 = [...CHAIN, ['W2.7', 'W3.1', 'SS', 2], ['W9.9', 'W3.1']];
-  await openUp(); await put([['일정.xlsx', await book([taskSheet(T3)])], ['관계.xlsx', await book([linkSheet(L3)])]]); const w4 = await win();
-  check('two files: both are listed, each with its section; the relation without a task is left out and told', w4.files === 2 && w4.tags.some(t => /일정 · 리스트\s*9/.test(t)) && w4.tags.some(t => /관계도\s*9/.test(t)) && w4.warn.some(x => /업무 목록에 없는 WBS를 가리키는 관계 1건/.test(x)) && w4.rows.some(r => /액션 관계도 8건/.test(r)) && w4.off === 3, w4);
+  await openUp(); await put([['일정.xlsx', await book([taskSheet(T3)]), null, 'list'], ['관계.xlsx', await book([linkSheet(L3)]), null, 'links']]); const w4 = await win();
+  check('two rows filled: each shows its file and how many it read; the relation without a task is left out and told', w4.files === 2 && w4.parts.list === '9건' && w4.parts.links === '9건' && w4.warn.some(x => /업무 목록에 없는 WBS를 가리키는 관계 1건/.test(x)) && w4.rows.some(r => /액션 관계도 8건/.test(r)) && w4.off === 3, w4);
   await apply(); const s5 = await st(a, pid);
   check('applied: the task is back (same id), eight relations, the package shows again', s5.n === 10 && s5.w25 && s5.w25.id === s1.w25.id && s5.l === 8 && s5.p === 1 && s5.w26, s5);
   const lag = await ev(p => { const m = schModel(p), e = m.plan.dependencies.find(e => m.byId.get(e.from).wbs === 'W2.7'); return e && { type: e.type, lag: e.lag, to: m.byId.get(e.to).wbs }; }, pid);
@@ -119,26 +120,34 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
   const MH = ['WBS', null, '작업명', '기간 Day', '기간 Week', '예상 시작일', '예상 완료일', '선행 WBS [유형]', '후속 WBS [유형]', '진척률', '주 담당', '부 담당', '운영 여유 / CP'];
   const mrows = [['통합 개발 일정'], ['운영개시 예상'], ['시험용'], ['조건부'], MH, []]; let lastPh = '';
   for (const [w, v] of Object.entries(T3)) { const ph = w.split('.')[0]; if (ph !== lastPh) { mrows.push([ph, null, PH[ph]]); lastPh = ph; } const ms = !!(v[3] && v[3].ms), s = w === 'W1.1' ? '2027-01-11' : v[1], f = w === 'W1.1' ? '2027-01-22' : v[2]; mrows.push([w, null, v[0], ms ? 0 : 5, 1, s, f, '—', '—', w === 'W1.1' ? 0.5 : null, null, null, '여유']); mrows.push([]); }
-  await openUp(); await put([['간트만.xlsx', await book([{ name: '마스터스케줄', rows: mrows }])]]); const w5 = await win();
-  check('the gantt sheet alone is read for names, dates, progress; the window says so', w5.tags.some(t => /일정\(날짜\)\s*9/.test(t)) && w5.notes.some(n => /작업명·날짜·진척률·담당만 읽습니다/.test(n)) && w5.rows.some(r => /액션 일정 · 리스트 10건 바뀜 1 \(날짜·작업명만\)/.test(r)) && w5.ok, w5);
+  await openUp(); await put([['간트만.xlsx', await book([{ name: '마스터스케줄', rows: mrows }]), null, 'gantt']]); const w5 = await win();
+  check('the gantt sheet alone is read for names, dates, progress; the window says so', w5.parts.gantt === '9건' && w5.notes.some(n => /작업명·날짜·진척률·담당만 읽습니다/.test(n)) && w5.rows.some(r => /액션 일정 · 리스트 10건 바뀜 1 \(날짜·작업명만\)/.test(r)) && w5.ok, w5);
   await apply(); const s6 = await st(a, pid);
   check('applied: the dates and the progress of the task changed, its roles and its state stayed', s6.w11.rs === '2027-01-11' && s6.w11.prog === 0.5 && s6.w11.A === '사업총괄' && s6.w11.st === '진행' && s6.w31.kind === 'milestone' && s6.n === 10 && s6.l === 8, s6);
-  await openUp(); await put([['간트만.xlsx', await book([{ name: '마스터스케줄', rows: mrows }])]]); const w6 = await win();
+  await openUp(); await put([['간트만.xlsx', await book([{ name: '마스터스케줄', rows: mrows }]), null, 'gantt']]); const w6 = await win();
   check('the same content again: "바뀌는 것이 없습니다" and nothing to apply', w6.same && /바뀌는 것이 없습니다/.test(w6.say) && w6.ok === false, w6);
   await a.click('#dlg [data-up="x"]'); await sleep(300);
 
+  console.log('— the rows and the master field together');
+  await openUp(); await put([['승인게이트만.xlsx', gates, null, 'links']]); const x1 = await win();
+  check('a row takes only its own sheet: a file without it is told so and cannot be applied', x1.parts.links === 'bad' && x1.notes.some(n => /이 파일에는 업무연결 시트가 없습니다/.test(n)) && x1.ok === false, x1);
+  await a.click('#dlg [data-up="rm"]'); await sleep(200);
+  await put([['마스터.xlsx', master], ['게이트 하나.xlsx', await book([gateSheet([G1])]), null, 'gates']]); const x2 = await win();
+  check('what a row holds wins over the same section of the master file, and the window says so', x2.files === 2 && x2.parts.gates === '1건' && x2.rows.some(r => /승인게이트 1건/.test(r)) && x2.info.some(t => /승인게이트 시트는 마스터 파일에도 있습니다. 따로 올린 “게이트 하나.xlsx” 기준/.test(t)), x2);
+  await a.click('#dlg [data-up="x"]'); await sleep(300);
+
   console.log('— what cannot be read or worked out');
-  await openUp(); await put([['유형오류.xlsx', await book([linkSheet([['W1.1', 'W1.2', 'XX']])])]]); const e1 = await win();
+  await openUp(); await put([['유형오류.xlsx', await book([linkSheet([['W1.1', 'W1.2', 'XX']])]), null, 'links']]); const e1 = await win();
   check('a relation of an unknown type: the sheet is told with its row and is not applied', e1.notes.some(n => /업무연결.*유형 "XX"/.test(n) && /이 시트는 반영하지 않습니다/.test(n)) && /반영할 수 있는 시트가 없습니다/.test(e1.say) && e1.ok === false, e1);
   await a.click('#dlg [data-up="rm"]'); await sleep(200);
   check('a file can be taken out of the list again', (await win()).files === 0);
-  await put([['순환.xlsx', await book([linkSheet([['W1.1', 'W1.2'], ['W1.2', 'W1.1']])])]]); const e2 = await win();
+  await put([['순환.xlsx', await book([linkSheet([['W1.1', 'W1.2'], ['W1.2', 'W1.1']])]), null, 'links']]); const e2 = await win();
   check('relations that go in a circle cannot be worked out: told, nothing to apply', !!e2.err && /이대로는 반영할 수 없습니다/.test(await ev(() => (document.querySelector('#dlg .up-res.bad h4') || {}).textContent || '')) && e2.ok === false, e2.err);
   await a.click('#dlg [data-up="rm"]'); await sleep(200);
-  await put([['날짜오류.xlsx', await book([taskSheet({ 'W1.1': ['기획 정리', '2027-01-15', '2027-01-04'] })])]]); const e3 = await win();
+  await put([['날짜오류.xlsx', await book([taskSheet({ 'W1.1': ['기획 정리', '2027-01-15', '2027-01-04'] })]), null, 'list']]); const e3 = await win();
   check('a finish before its start is told with the row', e3.notes.some(n => /W1\.1: 완료일이 시작일보다 빠릅니다/.test(n)) && e3.ok === false, e3.notes);
   await a.click('#dlg [data-up="rm"]'); await sleep(200);
-  await put([['앱내보내기.xlsx', await book([{ name: '단계별업무분장', rows: [['WBS', '단계', '업무명', '작업유형', '참조시작', '참조완료', '관리시작', '관리완료'], ['W1.1', '1 기획', '기획 정리', '작업', '2027-01-04', '2027-01-15', '2027-01-04', '2027-01-15']] }])]]); const e4 = await win();
+  await put([['앱내보내기.xlsx', await book([{ name: '단계별업무분장', rows: [['WBS', '단계', '업무명', '작업유형', '참조시작', '참조완료', '관리시작', '관리완료'], ['W1.1', '1 기획', '기획 정리', '작업', '2027-01-04', '2027-01-15', '2027-01-04', '2027-01-15']] }]), null, 'list']]); const e4 = await win();
   check('a table in the app\'s own export layout is recognised and refused in plain words', e4.notes.some(n => /앱에서 내보낸 파일의 표 형식/.test(n)) && e4.ok === false, e4.notes);
   await a.click('#dlg [data-up="rm"]'); await sleep(200);
   await put([['다른시트.xlsx', await book([{ name: 'Sheet1', rows: [['a', 'b'], [1, 2]] }])]]); const e5 = await win();

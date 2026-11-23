@@ -56,7 +56,7 @@ function dayOf(v: unknown): string | null {
   const d = `${m[1]}-${pad2(+m[2])}-${pad2(+m[3])}`; const t = new Date(d + 'T00:00:00Z');
   return isNaN(+t) || t.toISOString().slice(0, 10) !== d ? null : d;
 }
-async function readSheets(file: File) {
+async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
   if (file.size > 25 * 1024 * 1024) throw new Error('25MB 이하의 엑셀 파일을 선택해주세요.');
   if (!/\.xlsx$/i.test(file.name)) throw new Error('엑셀(.xlsx) 파일만 올릴 수 있습니다.');
   const ExcelJS = (await import('exceljs')).default, book = new ExcelJS.Workbook();
@@ -79,7 +79,9 @@ async function readSheets(file: File) {
     return null;
   };
   // ExcelJS's formula-value getter omits falsey cached results (a zero): the result is read on its own
-  const at = (ws: any, row: number, col: number): Val => { const c = ws.getCell(row, col); return value(c.type === ExcelJS.ValueType.Formula ? c.result : c.value); };
+  // A cell that is merged into another one hands out that one's value: only the first cell of a merge counts (the gantt sheet of the
+  // guide merges five rows per task, which read as the same WBS five times).
+  const at = (ws: any, row: number, col: number): Val => { const c = ws.getCell(row, col); if (c.isMerged && c.master && c.master.address !== c.address) return null; return value(c.type === ExcelJS.ValueType.Formula ? c.result : c.value); };
   const text = (v: unknown) => v === null || v === undefined ? '' : String(v).trim();
   const num = (v: unknown): number | null => { if (v === null || v === undefined || v === '') return null; const n = typeof v === 'number' ? v : Number(String(v).replace(/[,%\s]/g, '')); return Number.isFinite(n) ? n : null; };
   const width = (ws: any) => Math.min(Math.max(1, ws.columnCount || 1), 60);
@@ -130,7 +132,9 @@ async function readSheets(file: File) {
     if (partial) note(name, 'info', '이 시트에서는 작업명·날짜·진척률·담당만 읽습니다. 나머지 값은 그대로 둡니다.');
     return true;
   };
-  if (sheet('단계별업무분장')) readTasks('단계별업무분장', false); else if (sheet('마스터스케줄')) readTasks('마스터스케줄', true);
+  // (the row "액션 일정" of the upload window asks for the gantt sheet first; everything else for the input sheet)
+  if (opt && opt.tasks === 'gantt' && sheet('마스터스케줄')) readTasks('마스터스케줄', true);
+  else if (sheet('단계별업무분장')) readTasks('단계별업무분장', false); else if (sheet('마스터스케줄')) readTasks('마스터스케줄', true);
 
   { const name = '업무연결', ws = sheet(name);
     if (ws) { const hr = headerRow(ws, '연결번호');

@@ -10,7 +10,7 @@
 // plan, so they stay; only where the workbook itself changed a value does the workbook win (schUpReconcile). Tasks keep their ids by
 // WBS, so their bodies, comments and files stay attached. One undo step takes the whole upload back.
 // The reading is in the Excel bundle (schedule/xlsx.ts readSheets); nothing is written before 적용.
-const SCHUP={pid:'',files:[],plan:null,busy:false,fail:'',run:0,off:null};
+const SCHUP={pid:'',slots:{},plan:null,busy:false,fail:'',run:0,off:null};   // slots: 'master' and one per row of the window -> {name,size,file,reading,res,view,err}
 const SCH_UP_REC=[['procurementPackages','외부설비 조달대장'],['gates','승인게이트'],['commitmentReviews','보완·확약관리'],['assumptionsAndReferences','전제와참고자료'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS일정검토'],['offtakers','오프테이커 후보검토'],['sourceMappings','원자료대조']];
 const SCH_UP_EVK=['commitmentReviews','assumptionsAndReferences','responsibilityBoundaries','nvisScheduleReview','offtakers','sourceMappings'];
 // what the workbook says about a task, a relation, a package (everything else in an override is only known to the app: members, importance, address, reason)
@@ -66,12 +66,17 @@ function schUpReconcile(ov,oldBase,newBase,oldSrc,newSrc,has){ const out={}; let
 // The source plan the project would have, and what that does: nothing is written here.
 function schUpMerge(pid,reads){ const A=AIDCSchedule, D=A.dates, m=schModel(pid); if(!m)return {error:'일정을 불러오는 중입니다. 잠시 뒤에 다시 시도해주세요.'};
   const old=SCH.src[pid], oldBase=SCH.base[pid], root=SCHED[pid]||{}, src=schUpSlim(old), warn=[], R={}; let T=null, L=null, when='', sum=null;
-  const twice=(what,r)=>warn.push(`${what} 시트가 두 파일에 있습니다. “${r.name}” 기준으로 반영합니다.`);
+  const info=[], twice=(what,r)=>info.push(`${what} 시트는 마스터 파일에도 있습니다. 따로 올린 “${r.name}” 기준으로 반영합니다.`); let G=null;
   for(const r of reads){
-    if(r.tasks){ if(!T||(T.tasksPartial&&!r.tasksPartial))T=r; else if(T.tasksPartial===r.tasksPartial){twice('업무',r);T=r;} }
+    if(r.tasks){ if(r.gantt)G=r; else if(!T||(T.tasksPartial&&!r.tasksPartial))T=r; else if(T.tasksPartial===r.tasksPartial){twice('업무',r);T=r;} }
     if(r.links){ if(L)twice('업무연결',r); L=r; }
     for(const [k,label] of SCH_UP_REC)if(r.records&&r.records[k]){ if(R[k])twice(label,r); R[k]=r; }
     if(r.statusDate)when=r.statusDate; if(r.summary)sum=r.summary; }
+  // the row "액션 일정": alone it brings dates into the tasks there are; beside a task list (the master file, the row "액션 리스트") its dates go over that list's
+  if(G&&(!T||T.tasksPartial))T=G;
+  else if(G){ const by=new Map(G.tasks.map(g=>[g.wbs,g])), kinds=(G.taskCols||[]).some(k=>k==='kind'||k==='days'); let n=0;
+    T=Object.assign({},T,{tasks:T.tasks.map(t=>{const g=by.get(t.wbs); if(!g)return t; n++; by.delete(t.wbs); return Object.assign({},t,{start:g.start,finish:g.finish,fStart:null,fFinish:null},kinds?{kind:g.kind}:{});})});
+    if(by.size)warn.push(`액션 일정 파일에만 있는 WBS ${by.size}건은 넣지 않았습니다. 업무 목록은 리스트(단계별업무분장) 기준입니다.`); }
   const has={tasks:!!T,links:!!L,proc:!!R.procurementPackages,gates:!!R.gates,evid:SCH_UP_EVK.some(k=>R[k]),date:!!when&&when!==old.statusDate}; for(const k of SCH_UP_EVK)has['ev:'+k]=!!R[k];
   if(!(has.tasks||has.links||has.proc||has.gates||has.evid||when))return {none:true,warn,has};
   // the plan as it is now, without a scenario this browser may be looking at
@@ -114,21 +119,40 @@ function schUpMerge(pid,reads){ const A=AIDCSchedule, D=A.dates, m=schModel(pid)
   const common=l=>l.filter(t=>cur.tasks.some(x=>x.id===t.id)&&plan.tasks.some(x=>x.id===t.id)).map(t=>t.id).join(','), reordered=has.tasks&&common(cur.tasks)!==common(plan.tasks);
   let moved=0; for(const t of plan.tasks){const a=curRes.tasks[t.id], b=res.tasks[t.id]; if(a&&b&&(a.start!==b.start||a.finish!==b.finish))moved++;}
   const diff=c=>c.add+c.chg+c.del, total=diff(cT)+diff(cL)+diff(cP)+(has.gates?diff(cG):0)+diff(cE)+(has.date?1:0)+(reordered?1:0)+Object.keys(rec.changes).length;
-  return {src,has,warn,changes:rec.changes,replaced:rec.replaced,same:!total,partial:!!(T&&T.tasksPartial),moved,reordered,op0:curRes.operationDate||'',op1:res.operationDate||'',when,
+  return {src,has,warn,info,changes:rec.changes,replaced:rec.replaced,same:!total,partial:!!(T&&T.tasksPartial),moved,reordered,op0:curRes.operationDate||'',op1:res.operationDate||'',when,
     n:{tasks:plan.tasks.length,links:plan.dependencies.length,proc:plan.procurement.length,gates:src.gates.length,evid:cE.n},c:{tasks:cT,links:cL,proc:cP,gates:cG,evid:cE}}; }
 
 /* ---------- the window ---------- */
-function schUpPlan(){ SCHUP.plan=null; SCHUP.fail=''; const reads=SCHUP.files.filter(f=>f.res).map(f=>f.res); if(!reads.length)return; try{SCHUP.plan=schUpMerge(SCHUP.pid,reads);}catch(e){SCHUP.plan={error:String(e&&e.message||e),warn:[],has:{}};} }
-function schUpClose(){ const d=$('#dlg.sch-up'); if(d)d.remove(); if(SCHUP.off)SCHUP.off(); SCHUP.off=null; SCHUP.run++; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; }
-function schUpFileHtml(f,i){ const r=f.res, tags=[]; let notes='';
-  if(r){ if(r.tasks)tags.push([r.tasksPartial?'일정(날짜)':'일정 · 리스트',r.tasks.length]); if(r.links)tags.push(['관계도',r.links.length]);
-    for(const [k,label] of SCH_UP_REC)if(r.records[k])tags.push([k==='procurementPackages'?'외부설비':k==='gates'?'승인게이트':label,r.records[k].length]);
-    if(r.statusDate)tags.push(['기준일',schD(r.statusDate)]);
-    if(!tags.length&&!r.notes.some(n=>n.level==='error'))notes+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
-    for(const n of r.notes)notes+=`<div class="up-nt ${n.level==='error'?'err':''}">${n.sheet?`<b>${esc(n.sheet)}</b> `:''}${esc(n.text)}${n.level==='error'?' <i>이 시트는 반영하지 않습니다.</i>':''}</div>`; }
-  if(f.err)notes+=`<div class="up-nt err">${esc(f.err)}</div>`;
-  return `<div class="up-file ${f.err?'bad':''}"><div class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span>${f.reading?'<span class="rd">읽는 중…</span>':''}<button class="rm" data-up="rm" data-i="${i}" title="목록에서 빼기" aria-label="목록에서 빼기">${svg('i-x',9,9)}</button></div>
-    ${tags.length?`<div class="up-tags">${tags.map(t=>`<span>${esc(t[0])}<b>${esc(String(t[1]))}</b></span>`).join('')}</div>`:''}${notes}</div>`; }
+// The large field takes the master workbook (whichever of the guide's sheets it holds); below a line six long rows take a file for
+// one section each (owner, 2026-11-23: "큰 영역은 마스터파일 업로드 공간이고, 밑에 길게 6개를 빼서 각각 부분으로 업로드할 수 있는 공간").
+// A row uses only the sheets of its section, and what a row holds wins over the same section of the master file.
+const SCH_UP_SLOTS=[['gantt','액션 일정','마스터스케줄 시트 · 날짜 · 작업명 · 진척률',['마스터스케줄','단계별업무분장']],['list','액션 리스트','단계별업무분장 시트',['단계별업무분장']],['links','액션 관계도','업무연결 시트',['업무연결']],
+  ['proc','외부설비 조달','외부설비 조달대장 시트',['외부설비 조달대장']],['gates','승인게이트','승인게이트 시트',['승인게이트']],['evid','근거 및 확약','보완·확약관리 · 전제와참고자료 등 6개 시트',['보완·확약관리','전제와참고자료','책임경계','NVIS일정검토','오프테이커 후보검토','원자료대조']]];
+const SCH_UP_GCOLS=['name','start','finish','days','kind','progress','primary','secondary'];   // what the row "액션 일정" takes of a task
+const schUpFolder=(w,h)=>`<svg class="up-pic" width="${w}" height="${h}" viewBox="0 0 64 50" aria-hidden="true"><path d="M3 7a4 4 0 0 1 4-4h16.2a4 4 0 0 1 3 1.4L30 9h27a4 4 0 0 1 4 4v10H3z" fill="#a8a8a8"/><rect x="3" y="17" width="58" height="30" rx="4" fill="#2b2b2b"/></svg>`;
+// What one field uses of what was read: r (the part of the reading that counts, absent when nothing can be used), n (how many), notes, err.
+function schUpView(slot,r){ if(slot==='master')return {r,notes:r.notes};
+  const def=SCH_UP_SLOTS.find(s=>s[0]===slot), sheets=def[3], notes=r.notes.filter(n=>!n.sheet||sheets.includes(n.sheet)), bad=notes.some(n=>n.level==='error'), v={name:r.name,sha:r.sha,records:{},notes};
+  const none=what=>({notes,err:bad?'':`이 파일에는 ${what} 시트가 없습니다.`});
+  if(slot==='gantt'||slot==='list'){ if(!r.tasks||!sheets.includes(r.tasksFrom))return none(slot==='gantt'?'마스터스케줄(또는 단계별업무분장)':'단계별업무분장');
+    Object.assign(v,{tasks:r.tasks,tasksFrom:r.tasksFrom,tasksPartial:slot==='gantt'||!!r.tasksPartial,taskCols:slot==='gantt'?(r.taskCols||[]).filter(k=>SCH_UP_GCOLS.includes(k)):r.taskCols,gantt:slot==='gantt'}); return {r:v,notes,n:r.tasks.length}; }
+  if(slot==='links'){ if(!r.links)return none('업무연결'); v.links=r.links; return {r:v,notes,n:r.links.length}; }
+  const kinds=slot==='proc'?['procurementPackages']:slot==='gates'?['gates']:SCH_UP_EVK; let n=0, any=false; for(const k of kinds)if(r.records[k]){v.records[k]=r.records[k];n+=r.records[k].length;any=true;}
+  return any?{r:v,notes,n}:none(slot==='evid'?'근거 및 확약(보완·확약관리 등)':sheets[0]); }
+const schUpOrder=()=>['master'].concat(SCH_UP_SLOTS.map(s=>s[0]));
+const schUpReads=()=>schUpOrder().map(k=>SCHUP.slots[k]).filter(f=>f&&f.view&&f.view.r).map(f=>f.view.r);
+const schUpReading=()=>Object.values(SCHUP.slots).some(f=>f&&f.reading);
+function schUpPlan(){ SCHUP.plan=null; SCHUP.fail=''; const reads=schUpReads(); if(!reads.length){ if(Object.values(SCHUP.slots).some(f=>f&&(f.res||f.err)))SCHUP.plan={none:true,warn:[],has:{}}; return; }
+  try{SCHUP.plan=schUpMerge(SCHUP.pid,reads);}catch(e){SCHUP.plan={error:String(e&&e.message||e),warn:[],has:{}};} }
+function schUpClose(){ const d=$('#dlg.sch-up'); if(d)d.remove(); if(SCHUP.off)SCHUP.off(); SCHUP.off=null; SCHUP.run++; SCHUP.slots={}; SCHUP.plan=null; SCHUP.busy=false; }
+function schUpTagsHtml(r){ const tags=[]; if(r.tasks)tags.push([r.tasksPartial?'일정(날짜)':'일정 · 리스트',r.tasks.length]); if(r.links)tags.push(['관계도',r.links.length]);
+  for(const [k,label] of SCH_UP_REC)if(r.records[k])tags.push([k==='procurementPackages'?'외부설비':k==='gates'?'승인게이트':label,r.records[k].length]);
+  if(r.statusDate)tags.push(['기준일',schD(r.statusDate)]);
+  return tags.length?`<span class="up-tags">${tags.map(t=>`<span>${esc(t[0])}<b>${esc(String(t[1]))}</b></span>`).join('')}</span>`:''; }
+function schUpNotesHtml(slot,f){ let h=''; const r=f.res, v=f.view;
+  if(slot==='master'&&r&&!schUpTagsHtml(r)&&!r.notes.some(n=>n.level==='error'))h+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
+  for(const n of (v&&v.notes)||[])h+=`<div class="up-nt ${n.level==='error'?'err':''}">${n.sheet?`<b>${esc(n.sheet)}</b> `:''}${esc(n.text)}${n.level==='error'?' <i>이 시트는 반영하지 않습니다.</i>':''}</div>`;
+  if(v&&v.err)h+=`<div class="up-nt err">${esc(v.err)}</div>`; if(f.err)h+=`<div class="up-nt err">${esc(f.err)}</div>`; return h; }
 function schUpResultHtml(P){ if(!P)return '';
   if(P.none)return `<div class="up-res"><p class="up-say">반영할 수 있는 시트가 없습니다. 가이드 엑셀의 시트 이름과 머리글을 그대로 둔 파일을 올려주세요.</p></div>`;
   if(P.error)return `<div class="up-res bad"><h4>이대로는 반영할 수 없습니다</h4><p class="up-say">${esc(P.error)}</p>${(P.warn||[]).map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}</div>`;
@@ -140,30 +164,35 @@ function schUpResultHtml(P){ if(!P)return '';
     ${P.when?`<div class="up-row"><span>기준일</span><b></b><em>${schD(P.when)}${P.has.date?'':' · 변화 없음'}</em></div>`:''}
     <div class="up-row op ${d>0?'late':d<0?'early':''}"><span>운영개시 예상</span><b></b><em>${P.op0?schD(P.op0):'미정'}${P.op1!==P.op0?` → ${P.op1?schD(P.op1):'미정'}`:''}${d?` (${d>0?'+':''}${d}일)`:P.op1===P.op0?' · 변화 없음':''}${P.moved?` · 예상일이 바뀌는 액션 ${P.moved}건`:''}</em></div>
     ${P.same?'<p class="up-say">지금 프로젝트에 들어 있는 내용과 같습니다. 바뀌는 것이 없습니다.</p>':''}
-    ${P.replaced?`<p class="up-wn">앱에서 고친 값 가운데 ${P.replaced}건은 엑셀에서도 바뀐 칸이라 엑셀 값이 됩니다.</p>`:''}${P.warn.map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}
+    ${P.replaced?`<p class="up-wn">앱에서 고친 값 가운데 ${P.replaced}건은 엑셀에서도 바뀐 칸이라 엑셀 값이 됩니다.</p>`:''}${P.warn.map(w=>`<p class="up-wn">${esc(w)}</p>`).join('')}${(P.info||[]).map(w=>`<p class="up-ft inf">${esc(w)}</p>`).join('')}
     <p class="up-ft">올리지 않은 구역, 앱에서 고친 값과 직접 추가한 액션은 그대로 둡니다. 적용한 뒤에도 되돌릴 수 있습니다.</p></div>`; }
-function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid=SCHUP.pid, P=SCHUP.plan, n=SCHUP.files.length, reading=SCHUP.files.some(f=>f.reading), cur=(SCHED[pid]||{}).src;
+function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid=SCHUP.pid, P=SCHUP.plan, S0=SCHUP.slots, M=S0.master, reading=schUpReading(), cur=(SCHED[pid]||{}).src;
   const can=!!P&&!P.error&&!P.none&&!P.same&&!reading&&!SCHUP.busy, keep=box.scrollTop;
-  box.innerHTML=`<h3 class="up-ttl">엑셀 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 마스터 파일 하나 또는 구역별 파일 여러 개</p>
-    <label class="up-drop ${n?'small':''}" tabindex="0"><input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple hidden>
-      <svg class="up-pic" viewBox="0 0 64 50" aria-hidden="true"><path d="M3 7a4 4 0 0 1 4-4h16.2a4 4 0 0 1 3 1.4L30 9h27a4 4 0 0 1 4 4v10H3z" fill="#a8a8a8"/><rect x="3" y="17" width="58" height="30" rx="4" fill="#2b2b2b"/></svg>
-      <span>${n?'파일 더 올리기':'파일을 여기에 끌어다 놓거나 눌러서 선택'}</span></label>
-    ${n?`<div class="up-files">${SCHUP.files.map(schUpFileHtml).join('')}</div>`:`<p class="up-hint">일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 한 번에 또는 따로 올릴 수 있습니다.</p>`}
+  const inp=slot=>`<input type="file" data-slot="${slot}" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>`;
+  const rm=slot=>`<button class="rm" data-up="rm" data-slot="${slot}" title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button>`;
+  const part=([slot,label,cap])=>{ const f=S0[slot], v=f&&f.view, ok=!!(v&&v.r), bad=!!f&&!f.reading&&!ok;
+    return `<label class="up-part ${f?'has':''} ${bad?'bad':''}" data-slot="${slot}" tabindex="0">${inp(slot)}${schUpFolder(26,20)}<b>${label}</b>${f?`<span class="fn" title="${esc(f.name)}">${esc(f.name)}</span>${f.reading?'<span class="rd">읽는 중…</span>':ok?`<span class="cnt">${v.n}건</span>`:''}${rm(slot)}`:`<em>${esc(cap)}</em>`}</label>${f?schUpNotesHtml(slot,f):''}`; };
+  box.innerHTML=`<h3 class="up-ttl">엑셀 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 마스터 파일 하나로 올리거나, 아래 칸에 구역별로 따로 올립니다</p>
+    <label class="up-drop ${M?'has':''}" data-slot="master" tabindex="0">${inp('master')}${M?`<span class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(M.name)}">${esc(M.name)}</span><span class="sz">${fmtSize(M.size)}</span>${M.reading?'<span class="rd">읽는 중…</span>':''}${rm('master')}</span>${M.res?schUpTagsHtml(M.res):''}`
+      :`${schUpFolder(64,50)}<span>마스터 파일을 여기에 끌어다 놓거나 눌러서 선택</span>`}</label>${M?schUpNotesHtml('master',M):''}
+    <div class="up-div"><span>구역별로 따로 올리기</span></div>
+    <div class="up-parts">${SCH_UP_SLOTS.map(part).join('')}</div>
     ${reading?'':schUpResultHtml(P)}${SCHUP.fail?`<p class="up-fail">${esc(SCHUP.fail)}</p>`:''}
     ${cur&&cur.name?`<p class="up-cur"><span>지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</span><button data-up="out" title="올린 엑셀을 빼고 올리기 전의 일정으로 돌아갑니다">올린 엑셀 빼기</button></p>`:''}
-    <div class="bt"><button data-up="x">${n?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
+    <div class="bt"><button data-up="x">${Object.keys(S0).length?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
   box.scrollTop=keep; }
-async function schUpAdd(list){ const run=SCHUP.run; if(!list.length||SCHUP.busy)return;
-  for(const f of list){ const ent=/\.xlsx$/i.test(f.name)?{name:f.name,size:f.size,file:f,reading:true}:{name:f.name,size:f.size,err:'엑셀(.xlsx) 파일만 올릴 수 있습니다.'}; const at=SCHUP.files.findIndex(x=>x.name===f.name); if(at>=0)SCHUP.files[at]=ent; else SCHUP.files.push(ent); }
-  schUpDraw(); if(SCHUP.reading)return; SCHUP.reading=true;                                    // one file after the other (reading a large workbook takes a few seconds)
-  try{ for(;;){ const ent=SCHUP.files.find(f=>f.reading&&f.file); if(!ent||run!==SCHUP.run)break;
-      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file); }catch(e){ ent.err=String(e&&e.message||e); }
+async function schUpAdd(slot,list){ const run=SCHUP.run; if(!list.length||SCHUP.busy||!schUpOrder().includes(slot))return; const f=list[0];
+  if(list.length>1)toast('한 칸에는 파일을 하나씩 올립니다. 첫 파일만 넣었습니다.',3200);
+  SCHUP.slots[slot]=/\.xlsx$/i.test(f.name)?{name:f.name,size:f.size,file:f,reading:true}:{name:f.name,size:f.size,err:'엑셀(.xlsx) 파일만 올릴 수 있습니다.'};
+  schUpPlan(); schUpDraw(); if(SCHUP.queue)return; SCHUP.queue=true;                         // one file after the other (reading a large workbook takes a few seconds)
+  try{ for(;;){ const k=schUpOrder().find(q=>SCHUP.slots[q]&&SCHUP.slots[q].reading&&SCHUP.slots[q].file); if(!k||run!==SCHUP.run)break; const ent=SCHUP.slots[k];
+      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file,{tasks:k==='gantt'?'gantt':'list'}); ent.view=schUpView(k,ent.res); }catch(e){ ent.err=String(e&&e.message||e); }
       ent.reading=false; ent.file=null; if(run!==SCHUP.run)break; schUpPlan(); schUpDraw(); } }
-  finally{ SCHUP.reading=false; } }
+  finally{ SCHUP.queue=false; } }
 async function schGzip(text){ const raw=new TextEncoder().encode(text); if(typeof CompressionStream==='undefined')return {bytes:raw,gz:false};
   return {bytes:new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()),gz:true}; }
-async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||SCHUP.files.some(f=>f.reading))return; schUpPlan(); const P=SCHUP.plan; if(!P||P.error||P.none||P.same){schUpDraw();return;}
-  SCHUP.busy=true; schUpDraw(); const want=schSrcWant(pid), reads=SCHUP.files.filter(f=>f.res).map(f=>f.res);
+async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||schUpReading())return; schUpPlan(); const P=SCHUP.plan; if(!P||P.error||P.none||P.same){schUpDraw();return;}
+  SCHUP.busy=true; schUpDraw(); const want=schSrcWant(pid), reads=schUpReads();
   try{ const json=JSON.stringify(P.src), z=await schGzip(json);
     if(z.bytes.length>1887436)throw new Error('올린 내용이 저장 한도(1.8MB)를 넘습니다. 쓰지 않는 행을 줄인 뒤 다시 올려주세요.');
     const d=await sharedUploadFile(new File([z.bytes],`${pid}-일정원본-${TODAY}.json${z.gz?'.gz':''}`,{type:z.gz?'application/gzip':'application/json'}),'sched-src-'+pid);
@@ -185,17 +214,17 @@ async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||
 function schUpTakeOut(pid){ const cur=(SCHED[pid]||{}).src; if(!cur)return; schUpClose();
   confirmDlg(`올린 엑셀(${cur.name||'이름 없음'})을 빼고 ${SCH_SOURCES[pid]?'처음의 기본 일정':'빈 일정'}으로 돌아갈까요? 엑셀에서 온 액션·관계·설비·승인게이트·근거가 화면에서 빠집니다. (뺀 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'빼기',pri:true,fn:()=>schSet(pid,'src',null,'올린 엑셀을 뺐습니다')},{t:'취소',fn:()=>{}}]); }
 function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
-  closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.files=[]; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
+  closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.slots={}; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up'; d.innerHTML='<div class="box" role="dialog" aria-label="엑셀 업로드"></div>'; document.body.appendChild(d);
-  const zone=()=>$('.up-drop',d), stop=e=>e.preventDefault();                       // a file let go beside the window must not open in the browser
-  const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();schUpClose();} else if(e.key==='Enter'&&e.target&&e.target.classList&&e.target.classList.contains('up-drop')){e.preventDefault();e.target.click();} };
+  const zoneOf=e=>e.target&&e.target.closest?e.target.closest('label[data-slot]'):null, clear=()=>d.querySelectorAll('label[data-slot].over').forEach(z=>z.classList.remove('over')), stop=e=>e.preventDefault();   // a file let go beside the window must not open in the browser
+  const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();schUpClose();} else if(e.key==='Enter'&&e.target&&e.target.matches&&e.target.matches('label[data-slot]')){e.preventDefault();e.target.click();} };
   SCHUP.off=()=>{document.removeEventListener('keydown',key,true);window.removeEventListener('dragover',stop);window.removeEventListener('drop',stop);};
   document.addEventListener('keydown',key,true); window.addEventListener('dragover',stop); window.addEventListener('drop',stop);
-  d.addEventListener('click',e=>{ if(e.target===d){ if(!SCHUP.files.length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
-    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); SCHUP.files.splice(+b.dataset.i,1); schUpPlan(); schUpDraw(); } });
-  d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files]; i.value=''; schUpAdd(l); } });
-  d.addEventListener('dragover',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.add('over'); });
-  d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget)){const z=zone(); if(z)z.classList.remove('over');} });
-  d.addEventListener('drop',e=>{ e.preventDefault(); const z=zone(); if(z)z.classList.remove('over'); schUpAdd([...((e.dataTransfer&&e.dataTransfer.files)||[])]); });
+  d.addEventListener('click',e=>{ if(e.target===d){ if(!Object.keys(SCHUP.slots).length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
+    if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); delete SCHUP.slots[b.dataset.slot]; schUpPlan(); schUpDraw(); } });
+  d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files], slot=i.dataset.slot; i.value=''; schUpAdd(slot,l); } });
+  d.addEventListener('dragover',e=>{ e.preventDefault(); clear(); const z=zoneOf(e)||d.querySelector('label[data-slot="master"]'); if(z)z.classList.add('over'); });
+  d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget))clear(); });
+  d.addEventListener('drop',e=>{ e.preventDefault(); clear(); const z=zoneOf(e); schUpAdd(z?z.dataset.slot:'master',[...((e.dataTransfer&&e.dataTransfer.files)||[])]); });   // beside the rows: the master field
   schUpDraw(); }
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-schup]'); if(!b)return; e.preventDefault(); schUpOpen(S.proj); });
