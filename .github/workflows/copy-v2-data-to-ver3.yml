@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/copy-v2-data-to-ver3.yml'
+      - 'tools/copy-v2-data-to-ver3.mjs'
   workflow_dispatch:
 permissions:
   contents: read
