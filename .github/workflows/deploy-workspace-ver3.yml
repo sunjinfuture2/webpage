@@ -1,10 +1,5 @@
 name: Create workspace_ver3 Worker
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'workspace_ver3/**'
-      - '.github/workflows/deploy-workspace-ver3.yml'
   workflow_dispatch:
 permissions:
   contents: read

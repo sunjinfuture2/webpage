@@ -4,7 +4,7 @@ import { el } from './ui.js';
 import { ctx } from './host.js';
 import { upgrade, hydrate } from './legacy.js';
 
-const stamp = iso => { const d = new Date(iso); if (isNaN(d)) return iso || ''; const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}  ${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${p(d.getMinutes())}`; };
+const stamp = iso => { const d = new Date(iso); if (isNaN(d)) return iso || ''; const p = n => String(n).padStart(2, '0'); return `${ctx.dateText ? ctx.dateText(d) : `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}`}  ${d.getHours() < 12 ? '오전' : '오후'} ${((d.getHours() + 11) % 12) + 1}:${p(d.getMinutes())}`; };
 
 export function openHistory(o) {
   const prevFocus = document.activeElement;
@@ -30,6 +30,6 @@ export function openHistory(o) {
   Promise.resolve().then(() => o.load()).then(vs => { if (closed) return; list.textContent = '';
     if (!vs || !vs.length) { list.append(el('div', { class: 'nb-hist-empty', text: '아직 보관된 버전이 없습니다.' })); note('제목이나 본문을 저장할 때마다 여기에 버전이 쌓입니다. 같은 사람이 1분 안에 이어서 저장한 것은 하나로 묶입니다.'); return; }
     rows = vs.map((v, i) => { const node = el('div', { class: 'nb-hist-it', role: 'option' }, el('b', { text: stamp(v.at) }), el('small', { text: (ctx.userName(v.employee, v.employee) || '알 수 없음') + (i === 0 ? ' · 최신' : v.kind === 'base' ? ' · 기록 시작 전 내용' : '') })); node.addEventListener('click', () => pick(v)); list.append(node); return { v, node }; });
-    pick(vs[0]); }).catch(() => { if (!closed) { list.textContent = ''; note('버전 기록을 불러오지 못했습니다. 연결을 확인한 뒤 다시 열어 주세요.'); } });
+    pick(vs[0]); }).catch(e => { if (!closed) { list.textContent = ''; note((e && e.userMessage) || '버전 기록을 불러오지 못했습니다. 연결을 확인한 뒤 다시 열어 주세요.'); } });   // what the server said, when it said something
   return { close };
 }
