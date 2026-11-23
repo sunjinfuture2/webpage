@@ -2420,6 +2420,21 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 .th-btn .sun{display:none}
 .th-btn.on .sun{display:block}
 .th-btn.on .moon{display:none}
+
+/* ================= reference-site cards: the owner's design (picture of 2026-11-23) =================
+   Five in a row instead of four, smaller and lighter. Measured on the picture (it is 1.3036 times the page): a cell 138.8 high,
+   rows 9.2 apart; the logo 9.2 below the top of the cell's line and 14.6 right of it; the name in 18 / semi-bold (its width and its ink
+   match the picture's; medium is too thin), its letters 36 below the top; the note in 12 on lines 18.4 apart. The columns are equal and fill the page (267.6; the picture's 273.5 would
+   be wider than the page). No line closes a full row at its right. The + is the cell after the last card; when it starts a row
+   of its own, as in the picture, it stands 46 below the cards. */
+.arch .agrid.g5{grid-template-columns:repeat(5,calc(267.6px + var(--d)/5));row-gap:9.2px}
+.arch .agrid.g5 .cell{height:138.8px;padding:4px 0 0 4px}
+.arch .agrid.g5 .acard{height:130.8px;margin-right:4px;padding:5.2px 0 0 9.8px}
+.arch .agrid.g5 .acard h4{font-size:18px;font-weight:600;margin:2.6px 0 0 -1.3px;max-width:calc(100% - 40px);line-height:24px;padding-bottom:0}
+.arch .agrid.g5 .acard p{font-size:12px;line-height:18.4px;margin:13.6px 10px 0 0.2px;max-width:none;width:auto;-webkit-line-clamp:3}
+.arch .agrid.g5 .acard .more{right:8px;top:27.8px}
+.arch .agrid.g5 .cell .add,.arch .agrid.g5 .cell.first .add{left:14.1px;top:11.5px}
+.arch .agrid.g5 .cell.addc.alone{margin-top:35.8px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4402,6 +4417,14 @@ const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared
 const TOKEN_KEY='aidc-token';                 // one login per browser, shared by all its tabs
 let sharedUser='',sharedName='',sharedToken='',sharedBase={},sharedUsers={},sharedLocks={};
 let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRoute=true,sharedRetryAt=0,sharedSocket;
+// Counts what has reached this page since it was loaded: my own saves and what the socket brought. A whole state that was asked
+// for before one of them and arrives after it is older than what the page already has, and must not be applied: it used to put
+// a setting back for a moment (owner, 2026-11-23: the dark mode flipping to light and to dark again after it was switched).
+let sharedSeq=0;
+// This open page's own name. A save carries it (`src`) and the Worker hands it on with the broadcast: what comes back over the socket
+// under this name is my own save, which the answer to the request has already brought. It is skipped; applied late it could put
+// back what was changed after it (two quick switches of the theme).
+const sharedPage=(()=>{try{return crypto.randomUUID();}catch(e){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);}})();
 const ownedLocks=new Set();
 let META_FLAGS={};                            // one-time migrations already applied to this shared database
 // Client-only fields of an item: never sent to the server, never compared for changes.
@@ -4567,8 +4590,8 @@ async function sharedFlush(wait=false){
  if(wait===true)while(sharedBusy)await new Promise(r=>setTimeout(r,50));
  if(!sharedReady||sharedBusy||(wait!==true&&Date.now()<sharedRetryAt))return false;
  const sent=sharedRecords();const changes=sharedDiff(sharedBase,sent);if(!changes.length)return true;
- sharedBusy=true;preserveLocal();
- try{const r=await postJson('/api/change',{changes});const data=await r.json().catch(()=>({}));
+ sharedBusy=true;sharedSeq++;preserveLocal();
+ try{const r=await postJson('/api/change',{changes,src:sharedPage});const data=await r.json().catch(()=>({}));
   if(r.status===401){sharedEnd(data.error);return false;}
   if(r.status===409||r.status===423){await sharedResolveConflict();return false;}
   if(r.status===403&&data.denied){await sharedDenied(data);return false;}
@@ -4606,9 +4629,10 @@ async function sharedResolveConflict(){
    if(!same(rest(mine),rest(base))){lost++;if(!same(mine.title,(base||{}).title)||!same(mine.body||'',(base||{}).body||'')){sharedKeepCopy(mine);kept++;}}
    applyRecord(key,server);
    if(server&&added.length){const it=item(key.slice(5));it.comments=(it.comments||[]).concat(added);}                  // my comments go on top of the server copy
-  }else if(isFieldMeta(key)&&mine&&server){
-   const keep={};for(const f of new Set([...Object.keys(mine),...Object.keys(base||{})])){if(same(mine[f],(base||{})[f]))continue;if(same(server[f],(base||{})[f]))keep[f]=mine[f];else lost++;}
-   applyRecord(key,server);const target=metaTarget(key);for(const [f,v] of Object.entries(keep)){if(v===undefined)delete target[f];else target[f]=copy(v);}
+  }else if((isFieldMeta(key)||key==='meta:inbox:'+sharedUser)&&mine&&server){ const own=key==='meta:inbox:'+sharedUser;   // own: nobody else writes it, so nothing is "lost" to another member
+   const keep={};for(const f of new Set([...Object.keys(mine),...Object.keys(base||{})])){if(same(mine[f],(base||{})[f]))continue;if(same(server[f],(base||{})[f])||(own&&f==='prefs'))keep[f]=mine[f];else if(!own)lost++;}
+   applyRecord(key,server);const target=own?INBOX_STATE:metaTarget(key);for(const [f,v] of Object.entries(keep)){if(v===undefined)delete target[f];else target[f]=copy(v);}
+   if(own&&typeof myPrefsApply==='function')myPrefsApply();
   }else{applyRecord(key,server);lost++;}
  }
  if(lost)toast('다른 사용자의 변경과 겹쳐 방금 한 수정 일부가 적용되지 않았습니다.'+(kept?' 작성하던 내용은 ‘작성 중인 초안’에 보관했습니다.':' 화면에는 최신 내용이 표시됩니다.'),3800);
@@ -4623,11 +4647,13 @@ async function sharedSaveProject(button){
 
 /* ---------- connection ---------- */
 function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebSocket(location.origin.replace('http','ws')+'/api/live?v='+CLIENT_VERSION+'&token='+encodeURIComponent(sharedToken));
- sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
+ sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(d.src&&d.src===sharedPage)return;if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedSeq++;sharedApply(d.records);sharedRedraw();}};
  sharedSocket.onopen=()=>{sharedRefresh();for(const item of ySubs.keys())sharedYSend({y:'join',item,cid:sharedCid});};
  sharedSocket.onclose=()=>{if(sharedReady)sharedConnect.timer=setTimeout(sharedConnect,3000);};
 }
-async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);
+async function sharedRefresh(){if(sharedBusy||!sharedReady)return;const seq=sharedSeq;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();
+ if(seq!==sharedSeq||sharedBusy){clearTimeout(sharedRefresh.t);sharedRefresh.t=setTimeout(sharedRefresh,400);return;}   // something was saved or arrived meanwhile: this copy may be older than that, ask again
+ sharedMeta(d);
  const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=!same(delta,sharedBase);sharedApply(delta);if(changed)sharedRedraw();}catch{}}
 // One-time addition (2026-11-16, owner request): the public reference links of the 판교 master schedule workbook go into 자료실.
 // Ids are fixed, so a second browser running this at the same moment cannot create duplicates. Deleting an entry later is final.
@@ -6265,7 +6291,7 @@ async function schExportXlsx(pid){ toast('엑셀 파일을 만드는 중입니�
 // section the button stands in.
 const SCH_XL_SHEET={commitmentReviews:'보완·확약관리',assumptionsAndReferences:'전제와참고자료',responsibilityBoundaries:'책임경계',nvisScheduleReview:'NVIS일정검토',offtakers:'오프테이커 후보검토',sourceMappings:'원자료대조'};
 // two: the action section offers what is shown now (the search and the filters in force) and the whole project (owner, 2026-11-23)
-const schXlBtn=(k,two)=>two?`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" data-part="view" title="지금 검색·필터로 보이는 액션만 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}현재 검색 결과 내보내기</button><button class="sh-btn lib sch-xl all" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료 전체를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}프로젝트 전체 내보내기</button>`
+const schXlBtn=(k,two)=>two?`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" data-part="view" title="지금 보고 있는 시트만 (검색·필터가 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}현재 시트 내보내기</button><button class="sh-btn lib sch-xl all" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료 전체를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}전체 내보내기</button>`
   :`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀 내보내기</button>`;
 // The conditions in force in the action section, as plain words (for the summary sheet of a partial export).
 function schCondText(pid){ const q=(SCHU.q||'').trim(), out=[...new DOMParser().parseFromString(schChips(pid),'text/html').querySelectorAll('.sch-chip')].map(b=>b.firstChild?b.firstChild.textContent:'').filter(Boolean); if(q)out.push('검색: '+q); return out.join(' / ')||'조건 없음 (전체)'; }
@@ -6275,11 +6301,11 @@ async function schXlsxSection(pid,which,part){ const m=schModel(pid); if(!m)retu
       const q=(SCHU.q||'').trim(), ph=SCHU.phase, shown=ph==='none'?[]:schFiltered(m,SCHU.tab==='list'), ids=new Set(shown.map(t=>t.id));
       const acts=liveItems('action',pid).filter(i=>{ if(i.own||!schItemTest(i,q))return false; const tk=i.task&&m.byId.get(i.task), code=tk?tk.phase:(i.phase||''); return !ph||(ph==='none'?!code:code===ph); });
       const trow=t=>{const r=m.res.tasks[t.id];return [t.wbs,schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.plannedStart,t.kind==='milestone'?'':t.plannedFinish,r.start,r.finish,n(t.actualStart),n(t.actualFinish),schStatus(t),schPeople(t).map(userName).join(', '),priTxt[schPri(m,t)],t.url||'',t.why||''];};
-      const sheets=[{name:'검토요약',rows:[['항목','값'],['프로젝트',P.full||P.tag||''],['내보낸 범위','현재 검색 결과'],['조건',schCondText(pid)],['업무수',shown.length],['액션수',acts.length],['상태일',m.plan.statusDate],['내보낸 날',TODAY]],widths:[24,60]},
+      const sheets=[{name:'검토요약',rows:[['항목','값'],['프로젝트',P.full||P.tag||''],['내보낸 범위','현재 시트 (검색·필터 적용)'],['조건',schCondText(pid)],['업무수',shown.length],['액션수',acts.length],['상태일',m.plan.statusDate],['내보낸 날',TODAY]],widths:[24,60]},
         {name:'액션(업무)',rows:[['WBS','단계','업무명','작업유형','시작일','완료일','예상시작','예상완료','실제시작','실제완료','상태','담당자','중요도','URL','지연 사유']].concat(shown.map(trow)),widths:[9,22,44,10,12,12,12,12,12,12,12,20,9,30,36]},
         {name:'액션(등록)',rows:[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL','지연 사유']].concat(acts.map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?tk.wbs:'',i.date||'',i.end&&i.end>i.date?i.end:'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||'',i.why||''];})),widths:[44,22,10,12,12,10,9,20,30,36]},
         {name:'업무연결',rows:[['선행 WBS','선행 업무','후행 WBS','후행 업무','유형','간격(일)','계산 적용']].concat(m.plan.dependencies.filter(e=>ids.has(e.from)&&ids.has(e.to)).map(e=>{const a=m.byId.get(e.from),b=m.byId.get(e.to);return [a.wbs,a.name,b.wbs,b.name,e.type,e.lag||0,e.active?'적용':'미적용'];})),widths:[10,40,10,40,8,10,10]}];
-      const bytes=await X.makeBook(sheets,which==='net'?'업무연결':'액션(업무)'); schExpSave(`${pname(P)}_액션 검색결과_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다. (업무 ${shown.length}건 · 액션 ${acts.length}건)`,3600); return; }
+      const bytes=await X.makeBook(sheets,which==='net'?'업무연결':'액션(업무)'); schExpSave(`${pname(P)}_액션 현재 시트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다. (업무 ${shown.length}건 · 액션 ${acts.length}건)`,3600); return; }
     const tasks=[['WBS','단계','업무명','작업유형','참조시작','참조완료','관리시작','관리완료','예상시작','예상완료','달력기간','실제시작','실제완료','진척률(0~1)','상태','담당 멤버','실행 역할','중요도','URL','추가지연','운영여유','완료기준','조건·확약','증빙']]
       .concat(m.phases.flatMap(g=>g.tasks).map(t=>{const r=m.res.tasks[t.id];return [t.wbs,schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.referenceStart,t.referenceFinish,t.plannedStart,t.plannedFinish,r.start,r.finish,r.duration,n(t.actualStart),n(t.actualFinish),n(t.progress),schStatus(t),schPeople(t).map(userName).join(', '),schRole(t),priTxt[schPri(m,t)]+(t.pri?'':' (자동)'),t.url||'',t.delay||0,n(r.slack),t.criteria||'',t.conditions||'',t.evidence||''];}));
     const loose=[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL']].concat(liveItems('action',pid).filter(i=>!i.own).map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?tk.wbs:'',i.date||'',itemEnd(i)||'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||''];}));
@@ -7069,10 +7095,10 @@ function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), rows=q?found.docs:ar
 function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
   ARCH_SECTIONS.forEach((sec,si)=>{ const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
     h+=`<div class="asec" style="${n++===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
-    const cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/4); h+=`<div class="agrid">`;
-    for(let r=0;r<nrows;r++)for(let k=0;k<4;k++){ const idx=r*4+k, cell=cells[idx], full=(r*4+3<cells.length)&&!cells[r*4+3].add;
+    const N=5, cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/N); h+=`<div class="agrid g5">`;   // five in a row (owner's design, 2026-11-23)
+    for(let r=0;r<nrows;r++)for(let k=0;k<N;k++){ const idx=r*N+k, cell=cells[idx], full=(r*N+N-1<cells.length)&&!cells[r*N+N-1].add;
       if(!cell){h+=`<div class="cell" style="border-left:0"></div>`;continue;}
-      h+=`<div class="cell ${k===3&&full?'last-line':''} ${k===0?'first':''}">`;
+      h+=`<div class="cell ${k===0?'first':''} ${cell.add?'addc':''} ${cell.add&&k===0&&r>0?'alone':''}">`;
       if(cell.add)h+=plusBtn('add','자료 추가').replace('class="sh-btn','data-addcard="'+si+'" class="sh-btn');
       else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic"><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg>${logoImg(cell.c.url)}</div><h4 title="${esc(cell.c.name)}">${urlHref(cell.c.url==='#'?'':cell.c.url)?`<a class="ttl-link" href="${esc(urlHref(cell.c.url))}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc(cell.c.name)}</a>`:esc(cell.c.name)}</h4><p>${esc(cell.c.desc)}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
       h+=`</div>`; }

@@ -358,7 +358,8 @@ export class Workspace {
         const locks = this.locks(); this.broadcast({ locks }); return json({ locks, record: this.get(id), co });
       }
       if (path === '/api/change' && req.method === 'POST') {
-        let { changes } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
+        let { changes, src } = await req.json(); if (!Array.isArray(changes) || changes.length > MAX_CHANGES) return json({ error: '잘못된 변경 요청' }, 400);
+        src = typeof src === 'string' && /^[\w-]{8,48}$/.test(src) ? src : '';   // which open page saves this: handed on with the broadcast, so that page can tell its own save from somebody else's (older pages send none)
         const applied = {}; let conflict = null; const summary = []; const versioned = new Set(), seenFirst = new Map();
         this.cleanup();
         // What this member may not change. A whole record (or a delete) refuses the request; a single field is left out and the record is
@@ -414,7 +415,7 @@ export class Workspace {
           if (summary.length) this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify(summary), new Date().toISOString());
         });
         if (conflict) return json({ error: '다른 사용자의 변경과 겹칩니다.', conflict }, 409);
-        if (Object.keys(applied).length) this.broadcast({ records: applied, users: this.users(), locks: this.locks() });
+        if (Object.keys(applied).length) this.broadcast({ records: applied, users: this.users(), locks: this.locks(), ...(src ? { src } : {}) });
         if (!refused.length) return json({ records: applied });
         const back = { ...applied }; for (const d of refused) if (!(d.id in back)) back[d.id] = this.get(d.id) ?? null;
         return json({ records: back, denied: refused, error: refused[0].why });

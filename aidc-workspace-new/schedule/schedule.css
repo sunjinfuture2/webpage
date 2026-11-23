@@ -1230,3 +1230,18 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 .th-btn .sun{display:none}
 .th-btn.on .sun{display:block}
 .th-btn.on .moon{display:none}
+
+/* ================= reference-site cards: the owner's design (picture of 2026-11-23) =================
+   Five in a row instead of four, smaller and lighter. Measured on the picture (it is 1.3036 times the page): a cell 138.8 high,
+   rows 9.2 apart; the logo 9.2 below the top of the cell's line and 14.6 right of it; the name in 18 / semi-bold (its width and its ink
+   match the picture's; medium is too thin), its letters 36 below the top; the note in 12 on lines 18.4 apart. The columns are equal and fill the page (267.6; the picture's 273.5 would
+   be wider than the page). No line closes a full row at its right. The + is the cell after the last card; when it starts a row
+   of its own, as in the picture, it stands 46 below the cards. */
+.arch .agrid.g5{grid-template-columns:repeat(5,calc(267.6px + var(--d)/5));row-gap:9.2px}
+.arch .agrid.g5 .cell{height:138.8px;padding:4px 0 0 4px}
+.arch .agrid.g5 .acard{height:130.8px;margin-right:4px;padding:5.2px 0 0 9.8px}
+.arch .agrid.g5 .acard h4{font-size:18px;font-weight:600;margin:2.6px 0 0 -1.3px;max-width:calc(100% - 40px);line-height:24px;padding-bottom:0}
+.arch .agrid.g5 .acard p{font-size:12px;line-height:18.4px;margin:13.6px 10px 0 0.2px;max-width:none;width:auto;-webkit-line-clamp:3}
+.arch .agrid.g5 .acard .more{right:8px;top:27.8px}
+.arch .agrid.g5 .cell .add,.arch .agrid.g5 .cell.first .add{left:14.1px;top:11.5px}
+.arch .agrid.g5 .cell.addc.alone{margin-top:35.8px}

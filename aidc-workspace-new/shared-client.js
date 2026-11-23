@@ -4,6 +4,14 @@ const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared
 const TOKEN_KEY='aidc-token';                 // one login per browser, shared by all its tabs
 let sharedUser='',sharedName='',sharedToken='',sharedBase={},sharedUsers={},sharedLocks={};
 let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRoute=true,sharedRetryAt=0,sharedSocket;
+// Counts what has reached this page since it was loaded: my own saves and what the socket brought. A whole state that was asked
+// for before one of them and arrives after it is older than what the page already has, and must not be applied: it used to put
+// a setting back for a moment (owner, 2026-11-23: the dark mode flipping to light and to dark again after it was switched).
+let sharedSeq=0;
+// This open page's own name. A save carries it (`src`) and the Worker hands it on with the broadcast: what comes back over the socket
+// under this name is my own save, which the answer to the request has already brought. It is skipped; applied late it could put
+// back what was changed after it (two quick switches of the theme).
+const sharedPage=(()=>{try{return crypto.randomUUID();}catch(e){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);}})();
 const ownedLocks=new Set();
 let META_FLAGS={};                            // one-time migrations already applied to this shared database
 // Client-only fields of an item: never sent to the server, never compared for changes.
@@ -169,8 +177,8 @@ async function sharedFlush(wait=false){
  if(wait===true)while(sharedBusy)await new Promise(r=>setTimeout(r,50));
  if(!sharedReady||sharedBusy||(wait!==true&&Date.now()<sharedRetryAt))return false;
  const sent=sharedRecords();const changes=sharedDiff(sharedBase,sent);if(!changes.length)return true;
- sharedBusy=true;preserveLocal();
- try{const r=await postJson('/api/change',{changes});const data=await r.json().catch(()=>({}));
+ sharedBusy=true;sharedSeq++;preserveLocal();
+ try{const r=await postJson('/api/change',{changes,src:sharedPage});const data=await r.json().catch(()=>({}));
   if(r.status===401){sharedEnd(data.error);return false;}
   if(r.status===409||r.status===423){await sharedResolveConflict();return false;}
   if(r.status===403&&data.denied){await sharedDenied(data);return false;}
@@ -208,9 +216,10 @@ async function sharedResolveConflict(){
    if(!same(rest(mine),rest(base))){lost++;if(!same(mine.title,(base||{}).title)||!same(mine.body||'',(base||{}).body||'')){sharedKeepCopy(mine);kept++;}}
    applyRecord(key,server);
    if(server&&added.length){const it=item(key.slice(5));it.comments=(it.comments||[]).concat(added);}                  // my comments go on top of the server copy
-  }else if(isFieldMeta(key)&&mine&&server){
-   const keep={};for(const f of new Set([...Object.keys(mine),...Object.keys(base||{})])){if(same(mine[f],(base||{})[f]))continue;if(same(server[f],(base||{})[f]))keep[f]=mine[f];else lost++;}
-   applyRecord(key,server);const target=metaTarget(key);for(const [f,v] of Object.entries(keep)){if(v===undefined)delete target[f];else target[f]=copy(v);}
+  }else if((isFieldMeta(key)||key==='meta:inbox:'+sharedUser)&&mine&&server){ const own=key==='meta:inbox:'+sharedUser;   // own: nobody else writes it, so nothing is "lost" to another member
+   const keep={};for(const f of new Set([...Object.keys(mine),...Object.keys(base||{})])){if(same(mine[f],(base||{})[f]))continue;if(same(server[f],(base||{})[f])||(own&&f==='prefs'))keep[f]=mine[f];else if(!own)lost++;}
+   applyRecord(key,server);const target=own?INBOX_STATE:metaTarget(key);for(const [f,v] of Object.entries(keep)){if(v===undefined)delete target[f];else target[f]=copy(v);}
+   if(own&&typeof myPrefsApply==='function')myPrefsApply();
   }else{applyRecord(key,server);lost++;}
  }
  if(lost)toast('다른 사용자의 변경과 겹쳐 방금 한 수정 일부가 적용되지 않았습니다.'+(kept?' 작성하던 내용은 ‘작성 중인 초안’에 보관했습니다.':' 화면에는 최신 내용이 표시됩니다.'),3800);
@@ -225,11 +234,13 @@ async function sharedSaveProject(button){
 
 /* ---------- connection ---------- */
 function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebSocket(location.origin.replace('http','ws')+'/api/live?v='+CLIENT_VERSION+'&token='+encodeURIComponent(sharedToken));
- sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedApply(d.records);sharedRedraw();}};
+ sharedSocket.onmessage=async e=>{if(e.data==='pong')return;const d=JSON.parse(e.data);if(d.y){sharedYMessage(d);return;}sharedMeta(d);if(d.records){if(d.src&&d.src===sharedPage)return;if(sharedBusy){setTimeout(sharedRefresh,400);return;}sharedSeq++;sharedApply(d.records);sharedRedraw();}};
  sharedSocket.onopen=()=>{sharedRefresh();for(const item of ySubs.keys())sharedYSend({y:'join',item,cid:sharedCid});};
  sharedSocket.onclose=()=>{if(sharedReady)sharedConnect.timer=setTimeout(sharedConnect,3000);};
 }
-async function sharedRefresh(){if(sharedBusy||!sharedReady)return;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();sharedMeta(d);
+async function sharedRefresh(){if(sharedBusy||!sharedReady)return;const seq=sharedSeq;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();
+ if(seq!==sharedSeq||sharedBusy){clearTimeout(sharedRefresh.t);sharedRefresh.t=setTimeout(sharedRefresh,400);return;}   // something was saved or arrived meanwhile: this copy may be older than that, ask again
+ sharedMeta(d);
  const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=!same(delta,sharedBase);sharedApply(delta);if(changed)sharedRedraw();}catch{}}
 // One-time addition (2026-11-16, owner request): the public reference links of the 판교 master schedule workbook go into 자료실.
 // Ids are fixed, so a second browser running this at the same moment cannot create duplicates. Deleting an entry later is final.

@@ -22,10 +22,10 @@ function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), rows=q?found.docs:ar
 function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
   ARCH_SECTIONS.forEach((sec,si)=>{ const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
     h+=`<div class="asec" style="${n++===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
-    const cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/4); h+=`<div class="agrid">`;
-    for(let r=0;r<nrows;r++)for(let k=0;k<4;k++){ const idx=r*4+k, cell=cells[idx], full=(r*4+3<cells.length)&&!cells[r*4+3].add;
+    const N=5, cells=[...live.map(c=>({c})),...(q?[]:[{add:true}])], nrows=Math.ceil(cells.length/N); h+=`<div class="agrid g5">`;   // five in a row (owner's design, 2026-11-23)
+    for(let r=0;r<nrows;r++)for(let k=0;k<N;k++){ const idx=r*N+k, cell=cells[idx], full=(r*N+N-1<cells.length)&&!cells[r*N+N-1].add;
       if(!cell){h+=`<div class="cell" style="border-left:0"></div>`;continue;}
-      h+=`<div class="cell ${k===3&&full?'last-line':''} ${k===0?'first':''}">`;
+      h+=`<div class="cell ${k===0?'first':''} ${cell.add?'addc':''} ${cell.add&&k===0&&r>0?'alone':''}">`;
       if(cell.add)h+=plusBtn('add','자료 추가').replace('class="sh-btn','data-addcard="'+si+'" class="sh-btn');
       else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic"><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg>${logoImg(cell.c.url)}</div><h4 title="${esc(cell.c.name)}">${urlHref(cell.c.url==='#'?'':cell.c.url)?`<a class="ttl-link" href="${esc(urlHref(cell.c.url))}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc(cell.c.name)}</a>`:esc(cell.c.name)}</h4><p>${esc(cell.c.desc)}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
       h+=`</div>`; }

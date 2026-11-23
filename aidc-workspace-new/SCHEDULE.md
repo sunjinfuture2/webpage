@@ -360,8 +360,8 @@ With the preview on:
 - The member card (schUserCard): pressing an assignee (`[data-user]`) where the value is not being edited, or resting on it for
   a second. Name, title, role, team, e-mail, phone (`phone` is a new field of 마이페이지 › 프로필). The 사번 is not shown.
 - Help: an "i" (`schInfo('dates' | 'status' | 'all')`) beside 예상 기한, 상태, the gantt's summary and the lists.
-- Excel in the action section: "현재 검색 결과 내보내기" (only what the search and the filters show: schXlsxSection(pid, tab,
-  'view')) and "프로젝트 전체 내보내기" beside it.
+- Excel in the action section: "현재 시트 내보내기" (only what the search and the filters show: schXlsxSection(pid, tab,
+  'view')) and "전체 내보내기" beside it (the owner's names; they were 현재 검색 결과 / 프로젝트 전체 내보내기 for a day).
 - The project's delete pictogram is 35 (2.5 times); the closed notice bar's arrow points down; the main calendar's project tags
   wrap and never run into 미팅 · 리서치.
 - Archive (76-archive.js; renderArchive hands over): search and the kinds of document at the top, 문서 목록 and 참고사이트 as
@@ -376,6 +376,9 @@ With the preview on:
 - Export: headings are read from the content (schExpHeads: a bold line, a line ending in a colon, a line with a heading mark, a
   short line above a list / table / long paragraph, [..]), never a sentence or a "name: value" line. One font: Pretendard for
   everything; the Word file carries a font table with one fallback (맑은 고딕) for a PC without Pretendard.
+- Reference-site cards (owner's picture of 2026-11-23): five in a row, smaller (`.agrid.g5`: five equal columns of 267.6, cell
+  138.8, name 18 / semi-bold, measured against the picture at its own scale); no line closes a full row; the + is the cell after
+  the last card and, when it starts a row of its own, stands 46 below the cards.
 - tests/schedule-9.cjs covers the round.
 
 ## Dark mode (owner, 2026-11-23)
@@ -392,6 +395,13 @@ With the preview on:
   not move fixed windows. Shadows become a hair line; the veils behind windows are written light so that they come out dark.
 - A new element that shows a photo by a background picture has to be added to that list in schedule.css, or it will look
   like a negative in dark mode.
+- Switching used to flip back and forth now and then: a whole state (/api/state: every 15 s, and after a socket message
+  that came during a save) that was asked for before the switch arrived after it and was applied over it, and the next one
+  put the setting right again. sharedRefresh now drops an answer when something was saved or arrived while it was on its way
+  (`sharedSeq`) and asks again. A save also says which open page it comes from (`src` = `sharedPage`; the Worker hands it on
+  with the broadcast, older pages send none) and a page skips its own save coming back over the socket: the answer to the
+  request has brought it already, and applied late it could undo a second switch. When two windows of one member write the
+  member's own record at once, the conflict keeps what each changed (prefs always).
 - tests/schedule-9.cjs has the checks.
 
 ## Not done yet (say so when asked)
