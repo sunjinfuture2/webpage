@@ -1344,3 +1344,53 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 @keyframes jPop{0%{scale:1}45%{scale:1.9}100%{scale:1}}
 .j-pop{animation:jPop .42s ease-out}
 @media (prefers-reduced-motion:reduce){ .j-pop{animation:none!important} .sch-on .pcard,.sch-on .rcard,.sch-on .arch .acard{transition:none!important;translate:none!important} }
+
+/* ================= Excel upload (82-upload.js; owner, 2026-11-23) =================
+   The window follows the owner's reference (a title, one grey line, a large dashed rounded field with a folder and one line of
+   text) in the page's own black, white and grey. With files in it the field becomes a low strip and the list and the result follow. */
+.phead .ttl .upx{margin:9.9px 0 0 8px;height:24.8px;padding:0 11px 0 9px;gap:6px;font-size:14px;font-weight:500;color:#8e8e8e;border-radius:4px}
+.phead .ttl .upx:hover{color:var(--ink)}
+.phead .ttl .upx svg{flex:none}
+.dlg.sch-dlg.sch-up .box{width:600px;padding:36px 40px 26px}
+.sch-up .up-ttl{margin:0;text-align:center;font-size:22px;font-weight:700;color:#000;letter-spacing:-0.02em}
+.sch-up .up-sub{margin:8px 0 0;text-align:center;font-size:13px;color:#8e8e8e}
+.sch-up .up-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:236px;margin-top:24px;border:1.6px dashed #bdbdbd;border-radius:20px;background:#fff;cursor:pointer;font-size:13.5px;color:#8e8e8e;outline:0}
+.sch-up .up-drop:hover,.sch-up .up-drop:focus-visible,.sch-up .up-drop.over{border-color:#1c1c1c;background:#f7f7f6;color:#3d3d3d}
+.sch-up .up-drop .up-pic{width:64px;height:50px;flex:none}
+.sch-up .up-drop.small{flex-direction:row;height:76px;gap:14px;border-radius:14px;margin-top:20px}
+.sch-up .up-drop.small .up-pic{width:36px;height:28px}
+.sch-up .up-hint{margin:14px 0 0;text-align:center;font-size:12.5px;color:#a3a3a3}
+.sch-up .up-files{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.sch-up .up-file{border:1px solid #e3e3e3;border-radius:8px;padding:10px 10px 10px 14px}
+.sch-up .up-file.bad{border-color:#f0c4c0}
+.sch-up .up-top{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1c1c1c;min-width:0}
+.sch-up .up-top > svg{flex:none;color:#4f4f4f}
+.sch-up .up-top .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-up .up-top .sz{flex:none;font-size:12px;color:#8e8e8e}
+.sch-up .up-top .rd{flex:none;font-size:12px;color:#1f8e00}
+.sch-up .up-top .rm{margin-left:auto;flex:none;width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#8e8e8e}
+.sch-up .up-top .rm:hover{background:#f0f0f0;color:#1c1c1c}
+.sch-up .up-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.sch-up .up-tags span{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:11px;background:#f4f4f3;font-size:12px;color:#4f4f4f;white-space:nowrap}
+.sch-up .up-tags b{font-weight:700;color:#1c1c1c;font-variant-numeric:tabular-nums}
+.sch-up .up-nt{margin-top:7px;font-size:12.5px;line-height:18px;color:#8e8e8e}
+.sch-up .up-nt b{font-weight:600;color:#4f4f4f;margin-right:2px}
+.sch-up .up-nt.err{color:#d30000}.sch-up .up-nt.err b{color:#d30000}
+.sch-up .up-nt i{font-style:normal;color:#8e8e8e}
+.sch-up .up-res{margin-top:14px;padding:15px 18px 14px;border-radius:8px;background:#f7f7f6}
+.sch-up .up-res.bad{background:#fdf1f0}
+.sch-up .up-res h4{margin:0 0 9px;font-size:13px;font-weight:700;color:#000}
+.sch-up .up-res.bad h4{color:#b3261e}
+.sch-up .up-row{display:grid;grid-template-columns:132px 62px 1fr;align-items:baseline;gap:0 8px;min-height:25px;font-size:13.5px;color:#1c1c1c}
+.sch-up .up-row b{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.sch-up .up-row em{font-style:normal;color:#4f4f4f;font-size:13px;padding-left:10px}
+.sch-up .up-row.off{color:#b0b0b0}.sch-up .up-row.off em{color:#b0b0b0}
+.sch-up .up-row.op{margin-top:7px;padding-top:9px;border-top:1px solid #e3e3e3}
+.sch-up .up-row.op.late em{color:#d30000}.sch-up .up-row.op.early em{color:#1f8e00}
+.sch-up .up-say{margin:9px 0 0;font-size:13px;line-height:19px;color:#1c1c1c;font-weight:600}
+.sch-up .up-res.bad .up-say{margin-top:0;font-weight:500;color:#b3261e}
+.sch-up .up-wn{margin:7px 0 0;font-size:12.5px;line-height:18px;color:#b3261e}
+.sch-up .up-ft{margin:10px 0 0;font-size:12px;line-height:18px;color:#8e8e8e}
+.sch-up .up-fail{margin:12px 0 0;font-size:13px;line-height:19px;color:#d30000}
+.sch-up .up-cur{margin:12px 0 0;font-size:12px;color:#a3a3a3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-up .box .bt{margin-top:20px}

@@ -509,3 +509,44 @@ reduced-motion setting turn every one of them off (schCalm for the parts that wa
   count pops when it grows. "Just come" is read from the data (dotsOf per item, at most three looks a second), never from the
   DOM, because entries are drawn again all the time; nothing pops on the first look or when a load of data arrives at once.
 - tests/schedule-11.cjs.
+
+## Excel upload (owner, 2026-11-23, the fifteenth round)
+
+"수정 옆에 엑셀 업로드 버튼 … 정보 입력이랑 가이드용으로 줬던 그 엑셀파일을 기준으로 올리면 프로젝트 페이지에 자동으로 정보가 입력되게 …
+각각 올릴 수도 있고 마스터파일 하나로 업로드할 수도 있게." schedule/ui/82-upload.js (the window, the merge), `readSheets` in
+schedule/xlsx.ts (the reading, in the Excel bundle), the loading of an uploaded plan in schedule/ui/00-state.js. Preview only.
+
+- The format is the owner's guide workbook ("판교 AIDC 개발 마스터스케줄", thirteen sheets; it is confidential and not in the
+  repository). A file may hold all of its sheets or any of them. Which sheet fills what:
+  단계별업무분장 -> 액션 일정 · 리스트 (tasks); 업무연결 -> 액션 관계도 (relations); 외부설비 조달대장 -> 외부설비 조달;
+  승인게이트 -> 승인게이트; 보완·확약관리 · 전제와참고자료 · 책임경계 · NVIS일정검토 · 오프테이커 후보검토 · 원자료대조 -> 근거 및 확약;
+  검토요약 (the row 기준일) -> the status date. 마스터스케줄 is read only when a file has no 단계별업무분장, and then only for
+  names, dates, progress and assignees (its cells are formulas over the other sheet); 운영영향 분석 is a result and is not read.
+- Reading (`AIDCScheduleXlsx.readSheets(file)`): unlike the Schedule app's importFile it does not want every sheet at fixed
+  rows. A sheet is found by its name, its header row by its first cell within the first 15 rows, its columns by their titles; a
+  package's cells are put back under the letters planFromSource reads. Whatever is wrong is a note of that sheet (a row, a
+  missing column, the app's own export layout) and only that sheet is left out. Read against the real workbook the result is
+  equal to the built-in plan of 판교 in every task, relation and record.
+- Where it is kept: the merged source plan (schUpSlim: the SeedArchive without the cell copies of tasks) is one file on the
+  server (`POST /api/file`, item `sched-src-<project>`, JSON as gzip, about 64 KB for the 233 tasks of 판교) and the project's
+  record names it: `src: {id, name, at, by, parts, n}` in meta:sched:<project>. schReady compares the plan in memory with the
+  name in the record (`schSrcWant` / `SCH.srcId`), so an upload by somebody else, or its undo, makes the page fetch the other
+  plan (`schSrcFetch`, cleaned by `schSrcClean`; plans this page has had are kept in `SCH.arch`). A project without `src` has the
+  built-in plan (판교) or an empty one, as before. The Worker only learned to remove these files when a deleted project is
+  purged; MIN_CLIENT stays 4.
+- Merging (schUpMerge): a section that was uploaded is replaced by the workbook's, the others stay. A task keeps its id by
+  WBS (so its body, comments, files, linked actions stay), a new one gets `<project>:task:<WBS>`; a relation whose task is not
+  there is left out and told; a column the sheet does not have keeps the value the plan had.
+- What members changed in the app (schUpReconcile, a three-way merge per value): overrides sit on top of the source plan, so
+  they stay; where the workbook changed the same value since the plan before, the workbook's value wins and the window says how
+  many such values there are before 적용. A task / relation / package added in the app that the workbook does not have stays;
+  what hung on something that is gone is dropped. So the same workbook twice changes nothing ("바뀌는 것이 없습니다").
+- The window (after the owner's reference picture, in the page's black, white and grey): a centred title, one grey line, a
+  large dashed rounded field with a folder (drop or press; several files); with files in it the field becomes a low strip, each
+  file lists the sections found with their counts and its notes, and "프로젝트에 반영되는 내용" says per section how many are new /
+  changed / gone, what was not uploaded, and what happens to the operation date. Nothing is written before 적용; the plan is
+  worked out again on what is there at that moment. One undo step (toast, Ctrl+Z) takes the plan and the changed overrides back.
+- Not done: a file in the app's own export layout (현재 시트 내보내기 / 전체 내보내기) cannot be uploaded: its tables have other
+  columns. It is recognised and refused in plain words. Old stored plans are kept (an undo needs them); nothing removes them
+  but the purge of a deleted project.
+- tests/schedule-12.cjs (41 checks; the workbooks are made in the browser in the guide's shape).

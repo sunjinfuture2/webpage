@@ -4,7 +4,7 @@
 // Nothing here runs for a project without a schedule, or while the preview is off.
 
 const SCH_SOURCES={pangyo:'/schedule/pangyo.json'};           // projects whose plan came from a workbook (static source plans)
-const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{},note:{},last:{},tick:0};
+const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{},note:{},last:{},tick:0,srcId:{},arch:{},failWant:{}};
 // Preview (owner, 2026-11-19): the combined page is shown only to a browser that opened the site with ?v=2 once; ?v=1 turns it off again.
 (function(){try{const v=new URLSearchParams(location.search).get('v');if(v==='2')localStorage.setItem('aidc-preview','1');else if(v==='1')localStorage.removeItem('aidc-preview');}catch(e){}})();
 const schPreview=()=>{try{return localStorage.getItem('aidc-preview')==='1';}catch(e){return false;}};
@@ -13,7 +13,15 @@ const schPreview=()=>{try{return localStorage.getItem('aidc-preview')==='1';}cat
 const schHas=pid=>!!pid&&schPreview()&&!!PROJECTS[pid]&&!!window.AIDCSchedule;
 const schPids=()=>Object.keys(PROJECTS).filter(schHas);
 const schEmptySource=()=>({schemaVersion:'analysis-seed-1',sourceFile:'',statusDate:'2026-01-01',tasks:[],dependencies:[],procurementPackages:[],gates:[],responsibilityBoundaries:[],assumptionsAndReferences:[],sourceMappings:[],nvisScheduleReview:[],offtakers:[],commitmentReviews:[],sourceProjectSummary:[]});
-const schReady=pid=>schHas(pid)&&!!(SCH.base[pid]||(!SCH_SOURCES[pid]&&(schLoad(pid),SCH.base[pid])));
+// The source plan of a project is the built-in one (or an empty one), until a member uploads a workbook (82-upload.js): the project's
+// record then names a stored file (`src`), and that file is the source plan. The name can change at any time (an upload here or by
+// somebody else, its undo), so being ready also means "the plan in memory is the one the record names".
+const schSrcWant=pid=>{const p=(SCHED[pid]||{}).src;return p&&typeof p==='object'&&/^[\w-]{8,64}$/.test(String(p.id||''))?String(p.id):'';};
+const schReady=pid=>{ if(!schHas(pid))return false; const want=schSrcWant(pid);
+  if(SCH.base[pid]&&(SCH.srcId[pid]||'')!==want){delete SCH.base[pid];SCH.memo[pid]=null;}          // another source plan is wanted now
+  if(SCH.failed[pid]&&SCH.failWant[pid]!==want)delete SCH.failed[pid];
+  if(!SCH.base[pid]&&!SCH.failed[pid]&&(want||!SCH_SOURCES[pid]||SCH.srcId[pid]!==undefined))schLoad(pid);   // (the built-in plan of 판교 is first asked for by the pages that show it)
+  return !!SCH.base[pid]; };
 // The engine wants at least one task; a plan without any has nothing to work out.
 const schCalc=plan=>plan.tasks.length?AIDCSchedule.calculate(plan):{planId:plan.id,tasks:{},order:[],operationDate:'',operationDelay:0,operationValid:true,criticalCount:0,nearCount:0,changedCount:0,deliveries:{},issues:[]};
 
@@ -24,12 +32,26 @@ const SCHU=(()=>{let v={};try{v=JSON.parse(sessionStorage.getItem('aidc-sch-ui')
 function schUiSave(){try{sessionStorage.setItem('aidc-sch-ui',JSON.stringify(SCHU));}catch(e){}}
 
 /* ---------- source plan and model ---------- */
-function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return;
-  if(!SCH_SOURCES[pid]){ const src=schEmptySource(); SCH.src[pid]=src; SCH.base[pid]=AIDCSchedule.planFromSource(src); return; }   // no workbook: an empty plan, there at once
+function schSrcUse(pid,src,id){ const base=AIDCSchedule.planFromSource(src); SCH.src[pid]=src; SCH.base[pid]=base; SCH.srcId[pid]=id; SCH.memo[pid]=null; SCH.note[pid]=null; SCH.loading[pid]=false; delete SCH.failed[pid]; }
+// an uploaded source plan: one stored file (JSON, gzip where the browser can), cleaned to the shape the page reads
+function schSrcClean(s){ if(!s||typeof s!=='object'||s.schemaVersion!=='analysis-seed-1'||!Array.isArray(s.tasks)||!Array.isArray(s.dependencies))throw new Error('올린 일정 원본의 형식이 맞지 않습니다.');
+  const e=schEmptySource(); for(const k of Object.keys(e)){ if(!Array.isArray(e[k]))continue; s[k]=Array.isArray(s[k])?s[k].filter(r=>r&&typeof r==='object'):[];
+    if(k!=='tasks'&&k!=='dependencies'&&k!=='sourceProjectSummary')s[k]=s[k].map(r=>({provenance:r.provenance&&typeof r.provenance==='object'?r.provenance:{},fields:r.fields&&typeof r.fields==='object'?r.fields:{},sourceCells:r.sourceCells&&typeof r.sourceCells==='object'?r.sourceCells:{}})); }
+  return s; }
+async function schSrcFetch(id){ const r=await apiFetch('/api/file/'+encodeURIComponent(id)); if(!r.ok)throw new Error(r.status===404?'올린 일정 원본 파일을 찾을 수 없습니다.':'일정 원본을 불러오지 못했습니다 ('+r.status+')');
+  let buf=new Uint8Array(await r.arrayBuffer());
+  if(buf[0]===0x1f&&buf[1]===0x8b){ if(typeof DecompressionStream==='undefined')throw new Error('이 브라우저에서는 올린 일정 원본을 열 수 없습니다. 최신 브라우저를 사용해주세요.');
+    buf=new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); }
+  return schSrcClean(JSON.parse(new TextDecoder().decode(buf))); }
+function schLoad(pid){ if(!schHas(pid)||SCH.base[pid]||SCH.loading[pid])return; const want=schSrcWant(pid), key=want||'~'+pid;
+  const use=src=>{ try{schSrcUse(pid,src,want);return true;}catch(e){SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;return false;} };
+  if(SCH.arch[key]){use(SCH.arch[key]);return;}                                                 // had before (this page uploaded it, or it was undone to): there at once
+  if(!want&&!SCH_SOURCES[pid]){use(SCH.arch[key]=schEmptySource());return;}                       // no workbook: an empty plan, there at once
   SCH.loading[pid]=true; delete SCH.failed[pid];
-  fetch(SCH_SOURCES[pid]).then(r=>{if(!r.ok)throw new Error('일정 원본을 불러오지 못했습니다 ('+r.status+')');return r.json();})
-    .then(src=>{SCH.src[pid]=src;SCH.base[pid]=AIDCSchedule.planFromSource(src);SCH.loading[pid]=false;schRedraw();schOpenWanted();})
-    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);schRedraw();}); }
+  (want?schSrcFetch(want):fetch(SCH_SOURCES[pid]).then(r=>{if(!r.ok)throw new Error('일정 원본을 불러오지 못했습니다 ('+r.status+')');return r.json();}))
+    .then(src=>{ SCH.arch[key]=src; SCH.loading[pid]=false; if(schSrcWant(pid)!==want){schLoad(pid);if(SCH.base[pid]){schRedraw();schOpenWanted();}return;}   // the record names another plan by now
+      if(use(src)){schRedraw();schOpenWanted();}else schRedraw(); })
+    .catch(e=>{SCH.loading[pid]=false;SCH.failed[pid]=String(e&&e.message||e);SCH.failWant[pid]=want;schRedraw();}); }
 // An address that names a task (or a package / gate / record) of a schedule that has not arrived yet: remembered, opened after loading.
 function schDeferRoute(r){ if(!schPreview())return; for(const k of ['full','panel']){const id=r[k]; if(!id||!/^(wt-|s[pget]-)/.test(id))continue; schPids().forEach(schLoad); if(schPids().every(p=>SCH.base[p]))continue; SCH.want=Object.assign(SCH.want||{},{[k]:id}); r[k]=null;} }
 function schOpenWanted(){ const w=SCH.want; if(!w||!sharedReady)return; SCH.want=null; if(w.full&&item(w.full)&&!S.full){S.full=w.full;render();} if(w.panel&&!S.panel&&panelExists(w.panel))openPanel(w.panel,true); }

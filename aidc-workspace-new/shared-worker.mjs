@@ -196,7 +196,7 @@ export class Workspace {
     const arch = this.get('meta:archive');
     if (Array.isArray(arch)) { let ch = false; for (const s of arch) { if (!s || !Array.isArray(s.cards)) continue; const keep = s.cards.filter(c => !(c && c.trash && c.trashedAt && c.trashedAt < limit)); if (keep.length !== s.cards.length) { s.cards = keep; ch = true; } } if (ch) { this.put('meta:archive', arch); gone['meta:archive'] = arch; } }
     const st = this.get('meta:settings');
-    if (st && st.projTrash) { const keep = Object.fromEntries(Object.entries(st.projTrash).filter(([, t]) => !(t && t.at && t.at < limit))); if (Object.keys(keep).length !== Object.keys(st.projTrash).length) { st.projTrash = keep; this.put('meta:settings', st); gone['meta:settings'] = st; } }
+    if (st && st.projTrash) { const keep = Object.fromEntries(Object.entries(st.projTrash).filter(([, t]) => !(t && t.at && t.at < limit))); if (Object.keys(keep).length !== Object.keys(st.projTrash).length) { for (const pid of Object.keys(st.projTrash)) if (!(pid in keep)) this.sql.exec('DELETE FROM files WHERE item=?', 'sched-src-' + pid);   /* the source plans a member uploaded for it (schedule/ui/82-upload.js) */ st.projTrash = keep; this.put('meta:settings', st); gone['meta:settings'] = st; } }
     if (Object.keys(gone).length) { this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', 'system', JSON.stringify({ event: 'auto-purge', title: Object.keys(gone).length + '건' }), new Date().toISOString()); this.broadcast({ records: gone }); }
   }
   // One line per changed record for the 업데이트 / 감사 로그 screens. Older history rows hold the full changes; newer ones are already summarised.
