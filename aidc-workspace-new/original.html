@@ -2217,7 +2217,7 @@ const themeWant=()=>sharedReady?(THEME_NAMES[myPref('theme')]?myPref('theme'):'l
 const themeIsDark=()=>{const w=themeWant();return PREVIEW_ON&&(w==='dark'||(w==='system'&&!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)));};
 function themeApply(){ const dark=themeIsDark(); document.documentElement.classList.toggle('dark',dark); if(sharedReady){try{localStorage.setItem('aidc-theme',themeWant());}catch(e){}}
   const b=$('#th-btn'); if(b){b.classList.toggle('on',dark);b.title=dark?'라이트 모드로 전환':'다크 모드로 전환';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',dark?'true':'false');} }
-function themeSet(v){ if(!THEME_NAMES[v])return; const p={...(INBOX_STATE.prefs||{})}; if(v===MY_PREFS.theme)delete p.theme; else p.theme=v; INBOX_STATE.prefs=p; myPrefsApply(); }
+function themeSet(v){ if(!THEME_NAMES[v])return; { const h=document.documentElement; h.classList.add('th-anim'); clearTimeout(themeSet.t); themeSet.t=setTimeout(()=>h.classList.remove('th-anim'),340); }   /* light <-> dark crosses over (schedule.css) */ const p={...(INBOX_STATE.prefs||{})}; if(v===MY_PREFS.theme)delete p.theme; else p.theme=v; INBOX_STATE.prefs=p; myPrefsApply(); }
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>themeApply()); }catch(e){}
 // A comment is sent with Enter, or with Ctrl / ⌘ + Enter when I chose so. Never while a Korean syllable is still being composed.
 const cmtSend=ev=>ev.key==='Enter'&&!ev.isComposing&&ev.keyCode!==229&&(myPref('cmtEnter')!=='mod'||ev.ctrlKey||ev.metaKey);

@@ -13,7 +13,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='col'&&m){e.stopPropagation();schColMenu(el,pid,m,v);return;}
   if(k==='chip'){ e.stopPropagation(); if(v==='procState'||v==='evState'){SCHU[v]='';SCHU.evPage=1;schLowerRefresh();return;} if(v==='phase')SCHU.phase=''; else if(v==='scope')SCHU.scope='all'; else if(v==='who')SCHU.who=''; else if(v.startsWith('cf:'))delete schCf()[v.slice(3)]; SCHU.page=1; schRefresh(); return; }
   if(k==='toggle'){SCHU[v]=v==='refm'?SCHU.refm===false:!SCHU[v];schRefresh();return;}
-  if(k==='phase'){const i=SCHU.open.indexOf(v);if(i>=0)SCHU.open.splice(i,1);else SCHU.open.push(v);schRefresh();return;}
+  if(k==='phase'){schFold(v);return;}   // opens / closes with a small movement (80-motion.js)
   if(k==='expand'){SCHU.open=v==='1'&&m?m.phases.map(g=>g.code):[];schRefresh();return;}
   if(k==='sort'){if(SCHU.sort===v)SCHU.dir=-SCHU.dir;else{SCHU.sort=v;SCHU.dir=1;}SCHU.page=1;schRefresh();return;}
   if(k==='page'){const key=v, cur=SCHU[key]||1, x=el.dataset.v;SCHU[key]=x==='prev'?cur-1:x==='next'?cur+1:x==='first'?1:x==='last'?(+el.dataset.t||cur):+x;if(key==='evPage'){schLowerRefresh();const lw=$('#sch-lower');if(lw)lw.scrollIntoView({block:'start'});return;}schRefresh();const top=$('#sch-actions');if(top&&key==='page')top.scrollIntoView({block:'start'});return;}

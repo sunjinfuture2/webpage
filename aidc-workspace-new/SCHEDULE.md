@@ -478,3 +478,30 @@ comment that calls me, else my name in the text, else the first unseen comment o
 2.6 seconds (`.mine-hit`; kept as `SCH.mine` so that a redraw of the panel does not put it out). The page's handler of
 `[data-open]` and the my page's `in-open` call mineOpen instead of openPanel. An entry without a red mark opens as before.
 tests/schedule-10.cjs has both ways in.
+
+## Small movements (owner, 2026-11-23, the fourteenth round)
+
+"부담스럽지 않은 수준에서 UI 애니메이션". schedule/ui/80-motion.js and the block "small movements" at the end of schedule.css; preview
+only. All short (0.12 – 0.26 s), no bounce, nothing while something is pulled. `html.mp-calm` (설정 › 화면 움직임 줄이기) and the system's
+reduced-motion setting turn every one of them off (schCalm for the parts that wait in script).
+
+- Why classes and not transitions: most of the page is drawn again as HTML, so there is nothing for a transition to run on. A
+  movement is a class put on what was just drawn (`j-in`, `j-fade`, `j-tab`, `sg-j-in / -shift / -out`, `j-cal-n / -p`), set off by
+  the press that caused the draw (one capturing click listener) and taken off again after 0.3 s. `translate` / `scale` are used
+  instead of `transform`, so that what is already turned or scaled keeps its own transform.
+- Gantt, a phase opens / closes (schFold, called by the `phase` handler): opening draws first, then the phase's rows and bars come
+  in and everything below slides from where it stood (the distance is how far the next phase moved); closing lets the rows go
+  first and draws 0.12 s later, so closing is that much slower than before. The arrow turns.
+- After a change of dates is saved the bars slide from where they stood (schBarSlide, called by schGhostsDraw): it starts on the
+  first draw that has the bars at their new places and goes on from where they were when the chart is drawn again meanwhile.
+- Tabs (액션 views, the lower section, a panel's 정보 / 연결된 액션, the archive's views and kinds): the line under the chosen tab
+  grows from the side of the tab that was left, what it shows fades in. For that the lines of `.sp-tabs` and `.ar-views` are
+  drawn as a background (same place and thickness as the border they had).
+- What appears: menus, the member card, the day window come down 5 px; a window that asks (relation, dates, delete) fades its
+  veil in and grows from 97.5 %. Put on by an observer of the body's children; something drawn again within 0.09 s of going
+  (a menu after a choice) does not move again.
+- The calendar moves the way the month goes; the recent items of a kind and the notice list come in when opened; light <-> dark
+  crosses over (`html.th-anim` for 0.34 s gives the page's filter and the turned-back pictures the same transition).
+- Left for a second set, if the owner wants them: cards rising under the pointer, lists fading on filter / order / page, a
+  badge popping when it appears.
+- tests/schedule-11.cjs.

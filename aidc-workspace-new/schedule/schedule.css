@@ -1295,3 +1295,41 @@ html.dark .nb-modal{background:rgba(255,255,255,.5)}
 /* ---- my place in an opened item lights up for a moment (78-mine.js): the comment that calls me, my name in the text ---- */
 @keyframes mineHit{0%,50%{background-color:#ffef9e;box-shadow:0 0 0 6px #ffef9e}100%{background-color:rgba(255,239,158,0);box-shadow:0 0 0 6px rgba(255,239,158,0)}}
 .mine-hit{animation:mineHit 2.6s ease-out both;border-radius:4px}
+
+/* ================= small movements (80-motion.js; owner, 2026-11-23) =================
+   Short, no bounce. `translate` / `scale` are used instead of `transform` so that what is already turned or scaled keeps its own
+   transform while it moves. html.mp-calm (화면 움직임 줄이기) switches every animation off; so does the system's setting, below. */
+@keyframes jIn{from{opacity:0;translate:0 -5px}to{opacity:1;translate:0 0}}
+@keyframes jFade{from{opacity:0}to{opacity:1}}
+@keyframes jDlg{from{opacity:0;scale:.975}to{opacity:1;scale:1}}
+@keyframes jTab{from{background-size:0% var(--uh,1.6px)}}
+@keyframes sgIn{from{opacity:0;translate:0 -7px}to{opacity:1;translate:0 0}}
+@keyframes sgShift{from{translate:0 var(--dy,0px)}to{translate:0 0}}
+@keyframes sgOut{to{opacity:0;translate:0 -5px}}
+@keyframes sgTri{from{transform:rotate(-90deg)}to{transform:none}}
+@keyframes jCalN{from{opacity:.25;translate:14px 0}to{opacity:1;translate:0 0}}
+@keyframes jCalP{from{opacity:.25;translate:-14px 0}to{opacity:1;translate:0 0}}
+.j-fade{animation:jFade .18s ease-out both}
+.pop.j-in,.ucard.j-in,.sch-daypop.j-in{animation:jIn .13s ease-out both}
+.sch-tip.j-in{animation:jFade .1s ease-out both}
+.dlg.j-in{animation:jFade .16s ease-out both}
+.dlg.j-in .box{animation:jDlg .18s ease-out both}
+#sb-recent .item.j-in,#notice .list.j-in{animation:jIn .16s ease-out both}
+/* gantt: a phase opens / closes */
+.sg-j-in{animation:sgIn .18s ease-out both}
+.sg-j-shift{animation:sgShift .18s ease-out both}
+.sg-j-out{animation:sgOut .12s ease-in both}
+.sg-row.ph.j-open .tw svg{animation:sgTri .16s ease-out both}
+/* tabs: the line under the chosen tab grows from the side of the tab that was left */
+.sch-tabs button.on.j-tab{animation:jTab .2s ease-out}
+.sch-tabs button.on.j-tab.j-r{background-position:100% calc(100% - 1.5px)}
+.sch-props .sp-tabs button.on{border-bottom-color:transparent;background:linear-gradient(#3d3d3d,#3d3d3d) 0 100%/100% 2px no-repeat border-box;--uh:2px}
+.arch .ar-views button.on{border-bottom-color:transparent;background:linear-gradient(#231815,#231815) 0 100%/100% 2.3px no-repeat border-box;--uh:2.3px}
+.sch-props .sp-tabs button.on.j-tab,.arch .ar-views button.on.j-tab{animation:jTab .2s ease-out}
+.sch-props .sp-tabs button.on.j-tab.j-r,.arch .ar-views button.on.j-tab.j-r{background-position:100% 100%}
+/* the calendar goes the way the month goes */
+.cal .rows.j-cal-n{animation:jCalN .16s ease-out both}
+.cal .rows.j-cal-p{animation:jCalP .16s ease-out both}
+/* light <-> dark: the page and the pictures that are turned back cross over together */
+html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){transition:filter .22s ease!important}
+@media (prefers-reduced-motion:reduce){ .j-fade,.j-in,.j-tab,.sg-j-in,.sg-j-shift,.sg-j-out,.j-open .tw svg,.j-cal-n,.j-cal-p,.dlg.j-in .box{animation:none!important} html.th-anim,html.th-anim *{transition:none!important} }

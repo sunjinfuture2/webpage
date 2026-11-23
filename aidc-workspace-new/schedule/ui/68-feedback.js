@@ -36,7 +36,8 @@ function schGhostsDraw(){ const G=SCH.ghost, host=$('#sch-gantt .sg-scroll'), ri
   const D=AIDCSchedule.dates, px=host._px, X=d=>(D.dayNumber(d)-host._o)*px; right.querySelectorAll('.sg-ghost.keep').forEach(g=>right.removeChild(g));
   for(const x of G.list){ const r=host._rows.get(x.id); if(!r||r.top===undefined)continue; const bar=right.querySelector(`[data-bar="${x.id}"]`); if(bar){bar.classList.add('chg');bar.style.animationDelay=(-age)+'ms';}
     const g=document.createElement('i'); g.className='sg-ghost keep'+(r.ms?' ms':''); const x1=X(x.a[0]), w=Math.max(4,X(x.a[1])+px-x1);
-    g.style.cssText=r.ms?`left:${x1-7}px;top:${r.cy-7}px`:`left:${x1}px;top:${r.top}px;width:${w}px`; right.appendChild(g); } }
+    g.style.cssText=r.ms?`left:${x1-7}px;top:${r.cy-7}px`:`left:${x1}px;top:${r.top}px;width:${w}px`; right.appendChild(g); }
+  if(typeof schBarSlide==='function')schBarSlide(G); }   // the bars slide to their new places (80-motion.js)
 
 /* ---------- gantt: moving a bar, pulling its ends ---------- */
 function schBarDrag(e,bar){ const pid=S.proj, m=schModel(pid), host=$('#sch-gantt .sg-scroll'); if(!m||!host||!host._px)return; const t=m.byId.get(bar.dataset.bar); if(!t)return;
