@@ -1,0 +1,30 @@
+name: Copy v2 data to independent ver3
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cloudflare-workspace-ver3
+  cancel-in-progress: false
+jobs:
+  copy-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: aidc-workspace-new/package-lock.json
+      - name: Prepare asset inventory and deployment tool
+        working-directory: aidc-workspace-new
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Snapshot, back up ver3, copy, verify, restore runtime
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node tools/copy-v2-data-to-ver3.mjs
