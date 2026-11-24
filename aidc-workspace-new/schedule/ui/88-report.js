@@ -70,8 +70,8 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
      ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
     <div class="hr bt"></div></div>`; }
 // What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
-function schRepMirror(h,p){ const row=l=>{ const r=(h.rows||[]).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
-  set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=(h.fin||[]).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
+function schRepMirror(h,p){ const arr=a=>Array.isArray(a)?a.filter(Array.isArray):[], row=l=>{ const r=arr(h.rows).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
+  set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=arr(h.fin).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
 
 /* ---------- the cards of the main page ---------- */
 function schRepCards(ids){ const nos=schRepNos(), line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;

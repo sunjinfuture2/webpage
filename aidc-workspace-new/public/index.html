@@ -5027,7 +5027,9 @@ const mapQuery=t=>{t=(t||'').trim();if(!t)return '';const m=t.match(/\(([^()]{4,
 const mapBox=(t,style)=>{const q=mapQuery(t);return q?`<iframe class="map" style="${style}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&hl=ko&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${esc(q)}"></iframe>`:`<div class="ph-img" style="${style}"></div>`;};
 // Reads the overview fields being edited into the project. The short name (약칭) is its own field and is never derived from the long name.
 function saveProjectHead(){const pw=$('#proj-pw'); if(!pw||!S.editProj)return; const h=PHEAD[S.proj], p=PROJECTS[S.proj]; if(!h||!p)return;
-  $$('[data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){const si=+k.split(':')[1]; h.scale[si][1]=v; if(SCALE_FB[si])p[SCALE_FB[si]]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else if(/^(kpi|fin|rows|plan):\d+:\d+$/.test(k)){const [a,i,j]=k.split(':'); if(h[a]&&h[a][+i])h[a][+i][+j]=v;} else h[k]=v;});
+  // only the overview's own fields: the schedule sections below it use data-k too (tabs, pickers, the list's columns `plan` / `fin` …),
+  // and reading those as fields wrote junk into the record and, since the lists of the review list, broke the save while the list was open
+  $$('.phead [data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){const si=+k.split(':')[1]; h.scale[si][1]=v; if(SCALE_FB[si])p[SCALE_FB[si]]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else if(/^(kpi|fin|rows|plan):\d+:\d+$/.test(k)){const [a,i,j]=k.split(':'); if(h[a]&&h[a][+i])h[a][+i][+j]=v;} else h[k]=v;});
   h.partners=h.partners.filter(x=>x!==''); for(const a of ['kpi','fin','rows','plan'])if(Array.isArray(h[a]))h[a]=h[a].filter(r=>r.some((x,j)=>x&&!(a==='plan'&&j===2)));   // a row left empty is gone
   if(PREVIEW_ON&&typeof schRepMirror==='function')schRepMirror(h,p);
   p.owner=h.owner; if(h.cost)p.cost=h.cost; }
@@ -8695,8 +8697,8 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
      ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
     <div class="hr bt"></div></div>`; }
 // What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
-function schRepMirror(h,p){ const row=l=>{ const r=(h.rows||[]).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
-  set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=(h.fin||[]).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
+function schRepMirror(h,p){ const arr=a=>Array.isArray(a)?a.filter(Array.isArray):[], row=l=>{ const r=arr(h.rows).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
+  set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=arr(h.fin).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
 
 /* ---------- the cards of the main page ---------- */
 function schRepCards(ids){ const nos=schRepNos(), line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;

@@ -96,8 +96,8 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   await a.fill('#np2-name', pname0); await a.click('[data-np2="ok"]'); await sleep(900); await a.click('[data-editproj]'); await sleep(900);
   const pid = await ev(() => S.proj);
   await a.click('#sch-gantt .sg-row.add'); await sleep(300); await a.fill('#ask-in', '기획'); await a.keyboard.press('Enter'); await sleep(700);
-  await a.click('#sch-gantt .sg-row.ph .add'); await sleep(900); const firstPanel = await ev(() => [S.panel && S.panel.startsWith('wt-'), !!document.querySelector('#panel-pin .sch-props')]); await ev(() => closePanel(true)); await sleep(300);
-  await a.click('#sch-gantt .sg-row.ph .add'); await sleep(900); await ev(() => closePanel(true)); await sleep(300);
+  await a.hover('#sch-gantt .sg-row.ph'); await a.click('#sch-gantt .sg-row.ph .add'); await sleep(900); const firstPanel = await ev(() => [S.panel && S.panel.startsWith('wt-'), !!document.querySelector('#panel-pin .sch-props')]); await ev(() => closePanel(true)); await sleep(300);
+  await a.hover('#sch-gantt .sg-row.ph'); await a.click('#sch-gantt .sg-row.ph .add'); await sleep(900); await ev(() => closePanel(true)); await sleep(300);   // (the + shows while the pointer is on the row; the page may have moved under it)
   const ts = await ev(p => schModel(p).plan.tasks.map(t => [t.id, t.wbs, t.phaseLabel]), pid);
   check('a phase and two tasks can be added to the empty plan; the tasks carry the phase\'s name', ts.length === 2 && ts[0][1] === 'W1.1' && ts[1][1] === 'W1.2' && ts.every(t => t[2] === '기획') && firstPanel[0] && firstPanel[1], { ts, firstPanel });
   await ev(([p, x, y]) => schPropose(p, { kind: 'new', from: x, to: y, type: 'FS' }), [pid, ts[0][0], ts[1][0]]); await sleep(500); await a.click('#dlg [data-pp="ok"]'); await sleep(900);
