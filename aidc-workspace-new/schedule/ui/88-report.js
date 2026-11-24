@@ -20,8 +20,8 @@ const REP_KIND='aidc-dev-report';
 // (twenty-eighth round, owner: "주황색으로 보완필요, 확인필요 … 프로젝트 포인트컬러로") the two marks take the colour of the project they stand in:
 // the overview, a row of the table and a card hand it down as --pc (schRepPc); without one they stay orange.
 // (thirtieth round, owner: "넘버랑 프로젝트 사이에 넣고 컬러는 둘다 밝은 그레이로 통일") the group of a project as a small light grey badge:
-// between the number and the name — after the number in a row of the table and in the overview's first line, before the name on a
-// card (which has no number). No group, no badge.
+// between the number and the name — after the number in a row of the table and in the overview's first line. On a card, which has
+// no number, it stands after the name (thirty-first round), and 집중 추진 after it in the colours of the table's mark. No group, no badge.
 const schRepGrpTag=g=>REP_GRPS.includes(g)?`<i class="gtag">${esc(g)}</i>`:'';
 const schRepPc=p=>p&&/^#[0-9a-f]{3,8}$/i.test(p.color||'')?` style="--pc:${p.color}"`:'';
 const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em class="rq">$1</em>').replace(/자료 없음/g,'<em class="na">자료 없음</em>');
@@ -111,10 +111,10 @@ const schRepListTxt=v=>{ const s=String(v||'').replace(/자료 없음/g,'-').tri
 // page, the list in the sidebar; kept in this browser like those), and starred cards stand first, whatever the order of the rest.
 const schRepPinned=k=>S.favs.includes('project:'+k);
 function schRepCards(ids){ ids=[...ids.filter(schRepPinned),...ids.filter(k=>!schRepPinned(k))]; const line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${schRepListTxt(v)}</span></div>`;
-  const star=on=>`<svg width="20" height="19" viewBox="0 0 21 20" aria-hidden="true"><path d="M10.4 1.4l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L1.7 7.7l6-.9z" fill="${on?'#ffce00':'none'}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+  const star=on=>`<svg width="20" height="19" viewBox="0 0 21 20" aria-hidden="true"><path d="M10.4 1.4l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L1.7 7.7l6-.9z" fill="${on?'#ffce00':'#fff'}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
   return ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null, ops=m&&m.res.operationDate;
-    return `<div class="pcard rep ${r.focus?'focus':''} ${schRepPinned(k)?'pinned':''}" data-go="project:${k}"${schRepPc(p)}><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><button type="button" class="pstar ${schRepPinned(k)?'on':''}" data-pstar="${k}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 카드를 맨 앞에 고정'}">${star(schRepPinned(k))}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
-  <h3 style="color:${p.color}" title="${esc([p.full,r.sub].filter(Boolean).join(' — '))}">${schRepGrpTag(r.grp)}${esc(p.full)}</h3>
+    return `<div class="pcard rep ${r.focus?'focus':''} ${schRepPinned(k)?'pinned':''}" data-go="project:${k}"${schRepPc(p)}><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><button type="button" class="pstar ${schRepPinned(k)?'on':''}" data-pstar="${k}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 카드를 맨 앞에 고정'}">${star(schRepPinned(k))}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span></div>
+  <h3 style="color:${p.color}" title="${esc([p.full,r.sub].filter(Boolean).join(' — '))}"><span class="pnm">${esc(p.full)}</span>${schRepGrpTag(r.grp)}${r.focus?'<i class="gtag gfo" title="현재 집중 추진 중인 프로젝트">집중 추진</i>':''}</h3>
   <div class="info">${ops?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}${line('위치',r.site)}${line('사업주체',r.dev)}${line('대지면적',r.area)}${line('연면적',r.gfa)}${line('IT LOAD',r.load)}${line('최초자료일',r.first)}</div></div>`; }).join(''); }
 
 /* ---------- the table of the main page (the list itself) ---------- */

@@ -1634,7 +1634,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .pcard.rep .info b{width:64px;flex:none;margin-right:6px}
 .sch-on .pcard.rep .info .e{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sch-on .pcard.rep .info .ops b{width:auto}
-.sch-on .pcard.rep .fo{position:absolute;left:6.6px;top:31px;height:16.6px;padding:0 7.4px;border-radius:8.3px;background:#d9202e;color:#fff;display:flex;align-items:center;font-size:9px;font-weight:600;white-space:nowrap;box-shadow:0 0.4px 2.6px rgba(0,0,0,.14)}
 
 /* the table of the list: two lines a cell, the groups with their count (the ones being pushed: a small mark at the name, see the twenty-seventh round) */
 .tbl.sch-proc.vt-rep .hd,.tbl.sch-proc.vt-rep .rw{grid-template-columns:122px minmax(170px,1.5fr) minmax(108px,.8fr) minmax(140px,1.3fr) minmax(96px,.7fr) minmax(96px,.7fr) minmax(150px,1.4fr) minmax(96px,.62fr) minmax(98px,.62fr)}
@@ -1664,7 +1663,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* Twenty-fifth round (owner, 2026-11-24): the star of a project card (a favourite; starred cards stand first) */
 .sch-on .pcard.rep .pstar{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;padding:0;border:0;cursor:pointer;z-index:2;transition:transform .12s}
 .sch-on .pcard.rep .pstar:hover{transform:scale(1.08)}
-.sch-on .pcard.rep .pstar:not(.on) svg path{stroke:#9a9a9a}
 .sch-on .pcard.rep .img-btn{right:40px}
 
 /* Twenty-fifth round (owner, 2026-11-24: "타이틀과 컨텐츠, 필터 간의 거리가 다 다르잖아 … 기준은 액션으로"): on the main page the pickers of
@@ -1783,5 +1781,11 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* the table: the number, then the badge (between the number and the name). The columns fit the narrowest table (1138 wide,
    --d -200): their smallest widths add up to 1076 */
 .tbl.sch-proc.vt-rep .rw .no{display:flex;align-items:center;gap:8px}
-/* a card: before the name */
-.sch-on .pcard.rep h3 .gtag{margin:-3px 8px 0 0}
+/* a card (thirty-first round): the name, then the badge of the group, then 집중 추진 in the colours of the table's mark; a long
+   name is cut, the badges stay whole */
+.sch-on .pcard.rep h3{display:flex;align-items:center;gap:7px}
+.sch-on .pcard.rep h3 .pnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-on .pcard.rep h3 .gtag{margin:1px 0 0}
+.sch-on .gtag.gfo{background:#fdecee;color:#d9202e}
+/* a star that is not on is white, inside and out (the old grey line is gone); the shadow keeps it readable on a pale picture */
+.sch-on .pcard.rep .pstar{filter:drop-shadow(0 0 1.8px rgba(0,0,0,.5)) drop-shadow(0 1px 1.5px rgba(0,0,0,.18))}

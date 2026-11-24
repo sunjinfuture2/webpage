@@ -943,3 +943,13 @@ asked for the project overview and the project list of the main page to follow i
   narrowest page (1138 wide, `--d` -200). The columns of the twenty-eighth round needed 1320 and stuck out on a window narrower
   than 1900; do not give this table fixed widths that add up to more than 1138 again.
 - tests/schedule-15, 16, 17 follow; **not run**.
+
+## A card: name, group, 집중 추진; a white star (owner, 2026-11-24, thirty-first round)
+
+- **A project card's title line**: the name (`.pnm`, cut when it is long), then the badge of the group, then **집중 추진** as a badge
+  (`.gtag.gfo`) in the colours of the table's mark (`#fdecee`, text `#d9202e`). The red pill on the picture is gone. In the table
+  the mark "집중" already follows the badge of the group (the badge ends the NO. cell, the mark starts the name).
+- **A star that is not on is white inside and out** ("활성화 안된 곳은 하얀색으로 별을 채워줘"); on, it is yellow inside with the white
+  line. An old rule that drew the line of a star that is not on in grey was still there after the twenty-seventh round and is
+  removed. Two soft shadows keep the white star readable on a pale picture.
+- tests/schedule-16.cjs follows; **not run**.
