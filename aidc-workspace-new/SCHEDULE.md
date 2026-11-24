@@ -905,7 +905,7 @@ asked for the project overview and the project list of the main page to follow i
 
 - **The table of projects** (schRepTable): no note below it, no 비고 column, **ten rows a page** with the pager of the other tables
   (schVPager, S.pjPage; a search or a picker goes back to page 1). schRepSeq is the order it lists in (group by group unless an
-  order was chosen); a page shows the heading of every group it has rows of, with the count of the whole group. Columns:
+  order was chosen). (It had a heading for every group; the thirtieth round took the headings out.) Columns of that round:
   `64px minmax(210px,1.5fr) 150px minmax(180px,1.3fr) 132px 132px minmax(200px,1.4fr) 124px 128px`.
 - **비고** (`memo`) is the last row of 사업 개요 표 in the overview (shown when there is one, always while it is edited). It left the
   block "메인 페이지 목록에 표시되는 값". The Excel file and the data file still carry it; the search still looks into it.
@@ -931,10 +931,13 @@ asked for the project overview and the project list of the main page to follow i
 
 ## AIDC / Small AIDC as a badge (owner, 2026-11-24, thirtieth round)
 
-- schRepGrpTag(grp) draws the group of a project as a small badge (`.gtag`: `ga` AIDC, dark; `gs` Small AIDC, white with a line);
-  a project without a group has none. It stands **before the number** where a number is written — a row of the table (inside the
-  NO. cell, one width so the numbers stand in a line) and the first line of the overview (the badge, then "No. 13") — and **before
-  the name** on a card.
+- schRepGrpTag(grp) draws the group of a project as a small badge (`.gtag`), **both groups in one light grey** (`#f1f1f0`, text
+  `#6f6f6f`); a project without a group has none. It stands **between the number and the name** ("넘버랑 프로젝트 사이에"): after the
+  number in a row of the table (inside the NO. cell) and in the first line of the overview ("No. 13", then the badge), and before
+  the name on a card, which has no number. (A first version put it before the number and gave the two groups different tones; the
+  owner corrected both.)
+- **The table has no headings of groups** ("AIDC 프로젝트 9건, Small AIDC 9건 이건 빼고"). The order is still group by group
+  (schRepSeq) unless an order was chosen; the badge says which group a row is of.
 - The table's columns: `122px minmax(170px,1.5fr) minmax(108px,.8fr) minmax(140px,1.3fr) minmax(96px,.7fr) minmax(96px,.7fr)
   minmax(150px,1.4fr) minmax(96px,.62fr) minmax(98px,.62fr)`. Their smallest widths add up to 1076, so the table also fits the
   narrowest page (1138 wide, `--d` -200). The columns of the twenty-eighth round needed 1320 and stuck out on a window narrower
