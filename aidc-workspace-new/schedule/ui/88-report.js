@@ -79,7 +79,7 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
     +schRepDocs(pid,d,E);
   const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo?nil:''}${add('rows','+ 행')}</div>`)
     +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
-  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${!E?`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button><button class="sh-btn upx" data-projexp title="이 프로젝트의 지금 진행 상황을 보고서로 내보냅니다 (범위 · 요약형/풀버전 · PDF/Word/엑셀)">${svg('i-sch-fdn',13,13)}내보내기</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div></div>
     <div class="hr bt"></div></div>`; }
@@ -148,7 +148,6 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   if(el=T.closest('[data-repfocus]')){ if(!S.editProj)return; saveProjectHead(); h().focus=!h().focus; render(true); return; }
   if(el=T.closest('[data-docadd]')){ if(!S.editProj)return; schRepDocPick(); return; }
   if(el=T.closest('[data-docdel]')){ if(!S.editProj)return; saveProjectHead(); const a=schRepDocList(h()); a.splice(+el.dataset.docdel,1); h().docs=a; render(true); return; }
-  if(el=T.closest('[data-repio]')){ e.stopPropagation(); menuPop(el,[{t:'자료 파일 가져오기 (.json)',k:'in',fn:schRepPick},{t:'자료 파일로 내보내기 (.json)',k:'out',fn:schRepExport}],{cls:'sch-colmenu'}); return; }
 });
 
 /* ---------- a data file of the list: read ---------- */
@@ -179,31 +178,20 @@ function schRepApply(data,others){ const plan=schRepPlan(data), ids=[]; let made
   let gone=0; if(others)for(const k of plan.rest){ if(PROJECTS[k]){ trashProject(k); gone++; } }
   if(typeof data.asof==='string'&&data.asof.trim())META_FLAGS.repAsof=data.asof.trim().slice(0,20);
   return {made,upd,gone}; }
-// the file chooser, then a window that says what will happen before anything is changed
-function schRepPick(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json'; inp.style.display='none'; inp.dataset.repfile='1'; document.body.appendChild(inp);
-  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; inp.remove(); if(!f)return; let data=null; try{ data=JSON.parse(await f.text()); }catch(err){ data=null; }
-    if(!data||data.kind!==REP_KIND||!Array.isArray(data.projects)||!data.projects.length){ toast('개발검토 리스트 자료 파일이 아닙니다. "자료 파일로 내보내기"로 만든 .json 파일을 올려 주세요.',5200); return; }
-    schRepAsk(data,f.name); }); inp.click(); }
+// a window that says what will happen before anything is changed (a data file, or what a document was read as: 89-docread.js)
 function schRepAsk(data,fname){ closePop(); const old=$('#dlg'); if(old)old.remove(); const plan=schRepPlan(data), make=plan.rows.filter(r=>!r.k&&!r.back), upd=plan.rows.filter(r=>r.k||r.back);
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-repin'; const names=a=>a.map(r=>`<li>${esc(r.x.name)}${r.k&&norm(PROJECTS[r.k].full)!==norm(r.x.name)?` <span>← ${esc(PROJECTS[r.k].full)}</span>`:r.back?' <span>← 휴지통에서 되살림</span>':''}</li>`).join('');
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="자료 파일 가져오기"><div class="np-hd"><b>자료 파일 가져오기</b><span>${esc(fname||'')}${data.asof?` · 기준일 ${esc(String(data.asof))}`:''} · ${plan.rows.length}건</span></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="${data.noRest?'문서로 프로젝트 만들기':'자료 파일 가져오기'}"><div class="np-hd"><b>${data.noRest?'문서로 프로젝트 만들기':'자료 파일 가져오기'}</b><span>${esc(fname||'')}${data.asof?` · 기준일 ${esc(String(data.asof))}`:''} · ${plan.rows.length}건</span></div>
     <div class="rin">${make.length?`<div class="g"><b>새로 만들기 ${make.length}건</b><ul>${names(make)}</ul></div>`:''}${upd.length?`<div class="g"><b>덮어쓰기 ${upd.length}건</b><small>사업개요만 파일 내용으로 바뀝니다. 일정 · 액션 · 미팅 · 담당자 · 협력업체는 그대로 둡니다.</small><ul>${names(upd)}</ul></div>`:''}
-      ${plan.rest.length?`<div class="g"><b>파일에 없는 프로젝트 ${plan.rest.length}건</b><ul>${plan.rest.map(k=>`<li>${esc(PROJECTS[k].full)}</li>`).join('')}</ul><label class="ck"><input type="checkbox" id="rin-others" ${data.others==='trash'?'checked':''}> 이 프로젝트들을 휴지통으로 보내기 <em>(30일 안에 되살릴 수 있습니다)</em></label></div>`:''}</div>
+      ${plan.rest.length&&!data.noRest?`<div class="g"><b>파일에 없는 프로젝트 ${plan.rest.length}건</b><ul>${plan.rest.map(k=>`<li>${esc(PROJECTS[k].full)}</li>`).join('')}</ul><label class="ck"><input type="checkbox" id="rin-others" ${data.others==='trash'?'checked':''}> 이 프로젝트들을 휴지통으로 보내기 <em>(30일 안에 되살릴 수 있습니다)</em></label></div>`:''}</div>
     <div class="np-bt"><button data-rin="x">취소</button><button class="pri" data-rin="ok">가져오기</button></div></div>`;
   document.body.appendChild(d); const close=()=>d.remove();
   d.addEventListener('click',e=>{ e.stopPropagation(); const a=e.target.closest('[data-rin]'); if(e.target===d||(a&&a.dataset.rin==='x')){close();return;} if(!a)return;
     if(S.editProj){ toast('사업개요를 수정하는 중에는 가져올 수 없습니다. 먼저 저장하거나 취소해 주세요.',4600); return; }
     const others=!!(d.querySelector('#rin-others')||{}).checked, here=S.page==='project'?S.proj:'', r=schRepApply(data,others); close();
     if(here&&!PROJECTS[here])go('main'); else render(true);
-    toast(`자료를 가져왔습니다 · 새로 만들기 ${r.made}건 · 덮어쓰기 ${r.upd}건${r.gone?` · 휴지통 ${r.gone}건`:''}`,5200); });
+    toast(`${data.noRest?'문서 내용을 반영했습니다':'자료를 가져왔습니다'} · 새로 만들기 ${r.made}건 · 덮어쓰기 ${r.upd}건${r.gone?` · 휴지통 ${r.gone}건`:''}`,5200); });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} }); }
-// everything the list holds, in the shape it is read in (a file the same workspace, or another one, can take back)
-function schRepExport(){ const L=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean), ids=orderedProjects();
-  const projects=ids.map(k=>{ const p=PROJECTS[k], h={...headOf(k)}; return { id:k, name:p.full, grp:h.grp, focus:!!h.focus, sub:h.sub, stage:normStatus(p.status), owner:h.owner||p.owner||'', first:h.first, asof:h.asof,
-    list:{site:h.lsite,dev:h.ldev,area:h.larea,gfa:h.lgfa,load:h.lload,memo:h.memo}, kpi:h.kpi, fin:h.fin, finNote:h.finNote, ov:h.main, infra:L(h.infra), model:h.struct, stat:L(h.stat).length>1?L(h.stat):h.stat, rows:h.rows, plan:h.plan, risk:L(h.risk), src:L(h.src) }; });
-  const out={kind:REP_KIND,v:1,asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',exported:TODAY,projects};
-  schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.json`,new Blob([JSON.stringify(out,null,1)],{type:'application/json'})); toast(`자료 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
-
 /* ---------- the star of a card ---------- */
 // (before the page's own click handler, which would open the project the card stands for)
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-pstar]'); if(!el)return; e.stopPropagation(); e.preventDefault();

@@ -2987,6 +2987,39 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .pcard.rep:hover h3 .pnm{text-decoration:underline}
 /* a star that is not on is white, inside and out (the old grey line is gone); the shadow keeps it readable on a pale picture */
 .sch-on .pcard.rep .pstar{filter:drop-shadow(0 0 1.8px rgba(0,0,0,.5)) drop-shadow(0 1px 1.5px rgba(0,0,0,.18))}
+
+/* Thirty-third round (owner, 2026-11-24): uploads and exports; the overview's small corrections */
+/* 집중 추진 on a project page: the colours of the mark in the table and on a card ("다른 거랑 안 맞으니까") */
+.rmeta .m.fo.on{background:#fdecee;border-color:#fdecee;color:#d9202e}
+/* no line above 핵심 지표 and 사업성 지표; the figures stand a little closer to each other */
+.phead.rep .rstats .rb{border-top:0;padding-top:0;margin-bottom:28px}
+.phead.rep .rstats .rt{margin-bottom:15px}
+.rstats .rkp{grid-template-columns:repeat(5,minmax(0,240px));gap:14px 22px}
+/* the window that makes a project: a field for the document (the look of the upload window's field), then the few inputs */
+.dlg.sch-np.sch-npdoc .box{width:560px;max-height:calc(100vh - 40px);overflow:auto}
+.sch-np .np-doc .up-drop{height:126px;margin-top:22px;gap:12px}
+.sch-np .np-doc .up-drop .up-pic{width:52px;height:41px}
+.sch-np .np-doc .up-drop.has{height:auto;min-height:74px}
+.sch-np .np-many{margin:10px 0 0;font-size:12.5px;line-height:18px;color:#4f4f4f}
+.sch-np .np-f.dim{opacity:.36}
+.sch-np .np-bt button:disabled{opacity:.38;cursor:default;filter:none}
+.sch-up .up-drop.bad{border-color:#e7b5b0}
+.sch-up .up-row select{max-width:100%;height:26px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#1c1c1c;padding:0 6px}
+.sch-up .up-parts.ext{margin-top:22px}
+/* the window that hands out files */
+.dlg.sch-np.sch-xw .box{width:540px;max-height:calc(100vh - 40px);overflow:auto}
+.sch-xw .xw{margin-top:22px;display:flex;flex-direction:column;gap:17px}
+.sch-xw .xw-g h5{margin:0 0 6px;font-size:12px;font-weight:600;color:#8e8e8e}
+.sch-xw .xw-o{display:flex;align-items:flex-start;gap:9px;padding:3px 0;font-size:13.5px;line-height:20px;color:#1c1c1c;cursor:pointer}
+.sch-xw .xw-o input{margin:3.5px 0 0;flex:none;accent-color:#0f0f0f}
+.sch-xw .xw-o em{font-style:normal;margin-left:8px;font-size:12px;color:#a0a0a0}
+.sch-xw .xw-o.off{color:#b9b9b9;cursor:default}
+.sch-xw .xw-g.dim{opacity:.34;pointer-events:none}
+.sch-xw [data-xwparts]{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+.sch-xw [data-xwparts] h5{grid-column:1/-1}
+.sch-xw .xw-nt{margin:0;min-height:18px;font-size:12px;line-height:18px;color:#8e8e8e}
+.sch-xw .xw-nt:empty{display:none}
+.sch-xw .np-bt button.pri{display:inline-flex;align-items:center;gap:7px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3757,6 +3790,11 @@ html.mob.sch-on .cal > .filters{position:relative}
 
 /* (twenty-eighth round) the pager of the project table keeps its arrows (the rule above that hides `.projects .arr` means the carousel's) */
 html.mob .projects .pager .arr{display:flex!important}
+
+/* (thirty-third round) the figures in two columns keep their own gap; the two new windows fit the screen */
+html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+html.mob .dlg.sch-np.sch-npdoc .box,html.mob .dlg.sch-np.sch-xw .box{width:calc(100vw - 28px)}
+html.mob .sch-xw [data-xwparts]{grid-template-columns:1fr}
 </style>
 </head>
 <body>
@@ -6332,7 +6370,7 @@ function schActionBody(pid){ const m=schModel(pid);
   else f=`<div class="seg"><button class="${SCHU.netMode==='all'?'on':''}" data-sch="netmode" data-k="all">${g?esc(schPhaseLabel(g)):'전체 단계'}</button><button class="${SCHU.netMode==='focus'?'on':''}" data-sch="netmode" data-k="focus">선택 업무 중심</button></div>`
     +(SCHU.netMode==='focus'?sf('netDepth',SCHU.netDepth+'단계 연결',false)+sf('netDir',({both:'선행+후행',before:'선행만',after:'후행만'})[SCHU.netDir],false):sf('phase',g?schPhaseLabel(g):'전체 단계',!!g));
   const note=m.err?`<div class="sch-note">일정 관계가 서로 맞지 않아 최근에 추가한 관계 일부를 빼고 계산했습니다: ${esc(m.err)}</div>`:(schScenario(pid)?`<div class="sch-note">시나리오 “${esc((SCHED[pid]['sc:'+schScenario(pid)]||{}).name||'')}”를 보고 있습니다. 여기서 고친 내용은 기본 계획에 반영되지 않습니다. <button class="sh-btn" data-sch="scn-off" style="margin-left:8px;height:22px;padding:0 9px;font-size:12px">기본 계획으로</button></div>`:'');
-  return `<div class="sch-filters ${SCHU.tab==='net'?'net':''}">${f}<div class="right">${schInfo('all')}${schXlBtn(SCHU.tab,true)}</div></div>${note}${SCHU.tab==='gantt'?'<div class="sch-gantt" id="sch-gantt"><div class="sg-scroll"></div></div>':SCHU.tab==='list'?schListHtml(pid,m):schNetShell(pid,m)}`; }
+  return `<div class="sch-filters ${SCHU.tab==='net'?'net':''}">${f}<div class="right">${schInfo('all')}${schUpBtn('act')}</div></div>${note}${SCHU.tab==='gantt'?'<div class="sch-gantt" id="sch-gantt"><div class="sg-scroll"></div></div>':SCHU.tab==='list'?schListHtml(pid,m):schNetShell(pid,m)}`; }
 
 // The page's pager look, but with its own attribute (the page's own handler would take data-pg for one of its lists).
 // Pages: the first and the last one ("<<", ">>"), one back and one on, and the numbers ten at a time (1-10, 11-20, ...).
@@ -7041,7 +7079,7 @@ const schSf=(k,label,set,cls='')=>`<div class="sf ${cls} ${set?'set':''}" data-s
 /* ---------- 외부설비 조달 ---------- */
 function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.procurement.filter(x=>(!SCHU.procState||x.commitment===SCHU.procState)&&(!q||matchQ(q,x.name,x.id,x.supplier,x.commitment,schSrcFields(pid,'procurementPackages',x.sourceIndex)['실행 역할'])));
   const th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="sch-filters">${schSf('procState',SCHU.procState||'전체 상태',!!SCHU.procState)}<div class="right">${schXlBtn('proc')}</div></div>
+  let h=`<div class="sch-filters">${schSf('procState',SCHU.procState||'전체 상태',!!SCHU.procState)}<div class="right">${schUpBtn('ext')}</div></div>
     <div class="tbl sch-proc"><div class="hd">${th('No.')}${th('설비')}${th('계약·PO 업무')}${th('예상 PO → 예상 설치완료')}${th('PO 추가지연')}${th('상태')}${th('담당자')}${th('운영 여유')}${th('확약 납기')}</div>`;
   for(const x of list){ const po=m.byId.get(x.poTaskId), pr=m.res.tasks[x.poTaskId], ins=m.res.tasks[x.installTaskId], f=schSrcFields(pid,'procurementPackages',x.sourceIndex), ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
     h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schNo(po)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
@@ -7059,7 +7097,7 @@ function schGates(pid,m){ const root=SCHED[pid]||{}; const list=((SCH.src[pid]||
     list.push({user:true,code:k.slice(2),title:v.title||'승인게이트',t,date:t?m.res.tasks[t.id].finish:'',plan:'',st:v.status||'확인 전',o:v,f:{'승인 역할':v.role||'','통과 증빙':v.evidence||'','미충족 처리':v.fallback||'','연계업무':''}}); }
   return list.sort((a,b)=>(a.date||'9').localeCompare(b.date||'9')); }
 function schGatesHtml(pid,m){ const q=(SCHU.lq||'').trim(), today=schToday(), D=AIDCSchedule.dates; const list=schGates(pid,m).filter(g=>!q||matchQ(q,g.code,g.title,g.f['통과 증빙'],g.f['승인 역할'],g.st));
-  let h=`<div class="sch-filters"><div class="right" style="margin-left:0;font-size:12.5px;color:#8e8e8e">날짜는 연결된 업무의 예상 완료일입니다. 날짜가 지나도 자동으로 승인되지 않습니다.</div><div class="right">${schXlBtn('gate')}</div></div><div class="sch-gates">`;
+  let h=`<div class="sch-filters"><div class="right" style="margin-left:0;font-size:12.5px;color:#8e8e8e">날짜는 연결된 업무의 예상 완료일입니다. 날짜가 지나도 자동으로 승인되지 않습니다.</div></div><div class="sch-gates">`;
   // the line is black only where it leads into an approved gate, and only as far as that gate's dot (owner, 2026-11-19)
   list.forEach((g,i)=>{ const ok=g.st==='승인', nextOk=!!list[i+1]&&list[i+1].st==='승인', slip=g.plan&&g.date?D.diffDays(g.date,g.plan):0;
     h+=`<div class="gt ${ok?'ok':'wait'} ${nextOk?'to-ok':''} ${S.panel===`sg-${pid}-${g.code}`?'sel':''}" data-open="sg-${pid}-${esc(g.code)}">${i?'':`<i class="ln0 ${ok?'ok':''}"></i>`}<i class="ln"></i><div class="date">${g.date?schD(g.date):'<span style="color:#c4c4c4;font-weight:500">업무 미연결</span>'}${slip?`<em class="${slip>0?'late':''}">${slip>0?'+':''}${slip}일</em>`:''}</div><i class="dot"></i>
@@ -7074,7 +7112,7 @@ function schEvidHtml(pid,m){ const kind=SCHU.evKind, q=(SCHU.lq||'').trim(); let
   rows=rows.filter(r=>(!SCHU.evState||r.st===SCHU.evState)&&(!q||matchQ(q,r.no,r.cat,r.title,r.link,r.st,r.role,r.body,r.ref)));
   const per=20, total=Math.max(1,Math.ceil(rows.length/per)); SCHU.evPage=Math.min(Math.max(1,SCHU.evPage),total); const page=rows.slice((SCHU.evPage-1)*per,SCHU.evPage*per);
   const src=SCH.src[pid]||{}, name=(SCH_EV.find(x=>x[0]===kind)||SCH_EV[0])[1], th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="sch-filters">${schSf('evKind',`${name} (${allN})`,true)}${sts.length?schSf('evState',SCHU.evState||'전체 상태',!!SCHU.evState):''}<div class="right">${schXlBtn('evid')}</div></div>
+  let h=`<div class="sch-filters">${schSf('evKind',`${name} (${allN})`,true)}${sts.length?schSf('evState',SCHU.evState||'전체 상태',!!SCHU.evState):''}</div>
     <div class="tbl sch-ev"><div class="hd">${th('ID')}${th('구분')}${th('제목')}${th('연결 업무')}${th('상태')}${th('확인 역할')}${th('기한')}${th('내용')}</div>`;
   for(const r of page)h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(r.no)}</div><div class="ct">${esc(r.cat)}</div><div class="nm"><span class="tx">${esc(r.title)}</span></div><div class="lk"><span class="tx">${schWbsLinks(m,r.link)||'-'}</span></div>
       <div>${r.st||r.user||kind==='commitmentReviews'?(r.st?schStateMark(r.st,'sf-e',`data-schc="estate" data-k="${esc(r.key)}" title="상태 변경"`):`<span class="sf-e sch-cm cm-none" data-schc="estate" data-k="${esc(r.key)}" title="상태 변경">상태 없음</span>`):'<span style="color:#c4c4c4">-</span>'}</div>
@@ -7367,7 +7405,7 @@ function schBackup(pid){ const root=SCHED[pid]||{}, A=AIDCSchedule, strip=o=>Obj
   return {schemaVersion:1,projectId:'pangyo-aidc',source:SCH.src[pid],scenarios:[base,...scs],activeId:'base',preferences:{view:'gantt',date:base.statusDate,scale:'month',collapsed:[...new Set(base.tasks.map(t=>t.phase))],masterTree:true,fitTimeline:true,showReference:true,showLinks:true,gridWidth:640},audit:[]}; }
 // The Excel reader / writer is a bundle of its own, fetched the first time it is needed.
 let schXlsxLoading=null;
-function schXlsx(){ return schXlsxLoading||(schXlsxLoading=new Promise((ok,no)=>{ if(window.AIDCScheduleXlsx){ok(window.AIDCScheduleXlsx);return;} const s=document.createElement('script'); s.src='/schedule-xlsx.js?v=3aaf68d2f21f';
+function schXlsx(){ return schXlsxLoading||(schXlsxLoading=new Promise((ok,no)=>{ if(window.AIDCScheduleXlsx){ok(window.AIDCScheduleXlsx);return;} const s=document.createElement('script'); s.src='/schedule-xlsx.js?v=03e3f00c852f';
     s.onload=()=>window.AIDCScheduleXlsx?ok(window.AIDCScheduleXlsx):no(new Error('엑셀 기능을 불러오지 못했습니다.')); s.onerror=()=>{schXlsxLoading=null;no(new Error('엑셀 기능을 불러오지 못했습니다. 연결을 확인해 주세요.'));}; document.head.appendChild(s); })); }
 // A plan from a file carries its own ids when the file was made from another copy of the workbook. Its tasks are then matched
 // to this project's by WBS number, its relations by the two tasks they join, so that the same task stays the same task.
@@ -7405,9 +7443,7 @@ async function schExportXlsx(pid){ toast('엑셀 파일을 만드는 중입니�
 // from (same names), filled from what the page shows now: what members changed and added is in it. It opens on the sheet of the
 // section the button stands in.
 const SCH_XL_SHEET={commitmentReviews:'보완·확약관리',assumptionsAndReferences:'전제와참고자료',responsibilityBoundaries:'책임경계',nvisScheduleReview:'NVIS일정검토',offtakers:'오프테이커 후보검토',sourceMappings:'원자료대조'};
-// two: the action section offers what is shown now (the search and the filters in force) and the whole project (owner, 2026-11-23)
-const schXlBtn=(k,two)=>two?`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" data-part="view" title="지금 보고 있는 시트만 (검색·필터가 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}현재 시트 내보내기</button><button class="sh-btn lib sch-xl all" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료 전체를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}전체 내보내기</button>`
-  :`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀 내보내기</button>`;
+// (thirty-third round) the sections have no export button any more: a project is handed out from the button beside its name (92-export.js).
 // The conditions in force in the action section, as plain words (for the summary sheet of a partial export).
 function schCondText(pid){ const q=(SCHU.q||'').trim(), out=[...new DOMParser().parseFromString(schChips(pid),'text/html').querySelectorAll('.sch-chip')].map(b=>b.firstChild?b.firstChild.textContent:'').filter(Boolean); if(q)out.push('검색: '+q); return out.join(' / ')||'조건 없음 (전체)'; }
 async function schXlsxSection(pid,which,part){ const m=schModel(pid); if(!m)return; toast('엑셀 파일을 만드는 중입니다…',20000);
@@ -7694,7 +7730,7 @@ function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim();
   return ids; }
 function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
   const chips=(c.grp?chip('grp','구분: '+c.grp):'')+(c.st?chip('st','추진 단계: '+c.st):'')+(c.region?chip('region','위치: '+c.region):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.focus?chip('focus','집중 추진만'):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
-  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','grp',c.grp||'전체 구분',!!c.grp)}${schSf2('ppick','st',c.st||'전체 단계',!!c.st)}${schSf2('ppick','region',c.region||'전체 위치',!!c.region)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','focus',c.focus?'집중 추진만':'집중 추진 포함',!!c.focus)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right"><button class="sh-btn lib sch-xl" data-repio title="개발검토 리스트 자료 파일(.json)로 프로젝트를 한꺼번에 만들거나 고치고, 지금 내용을 파일로 내려받습니다">자료 파일${svg('i-chev-d',8,4)}</button>${schProjXlBtn()}</div></div></div>`; }
+  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','grp',c.grp||'전체 구분',!!c.grp)}${schSf2('ppick','st',c.st||'전체 단계',!!c.st)}${schSf2('ppick','region',c.region||'전체 위치',!!c.region)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','focus',c.focus?'집중 추진만':'집중 추진 포함',!!c.focus)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right"><button class="sh-btn lib sch-xl" data-mainexp title="프로젝트 개요를 내보냅니다: 목록과 프로젝트별 1장 요약 (PDF · Word · 엑셀)">${svg('i-sch-fdn',12,12)}내보내기</button></div></div></div>`; }
 function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;S.pjPage=1;render(true);}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}), dot=(s,col)=>`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${col}"></i>${esc(s)}</span>`;
   const all=orderedProjects(), sts=[...new Set(all.map(p=>normStatus(PROJECTS[p].status)).filter(Boolean))].sort((x,y)=>(PSTATUS_ORDER.indexOf(x)+1||99)-(PSTATUS_ORDER.indexOf(y)+1||99));
   const grp=()=>[fl('grp','',{t:'전체 구분'}),...REP_GRPS.map(g=>fl('grp',g,{t:g}))], focus=()=>[fl('focus','',{t:'집중 추진 포함 (전체)'}),fl('focus','1',{t:'집중 추진만',html:'<span style="color:#d9202e;font-weight:600">집중 추진만</span>'})];
@@ -7723,38 +7759,48 @@ function schCardOps(k){ if(!schHas(k))return '<span class="nil">미정</span>'; 
   return `${schD(m.res.operationDate)}${d?`<em class="${d>0?'late':'early'}">${d>0?'+':''}${d}일</em>`:''}`; }
 
 /* ---------- the window that makes a project ---------- */
-function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st=PSTATUS_ORDER[0], grp=REP_GRPS[0];
+// (thirty-third round, owner 2026-11-24) A project is made from a document — a PDF or an Excel file whose content fills the overview
+// (89-docread.js) — or, without one, from its group and its name. The field for the document looks like the Excel upload's;
+// 부지 and the PDF that was only attached are gone. The button is on when there is a name, or a document that could be read.
+function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-npdoc'; let st=PSTATUS_ORDER[0], grp=REP_GRPS[0], busy=false, auto=''; const doc={};
   const sts=PSTATUS_ORDER;
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>이름만 있으면 만들 수 있습니다. 나머지는 프로젝트 페이지의 사업개요에서 채웁니다.</span></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>문서를 올리면 그 내용으로 사업개요를 채웁니다. 문서 없이 구분과 사업명만으로도 만들 수 있습니다.</span></div>
+    <div class="np-doc sch-up" data-docfield></div><p class="np-many" id="np2-many" hidden></p>
     <div class="np-f"><label for="np2-name">사업명 <em>필수</em></label><div><input id="np2-name" maxlength="60" placeholder="예: 대전 AI 데이터센터" autocomplete="off"><small class="err" id="np2-err"></small></div>
       <label>구분</label><div class="np-st" id="np2-grp">${REP_GRPS.map(g=>`<button type="button" data-grp="${g}" class="${g===grp?'on':''}">${g}</button>`).join('')}</div>
       <label>추진 단계</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
-      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
-      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div>
-      <label>자료 PDF</label><div class="np-pdf"><button type="button" class="sh-btn lib" data-np2pdf>PDF 첨부</button><span class="nm" id="np2-pdfname">선택한 파일 없음</span><button type="button" class="x" data-np2pdfx title="첨부 빼기" aria-label="첨부 빼기" hidden>✕</button><input type="file" id="np2-pdf" accept="application/pdf,.pdf" hidden><small>프로젝트 검토 자료(PDF)를 붙여 둡니다 · 1.8MB까지 · 사업개요에서 열어 볼 수 있습니다</small><small class="err" id="np2-pdferr"></small></div></div>
-    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
+      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div></div>
+    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok" disabled>프로젝트 만들기</button></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
-  const close=()=>d.remove(); let pdf=null, busy=false;
-  const setPdf=f=>{ const bad=f?schRepDocBad(f):''; pdf=bad?null:f||null; $n('#np2-pdfname').textContent=pdf?`${pdf.name} · ${fmtSize(pdf.size)}`:'선택한 파일 없음'; $n('#np2-pdfname').classList.toggle('on',!!pdf); $n('[data-np2pdfx]').hidden=!pdf; $n('#np2-pdferr').textContent=bad; if(!pdf)$n('#np2-pdf').value=''; };
-  $n('#np2-pdf').addEventListener('change',e=>setPdf(e.target.files&&e.target.files[0]));
-  const make=async()=>{ if(busy)return; const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
-    if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
-    const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
-    const id='p'+Date.now(); let docs=[];
-    if(pdf){ const ok=$n('[data-np2="ok"]'); busy=true; ok.disabled=true; ok.textContent='PDF 올리는 중…';   // the file first: a project is not made with a PDF that could not be stored
-      try{ docs=[await schRepDocUpload(pdf,id)]; }catch(e){ $n('#np2-pdferr').textContent=String(e&&e.message||'PDF를 올리지 못했습니다.'); busy=false; ok.disabled=false; ok.textContent='프로젝트 만들기'; return; }
-      busy=false; if(!d.isConnected)return; }
-    const T=nextProjTone();   // a colour no project has yet
-    PROJECTS[id]={id,tag,full:n,cls:T.cls,color:T.color,status:st,stColor:PSTATUS[st],grad:T.grad,imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
-    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site,docs};
+  const close=()=>{ doc.run=(doc.run||0)+1; d.remove(); }, name=()=>$n('#np2-name').value.replace(/\s+/g,' ').trim(), many=()=>!!doc.rep&&(doc.rep.projects.length>1||(!!doc.doc&&doc.doc.kind==='json')), one=()=>doc.rep&&!many()&&doc.rep.projects.length===1?doc.rep.projects[0]:null;   // (a data file always goes through the window that says what will happen)
+  const pick=(box,key,v)=>{ for(const b of $n(box).querySelectorAll('button'))b.classList.toggle('on',b.dataset[key]===v); };
+  // what the document says is put into the fields (a member may still change them); a name typed by hand is not written over
+  const sync=()=>{ const e=one(), ok=$n('[data-np2="ok"]'), m=$n('#np2-many');
+    if(e){ if(!name()||name()===auto){ $n('#np2-name').value=e.name; auto=e.name; } if(REP_GRPS.includes(e.grp)){ grp=e.grp; pick('#np2-grp','grp',grp); } if(PSTATUS[e.stage]){ st=e.stage; pick('#np2-st','st',st); } }
+    m.hidden=!many(); if(many())m.textContent=`문서에 프로젝트가 ${doc.rep.projects.length}건 있습니다. 한 번에 만들거나 덮어씁니다 (아래 사업명 · 구분 · 추진 단계는 쓰지 않습니다).`;
+    for(const i of d.querySelectorAll('.np-f input, .np-f button'))i.disabled=many(); $n('.np-f').classList.toggle('dim',many());
+    ok.disabled=busy||!!doc.reading||!(many()||name()); ok.textContent=many()?`${doc.rep.projects.length}건 만들기`:'프로젝트 만들기'; };
+  schDocField($n('[data-docfield]'),doc,sync,'PDF 또는 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택'); sync();
+  const make=async()=>{ if(busy||doc.reading)return;
+    if(many()){ const rep=doc.rep, fn=doc.file?doc.file.name:''; close(); schRepAsk(rep,fn); return; }
+    const n=name(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+    const owner=$n('#np2-owner').value.trim()||sharedName, e=one(), dup=Object.values(PROJECTS).some(p=>norm(p.full)===norm(n));
+    if(e){ // the document's sheet under the name, the group and the stage the window shows
+      const entry=Object.assign({},e,{name:n,grp,stage:st,owner:e.owner||owner,first:e.first||dateDot(TODAY).replace(/ /g,'')}), data={kind:REP_KIND,v:1,projects:[entry],noRest:true}, fn=doc.file?doc.file.name:'';
+      if(dup){ close(); schRepAsk(data,fn); return; }   // a project of that name is there: the window that says "덮어쓰기 1건" asks first
+      close(); schRepApply(data,false); const id=Object.keys(PROJECTS).find(k=>norm(PROJECTS[k].full)===norm(n)); if(id){ go('project:'+id); toast(`문서 내용으로 프로젝트를 만들었습니다 · ${schDocSays(entry)}`,5200); } else render(true); return; }
+    if(dup){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
+    const tag=n, id='p'+Date.now(), T=nextProjTone();   // a colour no project has yet
+    PROJECTS[id]={id,tag,full:n,cls:T.cls,color:T.color,status:st,stColor:PSTATUS[st],grad:T.grad,imgH:207.8,owner,site:'',cost:'',area:'',power:'',it:'',server:''};
+    PHEAD[id]={cls:st,prog:'',owner,loc:'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:'',docs:[]};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
     toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
   d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
     const gb=e.target.closest('[data-grp]'); if(gb){grp=gb.dataset.grp; d.querySelectorAll('[data-grp]').forEach(x=>x.classList.toggle('on',x===gb)); return;}
-    if(e.target.closest('[data-np2pdf]')){ $n('#np2-pdf').click(); return; } if(e.target.closest('[data-np2pdfx]')){ setPdf(null); return; }
     const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
-  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
+  d.addEventListener('input',e=>{ if(e.target.id==='np2-name'){ $n('#np2-err').textContent=''; sync(); } });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'&&e.target.type!=='file'){e.preventDefault();make();} }); }
 
 /* ---------- 사업개요: a partner is linked the way a person is called, with @ ---------- */
 const schPartnerOf=name=>{const n=norm(name||''); return n?PARTNERS.find(p=>!p.trash&&norm(p.name)===n):null;};
@@ -7961,6 +8007,8 @@ function schNetLink(e,card){ const pid=S.proj, m=schModel(pid), from=card&&card.
 // nothing is loaded for it) and as a page for the browser's print window, where "PDF로 저장" makes the PDF (schExpPrint).
 (function(){ const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); s.setAttribute('aria-hidden','true');
   s.innerHTML='<symbol id="i-sch-exp" viewBox="0 0 24 24"><path d="M12 15.2V3.4M7.6 7.6L12 3.2l4.4 4.4M4.2 13.6v5.1a1.9 1.9 0 0 0 1.9 1.9h11.8a1.9 1.9 0 0 0 1.9-1.9v-5.1" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>'
+   +'<symbol id="i-sch-fup" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 12.4V7.6M5.9 9.6L8 7.5l2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
+   +'<symbol id="i-sch-fdn" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 7.6v4.8M5.9 10.4L8 12.5l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
    +'<symbol id="i-sch-xls" viewBox="0 0 16 16"><path d="M2.2 1.6h8.2l3.4 3.4v9.4H2.2zM10.2 1.8v3.4h3.4M5.2 8l3.6 4.4M8.8 8l-3.6 4.4" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>';
   document.body.appendChild(s); })();
 const schExpBtn=()=>`<button type="button" class="iexp" data-ed="export" title="내보내기 (Word · PDF)" aria-label="내보내기" aria-haspopup="menu">${svg('i-sch-exp',24,24)}</button>`;
@@ -8067,7 +8115,7 @@ async function schExpDocx(doc){ const C=SCH_DOC, media=[], rels=[]; let rid=10;
   xml+=`<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${C.text}"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[0],{b:1,color:'000000',sz:30})}${doc.label?`<w:r><w:tab/></w:r>${run(doc.label,{color:'000000',sz:18,b:1})}`:''}</w:p>`;
   if(T[1])xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[1],{b:1,color:'000000',sz:30})}</w:p>`;
   xml+=`<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="${C.ink}"/></w:pBdr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="140"/></w:pPr></w:p>${spacer(160)}`;
-  for(const s of doc.sections){ let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
+  for(const s of doc.sections){ if(s.brk)xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
     for(const b of s.blocks){ if(b.k==='p')buf+=body(b.runs,{ind:b.ind});
       else if(b.k==='tbl'){ flush(); xml+=spacer(40)+table(b)+spacer(120); }
       else if(b.k==='img'){ const im=await schExpImage(b.src); if(!im){ buf+=body([{t:'[이미지'+(b.name?': '+b.name:'')+']'}]); continue; } const id='rId'+(++rid), max=4572000, cx=Math.min(max,im.w*9525), cy=Math.round(cx*im.h/im.w);
@@ -8099,12 +8147,12 @@ function schExpHtml(doc,fontCss){ const e=schX, runs=rs=>rs.map(r=>{let t=e(r.t|
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{font:10pt/12.5pt Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 h1{font-size:15pt;line-height:19pt;font-weight:700;color:#000;margin:2pt 0 1pt;display:flex;justify-content:space-between;align-items:baseline;gap:8mm}h1 small{font-size:9pt;font-weight:700;white-space:nowrap}
 .rule{border-bottom:.75pt solid #222;margin:3pt 0 14pt}
-.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
+.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.sec.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
 p{margin:0;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}p.pre{font-family:Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:9pt;white-space:pre-wrap;text-align:left}p.im{margin:3pt 0}p.im img{max-width:100%;max-height:120mm}
 table.d{border-collapse:collapse;width:100%;margin:2pt 0 6pt;table-layout:fixed}table.d th,table.d td{border:.5pt solid #bfbfbf;padding:1.2pt 3.5pt;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}table.d th{background:#f2f2f2;font-weight:700;text-align:center}table.d tr{break-inside:avoid}
 @media screen{body{padding:14mm 12mm;max-width:210mm;margin:0 auto}}
 <\/style><\/head><body><h1><span>${e(doc.title[0])}</span>${doc.label?`<small>${e(doc.label)}</small>`:''}</h1>${doc.title[1]?`<h1><span>${e(doc.title[1])}</span></h1>`:''}<div class="rule"></div>
-${doc.sections.map(s=>`<section class="sec"><h2>${e(s.h)}</h2><div>${s.blocks.map(block).join('')}</div></section>`).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
+${doc.sections.map(s=>`<section class="sec${s.brk?' brk':''}"><h2>${e(s.h)}</h2><div>${s.blocks.map(block).join('')}</div></section>`).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
 function schExpPrint(doc){ let font=''; try{ for(const sh of document.styleSheets){ let rules; try{rules=sh.cssRules;}catch(e){continue;} for(const r of rules)if(r.type===5&&/Pretendard/.test(r.cssText)){font+=r.cssText;} if(font)break; } }catch(e){}
   const old=document.getElementById('sch-print'); if(old)old.remove(); const fr=document.createElement('iframe'); fr.id='sch-print'; fr.setAttribute('aria-hidden','true'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'; document.body.appendChild(fr);
   const d=fr.contentDocument; d.open(); d.write(schExpHtml(doc,font)); d.close(); toast('인쇄 창이 열립니다. 대상에서 ‘PDF로 저장’을 고르면 PDF 파일이 됩니다.',5200);
@@ -8438,7 +8486,7 @@ document.addEventListener('click',e=>{ if(!schPreview()||schCalm()||!e.target.cl
 // plan, so they stay; only where the workbook itself changed a value does the workbook win (schUpReconcile). Tasks keep their ids by
 // WBS, so their bodies, comments and files stay attached. One undo step takes the whole upload back.
 // The reading is in the Excel bundle (schedule/xlsx.ts readSheets); nothing is written before 적용.
-const SCHUP={pid:'',slots:{},plan:null,busy:false,fail:'',run:0,off:null};   // slots: 'master' and one per row of the window -> {name,size,file,reading,res,view,err}
+const SCHUP={pid:'',mode:'act',slots:{},plan:null,busy:false,fail:'',run:0,off:null};   // slots: 'master' and one per row of the window -> {name,size,file,reading,res,view,err}
 const SCH_UP_REC=[['procurementPackages','외부설비 조달대장'],['gates','승인게이트'],['commitmentReviews','보완·확약관리'],['assumptionsAndReferences','전제와참고자료'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS일정검토'],['offtakers','오프테이커 후보검토'],['sourceMappings','원자료대조']];
 const SCH_UP_EVK=['commitmentReviews','assumptionsAndReferences','responsibilityBoundaries','nvisScheduleReview','offtakers','sourceMappings'];
 // what the workbook says about a task, a relation, a package (everything else in an override is only known to the app: members, importance, address, reason)
@@ -8559,7 +8607,13 @@ const SCH_UP_SLOTS=[['gantt','액션 일정','마스터스케줄 시트 · 날�
 const SCH_UP_GCOLS=['name','start','finish','days','kind','progress','primary','secondary'];   // what the row "액션 일정" takes of a task
 const schUpFolder=(w,h)=>`<svg class="up-pic" width="${w}" height="${h}" viewBox="0 0 64 50" aria-hidden="true"><path d="M3 7a4 4 0 0 1 4-4h16.2a4 4 0 0 1 3 1.4L30 9h27a4 4 0 0 1 4 4v10H3z" fill="#a8a8a8"/><rect x="3" y="17" width="58" height="30" rx="4" fill="#2b2b2b"/></svg>`;
 // What one field uses of what was read: r (the part of the reading that counts, absent when nothing can be used), n (how many), notes, err.
+// (thirty-third round) the window is opened for one of two things: 'act' — one schedule file fills 액션 일정 · 리스트 · 관계도 together;
+// 'ext' — 외부설비 조달, 승인게이트, 근거 및 확약, a file each.
 function schUpView(slot,r){ if(slot==='master')return {r,notes:r.notes};
+  if(slot==='act'){ const mine=['단계별업무분장','마스터스케줄','업무연결','검토요약'], notes=r.notes.filter(n=>!n.sheet||mine.includes(n.sheet)), bad=notes.some(n=>n.level==='error');
+    if(!r.tasks&&!r.links)return {notes,err:bad?'':'이 파일에는 일정 시트(단계별업무분장 · 마스터스케줄 · 업무연결)가 없습니다.'};
+    const v={name:r.name,sha:r.sha,records:{},notes}; if(r.tasks)Object.assign(v,{tasks:r.tasks,tasksFrom:r.tasksFrom,tasksPartial:!!r.tasksPartial,taskCols:r.taskCols}); if(r.links)v.links=r.links; if(r.statusDate){v.statusDate=r.statusDate;v.summary=r.summary;}
+    return {r:v,notes,n:r.tasks?r.tasks.length:r.links.length}; }
   const def=SCH_UP_SLOTS.find(s=>s[0]===slot), sheets=def[3], notes=r.notes.filter(n=>!n.sheet||sheets.includes(n.sheet)), bad=notes.some(n=>n.level==='error'), v={name:r.name,sha:r.sha,records:{},notes};
   const none=what=>({notes,err:bad?'':`이 파일에는 ${what} 시트가 없습니다.`});
   if(slot==='gantt'||slot==='list'){ if(!r.tasks||!sheets.includes(r.tasksFrom))return none(slot==='gantt'?'마스터스케줄(또는 단계별업무분장)':'단계별업무분장');
@@ -8567,7 +8621,8 @@ function schUpView(slot,r){ if(slot==='master')return {r,notes:r.notes};
   if(slot==='links'){ if(!r.links)return none('업무연결'); v.links=r.links; return {r:v,notes,n:r.links.length}; }
   const kinds=slot==='proc'?['procurementPackages']:slot==='gates'?['gates']:SCH_UP_EVK; let n=0, any=false; for(const k of kinds)if(r.records[k]){v.records[k]=r.records[k];n+=r.records[k].length;any=true;}
   return any?{r:v,notes,n}:none(slot==='evid'?'근거 및 확약(보완·확약관리 등)':sheets[0]); }
-const schUpOrder=()=>['master'].concat(SCH_UP_SLOTS.map(s=>s[0]));
+const SCH_UP_EXT=['proc','gates','evid'];
+const schUpOrder=()=>SCHUP.mode==='ext'?SCH_UP_EXT:['act'];
 const schUpReads=()=>schUpOrder().map(k=>SCHUP.slots[k]).filter(f=>f&&f.view&&f.view.r).map(f=>f.view.r);
 const schUpReading=()=>Object.values(SCHUP.slots).some(f=>f&&f.reading);
 function schUpPlan(){ SCHUP.plan=null; SCHUP.fail=''; const reads=schUpReads(); if(!reads.length){ if(Object.values(SCHUP.slots).some(f=>f&&(f.res||f.err)))SCHUP.plan={none:true,warn:[],has:{}}; return; }
@@ -8578,7 +8633,7 @@ function schUpTagsHtml(r){ const tags=[]; if(r.tasks)tags.push([r.tasksPartial?'
   if(r.statusDate)tags.push(['기준일',schD(r.statusDate)]);
   return tags.length?`<span class="up-tags">${tags.map(t=>`<span>${esc(t[0])}<b>${esc(String(t[1]))}</b></span>`).join('')}</span>`:''; }
 function schUpNotesHtml(slot,f){ let h=''; const r=f.res, v=f.view;
-  if(slot==='master'&&r&&!schUpTagsHtml(r)&&!r.notes.some(n=>n.level==='error'))h+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
+  if((slot==='master'||slot==='act')&&r&&!schUpTagsHtml(r)&&!r.notes.some(n=>n.level==='error'))h+=`<div class="up-nt err">${r.found.length?'읽을 내용이 있는 시트가 없습니다. (계산 결과 시트만 들어 있습니다)':'가이드 엑셀의 시트를 찾지 못했습니다.'}${r.other.length?` 시트 이름: ${esc(r.other.slice(0,6).join(', '))}`:''}</div>`;
   for(const n of (v&&v.notes)||[])h+=`<div class="up-nt ${n.level==='error'?'err':''}">${n.sheet?`<b>${esc(n.sheet)}</b> `:''}${esc(n.text)}${n.level==='error'?' <i>이 시트는 반영하지 않습니다.</i>':''}</div>`;
   if(v&&v.err)h+=`<div class="up-nt err">${esc(v.err)}</div>`; if(f.err)h+=`<div class="up-nt err">${esc(f.err)}</div>`; return h; }
 function schUpResultHtml(P){ if(!P)return '';
@@ -8588,7 +8643,8 @@ function schUpResultHtml(P){ if(!P)return '';
   const row=(label,on,n,c,extra)=>`<div class="up-row ${on?'':'off'}"><span>${label}</span><b>${on?n+'건':''}</b><em>${on?txt(c)+(extra||''):'올리지 않음 · 그대로'}</em></div>`;
   const D=AIDCSchedule.dates, d=P.op0&&P.op1?D.diffDays(P.op1,P.op0):0;
   return `<div class="up-res"><h4>프로젝트에 반영되는 내용</h4>
-    ${row('액션 일정 · 리스트',P.has.tasks,P.n.tasks,P.c.tasks,P.partial?' (날짜·작업명만)':P.reordered&&!(P.c.tasks.add+P.c.tasks.chg+P.c.tasks.del)?' · 순서 바뀜':'')}${row('액션 관계도',P.has.links,P.n.links,P.c.links)}${row('외부설비 조달',P.has.proc,P.n.proc,P.c.proc)}${row('승인게이트',P.has.gates,P.n.gates,P.c.gates)}${row('근거 및 확약',P.has.evid,P.n.evid,P.c.evid)}
+    ${SCHUP.mode==='ext'?row('외부설비 조달',P.has.proc,P.n.proc,P.c.proc)+row('승인게이트',P.has.gates,P.n.gates,P.c.gates)+row('근거 및 확약',P.has.evid,P.n.evid,P.c.evid)
+      :row('액션 일정 · 리스트',P.has.tasks,P.n.tasks,P.c.tasks,P.partial?' (날짜·작업명만)':P.reordered&&!(P.c.tasks.add+P.c.tasks.chg+P.c.tasks.del)?' · 순서 바뀜':'')+row('액션 관계도',P.has.links,P.n.links,P.c.links)}
     ${P.when?`<div class="up-row"><span>기준일</span><b></b><em>${schD(P.when)}${P.has.date?'':' · 변화 없음'}</em></div>`:''}
     <div class="up-row op ${d>0?'late':d<0?'early':''}"><span>운영개시 예상</span><b></b><em>${P.op0?schD(P.op0):'미정'}${P.op1!==P.op0?` → ${P.op1?schD(P.op1):'미정'}`:''}${d?` (${d>0?'+':''}${d}일)`:P.op1===P.op0?' · 변화 없음':''}${P.moved?` · 예상일이 바뀌는 액션 ${P.moved}건`:''}</em></div>
     ${P.same?'<p class="up-say">지금 프로젝트에 들어 있는 내용과 같습니다. 바뀌는 것이 없습니다.</p>':''}
@@ -8600,21 +8656,23 @@ function schUpDraw(){ const box=$('#dlg.sch-up .box'); if(!box)return; const pid
   const rm=slot=>`<button class="rm" data-up="rm" data-slot="${slot}" title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button>`;
   const part=([slot,label,cap])=>{ const f=S0[slot], v=f&&f.view, ok=!!(v&&v.r), bad=!!f&&!f.reading&&!ok;
     return `<label class="up-part ${f?'has':''} ${bad?'bad':''}" data-slot="${slot}" tabindex="0">${inp(slot)}${schUpFolder(26,20)}<b>${label}</b>${f?`<span class="fn" title="${esc(f.name)}">${esc(f.name)}</span>${f.reading?'<span class="rd">읽는 중…</span>':ok?`<span class="cnt">${v.n}건</span>`:''}${rm(slot)}`:`<em>${esc(cap)}</em>`}</label>${f?schUpNotesHtml(slot,f):''}`; };
-  box.innerHTML=`<h3 class="up-ttl">엑셀 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 마스터 파일 하나로 올리거나, 아래 칸에 구역별로 따로 올립니다</p>
-    <label class="up-drop ${M?'has':''}" data-slot="master" tabindex="0">${inp('master')}${M?`<span class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(M.name)}">${esc(M.name)}</span><span class="sz">${fmtSize(M.size)}</span>${M.reading?'<span class="rd">읽는 중…</span>':''}${rm('master')}</span>${M.res?schUpTagsHtml(M.res):''}`
-      :`${schUpFolder(64,50)}<span>마스터 파일을 여기에 끌어다 놓거나 눌러서 선택</span>`}</label>${M?schUpNotesHtml('master',M):''}
-    <div class="up-div"><span>구역별로 따로 올리기</span></div>
-    <div class="up-parts">${SCH_UP_SLOTS.map(part).join('')}</div>
+  const A=S0.act, ext=SCHUP.mode==='ext';
+  box.innerHTML=ext?`<h3 class="up-ttl">외부설비 · 승인게이트 · 근거 및 확약 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 구역마다 따로 올립니다 · 처음 등록할 때와 업데이트할 때 모두 씁니다</p>
+    <div class="up-parts ext">${SCH_UP_SLOTS.filter(s=>SCH_UP_EXT.includes(s[0])).map(part).join('')}</div>`
+   :`<h3 class="up-ttl">액션 일정 업로드</h3><p class="up-sub">가이드 엑셀 양식(.xlsx) · 일정 파일 하나로 액션 일정 · 리스트 · 관계도를 함께 채웁니다 · 처음 등록할 때와 업데이트할 때 모두 씁니다</p>
+    <label class="up-drop ${A?'has':''}" data-slot="act" tabindex="0">${inp('act')}${A?`<span class="up-top">${svg('i-sch-xls',14,14)}<span class="nm" title="${esc(A.name)}">${esc(A.name)}</span><span class="sz">${fmtSize(A.size)}</span>${A.reading?'<span class="rd">읽는 중…</span>':''}${rm('act')}</span>${A.view&&A.view.r?schUpTagsHtml(A.view.r):''}`
+      :`${schUpFolder(64,50)}<span>일정 엑셀 파일을 여기에 끌어다 놓거나 눌러서 선택</span>`}</label>${A?schUpNotesHtml('act',A):''}`;
+  box.innerHTML+=`
     ${reading?'':schUpResultHtml(P)}${SCHUP.fail?`<p class="up-fail">${esc(SCHUP.fail)}</p>`:''}
     ${cur&&cur.name?`<p class="up-cur"><span>지금 반영된 엑셀 · ${esc(String(cur.name))} · ${cur.at?schD(String(cur.at).slice(0,10)):''}${cur.by?' · '+esc(userName(cur.by)):''}</span><button data-up="out" title="올린 엑셀을 빼고 올리기 전의 일정으로 돌아갑니다">올린 엑셀 빼기</button></p>`:''}
     <div class="bt"><button data-up="x">${Object.keys(S0).length?'취소':'닫기'}</button><button data-up="ok" class="pri" ${can?'':'disabled'}>${SCHUP.busy?'반영하는 중…':'적용'}</button></div>`;
   box.scrollTop=keep; }
-async function schUpAdd(slot,list){ const run=SCHUP.run; if(!list.length||SCHUP.busy||!schUpOrder().includes(slot))return; const f=list[0];
+async function schUpAdd(slot,list){ if(!schUpOrder().includes(slot))slot=schUpOrder()[0]; const run=SCHUP.run; if(!list.length||SCHUP.busy||!schUpOrder().includes(slot))return; const f=list[0];
   if(list.length>1)toast('한 칸에는 파일을 하나씩 올립니다. 첫 파일만 넣었습니다.',3200);
   SCHUP.slots[slot]=/\.xlsx$/i.test(f.name)?{name:f.name,size:f.size,file:f,reading:true}:{name:f.name,size:f.size,err:'엑셀(.xlsx) 파일만 올릴 수 있습니다.'};
   schUpPlan(); schUpDraw(); if(SCHUP.queue)return; SCHUP.queue=true;                         // one file after the other (reading a large workbook takes a few seconds)
   try{ for(;;){ const k=schUpOrder().find(q=>SCHUP.slots[q]&&SCHUP.slots[q].reading&&SCHUP.slots[q].file); if(!k||run!==SCHUP.run)break; const ent=SCHUP.slots[k];
-      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file,{tasks:k==='gantt'?'gantt':'list'}); ent.view=schUpView(k,ent.res); }catch(e){ ent.err=String(e&&e.message||e); }
+      try{ const X=await schXlsx(); ent.res=await X.readSheets(ent.file,{tasks:'list'}); ent.view=schUpView(k,ent.res); }catch(e){ ent.err=String(e&&e.message||e); }
       ent.reading=false; ent.file=null; if(run!==SCHUP.run)break; schUpPlan(); schUpDraw(); } }
   finally{ SCHUP.queue=false; } }
 async function schGzip(text){ const raw=new TextEncoder().encode(text); if(typeof CompressionStream==='undefined')return {bytes:raw,gz:false};
@@ -8641,7 +8699,7 @@ async function schUpApply(){ const pid=SCHUP.pid, run=SCHUP.run; if(SCHUP.busy||
 // tasks only the workbook had no longer show. One undo step, like the upload.
 function schUpTakeOut(pid){ const cur=(SCHED[pid]||{}).src; if(!cur)return; schUpClose();
   confirmDlg(`올린 엑셀(${cur.name||'이름 없음'})을 빼고 ${SCH_SOURCES[pid]?'처음의 기본 일정':'빈 일정'}으로 돌아갈까요? 엑셀에서 온 액션·관계·설비·승인게이트·근거가 화면에서 빠집니다. (뺀 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'빼기',pri:true,fn:()=>schSet(pid,'src',null,'올린 엑셀을 뺐습니다')},{t:'취소',fn:()=>{}}]); }
-function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
+function schUpOpen(pid,mode){ if(!schHas(pid)||$('#dlg'))return; SCHUP.mode=mode==='ext'?'ext':'act'; if(!schReady(pid)){toast(SCH.failed[pid]||'일정을 불러오는 중입니다. 잠시 뒤에 다시 눌러주세요.',3200);return;}
   closePop(); SCHUP.run++; SCHUP.pid=pid; SCHUP.slots={}; SCHUP.plan=null; SCHUP.busy=false; SCHUP.fail='';
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up'; d.innerHTML='<div class="box" role="dialog" aria-label="엑셀 업로드"></div>'; document.body.appendChild(d);
   const zoneOf=e=>e.target&&e.target.closest?e.target.closest('label[data-slot]'):null, clear=()=>d.querySelectorAll('label[data-slot].over').forEach(z=>z.classList.remove('over')), stop=e=>e.preventDefault();   // a file let go beside the window must not open in the browser
@@ -8651,11 +8709,13 @@ function schUpOpen(pid){ if(!schHas(pid)||$('#dlg'))return; if(!schReady(pid)){t
   d.addEventListener('click',e=>{ if(e.target===d){ if(!Object.keys(SCHUP.slots).length&&!SCHUP.busy)schUpClose(); return; } const b=e.target.closest('[data-up]'); if(!b||SCHUP.busy)return; const k=b.dataset.up;
     if(k==='x')schUpClose(); else if(k==='ok')schUpApply(); else if(k==='out')schUpTakeOut(pid); else if(k==='rm'){ e.preventDefault(); delete SCHUP.slots[b.dataset.slot]; schUpPlan(); schUpDraw(); } });
   d.addEventListener('change',e=>{ const i=e.target; if(i&&i.type==='file'){ const l=[...i.files], slot=i.dataset.slot; i.value=''; schUpAdd(slot,l); } });
-  d.addEventListener('dragover',e=>{ e.preventDefault(); clear(); const z=zoneOf(e)||d.querySelector('label[data-slot="master"]'); if(z)z.classList.add('over'); });
+  d.addEventListener('dragover',e=>{ e.preventDefault(); clear(); const z=zoneOf(e)||(SCHUP.mode==='act'?d.querySelector('label[data-slot="act"]'):null); if(z)z.classList.add('over'); });
   d.addEventListener('dragleave',e=>{ if(!e.relatedTarget||!d.contains(e.relatedTarget))clear(); });
-  d.addEventListener('drop',e=>{ e.preventDefault(); clear(); const z=zoneOf(e); schUpAdd(z?z.dataset.slot:'master',[...((e.dataTransfer&&e.dataTransfer.files)||[])]); });   // beside the rows: the master field
+  d.addEventListener('drop',e=>{ e.preventDefault(); clear(); const z=zoneOf(e); if(!z&&SCHUP.mode==='ext'){ toast('올릴 구역의 칸에 놓아 주세요.',2600); return; } schUpAdd(z?z.dataset.slot:'act',[...((e.dataTransfer&&e.dataTransfer.files)||[])]); });   // beside the field: the one field of the action window
   schUpDraw(); }
-document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-schup]'); if(!b)return; e.preventDefault(); schUpOpen(S.proj); });
+// the button beside a project's name is "개요 업로드" now (89-docread.js); the schedule's files are let go in their own sections
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-schup]'); if(!b)return; e.preventDefault(); schDocOpen(S.proj); });
+const schUpBtn=mode=>`<button class="sh-btn lib sch-xl sch-upb" data-sch="upload" data-k="${mode}" title="${mode==='ext'?'가이드 엑셀(.xlsx)로 외부설비 조달 · 승인게이트 · 근거 및 확약을 각각 올립니다':'일정 엑셀 파일(.xlsx) 하나로 액션 일정 · 리스트 · 관계도를 함께 채웁니다'}">${svg('i-sch-fup',12,12)}업로드</button>`;
 
 /* ---- schedule/ui/84-tables.js ---- */
 // Twenty-first round (owner, 2026-11-24): the meetings of a project and the projects of the main page can be seen as a table too
@@ -8715,7 +8775,6 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 
 /* ---------- projects of the main page ---------- */
 const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${searchBox('proj','프로젝트 검색')}</div>`;
-const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
 // (since the twenty-fourth round the table is the development review list itself: schRepTable in 88-report.js, all of it on one page)
 const schProjTable=()=>schRepTable();
 const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${schRepCount()}${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
@@ -8723,14 +8782,6 @@ function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$(
   if(body)body.innerHTML=schProjTable(); else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); S.car.proj=0; applyCarousel('proj'); } afterNav(); }
 // The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order, with the
 // columns of the development review list.
-async function schProjXlsx(){ toast('엑셀 파일을 만드는 중입니다…',20000);
-  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos();
-    const cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.grp?'구분: '+c.grp:'',c.st?'추진 단계: '+c.st:'',c.region?'위치: '+c.region:'',c.owner?'담당자: '+c.owner:'',c.focus?'집중 추진만':'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
-    const rows=[['NO.','구분','프로젝트','부제','위치','사업주체','대지면적(m²)','연면적(m²)','IT LOAD (수전용량)','추진 단계','집중 추진','최초자료일','기준일','비고','담당자','운영개시 예상']].concat(ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null;
-      return [nos[k]||'',r.grp,p.full||pname(p),r.sub,r.site,r.dev,r.area,r.gfa,r.load,r.stage,r.focus?'집중 추진':'',r.first,r.asof,r.memo,r.owner,(m&&m.res.operationDate)||'']; }));
-    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,12,30,36,16,30,16,16,30,12,10,14,12,44,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['목록 기준일',typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:''],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
-    schExpSave(`프로젝트 목록_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
-  catch(e){ console.error(e); toast('엑셀 파일을 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.',4200); } }
 // The menu of a column title of the two tables. Meetings: the conditions of schMtf (the pickers show them too); projects: the
 // section's own menus (schProjMenu: 프로젝트 = 정렬 · 구분 · 집중 추진, 위치, 추진 단계, 최초자료일 = 정렬).
 function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col); return; }
@@ -8747,7 +8798,6 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return;
   if(el=e.target.closest('[data-mtpick]')){ e.stopPropagation(); schMeetMenu(el,el.dataset.mtpick); return; }
   if(el=e.target.closest('[data-vcol]')){ e.stopPropagation(); const [k,col]=el.dataset.vcol.split(':'); schVColMenu(el,k,col); return; }
   if(el=e.target.closest('[data-mtchip]')){ e.stopPropagation(); delete schMtf()[el.dataset.mtchip]; S.mtPage=1; schMeetRedraw(); return; }
-  if(el=e.target.closest('[data-pjxl]')){ e.stopPropagation(); schProjXlsx(); return; }
   if(el=e.target.closest('[data-vpg]')){ e.stopPropagation(); const k=el.closest('.pager').dataset.vk, key=k==='meet'?'mtPage':'pjPage', v=el.dataset.vpg; let cur=S[key]||1;
     if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=1e9; else cur=+v||1; S[key]=cur; if(k==='meet')schMeetRedraw(); else schProjRedraw(); return; }
 },true);
@@ -8868,7 +8918,7 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
     +schRepDocs(pid,d,E);
   const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo?nil:''}${add('rows','+ 행')}</div>`)
     +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
-  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${!E?`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button><button class="sh-btn upx" data-projexp title="이 프로젝트의 지금 진행 상황을 보고서로 내보냅니다 (범위 · 요약형/풀버전 · PDF/Word/엑셀)">${svg('i-sch-fdn',13,13)}내보내기</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div></div>
     <div class="hr bt"></div></div>`; }
@@ -8937,7 +8987,6 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   if(el=T.closest('[data-repfocus]')){ if(!S.editProj)return; saveProjectHead(); h().focus=!h().focus; render(true); return; }
   if(el=T.closest('[data-docadd]')){ if(!S.editProj)return; schRepDocPick(); return; }
   if(el=T.closest('[data-docdel]')){ if(!S.editProj)return; saveProjectHead(); const a=schRepDocList(h()); a.splice(+el.dataset.docdel,1); h().docs=a; render(true); return; }
-  if(el=T.closest('[data-repio]')){ e.stopPropagation(); menuPop(el,[{t:'자료 파일 가져오기 (.json)',k:'in',fn:schRepPick},{t:'자료 파일로 내보내기 (.json)',k:'out',fn:schRepExport}],{cls:'sch-colmenu'}); return; }
 });
 
 /* ---------- a data file of the list: read ---------- */
@@ -8968,31 +9017,20 @@ function schRepApply(data,others){ const plan=schRepPlan(data), ids=[]; let made
   let gone=0; if(others)for(const k of plan.rest){ if(PROJECTS[k]){ trashProject(k); gone++; } }
   if(typeof data.asof==='string'&&data.asof.trim())META_FLAGS.repAsof=data.asof.trim().slice(0,20);
   return {made,upd,gone}; }
-// the file chooser, then a window that says what will happen before anything is changed
-function schRepPick(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json'; inp.style.display='none'; inp.dataset.repfile='1'; document.body.appendChild(inp);
-  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; inp.remove(); if(!f)return; let data=null; try{ data=JSON.parse(await f.text()); }catch(err){ data=null; }
-    if(!data||data.kind!==REP_KIND||!Array.isArray(data.projects)||!data.projects.length){ toast('개발검토 리스트 자료 파일이 아닙니다. "자료 파일로 내보내기"로 만든 .json 파일을 올려 주세요.',5200); return; }
-    schRepAsk(data,f.name); }); inp.click(); }
+// a window that says what will happen before anything is changed (a data file, or what a document was read as: 89-docread.js)
 function schRepAsk(data,fname){ closePop(); const old=$('#dlg'); if(old)old.remove(); const plan=schRepPlan(data), make=plan.rows.filter(r=>!r.k&&!r.back), upd=plan.rows.filter(r=>r.k||r.back);
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-repin'; const names=a=>a.map(r=>`<li>${esc(r.x.name)}${r.k&&norm(PROJECTS[r.k].full)!==norm(r.x.name)?` <span>← ${esc(PROJECTS[r.k].full)}</span>`:r.back?' <span>← 휴지통에서 되살림</span>':''}</li>`).join('');
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="자료 파일 가져오기"><div class="np-hd"><b>자료 파일 가져오기</b><span>${esc(fname||'')}${data.asof?` · 기준일 ${esc(String(data.asof))}`:''} · ${plan.rows.length}건</span></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="${data.noRest?'문서로 프로젝트 만들기':'자료 파일 가져오기'}"><div class="np-hd"><b>${data.noRest?'문서로 프로젝트 만들기':'자료 파일 가져오기'}</b><span>${esc(fname||'')}${data.asof?` · 기준일 ${esc(String(data.asof))}`:''} · ${plan.rows.length}건</span></div>
     <div class="rin">${make.length?`<div class="g"><b>새로 만들기 ${make.length}건</b><ul>${names(make)}</ul></div>`:''}${upd.length?`<div class="g"><b>덮어쓰기 ${upd.length}건</b><small>사업개요만 파일 내용으로 바뀝니다. 일정 · 액션 · 미팅 · 담당자 · 협력업체는 그대로 둡니다.</small><ul>${names(upd)}</ul></div>`:''}
-      ${plan.rest.length?`<div class="g"><b>파일에 없는 프로젝트 ${plan.rest.length}건</b><ul>${plan.rest.map(k=>`<li>${esc(PROJECTS[k].full)}</li>`).join('')}</ul><label class="ck"><input type="checkbox" id="rin-others" ${data.others==='trash'?'checked':''}> 이 프로젝트들을 휴지통으로 보내기 <em>(30일 안에 되살릴 수 있습니다)</em></label></div>`:''}</div>
+      ${plan.rest.length&&!data.noRest?`<div class="g"><b>파일에 없는 프로젝트 ${plan.rest.length}건</b><ul>${plan.rest.map(k=>`<li>${esc(PROJECTS[k].full)}</li>`).join('')}</ul><label class="ck"><input type="checkbox" id="rin-others" ${data.others==='trash'?'checked':''}> 이 프로젝트들을 휴지통으로 보내기 <em>(30일 안에 되살릴 수 있습니다)</em></label></div>`:''}</div>
     <div class="np-bt"><button data-rin="x">취소</button><button class="pri" data-rin="ok">가져오기</button></div></div>`;
   document.body.appendChild(d); const close=()=>d.remove();
   d.addEventListener('click',e=>{ e.stopPropagation(); const a=e.target.closest('[data-rin]'); if(e.target===d||(a&&a.dataset.rin==='x')){close();return;} if(!a)return;
     if(S.editProj){ toast('사업개요를 수정하는 중에는 가져올 수 없습니다. 먼저 저장하거나 취소해 주세요.',4600); return; }
     const others=!!(d.querySelector('#rin-others')||{}).checked, here=S.page==='project'?S.proj:'', r=schRepApply(data,others); close();
     if(here&&!PROJECTS[here])go('main'); else render(true);
-    toast(`자료를 가져왔습니다 · 새로 만들기 ${r.made}건 · 덮어쓰기 ${r.upd}건${r.gone?` · 휴지통 ${r.gone}건`:''}`,5200); });
+    toast(`${data.noRest?'문서 내용을 반영했습니다':'자료를 가져왔습니다'} · 새로 만들기 ${r.made}건 · 덮어쓰기 ${r.upd}건${r.gone?` · 휴지통 ${r.gone}건`:''}`,5200); });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} }); }
-// everything the list holds, in the shape it is read in (a file the same workspace, or another one, can take back)
-function schRepExport(){ const L=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean), ids=orderedProjects();
-  const projects=ids.map(k=>{ const p=PROJECTS[k], h={...headOf(k)}; return { id:k, name:p.full, grp:h.grp, focus:!!h.focus, sub:h.sub, stage:normStatus(p.status), owner:h.owner||p.owner||'', first:h.first, asof:h.asof,
-    list:{site:h.lsite,dev:h.ldev,area:h.larea,gfa:h.lgfa,load:h.lload,memo:h.memo}, kpi:h.kpi, fin:h.fin, finNote:h.finNote, ov:h.main, infra:L(h.infra), model:h.struct, stat:L(h.stat).length>1?L(h.stat):h.stat, rows:h.rows, plan:h.plan, risk:L(h.risk), src:L(h.src) }; });
-  const out={kind:REP_KIND,v:1,asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',exported:TODAY,projects};
-  schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.json`,new Blob([JSON.stringify(out,null,1)],{type:'application/json'})); toast(`자료 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
-
 /* ---------- the star of a card ---------- */
 // (before the page's own click handler, which would open the project the card stands for)
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-pstar]'); if(!el)return; e.stopPropagation(); e.preventDefault();
@@ -9011,6 +9049,211 @@ function schCalPillsFit(){ const box=$('.page.on .cal > .filters'), btn=box&&box
   if(more){ const line=open?pills:pills.filter(p=>p.offsetTop<=top0+2), last=line[line.length-1]; btn.style.right='auto'; btn.style.left=(last.offsetLeft+last.offsetWidth+SCH_CALPILL_GAP)+'px'; btn.style.top=last.offsetTop+'px'; } }
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-calpills]'); if(!el)return; e.stopPropagation(); S.calPillsOpen=!S.calPillsOpen; refreshSec('cal'); });
 
+/* ---- schedule/ui/89-docread.js ---- */
+// Thirty-third round (owner, 2026-11-24): a document — a PDF or an Excel file — fills the overview of a project.
+//   "가이드에 맞는 문서를 업로드하면 그걸 베이스로 프로젝트 개요를 생성 … 디자인 달라져도 내용이 같으면 감지해서"
+// The document is read by what it SAYS, not by where things stand: the titles of the review list's sheet (핵심 지표, 사업성 지표,
+// 사업 개요, 입지 및 전력 인프라, 사업 구조 및 수익 모델, 추진 현황 및 주요 특성, 주요 리스크 및 검토사항, 추진 일정, 출처) and the head of
+// its list (NO. · 프로젝트 · 위치 · 사업주체 …). What is read becomes the same data a data file holds (kind "aidc-dev-report"), so
+// making and updating projects is the one routine there was (schRepPlan / schRepApply in 88-report.js).
+//   - schDocRead(file): a PDF through pdf.js (Apache-2.0, /pdf/, fetched on demand; the text and where it stands on the page),
+//     an .xlsx through the Excel bundle (readCells: the cells as text), a .json data file as it is.
+//   - schDocToReport(doc): {kind, v, asof, projects:[…], found:{…}} or an error that says what is missing.
+// Nothing here calls a service: reading is rules. A scanned PDF (pictures of pages), a free text without these titles, or
+// "write me the summary" would need a language model behind the Worker; schDocToReport is the one place such a reader would stand.
+let schPdfLoading=null;
+function schPdfLib(){ return schPdfLoading||(schPdfLoading=import('/pdf/pdf.min.mjs?v=6.5.438').then(m=>{ m.GlobalWorkerOptions.workerSrc='/pdf/pdf.worker.min.mjs?v=6.5.438'; return m; }).catch(e=>{ schPdfLoading=null; throw new Error('PDF를 읽는 기능을 불러오지 못했습니다. 연결을 확인하고 다시 시도해주세요.'); })); }
+// a few signs come out of some PDFs as other characters (a font without a proper table): the ones the review list's PDF has
+const SCH_DOC_FIX=[[/㏙/g,'('],[/㏚/g,')'],[/㒯/g,'㈜'],[/㒎/g,'m²'],[/㚕/g,'~'],[/㛳/g,'→'],[/㎿/g,'-'],[/㚠/g,'%'],[/㙌/g,'$'],[/㚉/g,'+'],[/㚋/g,'×'],[/㏇/g,'_'],[/㖈/g,'&'],[/㚒/g,'≤'],[/㚓/g,'≥'],[/㑄/g,"'"],[/㖞/g,'°C'],[/㖐/g,'°'],[/㏝/g,'['],[/㏞/g,']'],[/㏧/g,'「'],[/㏨/g,'」'],[/㜹/g,''],[/ /g,' ']];
+const schDocFix=s=>{ s=String(s==null?'':s); for(const [a,b] of SCH_DOC_FIX)s=s.replace(a,b); return s; };
+const schDocSq=s=>String(s==null?'':s).replace(/\s+/g,'');
+// the titles of a sheet -> the field they fill (squashed; a few other spellings)
+const SCH_DOC_HEADS={'핵심지표':'kpi','사업성지표':'fin','사업개요':'ov','사업개요표':'rows','입지및전력인프라':'infra','입지및전력':'infra','사업구조및수익모델':'model','사업구조':'model','추진현황및주요특성':'stat','추진현황':'stat',
+  '주요리스크및검토사항':'risk','주요리스크':'risk','리스크및검토사항':'risk','추진일정':'plan','출처':'src'};
+const SCH_DOC_STATES=['완료','진행','예정','목표'];
+const SCH_DOCR_MAX=25*1024*1024;
+
+async function schDocRead(file){ const name=file.name||'', ext=((name.match(/\.([a-z0-9]+)$/i)||[])[1]||'').toLowerCase();
+  if(file.size>SCH_DOCR_MAX)throw new Error('25MB 이하의 파일을 선택해주세요.');
+  if(ext==='pdf'||file.type==='application/pdf'){ const lib=await schPdfLib(), data=new Uint8Array(await file.arrayBuffer()); let doc;
+    try{ doc=await lib.getDocument({data,cMapUrl:'/pdf/cmaps/',cMapPacked:true,isEvalSupported:false}).promise; }catch(e){ throw new Error('PDF를 열지 못했습니다. 암호가 걸렸거나 손상된 파일일 수 있습니다.'); }
+    const pages=[]; for(let n=1;n<=Math.min(doc.numPages,150);n++){ const pg=await doc.getPage(n), vp=pg.getViewport({scale:1}), tc=await pg.getTextContent();
+      pages.push({w:vp.width,h:vp.height,items:tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({s:schDocFix(i.str).trim(),x:i.transform[4],y:vp.height-i.transform[5],h:i.height||Math.abs(i.transform[3])||0,w:i.width||0})).filter(i=>i.s)}); }
+    try{ doc.destroy(); }catch(e){}
+    return {name,kind:'pdf',pages}; }
+  if(ext==='xlsx'){ const X=await schXlsx(), r=await X.readCells(file); return {name,kind:'xlsx',sheets:r.sheets.map(sh=>({name:sh.name,rows:sh.rows.map(r=>r.map(schDocFix))}))}; }
+  if(ext==='json'){ let data=null; try{ data=JSON.parse(await file.text()); }catch(e){ data=null; } return {name,kind:'json',data}; }
+  throw new Error('PDF 또는 엑셀(.xlsx) 파일만 올릴 수 있습니다.'); }
+
+/* ---------- a page of a PDF ---------- */
+// items that stand on one line, left to right, as one text: a gap is a space, pieces that touch are one word
+function schDocJoin(items){ const a=[...items].sort((p,q)=>p.x-q.x); let out=''; a.forEach((it,i)=>{ if(i){ const pv=a[i-1], gap=it.x-(pv.x+pv.w); if(gap>Math.max(1,(it.h||8)*.2)&&!/^[,.:;)\]%]/.test(it.s)&&!/[(\[]$/.test(out))out+=' '; } out+=it.s; }); return out.replace(/\s+/g,' ').trim(); }
+const schDocLines=items=>{ const a=[...items].sort((p,q)=>p.y-q.y||p.x-q.x), lines=[]; for(const it of a){ const L=lines[lines.length-1]; if(L&&Math.abs(L.y-it.y)<=Math.max(3,(it.h||8)*.38))L.it.push(it); else lines.push({y:it.y,it:[it]}); } for(const L of lines)L.it.sort((p,q)=>p.x-q.x); return lines; };
+// items in several lines that belong to one cell, as one text
+const schDocCell=items=>schDocLines(items).map(L=>schDocJoin(L.it)).join(' ').replace(/\s+/g,' ').replace(/\( /g,'(').replace(/ \)/g,')').trim();
+// the list of the first pages: every table that has the list's head on this page -> rows
+function schDocPdfList(pg){ const rows=[], lines=schDocLines(pg.items), heads=lines.filter(L=>{ const t=L.it.map(i=>schDocSq(i.s)); return t.includes('프로젝트')&&(t.includes('위치')||t.includes('사업주체'))&&t.some(x=>/^NO\.?$/i.test(x)); });
+  if(!heads.length)return rows;
+  const grpOf=s=>/^SmallAIDC/i.test(schDocSq(s))?'Small AIDC':/^AIDC프로젝트/i.test(schDocSq(s))?'AIDC':null;
+  heads.forEach((H,hi)=>{ const y0=H.y+2, nextHead=heads[hi+1], cols=H.it.map(i=>({k:schDocSq(i.s),c:i.x+i.w/2,min:Infinity}));
+    // where the table ends: the next head (less the title of its group above it), a note that starts with "*", or the page's foot
+    let y1=pg.h; for(const L of lines){ if(L.y<=y0)continue; if(nextHead&&L.y>=nextHead.y-2){y1=Math.min(y1,nextHead.y-2);break;} if(grpOf(schDocJoin(L.it))!==null&&L.it.length<=2){y1=Math.min(y1,L.y-2);break;} if(/^\*/.test(L.it[0].s)){y1=Math.min(y1,L.y-2);break;} }
+    let grp=''; for(const L of lines){ if(L.y>=H.y-1)break; const g=grpOf(schDocJoin(L.it)); if(g!==null&&H.y-L.y<60)grp=g; }
+    const raw=pg.items.filter(i=>i.y>y0&&i.y<y1), no=cols.findIndex(c=>/^NO\.?$/i.test(c.k)); if(no<0)return;
+    const near=x=>{ let b=0; cols.forEach((c,i)=>{ if(Math.abs(c.c-x)<Math.abs(cols[b].c-x))b=i; }); return b; };
+    // a row is where a number stands under "NO."; what is further than a row's height below the last number is not the table's (the page's foot)
+    const anchors=raw.filter(i=>near(i.x+i.w/2)===no&&/^\d{1,3}$/.test(i.s)).sort((p,q)=>p.y-q.y); if(!anchors.length)return;
+    const cells=raw.filter(i=>i.y<=anchors[anchors.length-1].y+34);
+    for(const it of cells){ const c=cols[near(it.x+it.w/2)]; c.min=Math.min(c.min,it.x); }
+    // a column begins where its leftmost cell begins (a column that is written from the left reaches under the head before it)
+    const bound=cols.map((c,i)=>i?Math.min((cols[i-1].c+c.c)/2,c.min-2):-Infinity), colOf=x=>{ let b=0; bound.forEach((v,i)=>{ if(x>=v)b=i; }); return b; };
+    const R=anchors.map(a=>({y:a.y,c:cols.map(()=>[])}));
+    for(const it of cells){ let b=0; R.forEach((r,i)=>{ if(Math.abs(r.y-it.y)<Math.abs(R[b].y-it.y))b=i; }); if(Math.abs(R[b].y-it.y)>34)continue; R[b].c[colOf(it.x)].push(it); }
+    for(const r of R){ const v={}; cols.forEach((c,i)=>{ v[c.k]=schDocCell(r.c[i]); }); const g=k=>{ const key=Object.keys(v).find(x=>x.startsWith(k)); return key?v[key]:''; };
+      const name=g('프로젝트'); if(!name)continue;
+      rows.push({name,grp,stage:schDocSq(g('추진단계')),first:g('최초자료일'),list:{site:g('위치'),dev:g('사업주체'),area:g('대지면적'),gfa:g('연면적'),load:g('ITLOAD'),memo:g('비고')}}); } });
+  return rows; }
+// one page that is the sheet of a project -> an entry (or null when the page has none of the sheet's titles)
+function schDocPdfSheet(pg){ const heads=pg.items.filter(i=>SCH_DOC_HEADS[schDocSq(i.s)]&&i.s.length<16); if(heads.length<3)return null;
+  // columns: where the titles stand (titles less than 40 apart are one column)
+  const xs=[...new Set(heads.map(h=>Math.round(h.x)))].sort((a,b)=>a-b), cl=[]; for(const x of xs){ const c=cl[cl.length-1]; if(c&&x-c.max<=40)c.max=x; else cl.push({min:x,max:x}); }
+  const bound=cl.map((c,i)=>i?c.min-12:-Infinity), colOf=x=>{ let b=0; bound.forEach((v,i)=>{ if(x>=v)b=i; }); return b; };
+  const top=Math.min(...heads.map(h=>h.y)), over=pg.items.filter(i=>i.y<top-4), foot=pg.h-24;
+  const blocks=[]; cl.forEach((c,ci)=>{ const mine=pg.items.filter(i=>i.y>=top-4&&i.y<foot&&colOf(i.x)===ci); let cur=null;
+    for(const L of schDocLines(mine)){ const h=L.it.find(i=>heads.includes(i));
+      if(h){ cur={k:SCH_DOC_HEADS[schDocSq(h.s)],x:h.x,size:h.h,items:L.it.filter(i=>i!==h&&i.x>h.x)}; blocks.push(cur); }
+      else if(cur)cur.items.push(...L.it); } });
+  const e={name:'',sub:'',stage:'',first:'',asof:'',focus:false,kpi:[],fin:[],finNote:'',ov:'',infra:[],model:'',stat:'',rows:[],plan:[],risk:[],src:[]};
+  // the head of the page: the largest words are the name, the smaller ones beside it the sub title; a stage; two dates; 집중 추진
+  if(over.length){ const big=[...over].sort((a,b)=>b.h-a.h)[0]; if(big&&big.h>=12){ const line=over.filter(i=>Math.abs(i.y-big.y)<=8); e.name=schDocJoin(line.filter(i=>i.h>=big.h*.92));
+      e.sub=schDocJoin(line.filter(i=>i.h<big.h*.92&&i.x>big.x&&!PSTATUS[schDocSq(i.s)])); const st=over.find(i=>PSTATUS[schDocSq(i.s)]); if(st)e.stage=schDocSq(st.s); }
+    const flat=schDocSq(over.filter(i=>!big||Math.abs(i.y-big.y)>8).map(i=>i.s).join('')), d=/(\d{4}\.\d{1,2}(?:\.\d{1,2})?)/;
+    const f=flat.match(new RegExp('최초자료일?:?'+d.source)), a=flat.match(new RegExp('기준일:?'+d.source)); if(f)e.first=f[1]; if(a)e.asof=a[1]; e.focus=/집중추진/.test(flat); }
+  const text=(items,list)=>{ const out=[]; let cur=null; for(const L of schDocLines(items)){ const first=L.it[0].s, bul=/^[•·▪■◦\-–]$/.test(first)||/^[•▪■◦]\s*\S/.test(first), t=schDocJoin(bul&&/^[•·▪■◦\-–]$/.test(first)?L.it.slice(1):L.it).replace(/^[•▪■◦]\s*/,'');
+      if(!t)continue; if(bul||cur===null){ cur=t; out.push(cur); } else { cur=out[out.length-1]=(out[out.length-1]+' '+t).replace(/\s+/g,' '); } }
+    return list?out:out.join(out.length>1&&list!==false?'\n':' '); };
+  const tiles=(items,key)=>{ const all=schDocLines(items).map(l=>({h:Math.max(...l.it.map(i=>i.h)),t:schDocJoin(l.it)})).filter(l=>l.t), cnt={}, out=[]; let note='';
+    // a note ("* …") ends the block: it and the lines after it are the note
+    const ni=all.findIndex(l=>/^\*/.test(l.t)), L=ni<0?all:all.slice(0,ni); if(ni>=0)note=all.slice(ni).map(l=>l.t).join(' ');
+    // a tile is a figure in large type with its caption below in small type: the size most lines have (the smaller on a tie) is the caption's
+    for(const l of L){ const h=Math.round(l.h); cnt[h]=(cnt[h]||0)+1; }
+    const med=+Object.keys(cnt).sort((p,q)=>cnt[q]-cnt[p]||p-q)[0]||8;
+    for(const l of L){ if(l.h>=med*1.3)out.push([l.t,'']); else if(out.length)out[out.length-1][1]=(out[out.length-1][1]+' '+l.t).trim(); }
+    if(note&&key==='fin')e.finNote=note; return out; };
+  const table=items=>{ const body=items.filter(i=>!['구분','내용'].includes(schDocSq(i.s))||i.h<1), lx=Math.min(...body.map(i=>i.x)), labels=body.filter(i=>i.x<=lx+6).sort((a,b)=>a.y-b.y), vals=body.filter(i=>i.x>lx+6); if(!labels.length)return [];
+      // labels that stand right under each other with nothing between them are one label in two lines
+      const rows=[]; for(const l of labels){ const p=rows[rows.length-1]; if(p&&l.y-p.y1<=Math.max(11,l.h*1.35)&&!vals.some(v=>v.y>p.y1+1&&v.y<l.y-1)&&p.lone){ p.l.push(l); p.y1=l.y; p.y=(p.y0+p.y1)/2; } else rows.push({l:[l],y:l.y,y0:l.y,y1:l.y,v:[],lone:false}); }
+      for(const v of vals){ let b=0; rows.forEach((r,i)=>{ if(Math.abs(r.y-v.y)<Math.abs(rows[b].y-v.y))b=i; }); rows[b].v.push(v); }
+      return rows.map(r=>[schDocCell(r.l),schDocCell(r.v)]).filter(r=>r[0]); };
+  const plan=items=>{ const body=items.filter(i=>!['시기','내용','상태'].includes(schDocSq(i.s))); if(!body.length)return [];
+      // three columns: what happens is written from one left edge (the edge most lines share); the time stands before it, the state far behind it
+      const cnt={}; for(const i of body){ const x=Math.round(i.x/2)*2; cnt[x]=(cnt[x]||0)+1; } const lx=Math.min(...body.map(i=>i.x));
+      const wx=+Object.keys(cnt).filter(x=>+x>lx+18).sort((p,q)=>cnt[q]-cnt[p]||p-q)[0]||lx+40;
+      const whens=body.filter(i=>i.x<wx-4).sort((p,q)=>p.y-q.y), rest=body.filter(i=>i.x>=wx-4), rows=[];
+      const open=t=>/[\/~(,]$/.test(t)||(t.match(/\(/g)||[]).length>(t.match(/\)/g)||[]).length;   // "확인 필요 (2025.01 /" goes on in the next line
+      for(const w of whens){ const p=rows[rows.length-1]; if(p&&Math.abs(w.y-p.y1)<=3){ p.w.push(w); continue; }
+        if(p&&w.y-p.y1<=Math.max(12,w.h*1.5)&&(open(schDocCell(p.w))||/^[(\/~]/.test(w.s))){ p.w.push(w); p.y1=w.y; p.y=(p.y0+p.y1)/2; } else rows.push({w:[w],y:w.y,y0:w.y,y1:w.y,v:[],s:''}); }
+      if(!rows.length)return [];
+      for(const v of rest){ let b=0; rows.forEach((r,i)=>{ if(Math.abs(r.y-v.y)<Math.abs(rows[b].y-v.y))b=i; }); if(SCH_DOC_STATES.includes(schDocSq(v.s))&&v.x>wx+60)rows[b].s=schDocSq(v.s); else rows[b].v.push(v); }
+      return rows.map(r=>[schDocCell(r.w),schDocCell(r.v),r.s||'예정']).filter(r=>r[0]||r[1]); };
+  for(const b of blocks){ if(!b.items.length&&b.k!=='src')continue;
+    if(b.k==='kpi'||b.k==='fin'){ const t=tiles(b.items,b.k); if(t.length)e[b.k]=t; }
+    else if(b.k==='ov'){ if(b.items.some(i=>schDocSq(i.s)==='구분')&&b.items.some(i=>schDocSq(i.s)==='내용')||b.k==='rows'){ const r=table(b.items); if(r.length)e.rows=r; } else if(!e.ov)e.ov=text(b.items,false); else { const r=table(b.items); if(r.length&&!e.rows.length)e.rows=r; } }
+    else if(b.k==='rows'){ const r=table(b.items); if(r.length)e.rows=r; }
+    else if(b.k==='plan'){ const r=plan(b.items); if(r.length)e.plan=r; }
+    else if(b.k==='src'){ const t=text(b.items,false); e.src=t.split(/\s+\/\s+/).map(x=>x.trim()).filter(Boolean); }
+    else if(b.k==='model')e.model=text(b.items,false);
+    else if(b.k==='stat'){ const t=text(b.items,true); e.stat=t.length>1?t:t.join(' '); }
+    else e[b.k]=text(b.items,true); }
+  return e; }
+
+/* ---------- a sheet of an Excel file ---------- */
+const SCH_DOC_META={'프로젝트':'name','프로젝트명':'name','사업명':'name','부제':'sub','구분':'grp','추진단계':'stage','집중추진':'focus','최초자료일':'first','기준일':'asof','비고':'memo','담당자':'owner',
+  '위치(목록)':'site','사업주체(목록)':'dev','대지면적(목록)':'area','연면적(목록)':'gfa','ITLOAD(목록)':'load'};
+const schDocYes=v=>{ const s=schDocSq(v).toLowerCase(); return !!s&&!['-','x','n','no','false','아니오','아님','0'].includes(s); };
+// a table that has the list's head -> rows (as from a PDF)
+function schDocXlsList(rows){ const out=[]; let hr=-1; for(let r=0;r<Math.min(rows.length,40);r++){ const t=rows[r].map(schDocSq); if(t.some(x=>['프로젝트','프로젝트명','사업명'].includes(x))&&t.some(x=>['위치','사업주체','추진단계'].includes(x))){hr=r;break;} } if(hr<0)return out;
+  const H=rows[hr].map(schDocSq), col=(...ks)=>H.findIndex(h=>ks.some(k=>h===k||h.startsWith(k))), C={name:col('프로젝트','사업명'),grp:col('구분'),sub:col('부제'),site:col('위치'),dev:col('사업주체'),area:col('대지면적'),gfa:col('연면적'),load:col('ITLOAD'),stage:col('추진단계'),focus:col('집중추진'),first:col('최초자료일'),asof:col('기준일'),memo:col('비고'),owner:col('담당자')};
+  let grp=''; for(let r=hr+1;r<rows.length;r++){ const g=i=>i>=0?String(rows[r][i]||'').trim():'', name=g(C.name), filled=rows[r].filter(x=>String(x||'').trim());
+    if(filled.length===1&&!name){ const s=schDocSq(filled[0]); grp=/^SmallAIDC/i.test(s)?'Small AIDC':/^AIDC/i.test(s)?'AIDC':grp; continue; }
+    if(!name)continue;
+    out.push({name,grp:REP_GRPS.includes(g(C.grp))?g(C.grp):grp,sub:g(C.sub),stage:schDocSq(g(C.stage)),focus:C.focus>=0?schDocYes(g(C.focus)):undefined,first:g(C.first),asof:g(C.asof),owner:g(C.owner),list:{site:g(C.site),dev:g(C.dev),area:g(C.area),gfa:g(C.gfa),load:g(C.load),memo:g(C.memo)}}); }
+  return out; }
+// a sheet that is written downwards: "label | value" lines, then the sheet's titles with their lines below
+function schDocXlsSheet(sh){ const e={name:'',sub:'',grp:'',stage:'',first:'',asof:'',owner:'',focus:undefined,list:{},kpi:[],fin:[],finNote:'',ov:'',infra:[],model:'',stat:'',rows:[],plan:[],risk:[],src:[]}; let cur='', seen=0; const ovL=[], modL=[], statL=[];
+  for(const row of sh.rows){ const c=row.map(x=>String(x==null?'':x).trim()), f=c.filter(Boolean); if(!f.length)continue; const k0=schDocSq(f[0]);
+    if(f.length===1&&SCH_DOC_HEADS[k0]){ cur=SCH_DOC_HEADS[k0]; seen++; continue; }
+    if(!cur||SCH_DOC_META[k0]&&f.length<=2&&cur===''){ const m=SCH_DOC_META[k0]; if(m){ const v=f[1]||''; if(m==='focus')e.focus=schDocYes(v); else if(['site','dev','area','gfa','load'].includes(m))e.list[m]=v; else if(m==='memo')e.list.memo=v; else if(m==='stage')e.stage=schDocSq(v); else e[m]=v; } continue; }
+    if(cur==='kpi'||cur==='fin'){ if(/^\*/.test(f[0])){ if(cur==='fin')e.finNote=f.join(' '); } else if(!(k0==='값'||k0==='지표'))e[cur].push([f[0],f[1]||'']); }
+    else if(cur==='rows'){ if(!(k0==='구분'&&schDocSq(f[1])==='내용'))e.rows.push([f[0],f.slice(1).join(' ')]); }
+    else if(cur==='plan'){ if(!(k0==='시기'&&schDocSq(f[1])==='내용')){ const st=f.find(x=>SCH_DOC_STATES.includes(schDocSq(x))); e.plan.push([f[0],f.slice(1).filter(x=>x!==st).join(' '),st?schDocSq(st):'예정']); } }
+    else if(cur==='ov')ovL.push(f.join(' ')); else if(cur==='model')modL.push(f.join(' ')); else if(cur==='stat')statL.push(f.join(' '));
+    else if(Array.isArray(e[cur]))e[cur].push(f.join(' ').replace(/^[•▪■◦\-–]\s*/,'')); }
+  e.ov=ovL.join(' '); e.model=modL.join(' '); e.stat=statL.length>1?statL:statL.join(' ');
+  if(!e.name&&seen>=2)e.name=sh.name; return seen>=2||e.name&&(e.kpi.length||e.rows.length)?e:null; }
+
+/* ---------- a document -> the data of the list ---------- */
+function schDocToReport(doc){ if(doc.kind==='json'){ const d=doc.data; if(!d||d.kind!==REP_KIND||!Array.isArray(d.projects)||!d.projects.length)return {error:'개발검토 리스트 자료 파일이 아닙니다.'}; return Object.assign({},d,{found:{projects:d.projects.length}}); }
+  const list=[], sheets=[]; let asof='';
+  if(doc.kind==='pdf'){ let text=0; for(const pg of doc.pages){ text+=pg.items.length; const rows=schDocPdfList(pg); if(rows.length){ list.push(...rows); const flat=schDocSq(pg.items.filter(i=>i.y<60).map(i=>i.s).join('')), a=flat.match(/기준일:?(\d{4}\.\d{1,2}\.\d{1,2})/); if(a&&!asof)asof=a[1]; continue; } const e=schDocPdfSheet(pg); if(e&&e.name)sheets.push(e); }
+    if(!text)return {error:'이 PDF에는 글자가 없습니다 (스캔한 그림으로 보입니다). 글자를 선택할 수 있는 PDF나 엑셀 파일을 올려주세요.'}; }
+  else for(const sh of doc.sheets){ const rows=schDocXlsList(sh.rows); if(rows.length){ list.push(...rows); continue; } const e=schDocXlsSheet(sh); if(e&&e.name)sheets.push(e); }
+  if(!list.length&&!sheets.length)return {error:'문서에서 프로젝트 개요를 찾지 못했습니다. 제목(핵심 지표 · 사업 개요 · 추진 일정 등)이나 목록 표의 머리글(NO. · 프로젝트 · 위치 …)이 그대로 있는 문서여야 합니다.'};
+  // one entry per project: the list's row and the project's own sheet, found by the name
+  const by=new Map(), key=n=>norm(n).replace(/\s+/g,''), order=[];
+  for(const r of list){ const k=key(r.name); if(!by.has(k)){ by.set(k,{name:r.name.replace(/\s+/g,' ').trim()}); order.push(k); } const t=by.get(k); Object.assign(t,{grp:r.grp||t.grp||'',stage:r.stage||t.stage||'',first:r.first||t.first||'',list:Object.assign({},t.list,r.list)}); if(r.sub)t.sub=r.sub; if(r.asof)t.asof=r.asof; if(r.owner)t.owner=r.owner; if(r.focus!==undefined)t.focus=r.focus; }
+  for(const s of sheets){ const k=key(s.name); if(!by.has(k)){ by.set(k,{name:s.name.replace(/\s+/g,' ').trim()}); order.push(k); } const t=by.get(k), l=Object.assign({},t.list); for(const [a,b] of Object.entries(s.list||{}))if(b)l[a]=b;
+    for(const f of ['sub','asof','owner','finNote','ov','model'])if(s[f])t[f]=s[f]; if(s.first&&!t.first)t.first=s.first; if(s.grp&&REP_GRPS.includes(s.grp))t.grp=s.grp; if(s.stage)t.stage=s.stage; if(s.focus!==undefined)t.focus=!!s.focus||!!t.focus; t.list=l;   // (최초자료일: the list's own cell first — it may say "수신")
+    for(const f of ['kpi','fin','rows','plan','infra','risk','src'])if(s[f]&&s[f].length)t[f]=s[f]; if(s.stat&&s.stat.length)t.stat=s.stat; t.sheet=true; }
+  const projects=order.map(k=>by.get(k)).map(t=>Object.assign({grp:'',focus:false,sub:'',stage:'',first:'',asof:'',list:{},kpi:[],fin:[],finNote:'',ov:'',infra:[],model:'',stat:'',rows:[],plan:[],risk:[],src:[]},t,{stage:PSTATUS[t.stage]?t.stage:''}));
+  return {kind:REP_KIND,v:1,asof,projects,noRest:true,found:{projects:projects.length,list:list.length,sheets:sheets.length}}; }
+// what one entry holds, in a few words (for the windows)
+function schDocSays(p){ const a=[]; if(p.kpi&&p.kpi.length)a.push(`핵심 지표 ${p.kpi.length}`); if(p.fin&&p.fin.length)a.push(`사업성 지표 ${p.fin.length}`); const tx=['ov','infra','model','stat','risk'].filter(k=>p[k]&&p[k].length).length; if(tx)a.push(`본문 ${tx}개 항목`);
+  if(p.rows&&p.rows.length)a.push(`개요 표 ${p.rows.length}행`); if(p.plan&&p.plan.length)a.push(`추진 일정 ${p.plan.length}건`); const l=p.list||{}, n=['site','dev','area','gfa','load','memo'].filter(k=>l[k]).length; if(n)a.push(`목록 값 ${n}칸`); return a.join(' · ')||'이름만'; }
+
+/* ---------- the field a file is let go on (the look of the Excel upload window) ---------- */
+// One field: {file, reading, doc, rep, err}. host is the element the field is drawn in; change() is called whenever it changed.
+function schDocField(host,state,change,hint){ const draw=()=>{ const f=state.file, r=state.rep;
+    host.innerHTML=`<label class="up-drop ${f?'has':''} ${state.err?'bad':''}" data-docdrop tabindex="0"><input type="file" data-docfile accept=".pdf,.xlsx,.json,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>${f?`<span class="up-top">${svg('i-sch-fup',14,14)}<span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span>${state.reading?'<span class="rd">읽는 중…</span>':''}<button type="button" class="rm" data-docrm title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button></span>${r&&!r.error?`<span class="up-tags"><span>프로젝트<b>${r.projects.length}</b></span>${r.projects.length===1?`<span>${esc(schDocSays(r.projects[0]))}</span>`:''}</span>`:''}`
+      :`${schUpFolder(64,50)}<span>${esc(hint||'PDF 또는 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택')}</span>`}</label>${state.err?`<div class="up-nt err">${esc(state.err)}</div>`:''}`; };
+  const take=async f=>{ if(!f)return; const run=state.run=(state.run||0)+1; Object.assign(state,{file:f,reading:true,doc:null,rep:null,err:''}); draw(); change();
+    try{ const doc=await schDocRead(f); if(state.run!==run)return; const rep=schDocToReport(doc); state.doc=doc; if(rep.error){ state.err=rep.error; state.rep=null; } else state.rep=rep; }
+    catch(e){ if(state.run!==run)return; state.err=String(e&&e.message||e); }
+    state.reading=false; draw(); change(); };
+  host.addEventListener('change',e=>{ const t=e.target; if(t&&t.matches&&t.matches('[data-docfile]')){ const f=t.files&&t.files[0]; t.value=''; take(f); } });
+  host.addEventListener('click',e=>{ const x=e.target.closest&&e.target.closest('[data-docrm]'); if(!x)return; e.preventDefault(); e.stopPropagation(); state.run=(state.run||0)+1; Object.assign(state,{file:null,reading:false,doc:null,rep:null,err:''}); draw(); change(); });
+  host.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target&&e.target.matches&&e.target.matches('[data-docdrop]')){ e.preventDefault(); e.target.click(); } });
+  const over=on=>{ const z=host.querySelector('[data-docdrop]'); if(z)z.classList.toggle('over',on); };
+  host.addEventListener('dragover',e=>{ e.preventDefault(); over(true); }); host.addEventListener('dragleave',()=>over(false));
+  host.addEventListener('drop',e=>{ e.preventDefault(); over(false); const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; take(f); });
+  draw(); return {draw,take}; }
+
+/* ---------- "개요 업로드" on a project page: the document fills this project's overview ---------- */
+// What the document has goes in; what it does not say stays as it is. The project keeps its name, its schedule, its people.
+function schDocApplyTo(pid,entry){ const x=schRepNorm(entry), p=PROJECTS[pid], h=headOf(pid), before={head:copy(PHEAD[pid]),proj:copy(p)}, has=v=>Array.isArray(v)?v.length>0:typeof v==='string'?!!v.trim():false; let n=0;
+  for(const [k,v] of Object.entries(x.head)){ if(k==='focus'){ if(v&&!h.focus){h.focus=true;n++;} continue; } if(has(v)){ if(JSON.stringify(h[k])!==JSON.stringify(v))n++; h[k]=copy(v); } }
+  if(x.stage&&PSTATUS[x.stage]&&normStatus(p.status)!==x.stage){ applyProjectStatus(pid,x.stage); n++; }
+  schRepMirror(h,p); if(has(x.head.lgfa)){ p.area=h.lgfa; } if(has(x.head.lload))p.it=h.lload; p.site=h.loc||p.site; p.cost=h.cost||p.cost;
+  return {n,undo:()=>{ PHEAD[pid]=before.head; Object.assign(PROJECTS[pid],before.proj); render(true); }}; }
+function schDocOpen(pid){ if(!PROJECTS[pid]||$('#dlg'))return; if(S.editProj){ toast('사업개요를 수정하는 중에는 올릴 수 없습니다. 먼저 저장하거나 취소해 주세요.',4200); return; }
+  closePop(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up sch-docup'; const st={}; let pick=0;
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="개요 업로드"><h3 class="up-ttl">개요 업로드</h3><p class="up-sub">PDF 또는 엑셀 문서의 내용으로 이 프로젝트의 사업개요를 채웁니다 · 처음 채울 때와 고칠 때 모두 씁니다</p><div data-docfield></div><div data-docres></div>
+    <div class="bt"><button data-doc="x">닫기</button><button data-doc="ok" class="pri" disabled>적용</button></div></div>`;
+  document.body.appendChild(d); const res=d.querySelector('[data-docres]'), ok=d.querySelector('[data-doc="ok"]');
+  const chosen=()=>st.rep&&st.rep.projects[pick];
+  const change=()=>{ const r=st.rep; if(!r){ res.innerHTML=''; ok.disabled=true; return; } const me=norm(PROJECTS[pid].full).replace(/\s+/g,''), i=r.projects.findIndex(p=>norm(p.name).replace(/\s+/g,'')===me); if(i>=0&&!st.picked)pick=i; if(pick>=r.projects.length)pick=0;
+    const p=r.projects[pick], other=norm(p.name).replace(/\s+/g,'')!==me;
+    res.innerHTML=`<div class="up-res"><h4>이 프로젝트에 반영되는 내용</h4>${r.projects.length>1?`<div class="up-row"><span>문서의 프로젝트</span><b></b><em><select data-docpick>${r.projects.map((q,j)=>`<option value="${j}" ${j===pick?'selected':''}>${esc(q.name)}</option>`).join('')}</select></em></div>`:''}
+      <div class="up-row"><span>읽은 내용</span><b></b><em>${esc(schDocSays(p))}</em></div>${p.stage?`<div class="up-row"><span>추진 단계</span><b></b><em>${esc(p.stage)}</em></div>`:''}
+      ${other?`<p class="up-wn">문서의 사업명은 “${esc(p.name)}”입니다. 이 프로젝트의 이름(${esc(PROJECTS[pid].full)})은 그대로 둡니다.</p>`:''}<p class="up-ft">문서에 있는 항목만 바뀝니다. 문서에 없는 항목, 일정 · 액션 · 미팅 · 담당자 · 협력업체는 그대로 둡니다. 적용한 뒤에도 되돌릴 수 있습니다.</p></div>`;
+    ok.disabled=!!st.reading; };
+  schDocField(d.querySelector('[data-docfield]'),st,change);
+  const close=()=>{ st.run=(st.run||0)+1; d.remove(); };
+  d.addEventListener('change',e=>{ const s=e.target.closest&&e.target.closest('[data-docpick]'); if(s){ pick=+s.value||0; st.picked=true; change(); } });
+  d.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('[data-doc]'); if(e.target===d||(a&&a.dataset.doc==='x')){ e.stopPropagation(); close(); return; } if(!a||a.dataset.doc!=='ok')return; e.stopPropagation(); const p=chosen(); if(!p||!PROJECTS[pid])return;
+    const r=schDocApplyTo(pid,p); close(); render(true); toast(r.n?`문서 내용을 사업개요에 반영했습니다 · ${schDocSays(p)}`:'문서 내용이 지금 사업개요와 같습니다. 바뀐 것이 없습니다.',6000,r.n?{t:'되돌리기',fn:r.undo,keep:true}:undefined); });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } }); }
+
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).
 document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-sch]'); if(!el)return; const pid=S.proj; if(S.page!=='project'||!schHas(pid))return; const k=el.dataset.sch, v=el.dataset.k, m=schModel(pid);
@@ -9018,7 +9261,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='newphase'&&m){e.stopPropagation();schNewPhase(pid,m,code=>{if(!SCHU.open.includes(code))SCHU.open.push(code);schRefresh();});return;}
   if(k==='phmenu'&&m){ e.stopPropagation(); const g=m.phases.find(x=>x.code===v); if(g)menuPop(el,schPhaseEditItems(pid,m,g,()=>schRefresh(),true).slice(1)); return; }   // the "⋮" of a phase row: rename, remove
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
-  if(k==='xlsx'){e.stopPropagation();schXlsxSection(pid,v,el.dataset.part||'');return;}
+  if(k==='upload'){e.stopPropagation();schUpOpen(pid,v);return;}
   if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v), g=m.phases.find(x=>x.code===v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);if(g&&!g.tasks.length)t.phaseLabel=g.label;if(t.order==null)t.order=Math.max(0,...d.tasks.map(x=>+x.order||0))+1;d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}
   // a task in the gantt or the relation map: the first click selects it (green, its direct relations drawn stronger), the second opens it
   if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;}
@@ -9100,6 +9343,134 @@ document.addEventListener('mousedown',e=>{ if(e.button!==0)return; const sp=e.ta
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; if(moved){swallowClick();SCHU.gl=SG.left;schUiSave();} };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); },true);
 document.addEventListener('dblclick',e=>{ if(e.target.closest&&e.target.closest('#sch-gantt .sg-split')){delete SCHU.gl;schGanttBuild(S.proj);schUiSave();} });
+
+/* ---- schedule/ui/92-export.js ---- */
+// Thirty-third round (owner, 2026-11-24): files are handed out in two places only (a content panel's own "내보내기" stays as it is).
+//   1) the main page — the projects' overview: the list and one summary sheet per project ("프로젝트 개요와 1장씩 요약");
+//   2) a project page, beside its name — a report of the project as it stands now, after a window that asks what to put in
+//      ("어떤 범위로 … 뭘 넣고 뭘 뺄지 … 요약형으로 할지 풀버전으로 볼지").
+// Both write the one document model of 70-export.js ({file, head, title, label, sections}) and so come out as a Word file or
+// through the print window as a PDF, in the company's report sheet; a section may ask for a new page (`brk`). The Excel choice
+// writes workbooks: the projects as a list plus one sheet per project (a file 89-docread.js reads back), a project's schedule
+// data as the sections' workbook (schXlsxSection).
+// The words of a report are rules over the data (counts, dates, what is late): no service is called.
+const schXP=(t,o)=>({k:'p',runs:[{t:String(t==null?'':t),b:!!(o&&o.b)}],ind:(o&&o.ind)||0});
+const schXT=(head,rows,widths)=>({k:'tbl',head,rows:rows.map(r=>r.map(c=>c==null?'':String(c))),widths});
+const schXLines=s=>Array.isArray(s)?s:String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const schXDay=d=>d?dateDot(d):'';
+const schXHead=()=>`${SETTINGS.org||SETTINGS.wsName||'AIDC WorkSpace'}  Rev. Date: ${dateDot(TODAY)}`;
+const schXSafe=s=>String(s||'').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,60)||'문서';
+
+/* ---------- the overview of one project as blocks ---------- */
+function schXOverview(pid,full){ const h=headOf(pid), out=[];
+  if(h.kpi.length)out.push(schXT(['핵심 지표','값'],h.kpi.map(x=>[x[1],x[0]]),[3400,3800]));
+  if(h.fin.length)out.push(schXT(['사업성 지표','값'],h.fin.map(x=>[x[1],x[0]]),[3400,3800]));
+  if(h.main){ out.push(schXP('사업 개요',{b:1})); out.push(schXP(h.main)); }
+  if(full)for(const [t,k] of [['입지 및 전력 인프라','infra'],['사업 구조 및 수익 모델','struct'],['추진 현황 및 주요 특성','stat'],['주요 리스크 및 검토사항','risk']]){ const ls=schXLines(h[k]); if(!ls.length)continue; out.push(schXP(t,{b:1})); ls.forEach(x=>out.push(schXP((ls.length>1?'• ':'')+x,{ind:ls.length>1?1:0}))); }
+  const rows=h.rows.filter(x=>x[0]||x[1]).concat(h.memo?[['비고',h.memo]]:[]); if(rows.length)out.push(schXT(['구분','내용'],rows,[1900,5300]));
+  if(h.plan.length)out.push(schXT(['시기','추진 일정','상태'],h.plan,[1500,4700,1000]));
+  return out; }
+const schXMeta=pid=>{ const p=PROJECTS[pid], r=schRepOf(pid); return [r.grp,r.stage||'단계 미정',r.focus?'집중 추진':'',r.first?'최초자료일 '+r.first:'',r.asof?'기준일 '+r.asof:'',r.owner?'담당자 '+r.owner:''].filter(Boolean).join(' · '); };
+
+/* ---------- 1) the main page: the list and a sheet per project ---------- */
+function schXMainIds(scope){ const all=orderedProjects(); return scope==='all'?all:scope==='focus'?all.filter(k=>schRepOf(k).focus):schRepSeq(schProjFilter(all)); }
+function schXMainDoc(ids,parts){ const nos=schRepNos(), sections=[], asof=typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'';
+  if(parts.list)sections.push({h:'프로젝트 목록',blocks:[schXT(['NO.','프로젝트','구분','위치','사업주체','IT LOAD (수전용량)','추진 단계','최초자료일'],ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k); return [nos[k]||'',(r.focus?'[집중] ':'')+(p.full||pname(p)),r.grp,r.site,r.dev,r.load,r.stage,r.first]; }),[520,1750,760,900,1250,1300,760,860])]});
+  if(parts.sheets)for(const k of ids){ const p=PROJECTS[k]; sections.push({h:`${nos[k]?nos[k]+'  ':''}${p.full||pname(p)}`,raw:true,brk:sections.length>0,blocks:[schXP(schXMeta(k)),...schXOverview(k,false)]}); }
+  let n=0; sections.forEach(s=>{ if(!s.raw)s.h=`${++n}. ${s.h}`; });
+  return {file:`AIDC 프로젝트 개발검토 리스트_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:['AIDC 프로젝트 개발검토 리스트'],label:[asof?'기준일 '+asof:'',`총 ${ids.length}건`].filter(Boolean).join('  |  '),sections}; }
+// the same as a workbook: the list, and one sheet per project written downwards (label | value, then the sheet's titles)
+function schXProjRows(k){ const p=PROJECTS[k], h=headOf(k), r=schRepOf(k), rows=[['항목','내용'],['프로젝트',p.full||pname(p)],['구분',r.grp],['추진 단계',r.stage],['집중 추진',r.focus?'예':''],['최초자료일',r.first],['기준일',r.asof],['담당자',r.owner],['부제',r.sub]];
+  for(const [l,f] of [['위치(목록)','lsite'],['사업주체(목록)','ldev'],['대지면적(목록)','larea'],['연면적(목록)','lgfa'],['IT LOAD(목록)','lload']])if(h[f])rows.push([l,h[f]]);
+  if(h.memo)rows.push(['비고',h.memo]);
+  const sec=(t,list)=>{ if(list.length){ rows.push([]); rows.push([t]); rows.push(...list); } };
+  sec('핵심 지표',h.kpi.map(x=>[x[0],x[1]])); sec('사업성 지표',h.fin.map(x=>[x[0],x[1]])); if(h.finNote){ if(!h.fin.length){ rows.push([]); rows.push(['사업성 지표']); } rows.push([(/^\*/.test(h.finNote)?'':'* ')+h.finNote]); }
+  sec('사업 개요',h.main?[[h.main]]:[]); sec('입지 및 전력 인프라',schXLines(h.infra).map(x=>[x])); sec('사업 구조 및 수익 모델',h.struct?[[h.struct]]:[]); sec('추진 현황 및 주요 특성',schXLines(h.stat).map(x=>[x])); sec('주요 리스크 및 검토사항',schXLines(h.risk).map(x=>[x]));
+  sec('사업 개요 표',h.rows.filter(x=>x[0]||x[1]).map(x=>[x[0],x[1]])); sec('추진 일정',h.plan.map(x=>[x[0],x[1],x[2]])); sec('출처',schXLines(h.src).map(x=>[x]));
+  return rows; }
+function schXMainSheets(ids,parts){ const nos=schRepNos(), sheets=[], used=new Set(['프로젝트 목록']);
+  if(parts.list)sheets.push({name:'프로젝트 목록',rows:[['NO.','구분','프로젝트','부제','위치','사업주체','대지면적(m²)','연면적(m²)','IT LOAD (수전용량)','추진 단계','집중 추진','최초자료일','기준일','비고','담당자','운영개시 예상']].concat(ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)&&schReady(k)?schModel(k):null;
+      return [nos[k]||'',r.grp,p.full||pname(p),r.sub,r.site,r.dev,r.area,r.gfa,r.load,r.stage,r.focus?'집중 추진':'',r.first,r.asof,r.memo,r.owner,(m&&m.res.operationDate)||'']; })),widths:[7,12,30,36,16,30,16,16,30,12,10,14,12,44,14,14]});
+  if(parts.sheets)for(const k of ids){ let nm=schXSafe(PROJECTS[k].full||k).replace(/[\[\]']/g,' ').slice(0,28), i=2; const base=nm; while(used.has(nm))nm=`${base.slice(0,25)} ${i++}`; used.add(nm); sheets.push({name:nm,rows:schXProjRows(k),widths:[30,96,14]}); }
+  return sheets; }
+
+/* ---------- 2) a project: the report of where it stands ---------- */
+// what the report can hold, with how much there is of each (a part without content cannot be ticked)
+function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):null, h=headOf(pid), tasks=m?m.phases.flatMap(g=>g.tasks):[];
+  const ov=h.kpi.length+h.fin.length+h.rows.length+h.plan.length+(h.main?1:0), ev=m?SCH_UP_EVK.reduce((n,k)=>n+schEvRows(pid,k).length,0):0, meets=liveItems('meeting',pid).length;
+  return [{k:'state',t:'진행 현황 요약',n:1,say:'추진 단계 · 진행률 · 지연 · 다음 일정'},{k:'ov',t:'사업 개요',n:ov,say:ov?'지표 · 개요 · 표 · 추진 일정':''},{k:'act',t:'액션 일정',n:tasks.length,say:tasks.length?`업무 ${tasks.length}건`:''},
+    {k:'proc',t:'외부설비 조달',n:m?m.plan.procurement.length:0,say:m&&m.plan.procurement.length?`${m.plan.procurement.length}건`:''},{k:'gate',t:'승인게이트',n:m?schGates(pid,m).length:0,say:m&&schGates(pid,m).length?`${schGates(pid,m).length}건`:''},
+    {k:'evid',t:'근거 및 확약',n:ev,say:ev?`${ev}건`:''},{k:'meet',t:'미팅',n:meets,say:meets?`${meets}건`:''},{k:'part',t:'협력업체',n:(h.partners||[]).length,say:(h.partners||[]).length?`${h.partners.length}곳`:''}]; }
+function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, full=opt.form==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday();
+  const tasks=m?m.phases.flatMap(g=>g.tasks):[], res=t=>m.res.tasks[t.id], who=t=>schPeople(t).map(userName).join(', ')||'미지정', late=tasks.filter(t=>schLate(m,t)).sort((a,b)=>res(a).finish.localeCompare(res(b).finish));
+  const done=tasks.filter(t=>AIDCSchedule.progress.isDone(t)), soonEnd=D.addDays(today,opt.days||60), soon=tasks.filter(t=>schOpen(m,t)&&!schLate(m,t)&&res(t).start<=soonEnd).sort((a,b)=>res(a).start.localeCompare(res(b).start)||res(a).finish.localeCompare(res(b).finish));
+  const cut=(a,n)=>full?a:a.slice(0,n), more=(a,n)=>!full&&a.length>n?[schXP(`외 ${a.length-n}건 (풀버전에 전체 수록)`)]:[];
+  if(has('state')){ const rows=[['추진 단계',r.stage||'미정'],['구분',r.grp||'구분 없음'],['담당자',r.owner||'미지정']], say=[];
+    if(r.focus)rows.push(['집중 추진','예']);
+    if(m){ const pr=tasks.length?schProgress(m,tasks):null, ms=tasks.filter(t=>t.kind==='milestone'&&schOpen(m,t)).sort((a,b)=>res(a).start.localeCompare(res(b).start))[0], gs=schGates(pid,m), okG=gs.filter(g=>g.st==='승인').length;
+      rows.push(['운영개시 예상',m.res.operationDate?schXDay(m.res.operationDate)+(m.res.operationDelay?` (목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)`:''):'미정 (일정에 업무 없음)']);
+      if(pr)rows.push(['전체 진행률',`${schPct(pr)}% (업무 ${tasks.length}건 중 완료 ${done.length}건)`]);
+      if(tasks.length)rows.push(['액션 현황',`완료 ${done.length} · 지연 ${late.length} · 진행·예정 ${tasks.length-done.length-late.length}`]);
+      if(ms)rows.push(['다음 마일스톤',`${schTaskTitle(ms)} · ${schXDay(res(ms).start)}`]);
+      if(gs.length)rows.push(['승인게이트',`승인 ${okG} / 전체 ${gs.length}`]);
+      if(m.plan.procurement.length)rows.push(['외부설비',`${m.plan.procurement.length}건 · 확약 ${m.plan.procurement.filter(x=>x.commitment&&x.commitment!=='미확약').length}건`]);
+      rows.push(['일정 기준일',schXDay(m.plan.statusDate)]);
+      say.push(`추진 단계 ${r.stage||'미정'}${pr?`, 전체 진행률 ${schPct(pr)}%`:''}.`);
+      if(late.length){ const w=late[0]; say.push(`지연 ${late.length}건. 가장 오래 지연된 업무는 ${schTaskTitle(w)} (${D.diffDays(today,res(w).finish)}일 지연, 담당 ${who(w)}).`); } else if(tasks.length)say.push('지연 업무 없음.');
+      if(ms)say.push(`다음 마일스톤은 ${ms.name} (${schXDay(res(ms).start)}).`); if(m.res.operationDate)say.push(`운영개시 예상 ${schXDay(m.res.operationDate)}.`); }
+    rows.push(['보고서 작성일',schXDay(TODAY)]);
+    sections.push({h:'진행 현황',blocks:[...(say.length?[schXP(say.join(' '))]:[]),schXT(['항목','내용'],rows,[1900,5300])]}); }
+  if(has('ov')){ const b=schXOverview(pid,full); if(b.length)sections.push({h:'사업 개요',blocks:b}); }
+  if(has('act')&&m&&tasks.length){ const b=[];
+    b.push(schXP('단계별 진행',{b:1})); b.push(schXT(['개발 단계','업무','완료','진행률','기간'],m.phases.filter(g=>g.tasks.length).map(g=>{ const pr=schProgress(m,g.tasks); let a='9999',z=''; for(const t of g.tasks){ const x=res(t); if(x.start<a)a=x.start; if(x.finish>z)z=x.finish; } return [schPhaseLabel(g),g.tasks.length,pr.done,schPct(pr)+'%',`${schXDay(a)} ~ ${schXDay(z)}`]; }),[2700,700,700,800,2300]));
+    if(late.length){ b.push(schXP(`지연 업무 ${late.length}건`,{b:1})); b.push(schXT(['WBS','업무','예상 완료','지연','담당','지연 사유'],cut(late,8).map(t=>[schNo(t),t.name,schXDay(res(t).finish),D.diffDays(today,res(t).finish)+'일',who(t),t.why||'']),[700,2500,1100,700,1100,1100])); b.push(...more(late,8)); }
+    if(soon.length){ b.push(schXP(`진행 중이거나 ${opt.days||60}일 안에 시작하는 업무 ${soon.length}건`,{b:1})); b.push(schXT(['WBS','업무','시작','완료','상태','담당'],cut(soon,10).map(t=>[schNo(t),t.name,schXDay(res(t).start),t.kind==='milestone'?'':schXDay(res(t).finish),schStatus(t),who(t)]),[700,2700,1100,1100,700,900])); b.push(...more(soon,10)); }
+    if(full&&opt.act==='all'){ b.push(schXP(`전체 업무 ${tasks.length}건`,{b:1})); b.push(schXT(['WBS','단계','업무','시작','완료','상태','담당'],tasks.map(t=>[schNo(t),schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,schXDay(res(t).start),t.kind==='milestone'?'':schXDay(res(t).finish),schStatus(t),who(t)]),[650,1300,2300,950,950,650,900])); }
+    const loose=liveItems('action',pid).filter(i=>!i.own&&!i.task); if(loose.length){ b.push(schXP(`일정 미연결 액션 ${loose.length}건`,{b:1})); if(full)b.push(schXT(['제목','시작','종료','상태','담당자'],loose.map(i=>[oneLine(i.title),schXDay(i.date),schXDay(itemEnd(i)),schItemSt(i),(i.people||[]).map(userName).join(', ')]),[3300,1000,1000,800,1100])); }
+    sections.push({h:'액션 일정',blocks:b}); }
+  if(has('proc')&&m&&m.plan.procurement.length)sections.push({h:'외부설비 조달',blocks:[schXT(['패키지','설비','예상 PO','예상 설치완료','확약 상태','공급사·계약상태'],m.plan.procurement.map(x=>{ const pr=m.res.tasks[x.poTaskId], ins=m.res.tasks[x.installTaskId]; return [x.id,x.name,pr?schXDay(pr.start):'',ins?schXDay(ins.finish):'',x.commitment||'미확약',x.supplier||'']; }),[800,2300,1000,1100,900,1100])]});
+  if(has('gate')&&m){ const gs=schGates(pid,m); if(gs.length)sections.push({h:'승인게이트',blocks:[schXT(['게이트','승인 사항','연결 업무','예상 승인일','상태'],gs.map(g=>[g.user?'추가':g.code,g.title,g.t?schNo(g.t):'',schXDay(g.date),g.st]),[800,3300,900,1200,1000])]}); }
+  if(has('evid')&&m){ const kinds=SCH_UP_EVK.map(k=>({k,name:SCH_XL_SHEET[k],rows:schEvRows(pid,k)})).filter(x=>x.rows.length); if(kinds.length){ const b=[schXT(['구분','건수','완료·확인 외'],kinds.map(x=>[x.name,x.rows.length,x.rows.filter(r=>!/완료|확인|충족|종결/.test(String(r.st||''))).length]),[3600,1200,1600])];
+      if(full)for(const x of kinds){ b.push(schXP(x.name,{b:1})); b.push(schXT(['ID','제목','상태','기한'],x.rows.slice(0,60).map(r=>[r.no,r.title,r.st,r.due]),[900,4000,1100,1200])); }
+      sections.push({h:'근거 및 확약',blocks:b}); } }
+  if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({h:'미팅',blocks:[schXT(['일자','제목','주요안건','참석자'],cut(ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1100,2500,2300,1300]),...more(ms,5)]}); }
+  if(has('part')&&(h.partners||[]).length)sections.push({h:'협력업체',blocks:[schXP(h.partners.map(x=>String(x).replace(/^@/,'')).join(', '))]});
+  sections.forEach((s,i)=>{ s.h=`${i+1}. ${s.h}`; });
+  const no=schRepNos()[pid];
+  return {file:`${schXSafe(pname(P))}_보고서(${full?'풀버전':'요약'})_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:[P.full||pname(P),`프로젝트 보고서 · ${full?'풀버전':'요약형'}`],label:[no?'No. '+no:'',r.grp,r.stage].filter(Boolean).join('  |  '),sections}; }
+
+/* ---------- the window ---------- */
+async function schXOut(doc,file){ if(file==='docx'){ toast('Word 문서를 만드는 중입니다…',8000); const blob=await schExpDocx(doc); schExpSave(doc.file+'.docx',blob); toast('Word 문서를 내려받았습니다.',2600); } else schExpPrint(doc); }
+function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[pid])return; closePop();
+  const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-xw'; const main=kind==='main', nShown=main?schXMainIds('shown').length:0, nAll=main?orderedProjects().length:0, nFocus=main?schXMainIds('focus').length:0, parts=main?[]:schXProjParts(pid);
+  const rd=(name,val,label,note,on)=>`<label class="xw-o"><input type="radio" name="${name}" value="${val}" ${on?'checked':''}><span>${esc(label)}${note?`<em>${esc(note)}</em>`:''}</span></label>`;
+  const ck=(key,label,note,on,off)=>`<label class="xw-o ${off?'off':''}"><input type="checkbox" data-xwp="${key}" ${on&&!off?'checked':''} ${off?'disabled':''}><span>${esc(label)}${note?`<em>${esc(note)}</em>`:''}</span></label>`;
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="내보내기"><div class="np-hd"><b>내보내기</b><span>${main?'프로젝트 개요 — 목록과 프로젝트별 1장 요약':esc(`${PROJECTS[pid].full||pname(PROJECTS[pid])} — 지금 진행 상황으로 만드는 보고서`)}</span></div>
+    <div class="xw">${main?`<div class="xw-g"><h5>범위</h5>${nShown!==nAll?rd('xw-scope','shown','지금 목록',`${nShown}건 · 검색·조건 적용`,true):''}${rd('xw-scope','all','전체 프로젝트',`${nAll}건`,nShown===nAll)}${nFocus&&nFocus!==nAll?rd('xw-scope','focus','집중 추진만',`${nFocus}건`,false):''}</div>
+      <div class="xw-g"><h5>넣을 내용</h5>${ck('list','프로젝트 목록 표','',true)}${ck('sheets','프로젝트별 1장 요약','지표 · 개요 · 표 · 추진 일정',true)}</div>`
+     :`<div class="xw-g"><h5>형식</h5>${rd('xw-form','sum','요약형','핵심만 · 표는 앞의 몇 건',true)}${rd('xw-form','full','풀버전','본문 전체 · 표 전체',false)}</div>
+      <div class="xw-g" data-xwparts><h5>넣을 내용</h5>${parts.map(p=>ck(p.k,p.t,p.n?p.say:'내용 없음',p.k!=='evid'&&p.k!=='part',!p.n)).join('')}</div>
+      <div class="xw-g" data-xwact><h5>액션 범위</h5>${rd('xw-act','near','지연 · 진행 중 · 앞으로 60일','',true)}${rd('xw-act','all','전체 업무 목록까지','풀버전에서',false)}</div>`}
+      <div class="xw-g"><h5>파일</h5>${rd('xw-file','pdf','PDF','인쇄 창에서 ‘PDF로 저장’',true)}${rd('xw-file','docx','Word (.docx)','',false)}${rd('xw-file','xlsx','엑셀 (.xlsx)',main?'목록 + 프로젝트별 시트 · 다시 올릴 수 있는 형식':'일정 자료 전체 (시트별)',false)}</div>
+      <p class="xw-nt" data-xwnt></p></div>
+    <div class="np-bt"><button data-xw="x">취소</button><button class="pri" data-xw="ok">${svg('i-sch-fdn',13,13)}내보내기</button></div></div>`;
+  document.body.appendChild(d); const $n=s=>d.querySelector(s), val=n=>(d.querySelector(`input[name="${n}"]:checked`)||{}).value||'', picked=()=>[...d.querySelectorAll('[data-xwp]:checked')].map(x=>x.dataset.xwp), close=()=>d.remove();
+  const sync=()=>{ const file=val('xw-file'), xl=file==='xlsx', ok=$n('[data-xw="ok"]'), nt=$n('[data-xwnt]'); let say='';
+    if(!main){ for(const g of d.querySelectorAll('[data-xwparts],[data-xwact]'))g.classList.toggle('dim',xl); const g=$n('[data-xwact]'); if(g&&!xl)g.classList.toggle('dim',val('xw-form')!=='full'||!picked().includes('act')); if(xl)say='엑셀은 일정 · 리스트 · 관계 · 외부설비 · 승인게이트 · 근거 및 확약을 시트별로 모두 내보냅니다.'; }
+    const none=!picked().length&&!(xl&&!main); ok.disabled=none; if(none)say='넣을 내용을 하나 이상 골라 주세요.'; nt.textContent=say; };
+  d.addEventListener('change',sync); sync();
+  d.addEventListener('click',async e=>{ const a=e.target.closest&&e.target.closest('[data-xw]'); if(e.target===d||(a&&a.dataset.xw==='x')){ e.stopPropagation(); close(); return; } if(!a||a.dataset.xw!=='ok'||a.disabled)return; e.stopPropagation();
+    const file=val('xw-file'), ps=picked();
+    try{ if(main){ const ids=schXMainIds(val('xw-scope')||'all'), want={list:ps.includes('list'),sheets:ps.includes('sheets')}; if(!ids.length){ toast('내보낼 프로젝트가 없습니다.',3200); return; } close();
+        if(file==='xlsx'){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,want),want.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
+        else await schXOut(schXMainDoc(ids,want),file); }
+      else { close(); if(file==='xlsx'){ await schXlsxSection(pid,'gantt',''); return; } await schXOut(schXProjDoc(pid,{form:val('xw-form')==='full'?'full':'sum',parts:ps,act:val('xw-act')==='all'?'all':'near',days:60}),file); } }
+    catch(err){ console.error(err); toast('내보내지 못했습니다: '+String(err&&err.message||err),4200); } });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } }); }
+document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return; let el;
+  if(el=e.target.closest('[data-mainexp]')){ e.stopPropagation(); e.preventDefault(); schExpWin('main'); return; }
+  if(el=e.target.closest('[data-projexp]')){ e.stopPropagation(); e.preventDefault(); if(S.editProj){ toast('사업개요를 수정하는 중에는 내보낼 수 없습니다. 먼저 저장하거나 취소해 주세요.',4200); return; } schExpWin('proj',S.proj); return; }
+},true);
 </script><script>
 /* ---- mypage/10-mypage.js ---- */
 /* My page (preview switch on): 계정 · 수신함 · 설정 · 휴지통, after the owner's specification "마이페이지 고도화 개발 명세서" (2026-11-19).

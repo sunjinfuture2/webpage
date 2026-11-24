@@ -961,3 +961,66 @@ asked for the project overview and the project list of the main page to follow i
   schCalPillsFit places it (`left` / `top` from that tag) after every draw; the row keeps 64 px free at its right end so the
   button always has room.
 - tests/schedule-17.cjs follows; **not run**.
+
+## Uploads and exports, each in two places (owner, 2026-11-24, thirty-third round)
+
+The owner's plan: make uploading and exporting definite first, by rules; a language model behind them is a later decision
+("api 연결은 할지 말지 모르고 … 안 되더라도 기능구현만 먼저"). Nothing here calls a service.
+
+**Uploads**
+
+1. **The window that makes a project** (schNewProject, 66-lists.js): a field for a document — a PDF or an Excel file — above the
+   inputs 사업명 · 구분 · 추진 단계 · 담당자 (부지 and the PDF that was only attached are gone). The button is on when there is a
+   name, or a document that could be read. One project in the document: its name, group and stage are put into the fields and
+   the project is made with the document's overview. Several: "n건 만들기" opens the window that lists what will be made or
+   written over (schRepAsk). A project of that name exists: the same window asks first. A `.json` data file is taken too and
+   always goes through that window (with the projects it does not name).
+2. **A project page**: "개요 업로드" beside the name (schDocOpen) fills the overview from a document — what the document has
+   is changed, what it does not say stays, the project keeps its name; one 되돌리기. The schedule's files are let go in their
+   sections: **액션** has one 업로드 button (schUpOpen(pid,'act'): one schedule workbook fills 액션 일정 · 리스트 · 관계도
+   together, with the status date) and **외부설비 조달** has one (schUpOpen(pid,'ext'): a row each for 외부설비 조달 · 승인게이트 ·
+   근거 및 확약). Both are for the first time and for updates. The old window with a master field and six rows is gone.
+
+**Reading a document** (89-docread.js) goes by what the document says, not by where things stand ("디자인 달라져도 내용이 같으면
+감지"):
+- A PDF is read with pdf.js (Apache-2.0; the build copies `pdf.min.mjs`, `pdf.worker.min.mjs` and the Korean character maps to
+  `public/pdf/`, fetched on demand): every piece of text with its place and size. A page with the list's head (NO. · 프로젝트 ·
+  위치 · 사업주체 …) is a table: a row is where a number stands under "NO.", a cell is what lies nearest to that row in the
+  column, and a column begins where its leftmost cell begins. A page with at least three of the sheet's titles (핵심 지표,
+  사업성 지표, 사업 개요, 입지 및 전력 인프라, 사업 구조 및 수익 모델, 추진 현황 및 주요 특성, 주요 리스크 및 검토사항, 추진 일정,
+  출처) is a project's sheet: the titles' places make the columns, each title takes what stands below it in its column; a figure
+  is a line in larger type with its caption below; "사업 개요" with 구분 / 내용 is the table, without it the text. The largest
+  words at the top are the name. The owner's PDF (18 projects, 20 pages) is read whole: 398 of 414 fields equal the data that
+  was typed in by hand in the twenty-sixth round, and the other 16 are that data's own slips.
+- A few signs come out of that PDF as other characters (its font has no proper table): SCH_DOC_FIX puts them back.
+- An .xlsx is read as cells (readCells in schedule/xlsx.ts): a sheet with the list's head is the list; a sheet written downwards
+  ("label | value", then the sheet's titles with their lines below) is a project. This is exactly what the main page's export
+  writes, so that file goes back in unchanged.
+- The guide workbook of the schedule (readSheets): a sheet is found by its name, and when no sheet has that name by the titles of
+  its head (SIGN); the head may stand lower and further right (the column of its first title is the key column). The window
+  says which sheet it took.
+- **When a language model would be needed** (not built, no key, no cost): a scanned PDF (pictures of pages — the reader says so
+  and refuses), a text without these titles, "work out the stage / write the summary". schDocToReport is the one place such a
+  reader would stand; it would be a call from the Worker with the key as a secret, and the document would leave the workspace
+  for that service, which needs the owner's approval.
+
+**Exports** (92-export.js; a content panel's own "내보내기" is unchanged, every other export button is gone — the sections'
+Excel buttons, the project table's Excel, the data file menu):
+
+1. **The main page**: one 내보내기 → a window: which projects (what is listed now / all / 집중 추진만), what to put in (the list,
+   one sheet per project), the file. PDF and Word are the company's report sheet (the document model of 70-export.js; a section
+   with `brk` starts a new page, so every project has its own); 엑셀 is the list plus one sheet per project.
+2. **A project page**, beside the name: 내보내기 → a window: 요약형 / 풀버전, the parts (진행 현황 요약, 사업 개요, 액션 일정,
+   외부설비 조달, 승인게이트, 근거 및 확약, 미팅, 협력업체 — a part without content cannot be ticked), how far the actions go,
+   the file. The report is made of the project as it stands: stage, progress (the weighted rule), what is late and by how many
+   days, the next milestone, the operation date, counts of gates and packages; then the parts. Its sentences are rules over
+   the data. 엑셀 writes the schedule's whole workbook (schXlsxSection).
+
+Pictograms: `i-sch-fup` (a file with an arrow up) on every upload button, `i-sch-fdn` (a file with an arrow down) on every
+export button.
+
+Small corrections of the overview: 집중 추진 in the first line has the colours of the mark in the table and on a card; no line
+above 핵심 지표 and 사업성 지표; the figures stand a little closer (columns of at most 240 px, 22 px apart).
+
+tests: schedule-12 (the two upload windows, sheets found by their heads), schedule-8 / 9 / 13 / 15 (the buttons), schedule-16
+(a document makes a project, 개요 업로드, the report, the workbook out and back).

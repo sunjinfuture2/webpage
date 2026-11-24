@@ -1792,3 +1792,36 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .pcard.rep:hover h3 .pnm{text-decoration:underline}
 /* a star that is not on is white, inside and out (the old grey line is gone); the shadow keeps it readable on a pale picture */
 .sch-on .pcard.rep .pstar{filter:drop-shadow(0 0 1.8px rgba(0,0,0,.5)) drop-shadow(0 1px 1.5px rgba(0,0,0,.18))}
+
+/* Thirty-third round (owner, 2026-11-24): uploads and exports; the overview's small corrections */
+/* 집중 추진 on a project page: the colours of the mark in the table and on a card ("다른 거랑 안 맞으니까") */
+.rmeta .m.fo.on{background:#fdecee;border-color:#fdecee;color:#d9202e}
+/* no line above 핵심 지표 and 사업성 지표; the figures stand a little closer to each other */
+.phead.rep .rstats .rb{border-top:0;padding-top:0;margin-bottom:28px}
+.phead.rep .rstats .rt{margin-bottom:15px}
+.rstats .rkp{grid-template-columns:repeat(5,minmax(0,240px));gap:14px 22px}
+/* the window that makes a project: a field for the document (the look of the upload window's field), then the few inputs */
+.dlg.sch-np.sch-npdoc .box{width:560px;max-height:calc(100vh - 40px);overflow:auto}
+.sch-np .np-doc .up-drop{height:126px;margin-top:22px;gap:12px}
+.sch-np .np-doc .up-drop .up-pic{width:52px;height:41px}
+.sch-np .np-doc .up-drop.has{height:auto;min-height:74px}
+.sch-np .np-many{margin:10px 0 0;font-size:12.5px;line-height:18px;color:#4f4f4f}
+.sch-np .np-f.dim{opacity:.36}
+.sch-np .np-bt button:disabled{opacity:.38;cursor:default;filter:none}
+.sch-up .up-drop.bad{border-color:#e7b5b0}
+.sch-up .up-row select{max-width:100%;height:26px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#1c1c1c;padding:0 6px}
+.sch-up .up-parts.ext{margin-top:22px}
+/* the window that hands out files */
+.dlg.sch-np.sch-xw .box{width:540px;max-height:calc(100vh - 40px);overflow:auto}
+.sch-xw .xw{margin-top:22px;display:flex;flex-direction:column;gap:17px}
+.sch-xw .xw-g h5{margin:0 0 6px;font-size:12px;font-weight:600;color:#8e8e8e}
+.sch-xw .xw-o{display:flex;align-items:flex-start;gap:9px;padding:3px 0;font-size:13.5px;line-height:20px;color:#1c1c1c;cursor:pointer}
+.sch-xw .xw-o input{margin:3.5px 0 0;flex:none;accent-color:#0f0f0f}
+.sch-xw .xw-o em{font-style:normal;margin-left:8px;font-size:12px;color:#a0a0a0}
+.sch-xw .xw-o.off{color:#b9b9b9;cursor:default}
+.sch-xw .xw-g.dim{opacity:.34;pointer-events:none}
+.sch-xw [data-xwparts]{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+.sch-xw [data-xwparts] h5{grid-column:1/-1}
+.sch-xw .xw-nt{margin:0;min-height:18px;font-size:12px;line-height:18px;color:#8e8e8e}
+.sch-xw .xw-nt:empty{display:none}
+.sch-xw .np-bt button.pri{display:inline-flex;align-items:center;gap:7px}

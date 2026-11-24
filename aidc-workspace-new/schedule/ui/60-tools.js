@@ -49,9 +49,7 @@ async function schExportXlsx(pid){ toast('엑셀 파일을 만드는 중입니�
 // from (same names), filled from what the page shows now: what members changed and added is in it. It opens on the sheet of the
 // section the button stands in.
 const SCH_XL_SHEET={commitmentReviews:'보완·확약관리',assumptionsAndReferences:'전제와참고자료',responsibilityBoundaries:'책임경계',nvisScheduleReview:'NVIS일정검토',offtakers:'오프테이커 후보검토',sourceMappings:'원자료대조'};
-// two: the action section offers what is shown now (the search and the filters in force) and the whole project (owner, 2026-11-23)
-const schXlBtn=(k,two)=>two?`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" data-part="view" title="지금 보고 있는 시트만 (검색·필터가 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}현재 시트 내보내기</button><button class="sh-btn lib sch-xl all" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료 전체를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}전체 내보내기</button>`
-  :`<button class="sh-btn lib sch-xl" data-sch="xlsx" data-k="${k}" title="이 프로젝트의 일정 자료를 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀 내보내기</button>`;
+// (thirty-third round) the sections have no export button any more: a project is handed out from the button beside its name (92-export.js).
 // The conditions in force in the action section, as plain words (for the summary sheet of a partial export).
 function schCondText(pid){ const q=(SCHU.q||'').trim(), out=[...new DOMParser().parseFromString(schChips(pid),'text/html').querySelectorAll('.sch-chip')].map(b=>b.firstChild?b.firstChild.textContent:'').filter(Boolean); if(q)out.push('검색: '+q); return out.join(' / ')||'조건 없음 (전체)'; }
 async function schXlsxSection(pid,which,part){ const m=schModel(pid); if(!m)return; toast('엑셀 파일을 만드는 중입니다…',20000);

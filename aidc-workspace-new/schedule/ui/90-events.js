@@ -4,7 +4,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='newphase'&&m){e.stopPropagation();schNewPhase(pid,m,code=>{if(!SCHU.open.includes(code))SCHU.open.push(code);schRefresh();});return;}
   if(k==='phmenu'&&m){ e.stopPropagation(); const g=m.phases.find(x=>x.code===v); if(g)menuPop(el,schPhaseEditItems(pid,m,g,()=>schRefresh(),true).slice(1)); return; }   // the "⋮" of a phase row: rename, remove
   if(k==='tools'){e.stopPropagation();schToolsMenu(el,pid);return;}
-  if(k==='xlsx'){e.stopPropagation();schXlsxSection(pid,v,el.dataset.part||'');return;}
+  if(k==='upload'){e.stopPropagation();schUpOpen(pid,v);return;}
   if(k==='addtask'&&m){e.stopPropagation();let nid='';if(schCommit(pid,d=>{const t=AIDCSchedule.newTask(d,v), g=m.phases.find(x=>x.code===v);t.plannedStart=t.referenceStart=schToday();t.plannedFinish=t.referenceFinish=AIDCSchedule.dates.addDays(schToday(),4);if(g&&!g.tasks.length)t.phaseLabel=g.label;if(t.order==null)t.order=Math.max(0,...d.tasks.map(x=>+x.order||0))+1;d.tasks.push(t);nid=t.id;},'업무를 추가했습니다')){if(!SCHU.open.includes(v))SCHU.open.push(v);schRefresh();openPanel(schItemId(nid));}return;}
   // a task in the gantt or the relation map: the first click selects it (green, its direct relations drawn stronger), the second opens it
   if(k==='pickrow'){ if(!m||!m.byId.has(v))return; if((schTaskIdOf(S.panel)||SCHU.sel)===v){SCHU.sel=v;openPanel(schItemId(v));return;}

@@ -62,6 +62,14 @@ for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.ends
 if(/<\/script/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing script tag');
 if(/<\/body>/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing body tag (write <\\/body>): the scripts that follow are put in front of the first one');
 schedUi=schedUi.replace('__SCH_XLSX_V__',xlsxV);
+// PDF reader (pdf.js, Apache-2.0): served from /pdf/ and fetched when a member lets a PDF go on an upload field
+// (schedule/ui/89-docread.js). Only the Korean character maps are copied.
+{const dir=path.join(here,'node_modules/pdfjs-dist'), meta=JSON.parse(await fs.readFile(path.join(dir,'package.json'),'utf8'));
+ await fs.mkdir(new URL('public/pdf/cmaps/',root),{recursive:true});
+ for(const f of ['pdf.min.mjs','pdf.worker.min.mjs'])await fs.copyFile(path.join(dir,'build',f),new URL('public/pdf/'+f,root));
+ for(const f of await fs.readdir(path.join(dir,'cmaps')))if(/^(KSC|UniKS|Adobe-Korea1|LICENSE)/.test(f))await fs.copyFile(path.join(dir,'cmaps',f),new URL('public/pdf/cmaps/'+f,root));
+ await fs.writeFile(new URL('public/pdf/LICENSE.txt',root),`${meta.name} ${meta.version} (${meta.license})\n\n${(await fs.readFile(path.join(dir,'LICENSE'),'utf8')).trim()}\n`);
+ schedUi=schedUi.split('__PDF_V__').join(meta.version);}
 if(!html.includes('<style id="nb-style">'))throw new Error('build-shared: editor stylesheet anchor missing');
 html=html.replace('<style id="nb-style">',()=>'<style id="sch-style">\n'+schedCss+'</style>\n<script src="/schedule.js?v='+createHash('sha256').update(schedJs).digest('hex').slice(0,12)+'"></script>\n<style id="nb-style">');
 html=html.replace('</body>',()=>'<script>'+schedUi+'</script></body>');

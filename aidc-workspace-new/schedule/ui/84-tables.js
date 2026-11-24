@@ -55,7 +55,6 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 
 /* ---------- projects of the main page ---------- */
 const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${searchBox('proj','프로젝트 검색')}</div>`;
-const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
 // (since the twenty-fourth round the table is the development review list itself: schRepTable in 88-report.js, all of it on one page)
 const schProjTable=()=>schRepTable();
 const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${schRepCount()}${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
@@ -63,14 +62,6 @@ function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$(
   if(body)body.innerHTML=schProjTable(); else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); S.car.proj=0; applyCarousel('proj'); } afterNav(); }
 // The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order, with the
 // columns of the development review list.
-async function schProjXlsx(){ toast('엑셀 파일을 만드는 중입니다…',20000);
-  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos();
-    const cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.grp?'구분: '+c.grp:'',c.st?'추진 단계: '+c.st:'',c.region?'위치: '+c.region:'',c.owner?'담당자: '+c.owner:'',c.focus?'집중 추진만':'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
-    const rows=[['NO.','구분','프로젝트','부제','위치','사업주체','대지면적(m²)','연면적(m²)','IT LOAD (수전용량)','추진 단계','집중 추진','최초자료일','기준일','비고','담당자','운영개시 예상']].concat(ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null;
-      return [nos[k]||'',r.grp,p.full||pname(p),r.sub,r.site,r.dev,r.area,r.gfa,r.load,r.stage,r.focus?'집중 추진':'',r.first,r.asof,r.memo,r.owner,(m&&m.res.operationDate)||'']; }));
-    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,12,30,36,16,30,16,16,30,12,10,14,12,44,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['목록 기준일',typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:''],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
-    schExpSave(`프로젝트 목록_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
-  catch(e){ console.error(e); toast('엑셀 파일을 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.',4200); } }
 // The menu of a column title of the two tables. Meetings: the conditions of schMtf (the pickers show them too); projects: the
 // section's own menus (schProjMenu: 프로젝트 = 정렬 · 구분 · 집중 추진, 위치, 추진 단계, 최초자료일 = 정렬).
 function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col); return; }
@@ -87,7 +78,6 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return;
   if(el=e.target.closest('[data-mtpick]')){ e.stopPropagation(); schMeetMenu(el,el.dataset.mtpick); return; }
   if(el=e.target.closest('[data-vcol]')){ e.stopPropagation(); const [k,col]=el.dataset.vcol.split(':'); schVColMenu(el,k,col); return; }
   if(el=e.target.closest('[data-mtchip]')){ e.stopPropagation(); delete schMtf()[el.dataset.mtchip]; S.mtPage=1; schMeetRedraw(); return; }
-  if(el=e.target.closest('[data-pjxl]')){ e.stopPropagation(); schProjXlsx(); return; }
   if(el=e.target.closest('[data-vpg]')){ e.stopPropagation(); const k=el.closest('.pager').dataset.vk, key=k==='meet'?'mtPage':'pjPage', v=el.dataset.vpg; let cur=S[key]||1;
     if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=1e9; else cur=+v||1; S[key]=cur; if(k==='meet')schMeetRedraw(); else schProjRedraw(); return; }
 },true);

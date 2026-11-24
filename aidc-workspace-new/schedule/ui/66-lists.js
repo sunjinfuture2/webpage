@@ -106,7 +106,7 @@ function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim();
   return ids; }
 function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
   const chips=(c.grp?chip('grp','구분: '+c.grp):'')+(c.st?chip('st','추진 단계: '+c.st):'')+(c.region?chip('region','위치: '+c.region):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.focus?chip('focus','집중 추진만'):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
-  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','grp',c.grp||'전체 구분',!!c.grp)}${schSf2('ppick','st',c.st||'전체 단계',!!c.st)}${schSf2('ppick','region',c.region||'전체 위치',!!c.region)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','focus',c.focus?'집중 추진만':'집중 추진 포함',!!c.focus)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right"><button class="sh-btn lib sch-xl" data-repio title="개발검토 리스트 자료 파일(.json)로 프로젝트를 한꺼번에 만들거나 고치고, 지금 내용을 파일로 내려받습니다">자료 파일${svg('i-chev-d',8,4)}</button>${schProjXlBtn()}</div></div></div>`; }
+  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','grp',c.grp||'전체 구분',!!c.grp)}${schSf2('ppick','st',c.st||'전체 단계',!!c.st)}${schSf2('ppick','region',c.region||'전체 위치',!!c.region)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','focus',c.focus?'집중 추진만':'집중 추진 포함',!!c.focus)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right"><button class="sh-btn lib sch-xl" data-mainexp title="프로젝트 개요를 내보냅니다: 목록과 프로젝트별 1장 요약 (PDF · Word · 엑셀)">${svg('i-sch-fdn',12,12)}내보내기</button></div></div></div>`; }
 function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;S.pjPage=1;render(true);}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}), dot=(s,col)=>`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${col}"></i>${esc(s)}</span>`;
   const all=orderedProjects(), sts=[...new Set(all.map(p=>normStatus(PROJECTS[p].status)).filter(Boolean))].sort((x,y)=>(PSTATUS_ORDER.indexOf(x)+1||99)-(PSTATUS_ORDER.indexOf(y)+1||99));
   const grp=()=>[fl('grp','',{t:'전체 구분'}),...REP_GRPS.map(g=>fl('grp',g,{t:g}))], focus=()=>[fl('focus','',{t:'집중 추진 포함 (전체)'}),fl('focus','1',{t:'집중 추진만',html:'<span style="color:#d9202e;font-weight:600">집중 추진만</span>'})];
@@ -135,38 +135,48 @@ function schCardOps(k){ if(!schHas(k))return '<span class="nil">미정</span>'; 
   return `${schD(m.res.operationDate)}${d?`<em class="${d>0?'late':'early'}">${d>0?'+':''}${d}일</em>`:''}`; }
 
 /* ---------- the window that makes a project ---------- */
-function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st=PSTATUS_ORDER[0], grp=REP_GRPS[0];
+// (thirty-third round, owner 2026-11-24) A project is made from a document — a PDF or an Excel file whose content fills the overview
+// (89-docread.js) — or, without one, from its group and its name. The field for the document looks like the Excel upload's;
+// 부지 and the PDF that was only attached are gone. The button is on when there is a name, or a document that could be read.
+function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-npdoc'; let st=PSTATUS_ORDER[0], grp=REP_GRPS[0], busy=false, auto=''; const doc={};
   const sts=PSTATUS_ORDER;
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>이름만 있으면 만들 수 있습니다. 나머지는 프로젝트 페이지의 사업개요에서 채웁니다.</span></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>문서를 올리면 그 내용으로 사업개요를 채웁니다. 문서 없이 구분과 사업명만으로도 만들 수 있습니다.</span></div>
+    <div class="np-doc sch-up" data-docfield></div><p class="np-many" id="np2-many" hidden></p>
     <div class="np-f"><label for="np2-name">사업명 <em>필수</em></label><div><input id="np2-name" maxlength="60" placeholder="예: 대전 AI 데이터센터" autocomplete="off"><small class="err" id="np2-err"></small></div>
       <label>구분</label><div class="np-st" id="np2-grp">${REP_GRPS.map(g=>`<button type="button" data-grp="${g}" class="${g===grp?'on':''}">${g}</button>`).join('')}</div>
       <label>추진 단계</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
-      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
-      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div>
-      <label>자료 PDF</label><div class="np-pdf"><button type="button" class="sh-btn lib" data-np2pdf>PDF 첨부</button><span class="nm" id="np2-pdfname">선택한 파일 없음</span><button type="button" class="x" data-np2pdfx title="첨부 빼기" aria-label="첨부 빼기" hidden>✕</button><input type="file" id="np2-pdf" accept="application/pdf,.pdf" hidden><small>프로젝트 검토 자료(PDF)를 붙여 둡니다 · 1.8MB까지 · 사업개요에서 열어 볼 수 있습니다</small><small class="err" id="np2-pdferr"></small></div></div>
-    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
+      <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div></div>
+    <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok" disabled>프로젝트 만들기</button></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
-  const close=()=>d.remove(); let pdf=null, busy=false;
-  const setPdf=f=>{ const bad=f?schRepDocBad(f):''; pdf=bad?null:f||null; $n('#np2-pdfname').textContent=pdf?`${pdf.name} · ${fmtSize(pdf.size)}`:'선택한 파일 없음'; $n('#np2-pdfname').classList.toggle('on',!!pdf); $n('[data-np2pdfx]').hidden=!pdf; $n('#np2-pdferr').textContent=bad; if(!pdf)$n('#np2-pdf').value=''; };
-  $n('#np2-pdf').addEventListener('change',e=>setPdf(e.target.files&&e.target.files[0]));
-  const make=async()=>{ if(busy)return; const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
-    if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
-    const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
-    const id='p'+Date.now(); let docs=[];
-    if(pdf){ const ok=$n('[data-np2="ok"]'); busy=true; ok.disabled=true; ok.textContent='PDF 올리는 중…';   // the file first: a project is not made with a PDF that could not be stored
-      try{ docs=[await schRepDocUpload(pdf,id)]; }catch(e){ $n('#np2-pdferr').textContent=String(e&&e.message||'PDF를 올리지 못했습니다.'); busy=false; ok.disabled=false; ok.textContent='프로젝트 만들기'; return; }
-      busy=false; if(!d.isConnected)return; }
-    const T=nextProjTone();   // a colour no project has yet
-    PROJECTS[id]={id,tag,full:n,cls:T.cls,color:T.color,status:st,stColor:PSTATUS[st],grad:T.grad,imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
-    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site,docs};
+  const close=()=>{ doc.run=(doc.run||0)+1; d.remove(); }, name=()=>$n('#np2-name').value.replace(/\s+/g,' ').trim(), many=()=>!!doc.rep&&(doc.rep.projects.length>1||(!!doc.doc&&doc.doc.kind==='json')), one=()=>doc.rep&&!many()&&doc.rep.projects.length===1?doc.rep.projects[0]:null;   // (a data file always goes through the window that says what will happen)
+  const pick=(box,key,v)=>{ for(const b of $n(box).querySelectorAll('button'))b.classList.toggle('on',b.dataset[key]===v); };
+  // what the document says is put into the fields (a member may still change them); a name typed by hand is not written over
+  const sync=()=>{ const e=one(), ok=$n('[data-np2="ok"]'), m=$n('#np2-many');
+    if(e){ if(!name()||name()===auto){ $n('#np2-name').value=e.name; auto=e.name; } if(REP_GRPS.includes(e.grp)){ grp=e.grp; pick('#np2-grp','grp',grp); } if(PSTATUS[e.stage]){ st=e.stage; pick('#np2-st','st',st); } }
+    m.hidden=!many(); if(many())m.textContent=`문서에 프로젝트가 ${doc.rep.projects.length}건 있습니다. 한 번에 만들거나 덮어씁니다 (아래 사업명 · 구분 · 추진 단계는 쓰지 않습니다).`;
+    for(const i of d.querySelectorAll('.np-f input, .np-f button'))i.disabled=many(); $n('.np-f').classList.toggle('dim',many());
+    ok.disabled=busy||!!doc.reading||!(many()||name()); ok.textContent=many()?`${doc.rep.projects.length}건 만들기`:'프로젝트 만들기'; };
+  schDocField($n('[data-docfield]'),doc,sync,'PDF 또는 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택'); sync();
+  const make=async()=>{ if(busy||doc.reading)return;
+    if(many()){ const rep=doc.rep, fn=doc.file?doc.file.name:''; close(); schRepAsk(rep,fn); return; }
+    const n=name(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+    const owner=$n('#np2-owner').value.trim()||sharedName, e=one(), dup=Object.values(PROJECTS).some(p=>norm(p.full)===norm(n));
+    if(e){ // the document's sheet under the name, the group and the stage the window shows
+      const entry=Object.assign({},e,{name:n,grp,stage:st,owner:e.owner||owner,first:e.first||dateDot(TODAY).replace(/ /g,'')}), data={kind:REP_KIND,v:1,projects:[entry],noRest:true}, fn=doc.file?doc.file.name:'';
+      if(dup){ close(); schRepAsk(data,fn); return; }   // a project of that name is there: the window that says "덮어쓰기 1건" asks first
+      close(); schRepApply(data,false); const id=Object.keys(PROJECTS).find(k=>norm(PROJECTS[k].full)===norm(n)); if(id){ go('project:'+id); toast(`문서 내용으로 프로젝트를 만들었습니다 · ${schDocSays(entry)}`,5200); } else render(true); return; }
+    if(dup){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
+    const tag=n, id='p'+Date.now(), T=nextProjTone();   // a colour no project has yet
+    PROJECTS[id]={id,tag,full:n,cls:T.cls,color:T.color,status:st,stColor:PSTATUS[st],grad:T.grad,imgH:207.8,owner,site:'',cost:'',area:'',power:'',it:'',server:''};
+    PHEAD[id]={cls:st,prog:'',owner,loc:'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:'',docs:[]};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
     toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
   d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
     const gb=e.target.closest('[data-grp]'); if(gb){grp=gb.dataset.grp; d.querySelectorAll('[data-grp]').forEach(x=>x.classList.toggle('on',x===gb)); return;}
-    if(e.target.closest('[data-np2pdf]')){ $n('#np2-pdf').click(); return; } if(e.target.closest('[data-np2pdfx]')){ setPdf(null); return; }
     const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
-  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
+  d.addEventListener('input',e=>{ if(e.target.id==='np2-name'){ $n('#np2-err').textContent=''; sync(); } });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'&&e.target.type!=='file'){e.preventDefault();make();} }); }
 
 /* ---------- 사업개요: a partner is linked the way a person is called, with @ ---------- */
 const schPartnerOf=name=>{const n=norm(name||''); return n?PARTNERS.find(p=>!p.trash&&norm(p.name)===n):null;};

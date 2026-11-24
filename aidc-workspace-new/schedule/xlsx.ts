@@ -85,14 +85,25 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
   const text = (v: unknown) => v === null || v === undefined ? '' : String(v).trim();
   const num = (v: unknown): number | null => { if (v === null || v === undefined || v === '') return null; const n = typeof v === 'number' ? v : Number(String(v).replace(/[,%\s]/g, '')); return Number.isFinite(n) ? n : null; };
   const width = (ws: any) => Math.min(Math.max(1, ws.columnCount || 1), 60);
-  const headerRow = (ws: any, first: string) => { const want = squash(first); for (let r = 1; r <= Math.min(ws.rowCount, 15); r++) if (squash(at(ws, r, 1)) === want) return r; return 0; };
+  // (thirty-third round: "디자인 달라져도 내용이 같으면 감지") the head may stand lower and further right than in the guide: the column its
+  // first title stands in is the sheet's key column (K)
+  const keyCol = new Map<any, number>(), K = (ws: any) => keyCol.get(ws) || 1;
+  const headerRow = (ws: any, first: string) => { const want = squash(first); for (let r = 1; r <= Math.min(ws.rowCount, 30); r++) for (let c = 1; c <= Math.min(width(ws), 8); c++) if (squash(at(ws, r, c)) === want) { keyCol.set(ws, c); return r; } return 0; };
+  const hasHeads = (ws: any, need: string[]) => { for (let r = 1; r <= Math.min(ws.rowCount, 30); r++) { const set = new Set<string>(); for (let c = 1; c <= width(ws); c++) set.add(squash(at(ws, r, c))); if (need.every(h => set.has(squash(h)))) return true; } return false; };
   const heads = (ws: any, row: number) => { const map = new Map<string, number>(), list: string[] = []; for (let c = 1; c <= width(ws); c++) { const h = text(at(ws, row, c)); list.push(h); if (h && !map.has(squash(h))) map.set(squash(h), c); } while (list.length && !list[list.length - 1]) list.pop(); return { map, list }; };
   const wbsOf = (v: unknown) => { const s = squash(v).toUpperCase(); return /^W\d+\.\d+$/.test(s) ? s : ''; };
 
   const out: any = { name: file.name, size: file.size, sha, backup: false, found: [], other: [], notes, records: {} };
-  const sheet = (name: string) => book.worksheets.find((w: any) => squash(w.name) === squash(name));
   out.backup = !!book.worksheets.find((w: any) => w.name === '__SUNJIN_BACKUP');
   const known = new Set(['검토요약', '마스터스케줄', '단계별업무분장', '업무연결', '운영영향 분석', ...Object.keys(RECORD_SHEETS)].map(squash));
+  // a sheet by its name; when no sheet has that name, the first other sheet whose head has the titles that sheet must have
+  const SIGN: Record<string, string[][]> = { '단계별업무분장': [['WBS', '업무패키지', '시작일', '완료일', '실행 역할'], ['WBS', '작업명', '시작일', '완료일', '실행 역할']], '마스터스케줄': [['WBS', '작업명', '시작일', '완료일'], ['WBS', '업무패키지', '시작일', '완료일']], '업무연결': [['선행 WBS', '후행 WBS']] };
+  for (const [n, def] of Object.entries(RECORD_SHEETS)) if (def.need.length) SIGN[n] = [[def.first, ...def.need]];
+  const found = new Map<string, any>(), claimed = new Set<any>();
+  const sheet = (name: string) => { if (found.has(name)) return found.get(name);
+    let ws = book.worksheets.find((w: any) => squash(w.name) === squash(name));
+    if (!ws && SIGN[name]) { ws = (book.worksheets as any[]).find(w => !claimed.has(w) && w.name !== '__SUNJIN_BACKUP' && !known.has(squash(w.name)) && SIGN[name].some(need => hasHeads(w, need))); if (ws) note(name, 'info', `시트 이름이 달라 머리글로 찾았습니다: "${ws.name}"`); }
+    if (ws) claimed.add(ws); found.set(name, ws); return ws; };
   for (const w of book.worksheets as any[]) { if (w.name === '__SUNJIN_BACKUP') continue; (known.has(squash(w.name)) ? out.found : out.other).push(w.name); }
 
   // tasks: 단계별업무분장 (the input sheet), or the dates of 마스터스케줄 when the file has only that one
@@ -109,7 +120,7 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
     const tasks: any[] = [], seen = new Set<string>(); let phaseLabel = '', bad = 0;
     const g = (r: number, k: string) => C[k] ? at(ws, r, C[k]) : null;
     for (let r = hr + 1; r <= ws.rowCount && tasks.length < 5000; r++) {
-      const a = at(ws, r, 1); if (a === null || a === '') continue;
+      const a = at(ws, r, K(ws)); if (a === null || a === '') continue;
       const wbs = wbsOf(a);
       if (!wbs) { if (/^W\d+$/i.test(squash(a))) phaseLabel = text(g(r, 'name')); continue; }   // a phase row of the gantt sheet names the tasks below it
       if (seen.has(wbs)) { note(name, 'error', `${r}행: WBS ${wbs}이(가) 두 번 나옵니다.`); bad++; continue; } seen.add(wbs);
@@ -148,7 +159,7 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
             const type = (Y ? squash(at(ws, r, Y)).toUpperCase() : 'FS') || 'FS';
             if (!['FS', 'SS', 'FF', 'SF'].includes(type)) { note(name, 'error', `${r}행: 유형 "${type}"은(는) FS·SS·FF·SF 중 하나여야 합니다.`); bad++; continue; }
             const act = A ? text(at(ws, r, A)) : '적용';
-            links.push({ row: r, sourceId: text(at(ws, r, 1)) || 'L' + String(links.length + 1).padStart(3, '0'), from, to, type, lag: (L ? num(at(ws, r, L)) : 0) || 0, active: act === '' || act === '적용', note: N ? text(at(ws, r, N)) : '' });
+            links.push({ row: r, sourceId: text(at(ws, r, K(ws))) || 'L' + String(links.length + 1).padStart(3, '0'), from, to, type, lag: (L ? num(at(ws, r, L)) : 0) || 0, active: act === '' || act === '적용', note: N ? text(at(ws, r, N)) : '' });
           }
           if (!bad) out.links = links; }
       } } }
@@ -160,7 +171,7 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
     if (lack.length) { note(name, 'error', `필요한 열이 없습니다: ${lack.join(', ')}`); continue; }
     const recs: any[] = [];
     for (let r = hr + 1; r <= ws.rowCount && recs.length < 5000; r++) {
-      if (at(ws, r, 1) === null || text(at(ws, r, 1)) === '') continue;
+      if (at(ws, r, K(ws)) === null || text(at(ws, r, K(ws))) === '') continue;
       const fields: Record<string, Val> = {}, cells: Record<string, Val> = {};
       H.list.forEach((h, i) => { let v = at(ws, r, i + 1); if (v === null) return; if (DATE_HEADS.has(h) && typeof v === 'number') v = dayOf(v) ?? v; fields[h || letters(i + 1)] = v; cells[letters(i + 1)] = v; });
       if (def.kind === 'procurementPackages') { for (const k of Object.keys(cells)) delete cells[k]; for (const [letter, h] of Object.entries(PROC_LETTERS)) if (fields[h] !== undefined) cells[letter] = fields[h]; }
@@ -179,4 +190,24 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
   return out;
 }
 
-(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, readSheets };
+// The cells of a workbook as text — what a document that describes a project says (schedule/ui/89-docread.js): every sheet,
+// at most 800 rows of 40 cells. A date is written yyyy.mm.dd, a number with its thousands marks when the cell shows them.
+async function readCells(file: File) {
+  if (file.size > 25 * 1024 * 1024) throw new Error('25MB 이하의 엑셀 파일을 선택해주세요.');
+  const ExcelJS = (await import('exceljs')).default, book = new ExcelJS.Workbook();
+  try { await book.xlsx.load(await file.arrayBuffer()); } catch (e) { throw new Error('엑셀 파일을 열지 못했습니다. 암호가 걸렸거나 손상된 파일일 수 있습니다.'); }
+  const txt = (v: any, fmt: string): string => { if (v === null || v === undefined) return ''; if (v instanceof Date) return isNaN(+v) ? '' : v.toISOString().slice(0, 10).replace(/-/g, '.');
+    if (typeof v === 'number') return !Number.isFinite(v) ? '' : /#,##/.test(fmt) ? v.toLocaleString('en-US', { maximumFractionDigits: 6 }) : String(Math.round(v * 1e6) / 1e6);
+    if (typeof v === 'string') return v; if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE'; if (v.error) return '';
+    if (v.formula !== undefined || v.sharedFormula !== undefined) return txt(v.result, fmt); if (v.richText) return v.richText.map((t: any) => t.text).join('');
+    if (v.text !== undefined) return txt(typeof v.text === 'object' ? (v.text.richText || []).map((t: any) => t.text).join('') : v.text, fmt); return ''; };
+  const sheets: { name: string; rows: string[][] }[] = [];
+  for (const ws of book.worksheets as any[]) { if (ws.name === '__SUNJIN_BACKUP' || ws.state === 'veryHidden') continue; const rows: string[][] = [], cols = Math.min(Math.max(1, ws.columnCount || 1), 40);
+    for (let r = 1; r <= Math.min(ws.rowCount, 800); r++) { const row: string[] = [];
+      for (let c = 1; c <= cols; c++) { const cell = ws.getCell(r, c); row.push(cell.isMerged && cell.master && cell.master.address !== cell.address ? '' : txt(cell.type === ExcelJS.ValueType.Formula ? cell.result : cell.value, String(cell.numFmt || '')).trim()); }
+      while (row.length && !row[row.length - 1]) row.pop(); rows.push(row); }
+    while (rows.length && !rows[rows.length - 1].length) rows.pop(); sheets.push({ name: ws.name, rows }); }
+  return { name: file.name, sheets };
+}
+
+(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, readSheets, readCells };

@@ -235,3 +235,8 @@ html.mob.sch-on .cal > .filters{position:relative}
 
 /* (twenty-eighth round) the pager of the project table keeps its arrows (the rule above that hides `.projects .arr` means the carousel's) */
 html.mob .projects .pager .arr{display:flex!important}
+
+/* (thirty-third round) the figures in two columns keep their own gap; the two new windows fit the screen */
+html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+html.mob .dlg.sch-np.sch-npdoc .box,html.mob .dlg.sch-np.sch-xw .box{width:calc(100vw - 28px)}
+html.mob .sch-xw [data-xwparts]{grid-template-columns:1fr}

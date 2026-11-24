@@ -6,6 +6,8 @@
 // nothing is loaded for it) and as a page for the browser's print window, where "PDF로 저장" makes the PDF (schExpPrint).
 (function(){ const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); s.setAttribute('aria-hidden','true');
   s.innerHTML='<symbol id="i-sch-exp" viewBox="0 0 24 24"><path d="M12 15.2V3.4M7.6 7.6L12 3.2l4.4 4.4M4.2 13.6v5.1a1.9 1.9 0 0 0 1.9 1.9h11.8a1.9 1.9 0 0 0 1.9-1.9v-5.1" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>'
+   +'<symbol id="i-sch-fup" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 12.4V7.6M5.9 9.6L8 7.5l2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
+   +'<symbol id="i-sch-fdn" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 7.6v4.8M5.9 10.4L8 12.5l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
    +'<symbol id="i-sch-xls" viewBox="0 0 16 16"><path d="M2.2 1.6h8.2l3.4 3.4v9.4H2.2zM10.2 1.8v3.4h3.4M5.2 8l3.6 4.4M8.8 8l-3.6 4.4" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>';
   document.body.appendChild(s); })();
 const schExpBtn=()=>`<button type="button" class="iexp" data-ed="export" title="내보내기 (Word · PDF)" aria-label="내보내기" aria-haspopup="menu">${svg('i-sch-exp',24,24)}</button>`;
@@ -112,7 +114,7 @@ async function schExpDocx(doc){ const C=SCH_DOC, media=[], rels=[]; let rid=10;
   xml+=`<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${C.text}"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[0],{b:1,color:'000000',sz:30})}${doc.label?`<w:r><w:tab/></w:r>${run(doc.label,{color:'000000',sz:18,b:1})}`:''}</w:p>`;
   if(T[1])xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[1],{b:1,color:'000000',sz:30})}</w:p>`;
   xml+=`<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="${C.ink}"/></w:pBdr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="140"/></w:pPr></w:p>${spacer(160)}`;
-  for(const s of doc.sections){ let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
+  for(const s of doc.sections){ if(s.brk)xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
     for(const b of s.blocks){ if(b.k==='p')buf+=body(b.runs,{ind:b.ind});
       else if(b.k==='tbl'){ flush(); xml+=spacer(40)+table(b)+spacer(120); }
       else if(b.k==='img'){ const im=await schExpImage(b.src); if(!im){ buf+=body([{t:'[이미지'+(b.name?': '+b.name:'')+']'}]); continue; } const id='rId'+(++rid), max=4572000, cx=Math.min(max,im.w*9525), cy=Math.round(cx*im.h/im.w);
@@ -144,12 +146,12 @@ function schExpHtml(doc,fontCss){ const e=schX, runs=rs=>rs.map(r=>{let t=e(r.t|
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{font:10pt/12.5pt Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 h1{font-size:15pt;line-height:19pt;font-weight:700;color:#000;margin:2pt 0 1pt;display:flex;justify-content:space-between;align-items:baseline;gap:8mm}h1 small{font-size:9pt;font-weight:700;white-space:nowrap}
 .rule{border-bottom:.75pt solid #222;margin:3pt 0 14pt}
-.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
+.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.sec.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
 p{margin:0;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}p.pre{font-family:Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:9pt;white-space:pre-wrap;text-align:left}p.im{margin:3pt 0}p.im img{max-width:100%;max-height:120mm}
 table.d{border-collapse:collapse;width:100%;margin:2pt 0 6pt;table-layout:fixed}table.d th,table.d td{border:.5pt solid #bfbfbf;padding:1.2pt 3.5pt;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}table.d th{background:#f2f2f2;font-weight:700;text-align:center}table.d tr{break-inside:avoid}
 @media screen{body{padding:14mm 12mm;max-width:210mm;margin:0 auto}}
 <\/style><\/head><body><h1><span>${e(doc.title[0])}</span>${doc.label?`<small>${e(doc.label)}</small>`:''}</h1>${doc.title[1]?`<h1><span>${e(doc.title[1])}</span></h1>`:''}<div class="rule"></div>
-${doc.sections.map(s=>`<section class="sec"><h2>${e(s.h)}</h2><div>${s.blocks.map(block).join('')}</div></section>`).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
+${doc.sections.map(s=>`<section class="sec${s.brk?' brk':''}"><h2>${e(s.h)}</h2><div>${s.blocks.map(block).join('')}</div></section>`).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
 function schExpPrint(doc){ let font=''; try{ for(const sh of document.styleSheets){ let rules; try{rules=sh.cssRules;}catch(e){continue;} for(const r of rules)if(r.type===5&&/Pretendard/.test(r.cssText)){font+=r.cssText;} if(font)break; } }catch(e){}
   const old=document.getElementById('sch-print'); if(old)old.remove(); const fr=document.createElement('iframe'); fr.id='sch-print'; fr.setAttribute('aria-hidden','true'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'; document.body.appendChild(fr);
   const d=fr.contentDocument; d.open(); d.write(schExpHtml(doc,font)); d.close(); toast('인쇄 창이 열립니다. 대상에서 ‘PDF로 저장’을 고르면 PDF 파일이 됩니다.',5200);
