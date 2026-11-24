@@ -118,8 +118,8 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   // the window that makes a project
   await a.click('#page-main .new-proj'); await sleep(300);
   check('+ beside 프로젝트 opens a window of its own', await ev(() => !!document.querySelector('.dlg.sch-np #np2-name') && !document.querySelector('.pop')));
-  await a.click('.sch-np [data-np2="ok"]'); await sleep(200);
-  check('it needs a name', await ev(() => /사업명을 입력/.test(document.querySelector('#np2-err').textContent)));
+  // (thirty-third round) the button is on only when there is a name, or a document that could be read
+  check('it needs a name: without one (and without a document) the button is off', await ev(() => document.querySelector('.sch-np [data-np2="ok"]').disabled === true && !!document.querySelector('.sch-np [data-docdrop]')));
   await a.fill('#np2-name', '6차 검사 사업 ' + sfx); await a.click('.sch-np [data-st="사업구상"]'); await a.click('.sch-np [data-np2="ok"]'); await sleep(900);
   const np = await ev(t => { const id = Object.keys(PROJECTS).find(k => PROJECTS[k].full === t), p = PROJECTS[id]; return p ? { id, tag: p.tag, st: p.status, page: S.page === 'project' && S.proj === id, edit: S.editProj } : null; }, '6차 검사 사업 ' + sfx);
   check('the project is made with name and class (no short name since the eighth round: it is the name), and opens for its overview', np && np.tag === '6차 검사 사업 ' + sfx && np.st === '사업구상' && np.page && np.edit, np);
