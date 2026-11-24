@@ -18,6 +18,9 @@ const REP_KIND='aidc-dev-report';
 
 /* ---------- reading ---------- */
 // a value as it is shown: the three marks of the list
+// (twenty-eighth round, owner: "주황색으로 보완필요, 확인필요 … 프로젝트 포인트컬러로") the two marks take the colour of the project they stand in:
+// the overview, a row of the table and a card hand it down as --pc (schRepPc); without one they stay orange.
+const schRepPc=p=>p&&/^#[0-9a-f]{3,8}$/i.test(p.color||'')?` style="--pc:${p.color}"`:'';
 const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em class="rq">$1</em>').replace(/자료 없음/g,'<em class="na">자료 없음</em>');
 // What the list says of a project (nothing is written). A project from before the list answers with what its overview held.
 // (twenty-sixth round: the overview no longer shows these cells as a block of their own — "요약쪽은 메인페이지 … 그 내용이 같이 연동되기만
@@ -61,7 +64,7 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
      <span class="m st ${E?'stpick':''}" ${E?'data-pickstatus':''}><b>추진 단계</b>${statusBadge(p.status)}${chev}</span><i class="sep"></i>
      <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)||'<span class="nil">미지정</span>'}</span>${chev}</span>
      <span class="m dt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}</span><span class="m dt"><b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</span></div>`;
-  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}${lf('비고','memo','memo','목록의 비고 칸')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
+  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
   // the two rows of figures
   const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''))}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>${d.finNote||E?`<div class="rnote${EC}" ${edk('finNote','지표의 기준 · 출처 (예: 2026.04 IM 기준 추정치)')}>${E?esc(d.finNote):schRepTxt(d.finNote)}</div>`:''}`)}</div>`;
   // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)
@@ -71,11 +74,10 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
     +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true))
     +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt')
     +schRepDocs(pid,d,E);
-  const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${!d.rows.length&&!E&&!ops?nil:''}${add('rows','+ 행')}</div>`)
+  const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo?nil:''}${add('rows','+ 행')}</div>`)
     +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
   const src=lines(d.src);
-  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
-    ${d.sub||E?`<div class="rsub${EC}" ${edk('sub','부제 (한 줄 설명)')}>${esc(d.sub)}</div>`:''}
+  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div>
      ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
@@ -110,21 +112,26 @@ const schRepPinned=k=>S.favs.includes('project:'+k);
 function schRepCards(ids){ ids=[...ids.filter(schRepPinned),...ids.filter(k=>!schRepPinned(k))]; const line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${schRepListTxt(v)}</span></div>`;
   const star=on=>`<svg width="20" height="19" viewBox="0 0 21 20" aria-hidden="true"><path d="M10.4 1.4l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L1.7 7.7l6-.9z" fill="${on?'#ffce00':'none'}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
   return ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null, ops=m&&m.res.operationDate;
-    return `<div class="pcard rep ${r.focus?'focus':''} ${schRepPinned(k)?'pinned':''}" data-go="project:${k}"><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><button type="button" class="pstar ${schRepPinned(k)?'on':''}" data-pstar="${k}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 카드를 맨 앞에 고정'}">${star(schRepPinned(k))}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
+    return `<div class="pcard rep ${r.focus?'focus':''} ${schRepPinned(k)?'pinned':''}" data-go="project:${k}"${schRepPc(p)}><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><button type="button" class="pstar ${schRepPinned(k)?'on':''}" data-pstar="${k}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 카드를 맨 앞에 고정'}">${star(schRepPinned(k))}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
   <h3 style="color:${p.color}" title="${esc([p.full,r.sub].filter(Boolean).join(' — '))}">${esc(p.full)}</h3>
   <div class="info">${ops?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}${line('위치',r.site)}${line('사업주체',r.dev)}${line('대지면적',r.area)}${line('연면적',r.gfa)}${line('IT LOAD',r.load)}${line('최초자료일',r.first)}</div></div>`; }).join(''); }
 
 /* ---------- the table of the main page (the list itself) ---------- */
-function schRepTable(){ const ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos(), grouped=!c.sort;
+// (twenty-eighth round, owner 2026-11-24: 비고 moved into the project's overview; ten rows a page — "10개단위로 페이지 넘기면서"; the note
+// below the table is gone.) A page shows the heading of every group it has rows of, with the count of the whole group.
+// schRepSeq: the projects in the order the table lists them (group by group unless an order was chosen).
+function schRepSeq(ids){ return schPf().sort?ids:REP_GRPS.concat('').flatMap(g=>ids.filter(k=>schRepOf(k).grp===g)); }
+function schRepTable(){ const ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos(), grouped=!c.sort, grpOf=k=>schRepOf(k).grp;
+  const seq=schRepSeq(ids), total=Math.max(1,Math.ceil(seq.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total);
+  const page=seq.slice((S.pjPage-1)*SCH_V_PER,S.pjPage*SCH_V_PER);
   const th=t=>`<span><em>${t}</em></span>`, tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
   const cell=(v,cls)=>`<div class="tx ${cls||''}" title="${esc(v||'')}"><span class="e">${schRepListTxt(v)}</span></div>`;
   const row=k=>{ const p=PROJECTS[k], r=schRepOf(k);
-    return `<div class="rw ${r.focus?'focus':''}" data-go="project:${esc(k)}"><div class="w no"><span>${nos[k]||''}</span></div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}${r.sub?' — '+esc(r.sub):''}">${r.focus?'<i class="fo" title="현재 집중 추진 중인 프로젝트">집중</i>':''}<span class="e">${esc(p.full||pname(p))}</span></div>${cell(r.site)}${cell(r.dev)}${cell(r.area,'num')}${cell(r.gfa,'num')}${cell(r.load)}<div class="st"><span style="color:${esc(PSTATUS[r.stage]||'#8e8e8e')}"><i></i>${esc(r.stage||'미정')}</span></div>${cell(r.first,'dt')}${cell(r.memo)}</div>`; };
-  let h=`<div class="tbl sch-proc sch-vtbl vt-proj vt-rep"><div class="hd">${th('NO.')}${tm('name','프로젝트',!!c.grp||!!c.focus,!!c.sort&&c.sort!=='first')}${tm('region','위치',!!c.region,false)}${th('사업주체')}${th('대지면적(m²)')}${th('연면적(m²)')}${th('IT LOAD (수전용량)')}${tm('st','추진 단계',!!c.st,false)}${tm('first','최초자료일',false,c.sort==='first')}${th('비고')}</div>`;
-  if(grouped){ for(const g of REP_GRPS.concat('')){ const part=ids.filter(k=>schRepOf(k).grp===g); if(!part.length)continue; h+=`<div class="grp" data-grp="${esc(g)}"><b>${esc(REP_GRP_T[g])}</b><span>${part.length}건</span></div>`+part.map(row).join(''); } }
-  else h+=ids.map(row).join('');
+    return `<div class="rw ${r.focus?'focus':''}" data-go="project:${esc(k)}"${schRepPc(p)}><div class="w no"><span>${nos[k]||''}</span></div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}${r.sub?' — '+esc(r.sub):''}">${r.focus?'<i class="fo" title="현재 집중 추진 중인 프로젝트">집중</i>':''}<span class="e">${esc(p.full||pname(p))}</span></div>${cell(r.site)}${cell(r.dev)}${cell(r.area,'num')}${cell(r.gfa,'num')}${cell(r.load)}<div class="st"><span style="color:${esc(PSTATUS[r.stage]||'#8e8e8e')}"><i></i>${esc(r.stage||'미정')}</span></div>${cell(r.first,'dt')}</div>`; };
+  let h=`<div class="tbl sch-proc sch-vtbl vt-proj vt-rep"><div class="hd">${th('NO.')}${tm('name','프로젝트',!!c.grp||!!c.focus,!!c.sort&&c.sort!=='first')}${tm('region','위치',!!c.region,false)}${th('사업주체')}${th('대지면적(m²)')}${th('연면적(m²)')}${th('IT LOAD (수전용량)')}${tm('st','추진 단계',!!c.st,false)}${tm('first','최초자료일',false,c.sort==='first')}</div>`;
+  let last=null; for(const k of page){ const g=grpOf(k); if(grouped&&g!==last){ last=g; h+=`<div class="grp" data-grp="${esc(g)}"><b>${esc(REP_GRP_T[g])}</b><span>${ids.filter(x=>grpOf(x)===g).length}건</span></div>`; } h+=row(k); }
   if(!ids.length)h+=`<div class="none">조건에 맞는 프로젝트가 없습니다.</div>`;
-  return h+`<div class="ft"></div></div><div class="rep-foot">* 최초자료일: 프로젝트별로 처음 받은 자료의 작성일(작성일이 없으면 수신일). 각 묶음 안에서 최초자료일이 오래된 순으로 정렬. 이름 앞의 "집중"은 현재 집중 추진 중인 프로젝트.</div>`; }
+  return h+`<div class="ft"></div></div>${seq.length>SCH_V_PER?schVPager('proj',S.pjPage,total):''}`; }
 
 /* ---------- the overview while it is edited: rows of its lists, the state of a step, the group ---------- */
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el; const h=()=>PHEAD[S.proj];

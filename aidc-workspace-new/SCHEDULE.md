@@ -900,3 +900,21 @@ asked for the project overview and the project list of the main page to follow i
   project's colour. The row keeps the class `focus`.
 - **자료 없음 is a dash in the list** (cards and table: schRepListTxt); the overview keeps the words.
 - tests/schedule-16.cjs (53 checks), tests/schedule-17.cjs (14 checks).
+
+## The table in pages of ten, 비고 in the overview, the overview's lines (owner, 2026-11-24, twenty-eighth round)
+
+- **The table of projects** (schRepTable): no note below it, no 비고 column, **ten rows a page** with the pager of the other tables
+  (schVPager, S.pjPage; a search or a picker goes back to page 1). schRepSeq is the order it lists in (group by group unless an
+  order was chosen); a page shows the heading of every group it has rows of, with the count of the whole group. Columns:
+  `64px minmax(210px,1.5fr) 150px minmax(180px,1.3fr) 132px 132px minmax(200px,1.4fr) 124px 128px`.
+- **비고** (`memo`) is the last row of 사업 개요 표 in the overview (shown when there is one, always while it is edited). It left the
+  block "메인 페이지 목록에 표시되는 값". The Excel file and the data file still carry it; the search still looks into it.
+- **No sub line under a project's name.** `sub` stays in the record (tooltip of the name in the table, search, Excel, data file)
+  but is neither shown nor edited on the project page.
+- **Figures** of 핵심 지표 / 사업성 지표: 19.8 px (a tenth smaller), weight 600 (one step lighter).
+- **Lines of a block of the overview** (the owner's picture): one line above the block's title (#a9a9a9), one paler line closing the
+  block (#e9e9e9); no line under the title, no lines between the rows of a table.
+- **확인 필요 / 보완 필요** are written in the colour of the project they stand in ("프로젝트 포인트컬러로"): the overview, a row of the table
+  and a card hand it down as `--pc` (schRepPc); without one the marks stay orange. 자료 없음 stays grey.
+- tests/schedule-15.cjs, schedule-16.cjs (54 checks) and schedule-17.cjs (15 checks) were changed to follow; **they were not run**
+  (owner, the same day: "회귀검사 내가 하라고할때만 해" — the change itself was looked at in a browser).

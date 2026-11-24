@@ -201,7 +201,6 @@ html.mob .dlg .box{min-width:0;width:calc(100vw - 28px);max-width:460px;max-heig
 
 /* the overview and the list of the development review list (twenty-fourth round) */
 html.mob .phead.rep,html.mob .phead.rep.collapsed{padding-bottom:0}
-html.mob .phead.rep .rsub{position:static;max-width:none;white-space:normal;overflow:visible;margin:8px 0 0;font-size:14px}
 html.mob .phead.rep .rep-in{width:auto;margin:22px 0 26px}
 html.mob .phead.rep .rmeta{gap:8px;margin-bottom:26px}
 html.mob .phead.rep .rmeta .sep{display:none}
@@ -214,7 +213,6 @@ html.mob .phead.rep.ed .rtb .r,html.mob .phead.rep.ed .rkp .k{padding-right:24px
 html.mob .phead.rep .rx{right:0}
 html.mob .phead.rep .rsrc{flex-direction:column;gap:4px}
 html.mob .phead.rep .rsrc span{overflow-wrap:anywhere}
-html.mob .rep-foot{width:auto}
 html.mob .sec-title .rep-cnt{margin-left:10px;font-size:12px}
 html.mob .projects .pfil .sch-filters .right{margin-left:0}
 html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
@@ -237,3 +235,6 @@ html.mob.sch-on .meet .sch-filters.meetf{position:static;margin:14px 0 0}
 
 /* (twenty-seventh round) the calendar's project tags: one line here too; the button that opens them stands at the end of that line */
 html.mob.sch-on .cal > .filters{position:relative}
+
+/* (twenty-eighth round) the pager of the project table keeps its arrows (the rule above that hides `.projects .arr` means the carousel's) */
+html.mob .projects .pager .arr{display:flex!important}
