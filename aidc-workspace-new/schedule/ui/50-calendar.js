@@ -49,7 +49,8 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* t
 // More below: a soft lower edge (cut). Scrolled: a soft upper edge too (cut-t, and below a caption that stands still: stuck).
 const schFitMark=el=>{ el.classList.toggle('cut',el.scrollHeight-el.clientHeight-el.scrollTop>2); el.classList.toggle('cut-t',el.scrollTop>2); const top=el.getBoundingClientRect().top;
   el.querySelectorAll('.rcap').forEach(c=>c.classList.toggle('stuck',el.scrollTop>2&&c.getBoundingClientRect().top-top<1.5)); };
-function schFitRight(){ const z=LAYOUT.zoom||1; $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'), box=el.querySelector('.rscroll'); if(!grid||!box||!el.offsetParent)return;
+function schFitRight(){ const z=LAYOUT.zoom||1; if(document.documentElement.classList.contains('mob')){ $$('.rlist.sch').forEach(el=>{el.style.top='';el.style.height='';}); return; }   // a phone: the list stands below the calendar, as long as it is
+  $$('.rlist.sch').forEach(el=>{ const grid=el.parentElement&&el.parentElement.querySelector('.cal .grid'), box=el.querySelector('.rscroll'); if(!grid||!box||!el.offsetParent)return;
     // its upper line stands level with the calendar's line under the weekdays, its lower line with the calendar's lower edge: neither moves
     const rows=grid.querySelector('.rows'), line=el.querySelector('.rline'); if(rows&&line){ const d=(rows.getBoundingClientRect().top-line.getBoundingClientRect().top)/z; if(Math.abs(d)>.3)el.style.top=(parseFloat(getComputedStyle(el).top)+d)+'px'; }
     const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.height=h+'px'; schFitMark(box);

@@ -735,3 +735,29 @@ Four requests of one afternoon. Preview only, except the fix of the address.
 - renderMain / renderProject choose between their own markup of the cards and `schProjTableSection()` /
   `schMeetTableSection(pid)`. The `?v=1` page has none of it.
 - tests/schedule-15.cjs (19 checks).
+
+## The page on a phone (owner, 2026-11-24, the twenty-second round)
+
+- Until now a phone got the 1920 wide page shrunk to its screen (the viewport tag said `width=1920`). Now the early script in
+  the head of original.html sets `html.mob` and turns the viewport tag to `width=device-width,initial-scale=1,minimum-scale=1`
+  when the shorter side of the screen is under 700 px or the window is under 700 px wide — only on the combined page; the
+  `?v=1` page and tablets keep the 1920 wide page. schedule/ui/86-mobile.js repeats the rule when the window changes size
+  (schMobApply: the class, the tag, a redraw). `minimum-scale=1` matters: without it the phone widens its viewport to what
+  is widest on the page.
+- **Nothing is scaled** (fitLayout's phone branch): the page is as wide as the screen, `--L` is 16 px, `--d` is what is left
+  of the 1338 wide column (about -980), so every rule of the form "1338 + d" fits by itself. A block that cannot be narrow
+  sets a measure of its own in its own scope and is moved sideways: `html.mob .tbl{--d:-110px; overflow-x:auto}` with rows
+  that are `max-content` wide. Custom properties that are worked out at `#app` (`--pw`) are not changed by that.
+- schedule/mobile.css holds every rule (the build puts it last in the head, `#mob-style`): the top bar with the grey square
+  that opens the sidebar as a drawer (the page's own `sb-off` state; a tap beside it or on an entry closes it), sections
+  with their tools below the title, the calendar with seven days of one width (renderCalendar's COLW) and the list of the
+  day below it (schFitRight does nothing there), rows of cards moved with the finger (no arrows, the carousel's offset is
+  overridden), the overview of a project and the panel of an item one part below the other (the panel's parts are taken out
+  of their absolute places: the order in the document is the order on the screen), the gantt with the names in 44 % of the
+  width (SG.left), the archive, my page as a full screen with its menu as a strip, windows that fit.
+- Fields are written at 16 px on a phone: a smaller field makes the phone zoom into the page when it is tapped.
+- Not done: pulling bars and relations in the gantt and the relation map with a finger (they listen to the mouse; the
+  place menu of an action, which uses pointer events, works), a layout of its own for tablets, the `?v=1` page.
+- The page is still darkened by one filter in dark mode: no colour rules of its own were needed.
+- tests/mobile-1.cjs (19 checks: a phone, a narrow window, a wide screen, `?v=1` on a phone). tests/h.cjs takes
+  `viewport`, `isMobile` and `hasTouch` for a member.

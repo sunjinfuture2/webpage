@@ -55,7 +55,7 @@ await fs.writeFile(new URL('public/schedule-xlsx.js',root),xlsx.outputFiles[0].t
 const xlsxV=createHash('sha256').update(xlsx.outputFiles[0].text).digest('hex').slice(0,12);
 {const dir=path.join(here,'node_modules/exceljs');const meta=JSON.parse(await fs.readFile(path.join(dir,'package.json'),'utf8'));
  await fs.writeFile(new URL('public/schedule.licenses.txt',root),`Third-party software bundled in schedule-xlsx.js\n\n${'='.repeat(78)}\n${meta.name} ${meta.version} (${meta.license})\n${'='.repeat(78)}\n${(await fs.readFile(path.join(dir,'LICENSE'),'utf8')).trim()}\n\nThe ExcelJS browser build contains its own dependencies (JSZip, saxes, readable-stream and others), each under the licence stated in its source header.\n`);}
-const schedCss=await fs.readFile(new URL('schedule/schedule.css',root),'utf8');
+const schedCss=await fs.readFile(new URL('schedule/schedule.css',root),'utf8'), mobileCss=await fs.readFile(new URL('schedule/mobile.css',root),'utf8');   // mobile.css: the page on a phone (html.mob), after every other sheet
 const myCss=await fs.readFile(new URL('mypage/mypage.css',root),'utf8');
 let schedUi='';
 for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.endsWith('.js')).sort())schedUi+='\n/* ---- schedule/ui/'+f+' ---- */\n'+await fs.readFile(new URL('schedule/ui/'+f,root),'utf8');
@@ -70,6 +70,8 @@ let myUi='';
 for(const f of (await fs.readdir(new URL('mypage/',root))).filter(n=>n.endsWith('.js')).sort())myUi+='\n/* ---- mypage/'+f+' ---- */\n'+await fs.readFile(new URL('mypage/'+f,root),'utf8');
 if(/<\/script/i.test(myUi))throw new Error('build-shared: mypage must not contain a closing script tag');
 html=html.replace('<style id="nb-style">',()=>'<style id="mp-style">\n'+myCss+'</style>\n<style id="nb-style">');
+if(!html.includes('</head>'))throw new Error('build-shared: head end missing');
+html=html.replace('</head>',()=>'<style id="mob-style">\n'+mobileCss+'</style>\n</head>');
 html=html.replace('</body>',()=>'<script>'+myUi+'</script></body>');
 // Isolated, removable toolbar experiment for the single Test research record.
 const trial=await fs.readFile(new URL('research-editor-trial.js',root),'utf8');

@@ -1,0 +1,200 @@
+/* AIDC WorkSpace on a phone (twenty-second round, 2026-11-24). Everything here hangs on html.mob (schedule/ui/86-mobile.js says
+   when that is set). The page is as wide as the screen with 16 px at each side; --d is negative there, so a rule that needs
+   the desktop measure inside a block sets --d:-200px in that block's own scope and lets the block be moved sideways. */
+html.mob{overflow:hidden;-webkit-text-size-adjust:100%}
+html.mob body{overscroll-behavior:none}
+html.mob #app{--L:16px;--sbw:292px;--panelw:100vw;min-width:0}
+html.mob .scroll,html.mob .content{-webkit-overflow-scrolling:touch}
+html.mob #app .main{overflow:hidden}   /* the panel waits beside the screen: nothing may be wider than the screen */
+/* a field under 16 px makes a phone zoom into the page when it is tapped */
+html.mob input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),html.mob textarea,html.mob select{font-size:16px!important}
+html.mob .ibody,html.mob .ibody .ProseMirror{font-size:16px}
+
+/* ---- the frame: top bar, drawer ---- */
+html.mob #app .main,html.mob #app.sb-off .main{left:0}
+html.mob #app .sb{position:fixed;width:min(292px,84vw);z-index:60;box-shadow:0 0 0 100vmax rgba(0,0,0,.38),4px 0 18px rgba(0,0,0,.16);transform:none}
+html.mob #app.sb-off .sb{transform:translateX(-105%);box-shadow:none}
+html.mob #app .sb-resize,html.mob #app .panel-resize{display:none}
+html.mob #app .tb-logo{display:none}
+html.mob #app .sb-open{display:flex;left:12px;top:10px;width:26px;height:26px;border-radius:6px;background:#efefef;z-index:16}
+html.mob #app:not(.sb-off) .sb-open{display:none}
+html.mob .topbar{height:46px;border-bottom:1px solid #f0f0f0}
+html.mob #app .crumbs,html.mob #app.sb-off .crumbs{left:50px;top:13px;right:140px;white-space:nowrap;overflow:hidden;font-size:14px}
+html.mob .crumbs > *{flex:none}
+html.mob .crumbs > :last-child{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.mob .tb-user{right:74px;top:11px}
+html.mob .tb-user .nm,html.mob .tb-user > span:not(.avatar):not(.av),html.mob .tb-user .name{display:none}
+html.mob .tb-ic.tb-share{right:42px}
+html.mob .tb-ic.tb-star{right:10px}
+html.mob .content{top:46px}
+html.mob .toast{max-width:calc(100vw - 24px);white-space:normal;bottom:22px}
+
+/* ---- pages: one column ---- */
+html.mob .page{width:100vw}
+html.mob .notice{left:8px;width:calc(100vw - 16px)}
+html.mob .sec-title{font-size:23px;flex-wrap:wrap;align-items:center;row-gap:10px;white-space:normal}
+html.mob .sec-title .srch,html.mob .sec-title .srch.box{flex:1 1 100%;margin:0;width:100%;order:9}
+html.mob .sec-title .srch input,html.mob .sec-title .srch.box input{width:100%;flex:1 1 auto;min-width:0}
+html.mob .sec-title .sch-ic svg{transform:scale(.8);transform-origin:left center}
+html.mob .sec{margin-top:64px!important;padding-bottom:0!important}
+html.mob .sch-filters{flex-wrap:wrap;height:auto;row-gap:14px;column-gap:18px;margin-left:0;margin-top:26px}
+html.mob .sch-filters .sf{min-width:96px}
+html.mob .sch-filters .right{margin-left:0;flex-wrap:wrap;gap:8px}
+html.mob .sch-chipwrap{height:auto}
+html.mob .sch-chiprow{position:static;max-width:none;margin-top:10px}
+html.mob .pager{flex-wrap:wrap;row-gap:6px;margin-top:26px!important}
+
+/* ---- the calendar: seven days across the screen, the list of the day below it ---- */
+html.mob [data-sec="cal"]{margin-top:0!important}
+html.mob .cal,html.mob .cal .grid{width:100%}
+html.mob .cal .wd,html.mob .cal .row{grid-template-columns:repeat(7,minmax(0,1fr))}
+html.mob .cal .wd span,html.mob .cal .cell{padding-left:4px}
+html.mob .cal .row{min-height:84px}
+html.mob .cal,html.mob .cal.narrow,html.mob.sch-on .cal:has(> .filters){padding-top:116px}
+html.mob .cal .mon{left:14px;top:62px}
+html.mob .cal .mon h2{font-size:23px}
+html.mob .cal .nav{top:66px;width:24px;height:24px}
+html.mob .cal .nav.prev{left:-8px}
+html.mob .cal .nav.next{left:118px}
+html.mob .cal .legend{position:static;justify-content:flex-end;margin:0 0 10px;gap:12px;font-size:11px}
+html.mob.sch-on .cal > .filters,html.mob .cal .filters{position:static;flex-wrap:wrap;row-gap:6px;margin:0 0 14px;min-height:0}
+html.mob .cal .ev{font-size:10px;padding-left:3px}
+html.mob .cal .ev .sq{display:none}
+html.mob .cal .cell .add{display:none!important}
+html.mob .rlist,html.mob .rlist.sch,html.mob .rlist.sch.pv{position:static!important;width:auto;height:auto!important;max-height:none;margin-top:42px;padding:0;overflow:visible}
+html.mob .rlist.sch .rdate{position:static;margin:0 0 8px}
+html.mob .rlist.sch .rscroll{overflow:visible;margin:0;padding:0}
+html.mob .rlist.sch .ra{margin:0;padding:0;height:auto;min-height:40px;flex-wrap:wrap;row-gap:0}
+html.mob .rlist.sch .ra .tt{font-size:14.5px;flex:1 1 60%}
+html.mob .rlist.sch .ra .sch-dd{width:auto;min-width:56px;font-size:13px}
+html.mob .rlist.sch .ra .dt{min-width:0;font-size:12.5px}
+
+/* ---- rows of cards that were pushed with arrows: moved with the finger ---- */
+html.mob .projects,html.mob .meet{height:auto!important;margin-top:64px!important}
+html.mob .projects .sec-title,html.mob .meet .sec-title{position:static}
+html.mob .sch-vtools{position:static;width:auto;justify-content:flex-start;flex-wrap:wrap;gap:10px;margin-top:12px}
+html.mob .sch-vtools .srch.box{flex:1 1 150px;min-width:0}
+html.mob .sch-vtools .srch.box input{width:100%;min-width:0}
+html.mob .sch-vtools .sch-filters{flex:1 1 100%;margin:0 0 4px;order:9}
+html.mob .projects .pfil{position:static;width:auto;margin-top:6px}
+html.mob .projects .track,html.mob .meet .track,html.mob.sch-on .projects .track{position:static!important;width:auto;margin:22px -16px 0;padding:4px 16px 12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none}
+html.mob .projects .track::-webkit-scrollbar,html.mob .meet .track::-webkit-scrollbar{display:none}
+html.mob .projects .inner,html.mob .meet .inner{transform:none!important;width:max-content}
+html.mob .projects .pcard,html.mob .meet .mcard{scroll-snap-align:start;flex:none;max-width:82vw}
+html.mob .projects .arr,html.mob .projects .fade,html.mob .meet .circ,html.mob .meet .fade{display:none!important}
+html.mob .meet.tv [data-vbody],html.mob .projects.tv [data-vbody]{padding-top:22px}
+html.mob .projects.tv{padding-bottom:0}
+
+/* ---- tables: the narrowest desktop measure inside, moved sideways ---- */
+html.mob .tbl{--d:-110px;width:auto!important;margin-left:-16px;margin-right:-16px;padding:0 16px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+html.mob .tbl > .hd,html.mob .tbl > .rw,html.mob .tbl > .gr{width:max-content;min-width:100%}
+html.mob .tbl > .none,html.mob .tbl > .ft{position:sticky;left:0}
+html.mob .tbl .rw .acts{display:none}
+
+/* ---- research cards, footer ---- */
+html.mob .rgrid{grid-template-columns:minmax(0,1fr)!important}
+html.mob .pfoot{margin-top:96px;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+html.mob .pfoot .fgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;row-gap:26px;padding:28px 2px 26px}
+html.mob .pfoot .fgrid > :first-child{grid-column:1 / -1}
+html.mob .pfoot .fend{flex-wrap:wrap;row-gap:8px}
+html.mob .pfoot .fout{flex-wrap:wrap}
+
+/* ---- the project page: the overview one field below the other ---- */
+html.mob .phead,html.mob .phead.collapsed{height:auto!important;padding-top:58px}
+html.mob .phead .ttl{position:static;flex-wrap:wrap;align-items:center;row-gap:8px;column-gap:8px}
+html.mob .phead .ttl h1{font-size:23px;white-space:normal;line-height:1.3;flex:1 1 100%}
+html.mob .phead .ttl .edit,html.mob .phead .ttl .cancel,html.mob .phead .ttl .sh-btn{margin:0}
+html.mob .phead .pdel{position:absolute;right:0;top:54px;width:34px;height:34px}
+html.mob .phead .pdel .pict{width:24px;height:24px}
+html.mob .phead .ov{position:static;margin:18px 0 10px}
+html.mob .phead .hr,html.mob .phead .hr.bt,html.mob .phead.collapsed .hr.bt{position:static;width:auto}
+html.mob .phead .cols{position:static;flex-direction:column;gap:6px;margin:20px 0 22px}
+html.mob.sch-on .phead .col1,html.mob.sch-on .phead .col2,html.mob.sch-on .phead .col3,html.mob .phead .col{width:auto}
+html.mob .phead .col .fr,html.mob .phead .col3 .fr + .fr{margin:0 0 16px}
+html.mob .phead .col .fr b{width:86px!important;margin-left:0!important}
+html.mob .phead .fr .v{min-width:0;overflow-wrap:anywhere}
+html.mob .phead .ph-img{max-width:100%}
+
+/* ---- the schedule sections ---- */
+html.mob .sch-title{font-size:20px}
+html.mob .sch-tabs{margin-left:4px;flex-wrap:wrap}
+html.mob .sch-tabs i{margin:0 5px}
+html.mob .sch-tabs button{line-height:30px}
+html.mob .sch-gantt,html.mob .sch-net,html.mob .sch-gates{width:auto;margin-left:-16px;margin-right:-16px}
+html.mob .sch-gates{overflow-x:auto}
+html.mob .sg-row.tk .rg,html.mob .sg-row .st,html.mob .sg-left .sg-sum{display:none}
+
+/* ---- the panel of an item: the whole screen, its parts one below the other ---- */
+html.mob #app::after{display:none}
+html.mob .panel{top:46px;width:100vw;box-shadow:none}
+html.mob #app.panel-open .sb-open{display:none}
+html.mob .tb-panel-ic{right:auto;left:14px;top:14px;gap:16px;z-index:19}
+html.mob .tb-panel-ic button{width:22px;height:22px}
+html.mob #panel-expand{display:none!important}
+html.mob #app.panel-open .crumbs{left:48px;max-width:none}
+html.mob .panel .pin,html.mob .ipage .pin{width:auto;margin:0;padding:18px 16px 96px;min-height:100%}
+html.mob .pin > .itype,html.mob .pin > .ihead,html.mob .pin > .ititle,html.mob .pin > .props,html.mob .pin > .cmt-row,html.mob .pin > .cmt-list,html.mob .pin > .ihr,html.mob .pin > .ibody{position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:auto!important;margin-left:0;margin-right:0}
+html.mob .pin > .ihead{margin-top:14px;flex-wrap:wrap;row-gap:8px;padding-right:38px}
+html.mob .pin > .ititle{margin-top:18px;font-size:26px;line-height:35px;min-width:0}
+html.mob .pin > .props{margin-top:22px;display:block}
+html.mob .props .rcol{margin-top:0}
+html.mob .props.sch-props{max-width:none}
+html.mob .sch-props .sp-grid,html.mob .sch-props .sp-more{display:block}
+html.mob .props .pr,html.mob .sch-props .sp-grid .pr{padding-bottom:14px;min-height:36px}
+html.mob .props .pr .k,html.mob .panel .rcol .pr .k,html.mob .ipage .props .pr .k,html.mob .ipage .rcol .pr .k,html.mob .sch-props .sp-grid .pr .k,html.mob .sch-props .sp-more .pr .k{width:96px}
+html.mob .props .pr .v{min-width:0;flex:1 1 auto;overflow-wrap:anywhere}
+html.mob .pin > .cmt-row{margin-top:10px}
+html.mob .pin > .ihr{margin:18px 0}
+html.mob .pin > .ibody,html.mob .panel .ibody.ed,html.mob .ipage .ibody.ed{padding-bottom:40px}
+html.mob .sp-links{overflow-x:auto}
+
+/* ---- the archive ---- */
+html.mob .arch .arch-title{position:static;font-size:23px;padding-top:58px}
+html.mob .arch .ar-pv{padding-top:22px}
+html.mob .arch .ar-top{flex-wrap:wrap;row-gap:16px;margin-bottom:34px}
+html.mob .arch .ar-views button{font-size:19px;white-space:nowrap}
+html.mob .arch .ar-top .srch.box{margin-left:0;flex:1 1 100%}
+html.mob .arch .ar-top .srch.box input{width:100%;min-width:0;flex:1 1 auto}
+html.mob .arch .ar-docs .tabs{margin-top:44px}
+html.mob .arch .tabs li{font-size:16px}
+html.mob .tbl.archive.pv{--d:-330px;margin-top:34px}
+html.mob .arch .ar-chips{margin:18px 0 -12px;flex-wrap:wrap}
+html.mob .arch .asec .h{height:auto;margin-bottom:12px}
+html.mob .arch .agrid,html.mob .arch .agrid.g5{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;row-gap:10px}
+html.mob .arch .agrid .cell,html.mob .arch .agrid.g5 .cell{height:auto;min-height:0;border-left:0!important;padding:0}
+html.mob .arch .agrid .cell:empty{display:none}
+html.mob .arch .agrid .acard,html.mob .arch .agrid.g5 .acard{height:auto;min-height:118px;margin:0;padding:12px 30px 14px 12px;background:#f7f7f6;border-radius:6px}
+html.mob .arch .acard h4{white-space:normal;font-size:16px;overflow-wrap:anywhere}
+html.mob .arch .agrid.g5 .acard p{margin:8px 0 0;max-width:none}
+html.mob .arch .agrid .cell.addc,html.mob .arch .agrid.g5 .cell.addc.alone{margin-top:0;min-height:44px}
+html.mob .arch .agrid .cell.addc .add,html.mob .arch .agrid.g5 .cell.first .add{position:static}
+html.mob #sec-partners{margin-top:72px!important}
+
+/* ---- my page: the whole screen, its menu as a strip above what it shows ---- */
+html.mob .modal,html.mob .modal.mp{left:0;top:0;width:100vw;height:100%;display:flex;flex-direction:column}
+html.mob .modal .mnav{position:relative;flex:none;width:auto;border-right:0;border-bottom:1px solid #ececec;padding:12px 12px 10px}
+html.mob .modal .mnav .me{position:static;margin:2px 44px 10px 4px}
+html.mob .modal.mp .mp-x{right:10px;top:8px}
+html.mob .modal.mp .mnav .mp-nav{position:static;display:flex;flex-wrap:wrap;gap:6px;max-height:34vh;overflow-y:auto}
+html.mob .modal.mp .mnav .mi{width:auto;height:30px;margin:0;padding:0 11px 0 8px;background:#efeeed}
+html.mob .modal.mp .mnav .mi.on{background:#dcdcdc}
+html.mob .modal.mp .mnav .mi.out{position:static;width:auto;margin-top:6px;background:transparent;padding-left:4px}
+html.mob .modal.mp .mnav .mp-badge{margin:0 0 0 8px}
+html.mob .modal.mp .mnav .sub{order:9;flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px 6px;margin:4px 0 0;padding:8px 0 0;border-left:0;border-top:1px solid #e6e6e6}
+html.mob .modal.mp .mnav .sub .gh{flex:1 1 100%;margin:4px 0 0 4px}
+html.mob .modal.mp .mnav .si{width:auto;padding:3px 10px;background:#f4f3f2}
+html.mob .modal.mp .mnav .si.on{background:#dcdcdc}
+html.mob .modal.mp .mnav .si span{margin-left:6px}
+html.mob .modal.mp .mnav .mp-sq{flex:1 1 100%;margin:0}
+html.mob .modal .mbody,html.mob .modal.mp .mbody{position:relative;left:0;flex:1 1 auto;min-height:0;overflow:auto}
+html.mob .mpp{padding:24px 16px 60px;min-width:0;max-width:none}
+html.mob .mp-hd{flex-wrap:wrap}
+html.mob .mp-form,html.mob .mp-rows{max-width:none}
+html.mob .mp-form .fl{grid-template-columns:minmax(0,1fr);row-gap:6px}
+html.mob .mp-row{flex-wrap:wrap;gap:8px 16px}
+html.mob .mp-av{flex-wrap:wrap}
+html.mob .modal .readall{right:14px}
+
+/* ---- menus and windows ---- */
+html.mob .pop{max-width:calc(100vw - 16px)}
+html.mob .dlg .box{min-width:0;width:calc(100vw - 28px);max-width:460px;max-height:calc(100vh - 28px);overflow:auto;padding:20px 18px 16px}

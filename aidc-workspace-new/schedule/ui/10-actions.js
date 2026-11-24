@@ -176,7 +176,7 @@ function schLinkPath(a,b,type){ type=/^(FS|SS|FF|SF)$/.test(type||'')?type:'FS';
 function schTextW(text,weight){ const c=schTextW.c||(schTextW.c=document.createElement('canvas').getContext('2d')); if(!schTextW.f)schTextW.f=getComputedStyle(document.body).fontFamily||'sans-serif';
   c.font=`${weight||400} 12px ${schTextW.f}`; return c.measureText(text).width-text.length*.144; }
 function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const m=schModel(pid); if(!m){host.innerHTML='';return;} const A=AIDCSchedule, D=A.dates, P=A.progress;
-  SG.left=Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)));   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
+  SG.left=document.documentElement.classList.contains('mob')?Math.round(Math.max(132,host.clientWidth*.44)):Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)))   /* a phone: the names only, the chart beside them */;   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
   const shown=schFiltered(m), shownIds=new Set(shown.map(t=>t.id)), force=schFiltering(), sel=schTaskIdOf(S.panel)||SCHU.sel;
   // time range: like the Schedule app, the long support tail after the operation date is cut (it would flatten everything else)
   const all=m.plan.tasks; let o=Infinity, mx=-Infinity; for(const t of all){const r=m.res.tasks[t.id];o=Math.min(o,D.dayNumber(t.referenceStart),D.dayNumber(r.start));mx=Math.max(mx,D.dayNumber(r.finish));}
