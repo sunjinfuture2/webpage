@@ -782,3 +782,54 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   once: a window says from which number to which ("…1-6 자리에서 1-2 자리로 옮길까요?", for a new action "…1-17 대신 1-3 자리에
   넣을까요?") with 옮기기 / 취소. 취소 changes nothing; the same place as before asks nothing.
 - tests/schedule-13.cjs (74 checks).
+
+## The development review list (owner, 2026-11-24, twenty-fourth round)
+
+The owner sent the company's "AIDC 프로젝트 개발검토 리스트" (a list of 18 projects on two pages, then one sheet per project) and
+asked for the project overview and the project list of the main page to follow it. schedule/ui/88-report.js; tests/schedule-16.cjs.
+
+- **추진 단계 took the place of 분류.** PSTATUS (original.html) is now 기초검토 · 사업구상 · 사업제안 · 사업계획 · 계통협의 · 인허가, in the
+  order a project goes through them; it is still the project's `status`, for both pages. A status that is none of these (a
+  project from before) is shown as it is, in grey. The demo projects of a new database carry stages; the old one-time routine
+  that set the words of before does nothing any more, and a database from before gives its demo projects (pangyo, busan,
+  incheon, sunlight) their stage and group once (meta:flags `stagesV1`).
+- **The overview record (PHEAD[id], headOf) holds the sheet**: `sub` (부제), `grp` (AIDC / Small AIDC), `focus` (집중 추진),
+  `first` / `asof` (최초자료일 / 기준일, plain text such as "2026.11.12 수신"), the cells of the list `lsite` `ldev` `larea` `lgfa` `lload`
+  `memo`, `kpi` and `fin` (arrays of [value, what it is]) with `finNote`, the texts `main` (사업 개요), `infra`, `struct` (사업 구조
+  및 수익 모델), `stat`, `risk`, `src` (a list is one line per item), `rows` (the table 사업 개요: [label, value]) and `plan` (추진 일정:
+  [when, what, 완료 | 진행 | 예정 | 목표]). A project from before gets its `rows` from what its overview already said.
+- **What other screens still read follows the sheet** (schRepMirror, on saving and on taking a file in): `loc` (map, search) from
+  the row 위치, `zone` from 용도지역, `dev` from 사업주체, `cost` from the 사업성 지표 that is called 총사업비 / 총 투자비 / 총 CAPEX. The page as it
+  was (?v=1) keeps its own overview and shows these.
+- **The overview on the combined page** (schRepHead) stands in the page's flow (`.phead.rep`, as tall as what it says; folded it is
+  196 px as before): the sub title under the name; one line with number, group, 집중 추진, stage, owner, the two dates; three
+  columns — 요약 (운영개시 예상 and the cells of the list, read through schRepOf like the list itself, so a project from before the
+  list shows what its overview held; edited, the stored value) · 핵심 지표 · 사업성 지표 (in the project's colour) · 위치 지도 / the four texts ·
+  협력업체 / 사업 개요 표 · 추진 일정 · 주요 리스크 및 검토사항 — and 출처 below. Editing is the edit of before (수정 / 저장 / 취소, the lock, the
+  question on leaving): every value is a `data-k` field, a cell of a list is `kpi:0:1`, `rows:3:0`, `plan:2:2`; "+ …" adds a row,
+  the x empties a row and saving drops rows left empty (so no place has to be counted); the state of a step is the text of its
+  cell, chosen from a menu.
+- **The three marks**: wherever a value of the list is shown, "확인 필요" and "보완 필요" are orange and "자료 없음" is grey (schRepTxt:
+  always through it, never by hand). While the overview is edited the text is plain.
+- **Numbers are not stored.** A project's number is its place in the order of the list: the group (AIDC, Small AIDC, then the ones
+  without), 최초자료일 oldest first (a month alone before its days), then the saved order (schRepSort; orderedProjects() uses it on
+  the combined page). schRepNos() hands out 01, 02, …
+- **The main page**: beside the title "기준일 … · 총 n건" (the day is META_FLAGS.repAsof, set by a data file). Cards: number and name,
+  group · sub title, the stage on the picture, 집중 추진 in red, 운영개시 예상 as the first line when the schedule has a date, then 위치 ·
+  사업주체 · 대지면적 · 연면적 · IT LOAD · 최초자료일. Table (schRepTable, all projects on one page, two lines a cell): NO. · 프로젝트 · 위치 · 사업주체 · 대지면적(m²) ·
+  연면적(m²) · IT LOAD (수전용량) · 추진 단계 · 최초자료일 · 비고, grouped with counts, the pushed ones with a red number and a pale red row;
+  with an order chosen the groups are not drawn. Pickers: 구분 · 추진 단계 · 위치 (시·도, the first word of the place) · 담당자 · 집중 추진 ·
+  정렬 (S.pf: grp, st, region, owner, focus, sort); the search looks into name, sub title, place, 사업주체, IT LOAD, 비고, owner.
+  The Excel file has the columns of the list plus group, sub title, 집중 추진, 기준일, owner, 운영개시 예상.
+- **A data file of the list** ("자료 파일" beside 엑셀로 내보내기): a .json of kind `aidc-dev-report` with `asof`, optionally
+  `others: "trash"`, and `projects` (id, name, match = names it had before, grp, focus, sub, stage, owner, first, asof, list {site,
+  dev, area, gfa, load, memo}, kpi, fin, finNote, ov, infra, model, stat, rows, plan, risk, src; a list may be an array of
+  lines). 가져오기 first shows a window with what will be made, what will be written over (by id, else by name) and which projects
+  are not in the file (a box sends those to the trash; ticked when the file asks for it); nothing changes before 가져오기. Written
+  over means: the overview is the file's and the name too; schedule, actions, meetings, owner and partners stay. 내보내기 writes
+  the same kind of file. This is how the list gets into a workspace: **the repository is public, so the list's own data (the
+  owner's PDF, the file made from it) is never committed** — not in the fixtures, not in a test, not in a note. The tests use
+  made-up projects.
+- A phone: the three columns stand below each other; the table is moved sideways (schedule/mobile.css).
+- Not built (the owner's wish for later): reading the PDF itself. The data file is the form such an upload would be turned into.
+- tests/schedule-16.cjs (38 checks, three members, one on the page as it was).

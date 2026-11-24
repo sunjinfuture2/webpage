@@ -2750,6 +2750,124 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .tbl.sch-vtbl .hd span.flt{color:#000;font-weight:600}
 .tbl.sch-vtbl .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px;flex:none}
 .sch-vtools .sch-filters .sch-chip{align-self:center}
+
+/* Twenty-fourth round (owner, 2026-11-24): the overview of a project and the list of projects follow the development review list
+   (schedule/ui/88-report.js). The overview is as tall as what it says: its parts stand in the page's flow below the title. */
+.sch-on em.rq{font-style:normal;font-weight:600;color:#e07a00}
+.sch-on em.na{font-style:normal;color:#b5b5b5}
+.phead.rep{height:auto;padding:203.2px 0 46px}
+.phead.rep.collapsed{height:196px;padding:0}
+.phead.rep.collapsed .rep-in{display:none}
+.phead.rep .hr.bt{top:auto;bottom:0}
+.phead.rep.collapsed .hr.bt{top:195.6px;bottom:auto}
+.phead.rep .rsub{position:absolute;left:0;top:121px;max-width:calc(1338.9px + var(--d));font-size:15px;line-height:20px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phead.rep .rsub.editable{min-width:240px;overflow:visible}
+.phead.rep .nil{color:#c4c4c4}
+.rep-in{width:calc(1338.9px + var(--d));font-size:15px;color:var(--t2);word-break:keep-all}
+.rmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 32px;font-size:13px;line-height:20px;color:#3d3d3d}
+.rmeta .m{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.rmeta .m > b{font-weight:600;color:#8e8e8e;font-size:12px}
+.rmeta .m.no{font-weight:700;color:#1c1c1c;font-variant-numeric:tabular-nums;margin-right:2px}
+.rmeta .m.grp{height:22px;padding:0 10px;border-radius:11px;background:#f1f1f0;font-weight:600;font-size:12px;color:#3d3d3d}
+.rmeta .m.fo{height:22px;padding:0 10px;border-radius:11px;border:1px solid #dcdcdc;background:#fff;font-size:12px;font-weight:600;color:#a0a0a0}
+.rmeta .m.fo.on{background:#d9202e;border-color:#d9202e;color:#fff}
+.rmeta button.m.fo{cursor:pointer}
+.rmeta .m.st{margin-left:4px}
+.rmeta .sep{width:1px;height:14px;background:#e0e0e0;margin:0 8px}
+.rmeta .m.pk,.rmeta .m.stpick{cursor:pointer}
+.rmeta .m.who .avatar{width:15.4px;height:15.4px}
+.rmeta .m.who + .m.dt{margin-left:auto}
+.rmeta .m.dt{margin-left:14px;font-variant-numeric:tabular-nums}
+.rmeta .m.dt .editable{min-width:74px}
+.rcols{display:grid;grid-template-columns:calc(300px + var(--d) * .2) minmax(0,1fr) minmax(0,1.06fr);column-gap:52px;align-items:start}
+.rc{min-width:0}
+.rb{margin-bottom:36px}
+.rb:last-child{margin-bottom:0}
+.rt{font-size:14px;font-weight:600;color:#000;line-height:20px;padding-bottom:9px;margin-bottom:13px;border-bottom:1px solid #e3e3e3}
+.phead.rep .rb.sum .fr{margin-bottom:10px;font-size:13.5px}
+.phead.rep .rb.sum .fr > b{width:98px;color:#1c1c1c}
+.phead.rep .rb.sum .fr .v{min-width:0;overflow-wrap:anywhere;white-space:pre-line;color:#3d3d3d}
+.phead.rep .rb.sum .fr .v.editable{flex:1}
+.phead.rep .rhint{display:block;font-size:11px;line-height:16px;color:#a6a6a6;margin-top:2px}
+.rkp .k{position:relative;margin-bottom:15px}
+.rkp .k:last-of-type{margin-bottom:0}
+.rkp .k > b{display:block;font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:28px;color:#111;overflow-wrap:anywhere}
+.rkp.fin .k > b{color:var(--pc,#111)}
+.rkp .k > b em.rq{font-weight:700}
+.rkp .k > span{display:block;margin-top:1px;font-size:12px;line-height:17px;color:#8e8e8e;overflow-wrap:anywhere}
+.rnote{margin-top:12px;font-size:11.5px;font-style:italic;line-height:17px;color:#a0a0a0}
+.phead.rep .map,.phead.rep .ph-img{width:100%;height:150px;margin-top:0}
+.rtx{font-size:14.5px;line-height:23px;white-space:pre-line;overflow-wrap:anywhere;color:#3d3d3d}
+.rul{margin:0;padding:0;list-style:none;font-size:14.5px;line-height:22px;color:#3d3d3d}
+.rul li{position:relative;padding-left:13px;margin-bottom:6px;overflow-wrap:anywhere}
+.rul li:last-child{margin-bottom:0}
+.rul li::before{content:"";position:absolute;left:1px;top:9px;width:4px;height:4px;border-radius:50%;background:#b5b5b5}
+.phead.rep .rb.pt .partners{display:flex;flex-direction:column;gap:6.6px;align-items:flex-start}
+.rtb .r{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);column-gap:14px;padding:7px 0;border-bottom:1px solid #f1f1f1;font-size:13.5px;line-height:20px}
+.rtb .r:first-child{padding-top:0}
+.rtb .r > b{font-weight:600;color:#1c1c1c;overflow-wrap:anywhere;min-width:0}
+.rtb .r > span{color:#3d3d3d;overflow-wrap:anywhere;min-width:0}
+.rtb.plan .r{grid-template-columns:112px minmax(0,1fr) 64px}
+.rtb.plan .r > b{font-weight:500;font-variant-numeric:tabular-nums}
+.rtb.plan .r > i{font-style:normal;display:inline-flex;align-items:center;gap:4px;font-size:12.5px;height:20px;white-space:nowrap}
+.rtb.plan .r > i.pk{cursor:pointer}
+.rtb .r.th{padding:0 0 6px;font-size:11.5px;line-height:16px}
+.rtb .r.th > b,.rtb .r.th > span,.rtb .r.th > i{font-weight:500;color:#a0a0a0;font-size:11.5px;height:auto}
+.phead.rep .rx{position:absolute;right:-22px;top:7px;width:18px;height:18px;border-radius:4px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:#b5b5b5;cursor:pointer}
+.phead.rep .rkp .rx{top:5px}
+.phead.rep .rx:hover{background:#f1f1f1;color:#d30000}
+.phead.rep .radd{margin-top:10px;height:22px;font-size:12px}
+.phead.rep.ed .rtb .r > b,.phead.rep.ed .rtb .r > span,.phead.rep.ed .rkp .k > b,.phead.rep.ed .rkp .k > span{display:block;min-height:20px}
+.phead.rep.ed .rtx.editable{min-height:46px}
+.rsrc{display:flex;gap:12px;margin-top:34px;padding-top:13px;border-top:1px solid #f1f1f1;font-size:12px;line-height:18px;color:#8e8e8e}
+.rsrc > b{font-weight:600;color:#6f6f6f;flex:none}
+.rsrc i{font-style:normal;margin:0 7px;color:#c4c4c4}
+.rsrc .rtx{flex:1;font-size:12.5px;line-height:19px}
+
+/* the cards of the list */
+.sec-title .rep-cnt{align-self:flex-end;margin:0 0 6px 16px;font-size:12.5px;font-weight:500;letter-spacing:0;color:#8e8e8e;font-variant-numeric:tabular-nums}
+.sch-on .pcard.rep h3{overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep h3 em{font-style:normal;font-size:14px;font-weight:700;margin-right:7px;color:#b5b5b5;font-variant-numeric:tabular-nums}
+.sch-on .pcard.rep.focus h3 em{color:#d9202e}
+.sch-on .pcard.rep .sub{margin:3px 0 0 -1.4px;height:18px;font-size:12px;line-height:18px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep .info{margin-top:7px}
+.sch-on .pcard.rep .info b{width:64px;flex:none;margin-right:6px}
+.sch-on .pcard.rep .info .e{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep .info .ops b{width:auto}
+.sch-on .pcard.rep .fo{position:absolute;left:6.6px;top:31px;height:16.6px;padding:0 7.4px;border-radius:8.3px;background:#d9202e;color:#fff;display:flex;align-items:center;font-size:9px;font-weight:600;white-space:nowrap;box-shadow:0 0.4px 2.6px rgba(0,0,0,.14)}
+
+/* the table of the list: two lines a cell, the groups with their count, the ones being pushed red */
+.tbl.sch-proc.vt-rep .hd,.tbl.sch-proc.vt-rep .rw{grid-template-columns:56px minmax(170px,1.25fr) 112px minmax(140px,1.1fr) 106px 106px minmax(150px,1.2fr) 98px 106px minmax(180px,1.7fr)}
+.tbl.sch-proc.vt-rep .rw{height:56px}
+.tbl.sch-proc.vt-rep .rw > div{font-size:13.5px;word-break:keep-all}
+.tbl.sch-proc.vt-rep .rw .e{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:18px;overflow-wrap:anywhere}
+.tbl.sch-proc.vt-rep .rw .nm{font-size:14.5px}
+.tbl.sch-proc.vt-rep .rw .nm .e{-webkit-line-clamp:2}
+.tbl.sch-proc.vt-rep .rw .dt{font-variant-numeric:tabular-nums}
+.tbl.sch-proc.vt-rep .rw .no span{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums}
+.tbl.sch-proc.vt-rep .rw.focus{background:#fdf0f1}
+.tbl.sch-proc.vt-rep .rw.focus:hover{background:#fbe5e7}
+.tbl.sch-proc.vt-rep .rw.focus .no span{background:#d9202e;color:#fff}
+.tbl.sch-proc.vt-rep .rw.focus .nm{color:#d9202e!important}
+.tbl.sch-proc.vt-rep .grp{display:flex;align-items:baseline;gap:8px;height:46px;padding:20px 0 0 10px;font-size:14px;color:#000;border-bottom:1px solid #e3e3e3}
+.tbl.sch-proc.vt-rep .grp b{font-weight:600}
+.tbl.sch-proc.vt-rep .grp span{font-size:12.5px;color:#8e8e8e;font-variant-numeric:tabular-nums}
+.rep-foot{width:calc(1337.9px + var(--d));margin-top:10px;font-size:11.5px;font-style:italic;line-height:17px;color:#a0a0a0}
+.projects .pfil .sch-filters .right{display:flex;align-items:center;gap:8px}
+.projects .pfil .sch-filters .right [data-repio]{display:inline-flex;align-items:center;gap:6px}
+
+/* the window of a data file: what will be made, written over, sent to the trash */
+.dlg.sch-repin .box{width:560px}
+.sch-repin .rin{margin-top:22px;max-height:min(56vh,520px);overflow:auto;font-size:13.5px;color:#3d3d3d}
+.sch-repin .rin .g{padding:14px 0;border-top:1px solid #f1f1f1}
+.sch-repin .rin .g:first-child{border-top:0;padding-top:0}
+.sch-repin .rin .g > b{display:block;font-weight:600;color:#000}
+.sch-repin .rin .g > small{display:block;margin-top:3px;font-size:12px;color:#8e8e8e;line-height:17px}
+.sch-repin .rin ul{margin:8px 0 0;padding:0;list-style:none;columns:2;column-gap:22px}
+.sch-repin .rin li{line-height:22px;break-inside:avoid;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-repin .rin li span{font-size:12px;color:#8e8e8e}
+.sch-repin .rin .ck{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;color:#1c1c1c;cursor:pointer}
+.sch-repin .rin .ck em{font-style:normal;font-size:12px;color:#8e8e8e}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3362,7 +3480,7 @@ html.mob .sch-vtools .srch.box{flex:1 1 150px;min-width:0}
 html.mob .sch-vtools .srch.box input{width:100%;min-width:0}
 html.mob .sch-vtools .sch-filters{flex:1 1 100%;margin:0 0 4px;order:9}
 html.mob .projects .pfil{position:static;width:auto;margin-top:6px}
-html.mob .projects .track,html.mob .meet .track,html.mob.sch-on .projects .track{position:static!important;width:auto;margin:22px -16px 0;padding:4px 16px 12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none}
+html.mob .projects .track,html.mob .meet .track,html.mob.sch-on .projects .track{position:static!important;width:auto;margin:22px -16px 0;padding:4px 16px 12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding:0 16px;scrollbar-width:none}
 html.mob .projects .track::-webkit-scrollbar,html.mob .meet .track::-webkit-scrollbar{display:none}
 html.mob .projects .inner,html.mob .meet .inner{transform:none!important;width:max-content}
 html.mob .projects .pcard,html.mob .meet .mcard{scroll-snap-align:start;flex:none;max-width:82vw}
@@ -3483,6 +3601,28 @@ html.mob .modal .readall{right:14px}
 /* ---- menus and windows ---- */
 html.mob .pop{max-width:calc(100vw - 16px)}
 html.mob .dlg .box{min-width:0;width:calc(100vw - 28px);max-width:460px;max-height:calc(100vh - 28px);overflow:auto;padding:20px 18px 16px}
+
+/* the overview and the list of the development review list (twenty-fourth round) */
+html.mob .phead.rep,html.mob .phead.rep.collapsed{padding-bottom:0}
+html.mob .phead.rep .rsub{position:static;max-width:none;white-space:normal;overflow:visible;margin:8px 0 0;font-size:14px}
+html.mob .phead.rep .rep-in{width:auto;margin:22px 0 26px}
+html.mob .phead.rep .rmeta{gap:8px;margin-bottom:26px}
+html.mob .phead.rep .rmeta .sep{display:none}
+html.mob .phead.rep .rmeta .m.who + .m.dt,html.mob .phead.rep .rmeta .m.dt{margin-left:0}
+html.mob .phead.rep .rcols{grid-template-columns:minmax(0,1fr);row-gap:34px}
+html.mob .phead.rep .rb.sum .fr > b{width:98px!important}
+html.mob .phead.rep .rtb .r{grid-template-columns:96px minmax(0,1fr)}
+html.mob .phead.rep .rtb.plan .r{grid-template-columns:86px minmax(0,1fr) 60px}
+html.mob .phead.rep.ed .rtb .r,html.mob .phead.rep.ed .rkp .k{padding-right:24px}
+html.mob .phead.rep .rx{right:0}
+html.mob .phead.rep .rsrc{flex-direction:column;gap:4px}
+html.mob .phead.rep .rsrc span{overflow-wrap:anywhere}
+html.mob .rep-foot{width:auto}
+html.mob .sec-title .rep-cnt{margin-left:10px;font-size:12px}
+html.mob .projects .pfil .sch-filters .right{margin-left:0}
+html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
+html.mob .dlg.sch-repin .box{width:auto}
+html.mob .sch-repin .rin ul{columns:1}
 </style>
 </head>
 <body>
@@ -3651,13 +3791,13 @@ html.mob .dlg .box{min-width:0;width:calc(100vw - 28px);max-width:460px;max-heig
 <script>
 /* ===================== DATA ===================== */
 const PROJECTS = {
-  pangyo:  {id:'pangyo', tag:'판교 AIDC', full:'판교 AI 데이터센터', cls:'pj-g', color:'#1f8e00', status:'진행중', stColor:'#61bc00', grad:'#b3d5aa', imgH:207.8,
+  pangyo:  {id:'pangyo', tag:'판교 AIDC', full:'판교 AI 데이터센터', cls:'pj-g', color:'#1f8e00', status:'사업계획', stColor:'#0091e2', grad:'#b3d5aa', imgH:207.8,
             owner:'박준수 대리', site:'경기 성남시 분당구 백현동 404-1', cost:'₩100,000,000,000', area:'1,000㎡ 내외', power:'5MW (전력 추가 확보 시)', it:'2.4MW+', server:'B300'},
-  busan:   {id:'busan', tag:'부산 AIDC', full:'부산 AI 데이터센터', cls:'pj-p', color:'#8c0043', status:'진행중', stColor:'#61bc00', grad:'#d6adc0', imgH:296.2,
+  busan:   {id:'busan', tag:'부산 AIDC', full:'부산 AI 데이터센터', cls:'pj-p', color:'#8c0043', status:'사업구상', stColor:'#8a7a4a', grad:'#d6adc0', imgH:296.2,
             owner:'박준수 대리', site:'경기 성남시 분당구 백현동 404-1', cost:'₩100,000,000,000', area:'1,000㎡ 내외', power:'5MW (전력 추가 확보 시)', it:'2.4MW+', server:'B300'},
-  incheon: {id:'incheon', tag:'인천 청라 AIDC', full:'인천 청라 AI 데이터센터', cls:'pj-b', color:'#4b42fc', status:'완료', stColor:'#0091e2', grad:'#c5c3f7', imgH:250.5,
+  incheon: {id:'incheon', tag:'인천 청라 AIDC', full:'인천 청라 AI 데이터센터', cls:'pj-b', color:'#4b42fc', status:'기초검토', stColor:'#9a9a9a', grad:'#c5c3f7', imgH:250.5,
             owner:'박준수 대리', site:'경기 성남시 분당구 백현동 404-1', cost:'₩100,000,000,000', area:'1,000㎡ 내외', power:'5MW (전력 추가 확보 시)', it:'2.4MW+', server:'B300'},
-  sunlight:{id:'sunlight', tag:'초기기획 사업', full:'햇빛 소득마을사업', cls:'pj-k', color:'#3a3a3a', status:'초기기획사업', stColor:'#8a7a4a', grad:'#d1d0d0', imgH:207.8,
+  sunlight:{id:'sunlight', tag:'초기기획 사업', full:'햇빛 소득마을사업', cls:'pj-k', color:'#3a3a3a', status:'기초검토', stColor:'#9a9a9a', grad:'#d1d0d0', imgH:207.8,
             owner:'박준수 대리', site:'경기 성남시 분당구 백현동 404-1', cost:'₩100,000,000,000', area:'1,000㎡ 내외', power:'5MW (전력 추가 확보 시)', it:'2.4MW+', server:'B300'}
 };
 const PROJ_ORDER = ['pangyo','busan','incheon','sunlight'];
@@ -3743,23 +3883,25 @@ const ROADMAP=[
   {date:'26.09.21',cat:'서버 구입가능성 검토',chips:[{k:'g',t:'GPU임대가...'}],title:'FOXCONN 미팅',imgs:[],body:'[구조]\n- Foxconn: AI 인프라 제조사(서버, 랙 등)\n- KT: AI 데이터센터 운영사업자(통신망 제공, GPUaaS 및\n   클라우드 서비스 운영)\n- 선진: 데이터센터 건설 및 프로젝트 PM 및 EPC\n\n[조직구상안]\n- 선진 HQ: 인허가 및 데이터센터 설계 및 시공감리(PM/EPC)\n- 선진 A: 핵심 부품 수입 및 유통전담\n- 선진 B: 펀드조성, 투자 및 자산운용 담당',gap:73.2},
   {date:'26.10.22',cat:'운영방법 검토',chips:[{k:'rs',t:'GPU임대가...'},{k:'g',t:'GPU임대가...'}],title:'VESSL AI 3차 미팅',imgs:[159.6],imgTop:15,bodyTop:14.5,body:'※ SPC 설립 및 DBO 모델 적용: 고가의 AI 서버 구매 비용을 감당하기 위해\n기존의 상면 임대(Colocation) 방식 외에, SPC를 설립하여 직접 서버를\n구매하고 운영·임대하는 DBO(Design-Build-Operate) 수익 모델 전환 검토 중',gap:34.5}];
 const PHEAD = {
-  pangyo:{cls:'진행 중',prog:'운영방법 검토',owner:'박준수 대리',loc:'신성엔지니어링 분당서비스센터\n(경기 성남시 분당구 백현동 404-1) ',alt:'※ 대체부지 (후보지)\n1.  한국전기공업협동조합',
+  pangyo:{grp:'Small AIDC',cls:'진행 중',prog:'운영방법 검토',owner:'박준수 대리',loc:'신성엔지니어링 분당서비스센터\n(경기 성남시 분당구 백현동 404-1) ',alt:'※ 대체부지 (후보지)\n1.  한국전기공업협동조합',
     zone:'도시지역, 자연녹지지역',kind:'데이터센터',dev:'선진엔지니어링',land:'신성이엔지',fund:'PF조달',cost:'₩100,000,000,000',fundType:'PF, 투자자유치',
     scale:[['공사면적:','1,000㎡ 내외'],['IT 용량:','2.4MW+'],['총 수전용량 :','5MW (전력 추가 확보 시)'],['서버:','GB300 SuperPOD']],partners:['신성이엔지','KT인베스트먼트','메가존클라우드','폭스콘','KB증권'],
     struct:'[구조]\n- Foxconn: AI 인프라 제조사(서버, 랙 등)\n- KT: AI 데이터센터 운영사업자(통신망 제공, GPUaaS 및\n   클라우드 서비스 운영)\n- 선진: 데이터센터 건설 및 프로젝트 PM 및 EPC\n\n[조직구상안]\n- 선진 HQ: 인허가 및 데이터센터 설계 및 시공감리(PM/EPC)\n- 선진 A: 핵심 부품 수입 및 유통전담\n- 선진 B: 펀드조성, 투자 및 자산운용 담당\n\n※ SPC 설립 및 DBO 모델 적용: 고가의 AI 서버 구매 비용을 감당하기 위해\n기존의 상면 임대(Colocation) 방식 외에, SPC를 설립하여 직접 서버를\n구매하고 운영·임대하는 DBO(Design-Build-Operate) 수익 모델 전환 검토 중',
     main:'1. 신성이엔지 판교 사옥 지하(B1) 기계/전기실 및 주차장 유휴부지 내 신축\n\n- 공간규모: 약 200~300평(리모델링) + 약200평(신축)\n- 기존 수전2 .2MW에 전력추가 약 2.8MW 확보하여 총 수전 5MW 예상\n\n2. 엔비디아 GB300 Super POD 2set 이상 도입 예정 (GPU 수급: 메가존)\n\n3. 당사 제공 레이아웃 및 검토의견 → Foxconn 피드백 수신 대기\n\n※ 당초 계획(부지 일부 사용)에서, 지하1층 부지를 전부 가용하는 방안 검토 중\n\n- 기존 수익구조 보고서에 금융구조가 추가된 사업성 분석 보고서 작성 중\n- GB300 SuperPOD 4SU 검토\n- 지하1층 부지 전체에 대한 평면도 작성 검토\n- 한전 전력 확보 검토'}
 };
-PHEAD.busan={...PHEAD.pangyo,cls:'진행 중',prog:'부지 검토',loc:'부산 강서구 미음산단 내 후보지\n(부산 강서구 미음동 0-00) ',alt:'※ 대체부지 (후보지)\n1.  부산 에코델타시티'};
-PHEAD.incheon={...PHEAD.pangyo,cls:'진행 중',prog:'인허가 검토',loc:'인천 청라국제도시 0-00 부지\n(인천 서구 청라동 0-00) ',alt:'※ 대체부지 (후보지)\n1.  인천 송도 지식정보산업단지'};
+PHEAD.busan={...PHEAD.pangyo,grp:'AIDC',cls:'진행 중',prog:'부지 검토',loc:'부산 강서구 미음산단 내 후보지\n(부산 강서구 미음동 0-00) ',alt:'※ 대체부지 (후보지)\n1.  부산 에코델타시티'};
+PHEAD.incheon={...PHEAD.pangyo,grp:'AIDC',cls:'진행 중',prog:'인허가 검토',loc:'인천 청라국제도시 0-00 부지\n(인천 서구 청라동 0-00) ',alt:'※ 대체부지 (후보지)\n1.  인천 송도 지식정보산업단지'};
 PHEAD.sunlight={...PHEAD.pangyo,cls:'계획 중',prog:'초기 기획',loc:'햇빛 소득마을 조성 후보지\n(경기 성남시 분당구 백현동 404-1) ',alt:'※ 대체부지 (후보지)\n1.  미정',kind:'신재생에너지'};
 const NOTES = {main:'메인 페이지'};
 const DEMO_TODAY='2026-10-27'; // the date the demo fixtures were written for
 const todayStr=()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');};
 let TODAY=todayStr(); // the real date: used for new items, the calendar and the "new" badge (green: created within 3 days)
-const PSTATUS={'진행중':'#61bc00','계획중':'#ffa912','완료':'#0091e2','초기기획사업':'#8a7a4a','취소':'#9a9a9a'}; const PSTATUS_ORDER=Object.keys(PSTATUS);
+// 추진 단계 (owner, 2026-11-24: the old 분류 — 진행중 · 계획중 · 완료 · 초기기획사업 — gave way to the stages of the development review list,
+// in the order a project goes through them). A status that is none of these (a project from before) is shown as it is, in grey.
+const PSTATUS={'기초검토':'#9a9a9a','사업구상':'#8a7a4a','사업제안':'#ffa912','사업계획':'#0091e2','계통협의':'#7a5cf0','인허가':'#61bc00'}; const PSTATUS_ORDER=Object.keys(PSTATUS);
 const normStatus=s=>String(s||'').replace(/\s+/g,'');
 const statusRank=id=>{const i=PSTATUS_ORDER.indexOf(normStatus(PROJECTS[id]&&PROJECTS[id].status));return i<0?99:i;};
-const orderedProjects=()=>{const ids=[...new Set(PROJ_ORDER.filter(k=>PROJECTS[k]).concat(Object.keys(PROJECTS).filter(k=>!PROJ_ORDER.includes(k))))];return ids.slice().sort((a,b)=>statusRank(a)-statusRank(b)||ids.indexOf(a)-ids.indexOf(b));}; // a project missing from the saved order is still listed
+const orderedProjects=()=>{const ids=[...new Set(PROJ_ORDER.filter(k=>PROJECTS[k]).concat(Object.keys(PROJECTS).filter(k=>!PROJ_ORDER.includes(k))))];return PREVIEW_ON&&typeof schRepSort==='function'?schRepSort(ids):ids.slice().sort((a,b)=>statusRank(a)-statusRank(b)||ids.indexOf(a)-ids.indexOf(b));}; // a project missing from the saved order is still listed (the combined page: the order of the review list, schRepSort)
 const statusBadge=s=>{s=normStatus(s);return `<span class="pst" style="color:${PSTATUS[s]||'#8e8e8e'}"><i></i>${esc(s||'미정')}</span>`;};
 function applyProjectStatus(id,s){s=normStatus(s);const p=PROJECTS[id];if(!p)return;p.status=s;p.stColor=PSTATUS[s]||p.stColor;if(PHEAD[id])PHEAD[id].cls=s;}
 Object.keys(PROJECTS).forEach(id=>applyProjectStatus(id,PROJECTS[id].status));
@@ -4096,6 +4238,7 @@ const scaleOf=(h,i,fb)=>{const s=h&&h.scale&&h.scale[i];return (s&&s[1])||fb||''
 const SCALE_FB=['area','it','power','server'];   // the project's own fields the card fell back on: the overview reads them the same way and writes both, so card and overview cannot differ
 const siteOf=(p,h)=>mapQuery(h&&h.loc)||((h&&h.loc)||'').split('\n')[0].trim()||p.site||'';
 function projectCards(){const ids=PREVIEW_ON?schProjFilter(orderedProjects()):orderedProjects(); if(PREVIEW_ON&&!ids.length)return '<div class="none" style="height:120px;color:#939393;font-size:14px;display:flex;align-items:center">조건에 맞는 프로젝트가 없습니다.</div>';
+  if(PREVIEW_ON)return schRepCards(ids);
   return ids.map(k=>{const p=PROJECTS[k], h=PHEAD[k]||{};return `<div class="pcard" data-go="project:${k}"><div class="img" style="height:${PREVIEW_ON?schCardImgH(p):p.imgH}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><div class="grad" style="height:${p.id==='busan'?78:90}px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${p.stColor}"><i></i>${esc(p.status)}</span></div>
   <h3 style="color:${p.color}">${esc(p.full)}</h3><div class="info">${PREVIEW_ON?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}<div><b>담당자</b>${av()}${esc(h.owner||p.owner)}</div><div><b>부지</b>${esc(siteOf(p,h))}</div><div><b>총사업비</b>${esc(h.cost||p.cost)}</div><div><b>공사 면적</b>${esc(scaleOf(h,0,p.area))}</div><div><b>총 수전용량</b>${esc(scaleOf(h,2,p.power))}</div><div><b>IT 용량</b>${esc(scaleOf(h,1,p.it))}</div><div><b>서버</b>${esc(scaleOf(h,3,p.server))}</div></div></div>`;}).join('');}
 // Meeting cards of one project, newest date first. The lines under the title are the agenda (checks) or the first lines of the minutes.
@@ -4150,7 +4293,7 @@ function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.pa
 function renderMain(){ if(schPreview())schPids().forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
-   ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?750:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
+   ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?750:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${PREVIEW_ON?schRepCount():''}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>`}
    <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${schPreview()?'':perBox()}${searchBox('action',ACT+' 검색')}</div>
@@ -4174,14 +4317,21 @@ function ptKeep(fn){ const c=$('#content'), z=LAYOUT.zoom||1, st=c.scrollTop; S.
   if(lack>0){S.ptHold=Math.ceil(b.getBoundingClientRect().height/z+lack); b.style.minHeight=S.ptHold+'px';}
   c.scrollTop=st; const up=b.closest('.sec').getBoundingClientRect().top-c.getBoundingClientRect().top; if(up<0)c.scrollTop+=up/z; }
 // The overview record of a project, completed if a field (or the whole record) is missing.
-function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]={}); const def={cls:p.status||'',prog:'',owner:p.owner||'',loc:p.site||'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:p.cost||'',fundType:'',struct:'',main:''};
-  for(const k of Object.keys(def))if(typeof h[k]!=='string')h[k]=def[k]; if(!Array.isArray(h.partners))h.partners=[]; if(!Array.isArray(h.scale)||!h.scale.length||!h.scale.every(s=>Array.isArray(s)&&s.length>=2))h.scale=['공사면적:','IT 용량:','총 수전용량 :','서버:'].map((l,i)=>{const s=Array.isArray(h.scale)?h.scale[i]:null;return Array.isArray(s)?[s[0]||l,s[1]||'']:[l,''];}); return h;}
+function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]={}); const def={cls:p.status||'',prog:'',owner:p.owner||'',loc:p.site||'',alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:p.cost||'',fundType:'',struct:'',main:'',
+    sub:'',grp:'',first:'',asof:'',lsite:'',ldev:'',larea:'',lgfa:'',lload:'',memo:'',finNote:'',infra:'',stat:'',risk:'',src:''};   // second line: the development review list (owner, 2026-11-24; schedule/ui/88-report.js)
+  for(const k of Object.keys(def))if(typeof h[k]!=='string')h[k]=def[k]; if(!Array.isArray(h.partners))h.partners=[]; if(!Array.isArray(h.scale)||!h.scale.length||!h.scale.every(s=>Array.isArray(s)&&s.length>=2))h.scale=['공사면적:','IT 용량:','총 수전용량 :','서버:'].map((l,i)=>{const s=Array.isArray(h.scale)?h.scale[i]:null;return Array.isArray(s)?[s[0]||l,s[1]||'']:[l,''];});
+  // lists of the review list: 핵심 지표 / 사업성 지표 (value, what it is), the table 사업 개요 (label, value), 추진 일정 (when, what, state).
+  // A project from before gets its table from what its overview already said.
+  const okRows=(a,n)=>Array.isArray(a)&&a.every(r=>Array.isArray(r)&&r.length>=n&&r.every(x=>typeof x==='string'));
+  if(!okRows(h.kpi,2))h.kpi=[]; if(!okRows(h.fin,2))h.fin=[]; if(!okRows(h.plan,3))h.plan=[];
+  if(!okRows(h.rows,2))h.rows=[['위치',mapQuery(h.loc)||h.loc.split('\n')[0].trim()],['용도지역',h.zone],['대지면적',''],['연면적',scaleOf(h,0,p.area)],['건폐율 / 용적률',''],['규모',''],['사업주체',h.dev],['운영사 / 임차인',''],['수전 계획',scaleOf(h,2,p.power)]];
+  h.focus=!!h.focus; return h;}
 function renderProject(pid){
   const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
   const lk=(t,k)=>`<span class="lk">${PV?schPartnerMark(t):`<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
   $('#proj-pw').innerHTML=`
-   <div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>${PREVIEW_ON?'':`<span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`}`:''}</div>${PREVIEW_ON&&!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+   ${PV?schRepHead(pid):`<div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>${PREVIEW_ON?'':`<span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`}`:''}</div>${PREVIEW_ON&&!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="cols">
      <div class="col col1"><div class="fr"><b>분류</b>${E?`<span class="v stpick" data-pickstatus>${statusBadge(p.status)}${svg('i-chev-d',7.2,3.6,'color:#8e8e8e')}</span>`:`<span class="v">${statusBadge(p.status)}</span>`}</div><div class="fr" style="margin-bottom:25.7px"><b>진행도</b><span class="v${EC}" ${edk('prog')}>${esc(d.prog)}</span></div>
@@ -4192,7 +4342,7 @@ function renderProject(pid){
       <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(scaleOf(d,i,p[SCALE_FB[i]]))}</span></div>`).join('')}</div></div>
       <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>${PV?'<small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>':''}`:''}</div></div></div>
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
-    </div><div class="hr bt"></div></div>
+    </div><div class="hr bt"></div></div>`}
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
    ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:${PV?371.4:352.1}px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
      <div class="track" style="top:${PV?76.7:57.4}px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
@@ -4730,9 +4880,9 @@ document.addEventListener('click',async e=>{
     const tot=+pg.dataset.total||$$('button[data-pg]',pg).filter(b=>!isNaN(b.dataset.pg)).length; const prev=S[key]; let cur=prev; if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=tot; else cur=+v; S[key]=Math.min(Math.max(1,cur),tot);
     if(key==='memPage'){renderPane('members');} else if(key==='archPage'){render(true);} else {if(key==='resPage'&&S[key]!==prev)S._slide={key,dir:S[key]>prev?1:-1}; if(key==='ptPage')ptKeep(()=>refreshSec('partner')); else refreshSec(key==='actPage'?'action':'research');} return;}
   if(el=q('[data-car]')){const [k,dir]=el.dataset.car.split(':'); moveCarousel(k,+dir); return;}
-  if(el=q('.new-proj')){if(PREVIEW_ON&&typeof schNewProject==='function'){schNewProject();return;}openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${['계획중','진행중','완료'].map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
+  if(el=q('.new-proj')){if(PREVIEW_ON&&typeof schNewProject==='function'){schNewProject();return;}openPop(el,`<div class="hd">새 프로젝트</div><div class="msg" style="padding-top:0"><label style="display:block;font-size:12px;font-weight:600;color:#0f0f0f">사업명</label><input id="np-name" placeholder="예: 대전 AI 데이터센터"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">분류</label><div class="np-st" id="np-st">${PSTATUS_ORDER.map((st,i)=>`<button type="button" data-npst="${st}" class="${i===0?'on':''}" style="color:${PSTATUS[st]}"><i></i>${st}</button>`).join('')}</div><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">담당자</label><input id="np-owner" value="${esc(sharedName)}"><label style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:#0f0f0f">부지</label><input id="np-site" placeholder="주소"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-np="cancel">취소</button><button class="it" data-np="ok" style="background:#0f0f0f;color:#fff">만들기</button></div></div>`,{}); $('#np-name').focus(); return;}
   if(el=q('[data-npst]')){$$('#np-st button').forEach(b=>b.classList.toggle('on',b===el));return;}
-  if(el=q('[data-np]')){if(el.dataset.np==='ok'){const n=$('#np-name').value.trim(); if(!n){$('#np-name').focus();return;} const npst=($('#np-st button.on')||{}).dataset?.npst||'계획중'; const id='p'+Date.now(); const ci=(PROJ_ORDER.length-4+6)%6; const TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci]; PROJECTS[id]={id,tag:n,full:n,cls:'pj-c'+ci,color:TONE[0],status:npst,stColor:PSTATUS[npst],grad:TONE[1],imgH:207.8,owner:$('#np-owner').value||sharedName,site:$('#np-site').value||'',cost:'',area:'',power:'',it:'',server:''}; PHEAD[id]={cls:npst,prog:'초기 기획',owner:PROJECTS[id].owner,loc:PROJECTS[id].site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''}; PROJ_ORDER.push(id); S.filters[id]=true; closePop(); go('project:'+id); if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);} toast('빈 프로젝트 페이지가 만들어졌습니다. 내용을 입력한 뒤 저장하세요.');} else closePop(); return;}
+  if(el=q('[data-np]')){if(el.dataset.np==='ok'){const n=$('#np-name').value.trim(); if(!n){$('#np-name').focus();return;} const npst=($('#np-st button.on')||{}).dataset?.npst||PSTATUS_ORDER[0]; const id='p'+Date.now(); const ci=(PROJ_ORDER.length-4+6)%6; const TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci]; PROJECTS[id]={id,tag:n,full:n,cls:'pj-c'+ci,color:TONE[0],status:npst,stColor:PSTATUS[npst],grad:TONE[1],imgH:207.8,owner:$('#np-owner').value||sharedName,site:$('#np-site').value||'',cost:'',area:'',power:'',it:'',server:''}; PHEAD[id]={cls:npst,prog:'초기 기획',owner:PROJECTS[id].owner,loc:PROJECTS[id].site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''}; PROJ_ORDER.push(id); S.filters[id]=true; closePop(); go('project:'+id); if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);} toast('빈 프로젝트 페이지가 만들어졌습니다. 내용을 입력한 뒤 저장하세요.');} else closePop(); return;}
   if(el=q('.new-action')){const it=newItem('action');openPanel(it.id);return;}
   if(el=q('.new-research')){const it=newItem('research');openPanel(it.id);return;}
   if(el=q('.new-meeting')){const it=newItem('meeting');openPanel(it.id);return;}
@@ -4877,8 +5027,10 @@ const mapQuery=t=>{t=(t||'').trim();if(!t)return '';const m=t.match(/\(([^()]{4,
 const mapBox=(t,style)=>{const q=mapQuery(t);return q?`<iframe class="map" style="${style}" src="https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&hl=ko&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${esc(q)}"></iframe>`:`<div class="ph-img" style="${style}"></div>`;};
 // Reads the overview fields being edited into the project. The short name (약칭) is its own field and is never derived from the long name.
 function saveProjectHead(){const pw=$('#proj-pw'); if(!pw||!S.editProj)return; const h=PHEAD[S.proj], p=PROJECTS[S.proj]; if(!h||!p)return;
-  $$('[data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){const si=+k.split(':')[1]; h.scale[si][1]=v; if(SCALE_FB[si])p[SCALE_FB[si]]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else h[k]=v;});
-  h.partners=h.partners.filter(x=>x!==''); p.owner=h.owner; if(h.cost)p.cost=h.cost; }
+  $$('[data-k]',pw).forEach(el=>{const k=el.dataset.k; const v=(el.innerText||el.textContent).replace(/ /g,' ').trim(); if(k==='__full'){if(v)p.full=v;} else if(k==='__tag'){if(v)p.tag=v;} else if(k.startsWith('scale:')){const si=+k.split(':')[1]; h.scale[si][1]=v; if(SCALE_FB[si])p[SCALE_FB[si]]=v;} else if(k.startsWith('partner:')){h.partners[+k.split(':')[1]]=v;} else if(/^(kpi|fin|rows|plan):\d+:\d+$/.test(k)){const [a,i,j]=k.split(':'); if(h[a]&&h[a][+i])h[a][+i][+j]=v;} else h[k]=v;});
+  h.partners=h.partners.filter(x=>x!==''); for(const a of ['kpi','fin','rows','plan'])if(Array.isArray(h[a]))h[a]=h[a].filter(r=>r.some((x,j)=>x&&!(a==='plan'&&j===2)));   // a row left empty is gone
+  if(PREVIEW_ON&&typeof schRepMirror==='function')schRepMirror(h,p);
+  p.owner=h.owner; if(h.cost)p.cost=h.cost; }
 const STAGES=['사업규모 확정','부지 검토','인허가 검토','운영방법 검토','서버 구입가능성 검토','자금조달 검토','착공','운영 개시'];
 const toYMD=s=>{const m=s.match(/^(\d\d)\.(\d\d)\.(\d\d)$/); return m?`20${m[1]}-${m[2]}-${m[3]}`:s;};
 const toRoadDate=ymd=>ymd.slice(2).replace(/-/g,'.');
@@ -5322,7 +5474,11 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
  // One-time data fixes, recorded in meta:flags so they run once per database.
  if(!ARCH_TABS.includes('기타')){ARCH_TABS.push('기타');if(!ARCH_ROWS['기타'])ARCH_ROWS['기타']=[];}
- if(!META_FLAGS.projectStatusV2){const want={pangyo:'진행중',incheon:'완료',sunlight:'초기기획사업'};Object.keys(PROJECTS).forEach(id=>applyProjectStatus(id,want[id]||PROJECTS[id].status));META_FLAGS.projectStatusV2=1;}
+ if(!META_FLAGS.projectStatusV2)META_FLAGS.projectStatusV2=1;   // (it set the old 분류 of the demo projects; those words gave way to 추진 단계 on 2026-11-24)
+ if(!META_FLAGS.stagesV1){ // 추진 단계 took the place of 분류 (2026-11-24): the demo projects of a database from before get the stage and the group the fixtures carry now
+  const old=new Set(['진행중','계획중','완료','초기기획사업','취소']), want={pangyo:['사업계획','Small AIDC'],busan:['사업구상','AIDC'],incheon:['기초검토','AIDC'],sunlight:['기초검토','Small AIDC']};
+  for(const [id,[st,grp]] of Object.entries(want)){const p=PROJECTS[id];if(!p)continue;if(old.has(normStatus(p.status)))applyProjectStatus(id,st);if(PHEAD[id]&&!PHEAD[id].grp)PHEAD[id].grp=grp;}
+  META_FLAGS.stagesV1=1;}
  if(!META_FLAGS.projectTagV1){ // saving the overview used to overwrite the short project name with the long one
   const short={'판교 AI 데이터센터':'판교 AIDC','부산 AI 데이터센터':'부산 AIDC','인천 청라 AI 데이터센터':'인천 청라 AIDC','인천 청라 AI 데이터센':'인천 청라 AIDC'};
   Object.values(PROJECTS).forEach(p=>{if(short[p.tag])p.tag=short[p.tag];});META_FLAGS.projectTagV1=1;}
@@ -7367,25 +7523,36 @@ function schResPer(){ const t=document.createElement('div'); t.style.cssText='po
 const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear title="이 조건 지우기">구분: ${esc(S.partnerCat)}<i>✕</i></button>`:'';
 
 /* ---------- project cards: a row of pickers, and how tall a card's picture is ---------- */
-// (owner, 2026-11-20: a few plain ones only) 분류 · 담당자 · 정렬
+// (owner, 2026-11-20: a few plain ones only; 2026-11-24: the ones of the development review list) 구분 · 추진 단계 · 위치 · 담당자 ·
+// 집중 추진 · 정렬. Without an order of its own the list stands as the review list has it (group, 최초자료일, see schRepSort).
 const schPf=()=>S.pf||(S.pf={});
-const SCH_PSORT={name:'이름순',ops:'운영개시 빠른 순',new:'최근 만든 순'};
+const SCH_PSORT={first:'최초자료일 최근 순',name:'이름순',ops:'운영개시 빠른 순',new:'최근 만든 순'};
 const schProjOwner=k=>String((PHEAD[k]||{}).owner||PROJECTS[k].owner||'').trim();
-function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim(); ids=ids.filter(k=>(!c.st||normStatus(PROJECTS[k].status)===c.st)&&(!c.owner||schProjOwner(k)===c.owner));
-  if(q)ids=ids.filter(k=>{ const p=PROJECTS[k], h=PHEAD[k]||{}; return matchQ(q,p.full,pname(p),p.status,schProjOwner(k),siteOf(p,h),h.cost||p.cost,p.tag); });   // the search box of the section (twenty-first round)
+function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim();
+  ids=ids.filter(k=>{ const r=schRepOf(k); return (!c.st||r.stage===c.st)&&(!c.owner||schProjOwner(k)===c.owner)&&(!c.grp||r.grp===c.grp)&&(!c.focus||r.focus)&&(!c.region||schRepRegion(k)===c.region); });
+  if(q)ids=ids.filter(k=>{ const p=PROJECTS[k], r=schRepOf(k); return matchQ(q,p.full,pname(p),p.tag,r.sub,r.stage,r.grp,r.site,r.dev,r.load,r.memo,schProjOwner(k)); });   // the search box of the section (twenty-first round)
   const ops=k=>{const m=schHas(k)?schModel(k):null;return (m&&m.res.operationDate)||'9999';};
   if(c.sort==='name')ids=ids.slice().sort((a,b)=>String(PROJECTS[a].full||'').localeCompare(String(PROJECTS[b].full||''),'ko'));
   else if(c.sort==='ops')ids=ids.slice().sort((a,b)=>ops(a).localeCompare(ops(b)));
   else if(c.sort==='new')ids=ids.slice().sort((a,b)=>(/^p\d{10,}$/.test(b)?+b.slice(1):0)-(/^p\d{10,}$/.test(a)?+a.slice(1):0));
+  else if(c.sort==='first')ids=ids.slice().sort((a,b)=>schRepKey(schRepOf(b).first).replace('9999','0000').localeCompare(schRepKey(schRepOf(a).first).replace('9999','0000')));
   return ids; }
 function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
-  const chips=(c.st?chip('st','분류: '+c.st):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
-  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','st',c.st||'전체 분류',!!c.st)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right">${schProjXlBtn()}</div></div></div>`; }
-function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;S.pjPage=1;render(true);}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
-  if(k==='st')items=[fl('',{t:'전체 분류'}),...[...new Set(orderedProjects().map(p=>normStatus(PROJECTS[p].status)))].map(s=>fl(s,{t:s,html:`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${PSTATUS[s]||'#8e8e8e'}"></i>${esc(s)}</span>`}))];
-  else if(k==='owner')items=[fl('',{t:'전체 담당자'}),...[...new Set(orderedProjects().map(schProjOwner).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(o=>fl(o,{t:o,ico:av('av15')}))];
-  else items=[fl('',{t:'기본 순서'}),...Object.entries(SCH_PSORT).map(([v,t])=>fl(v,{t}))];
-  menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu'}); }
+  const chips=(c.grp?chip('grp','구분: '+c.grp):'')+(c.st?chip('st','추진 단계: '+c.st):'')+(c.region?chip('region','위치: '+c.region):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.focus?chip('focus','집중 추진만'):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
+  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','grp',c.grp||'전체 구분',!!c.grp)}${schSf2('ppick','st',c.st||'전체 단계',!!c.st)}${schSf2('ppick','region',c.region||'전체 위치',!!c.region)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','focus',c.focus?'집중 추진만':'집중 추진 포함',!!c.focus)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right"><button class="sh-btn lib sch-xl" data-repio title="개발검토 리스트 자료 파일(.json)로 프로젝트를 한꺼번에 만들거나 고치고, 지금 내용을 파일로 내려받습니다">자료 파일${svg('i-chev-d',8,4)}</button>${schProjXlBtn()}</div></div></div>`; }
+function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;S.pjPage=1;render(true);}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}), dot=(s,col)=>`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${col}"></i>${esc(s)}</span>`;
+  const all=orderedProjects(), sts=[...new Set(all.map(p=>normStatus(PROJECTS[p].status)).filter(Boolean))].sort((x,y)=>(PSTATUS_ORDER.indexOf(x)+1||99)-(PSTATUS_ORDER.indexOf(y)+1||99));
+  const grp=()=>[fl('grp','',{t:'전체 구분'}),...REP_GRPS.map(g=>fl('grp',g,{t:g}))], focus=()=>[fl('focus','',{t:'집중 추진 포함 (전체)'}),fl('focus','1',{t:'집중 추진만',html:'<span style="color:#d9202e;font-weight:600">집중 추진만</span>'})];
+  const sort=keys=>[fl('sort','',{t:'기본 순서 (번호순)'}),...keys.map(v=>fl('sort',v,{t:SCH_PSORT[v]}))]; let items;
+  if(k==='st')items=[fl('st','',{t:'전체 단계'}),...sts.map(s=>fl('st',s,{t:s,html:dot(s,PSTATUS[s]||'#8e8e8e')}))];
+  else if(k==='owner')items=[fl('owner','',{t:'전체 담당자'}),...[...new Set(all.map(schProjOwner).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(o=>fl('owner',o,{t:o,ico:av('av15')}))];
+  else if(k==='grp')items=grp();
+  else if(k==='focus')items=focus();
+  else if(k==='region')items=[fl('region','',{t:'전체 위치'}),...[...new Set(all.map(schRepRegion).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(r=>fl('region',r,{t:r}))];
+  else if(k==='name')items=[{hd:'정렬'},...sort(['name','ops','new']),'-',{hd:'구분'},...grp(),'-',{hd:'집중 추진'},...focus()];   // the table's column 프로젝트
+  else if(k==='first')items=[{hd:'정렬'},...sort(['first'])];                                                                    // the table's column 최초자료일
+  else items=sort(Object.keys(SCH_PSORT));
+  menuPop(el,items.map((x,i)=>x==='-'?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
 // A card's picture: without one, the height of 판교's card; with one, as tall as the picture's own shape makes it at the card's width,
 // but never taller than 부산's card was (what is over is cut evenly above and below) and never a sliver.
 const SCH_IMG={w:379.5,base:207.8,max:296.2,min:150};
@@ -7401,11 +7568,12 @@ function schCardOps(k){ if(!schHas(k))return '<span class="nil">미정</span>'; 
   return `${schD(m.res.operationDate)}${d?`<em class="${d>0?'late':'early'}">${d>0?'+':''}${d}일</em>`:''}`; }
 
 /* ---------- the window that makes a project ---------- */
-function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st='계획중';
-  const sts=['계획중','진행중','완료','초기기획사업'].filter(s=>PSTATUS[s]);
+function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np'; let st=PSTATUS_ORDER[0], grp=REP_GRPS[0];
+  const sts=PSTATUS_ORDER;
   d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="새 프로젝트"><div class="np-hd"><b>새 프로젝트</b><span>이름만 있으면 만들 수 있습니다. 나머지는 프로젝트 페이지의 사업개요에서 채웁니다.</span></div>
     <div class="np-f"><label for="np2-name">사업명 <em>필수</em></label><div><input id="np2-name" maxlength="60" placeholder="예: 대전 AI 데이터센터" autocomplete="off"><small class="err" id="np2-err"></small></div>
-      <label>분류</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
+      <label>구분</label><div class="np-st" id="np2-grp">${REP_GRPS.map(g=>`<button type="button" data-grp="${g}" class="${g===grp?'on':''}">${g}</button>`).join('')}</div>
+      <label>추진 단계</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
       <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
       <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div></div>
     <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
@@ -7416,11 +7584,12 @@ function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); 
     const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
     const id='p'+Date.now(), ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
     PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
-    PHEAD[id]={cls:st,prog:'초기 기획',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:''};
+    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
     toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
   d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
+    const gb=e.target.closest('[data-grp]'); if(gb){grp=gb.dataset.grp; d.querySelectorAll('[data-grp]').forEach(x=>x.classList.toggle('on',x===gb)); return;}
     const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
 
@@ -7451,7 +7620,7 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
   if(el=T.closest('[data-mchip]')){delete schMf()[el.dataset.mchip];S.actPage=1;refreshSec('action');return;}
   if(el=T.closest('[data-rpick]')){e.stopPropagation();schResMenu(el,el.dataset.rpick);return;}
   if(el=T.closest('[data-ppick]')){e.stopPropagation();schProjMenu(el,el.dataset.ppick);return;}
-  if(el=T.closest('[data-pchip]')){e.stopPropagation();delete schPf()[el.dataset.pchip];S.car.proj=0;render(true);return;}
+  if(el=T.closest('[data-pchip]')){e.stopPropagation();delete schPf()[el.dataset.pchip];S.car.proj=0;S.pjPage=1;render(true);return;}
   if(el=T.closest('[data-rchip]')){const c=schRf(), rk=el.dataset.rchip; if(rk.startsWith('tag:')){const l=schRfTags(c).filter(t=>t!==rk.slice(4)); if(l.length)c.tags=l; else delete c.tags;} else delete c[rk]; if(rk==='when'){delete c.from;delete c.to;}S.resPage=1;refreshSec('research');return;}
 },true);
 
@@ -8383,29 +8552,24 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 /* ---------- projects of the main page ---------- */
 const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${searchBox('proj','프로젝트 검색')}</div>`;
 const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
-function schProjTable(){ const ids=schProjFilter(orderedProjects()), total=Math.max(1,Math.ceil(ids.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total); const from=(S.pjPage-1)*SCH_V_PER, page=ids.slice(from,from+SCH_V_PER), c=schPf(), th=t=>`<span><em>${t}</em></span>`;
-  const tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-proj"><div class="hd">${th('No.')}${tm('name','프로젝트',false,c.sort==='name'||c.sort==='new')}${tm('st','분류',!!c.st,false)}${tm('ops','운영개시 예상',false,c.sort==='ops')}${tm('owner','담당자',!!c.owner,false)}${th('부지')}${th('총사업비')}${th('공사 면적')}${th('총 수전용량')}${th('IT 용량')}${th('서버')}</div>`;
-  page.forEach((k,i)=>{ const p=PROJECTS[k], hd=PHEAD[k]||{}, cell=v=>`<div class="tx" title="${esc(v||'')}"><span class="e">${esc(v||'-')}</span></div>`;
-    h+=`<div class="rw" data-go="project:${esc(k)}"><div class="w">${from+i+1}</div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}"><span class="e">${esc(p.full||pname(p))}</span></div><div class="st"><span style="color:${esc(p.stColor||'#4f4f4f')}"><i></i>${esc(p.status||'-')}</span></div><div class="ops">${schCardOps(k)}</div>
-      <div class="who"><span>${av()}${esc(hd.owner||p.owner||'-')}</span></div>${cell(siteOf(p,hd))}${cell(hd.cost||p.cost)}${cell(scaleOf(hd,0,p.area))}${cell(scaleOf(hd,2,p.power))}${cell(scaleOf(hd,1,p.it))}${cell(scaleOf(hd,3,p.server))}</div>`; });
-  if(!ids.length)h+=`<div class="none">조건에 맞는 프로젝트가 없습니다.</div>`;
-  return h+`<div class="ft"></div></div>${ids.length>SCH_V_PER?schVPager('proj',S.pjPage,total):''}`; }
-const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
+// (since the twenty-fourth round the table is the development review list itself: schRepTable in 88-report.js, all of it on one page)
+const schProjTable=()=>schRepTable();
+const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${schRepCount()}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
 function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$('#proj-inner');
   if(body)body.innerHTML=schProjTable(); else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); S.car.proj=0; applyCarousel('proj'); } afterNav(); }
-// The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order.
+// The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order, with the
+// columns of the development review list.
 async function schProjXlsx(){ toast('엑셀 파일을 만드는 중입니다…',20000);
-  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.st?'분류: '+c.st:'',c.owner?'담당자: '+c.owner:'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
-    const rows=[['No.','프로젝트','분류','운영개시 예상','목표 대비(일)','담당자','부지','총사업비','공사 면적','총 수전용량','IT 용량','서버']].concat(ids.map((k,i)=>{ const p=PROJECTS[k], hd=PHEAD[k]||{}, m=schHas(k)?schModel(k):null;
-      return [i+1,p.full||pname(p),p.status||'',(m&&m.res.operationDate)||'',m&&m.res.operationDate?(m.res.operationDelay||0):'',hd.owner||p.owner||'',siteOf(p,hd),hd.cost||p.cost||'',scaleOf(hd,0,p.area),scaleOf(hd,2,p.power),scaleOf(hd,1,p.it),scaleOf(hd,3,p.server)]; }));
-    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,40,12,16,14,16,34,18,16,16,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
+  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos();
+    const cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.grp?'구분: '+c.grp:'',c.st?'추진 단계: '+c.st:'',c.region?'위치: '+c.region:'',c.owner?'담당자: '+c.owner:'',c.focus?'집중 추진만':'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
+    const rows=[['NO.','구분','프로젝트','부제','위치','사업주체','대지면적(m²)','연면적(m²)','IT LOAD (수전용량)','추진 단계','집중 추진','최초자료일','기준일','비고','담당자','운영개시 예상']].concat(ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null;
+      return [nos[k]||'',r.grp,p.full||pname(p),r.sub,r.site,r.dev,r.area,r.gfa,r.load,r.stage,r.focus?'집중 추진':'',r.first,r.asof,r.memo,r.owner,(m&&m.res.operationDate)||'']; }));
+    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,12,30,36,16,30,16,16,30,12,10,14,12,44,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['목록 기준일',typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:''],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
     schExpSave(`프로젝트 목록_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
   catch(e){ console.error(e); toast('엑셀 파일을 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.',4200); } }
-
 // The menu of a column title of the two tables. Meetings: the conditions of schMtf (the pickers show them too); projects: the
-// section's own menus (schProjMenu: 분류, 담당자, 정렬).
-function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col==='st'?'st':col==='owner'?'owner':'sort'); return; }
+// section's own menus (schProjMenu: 프로젝트 = 정렬 · 구분 · 집중 추진, 위치, 추진 단계, 최초자료일 = 정렬).
+function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col); return; }
   const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}); let items=[];
   if(col==='date')items=[{hd:'정렬'},fl('sort','',{t:'최신 순'}),fl('sort','old',{t:'오래된 순'}),'-',{hd:'기간'},fl('when','',{t:'전체 기간'}),...Object.entries(SCH_MT_WHEN).map(([v,t])=>fl('when',v,{t}))];
   else if(col==='name')items=[{hd:'정렬'},fl('sort','name',{t:'제목 순'}),fl('sort','',{t:'최신 순'})];
@@ -8457,6 +8621,168 @@ document.addEventListener('click',e=>{ if(!schMob()||!e.target.closest)return; c
 },true);
 // (Rows of cards that the desktop page pushes with arrows are moved with the finger here: mobile.css takes the offset of the
 // arrows away and lets the row scroll.)
+
+/* ---- schedule/ui/88-report.js ---- */
+// Twenty-fourth round (owner, 2026-11-24): the project overview and the list of projects follow the company's
+// "AIDC 프로젝트 개발검토 리스트" — a list (NO. · 프로젝트 · 위치 · 사업주체 · 대지면적 · 연면적 · IT LOAD · 추진 단계 · 최초자료일 · 비고,
+// in two groups, the ones being pushed marked red) and one sheet per project (핵심 지표, 사업성 지표, four texts, the table 사업 개요,
+// 추진 일정, 주요 리스크 및 검토사항, 출처).
+//  - Everything of the sheet is in the project's overview record (PHEAD[id], see headOf): sub, grp, focus, first, asof, the cells
+//    of the list (lsite, ldev, larea, lgfa, lload, memo), kpi / fin (+ finNote), main (사업 개요) · infra · struct (사업 구조 및 수익
+//    모델) · stat, rows, plan, risk, src. 추진 단계 is the project's `status` (PSTATUS in original.html).
+//  - The number of a project is not stored: the group first, then 최초자료일 (oldest first), then the saved order (schRepSort).
+//  - "확인 필요" / "보완 필요" are written orange and "자료 없음" grey wherever a value is shown (schRepTxt); while the overview is
+//    edited the text is plain.
+//  - A data file (.json, kind "aidc-dev-report") makes or updates projects in one go and can be written out again
+//    (schRepImport / schRepExport): the way the list gets into a workspace without its figures standing in the page's code.
+
+const REP_GRPS=['AIDC','Small AIDC'];
+const REP_GRP_T={'AIDC':'AIDC 프로젝트','Small AIDC':'Small AIDC','':'구분 없음'};
+const REP_PLAN_ST={'완료':'done','진행':'prog','예정':'plan','목표':'cond'};
+const REP_KIND='aidc-dev-report';
+const REP_TONES=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']];
+
+/* ---------- reading ---------- */
+// a value as it is shown: the three marks of the list
+const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em class="rq">$1</em>').replace(/자료 없음/g,'<em class="na">자료 없음</em>');
+// What the list says of a project (nothing is written). A project from before the list answers with what its overview held.
+function schRepOf(k){ const p=PROJECTS[k]||{}, h=PHEAD[k]||{}, s=x=>typeof x==='string'?x.trim():'', sc=i=>scaleOf(h,i,p[SCALE_FB[i]]), it=sc(1), pw=sc(2);
+  return { grp:REP_GRPS.includes(h.grp)?h.grp:'', focus:!!h.focus, sub:s(h.sub), first:s(h.first), asof:s(h.asof), stage:normStatus(p.status),
+    site:s(h.lsite)||siteOf(p,h), dev:s(h.ldev)||s(h.dev), area:s(h.larea), gfa:s(h.lgfa)||sc(0), load:s(h.lload)||(it&&pw?`${it} (수전 ${pw})`:it||pw), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
+// 2024.04.22 / 2025.12 / "2026.11.12 수신" -> a key that orders them (a month alone comes before its days, as in the list)
+const schRepKey=s=>{ const m=String(s||'').match(/(\d{4})(?:\D{1,3}(\d{1,2}))?(?:\D{1,3}(\d{1,2}))?/); return m?[m[1],m[2],m[3]].filter(Boolean).map(x=>x.padStart(2,'0')).join('.'):'9999'; };
+function schRepSort(ids){ const o=id=>{const i=PROJ_ORDER.indexOf(id);return i<0?1e6:i;}, g=id=>{const i=REP_GRPS.indexOf((PHEAD[id]||{}).grp);return i<0?REP_GRPS.length:i;}, f=id=>schRepKey((PHEAD[id]||{}).first);
+  return ids.slice().sort((a,b)=>g(a)-g(b)||f(a).localeCompare(f(b))||o(a)-o(b)); }
+// the numbers of all projects (01, 02, …), whatever the list is narrowed to
+function schRepNos(){ const out={}; orderedProjects().forEach((k,i)=>out[k]=String(i+1).padStart(2,'0')); return out; }
+// 시·도 of a place ("충남 아산시" -> 충남)
+const schRepRegion=k=>(schRepOf(k).site.replace(/^[^가-힣A-Za-z]+/,'').split(/[\s,(]/)[0]||'');
+// beside the title 프로젝트: the day the list is of (set by a data file) and how many there are
+function schRepCount(){ const n=Object.keys(PROJECTS).length, d=typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:''; return `<span class="rep-cnt">${d?`기준일 ${esc(d)} · `:''}총 ${n}건</span>`; }
+
+/* ---------- the overview of a project ---------- */
+const schRepState=s=>REP_PLAN_ST[s]?schMark(REP_PLAN_ST[s],s):`<span class="nil">${esc(s||'-')}</span>`;
+function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, SC=schHas(pid), EC=E?' editable':'', no=schRepNos()[pid]||'';
+  const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${esc(ph)}"`:'', chev=E?svg('i-chev-d',7.2,3.6,'color:#8e8e8e'):'';
+  const lines=s=>String(s||'').split('\n').map(x=>x.replace(/^\s*[•·\-–]\s+/,'').trim()).filter(Boolean), nil='<span class="nil">내용 없음</span>';
+  // a text: as it was typed, or a list (always for `list`, for 추진 현황 when it has more than one line)
+  const text=(k,ph,list)=>{ if(E)return `<div class="rtx editable" ${edk(k,ph)}>${esc(d[k])}</div>`; const L=lines(d[k]); if(!L.length)return `<div class="rtx">${nil}</div>`;
+    return list===true||(list==null&&L.length>1)?`<ul class="rul">${L.map(x=>`<li>${schRepTxt(x)}</li>`).join('')}</ul>`:`<div class="rtx">${schRepTxt(d[k].trim())}</div>`; };
+  const del=(a,i)=>E?`<button class="rx" data-repdel="${a}:${i}" title="이 줄 삭제" aria-label="이 줄 삭제">✕</button>`:'', add=(a,t)=>E?`<button class="sh-btn lib radd" data-repadd="${a}">${t}</button>`:'';
+  const cell=(tag,k,ph,v,cls)=>`<${tag} class="${cls||''}${EC}" ${edk(k,ph)}>${E?esc(v):schRepTxt(v)}</${tag}>`;
+  const kp=(a,cls)=>`<div class="rkp ${cls}">${d[a].map((r,i)=>`<div class="k">${cell('b',`${a}:${i}:0`,'값',r[0])}${cell('span',`${a}:${i}:1`,'무엇의 값인지',r[1])}${del(a,i)}</div>`).join('')}${!d[a].length&&!E?nil:''}${add(a,'+ 지표')}</div>`;
+  // 요약 shows what the list shows (schRepOf: a project from before the list answers with what its overview held); edited, the stored value
+  const R=schRepOf(pid), fr=(label,k,rk,ph)=>`<div class="fr"><b>${label}</b>${E?cell('span',k,(!d[k]&&R[rk])||ph||'입력',d[k],'v'):`<span class="v">${R[rk]?schRepTxt(R[rk]):'<span class="nil">-</span>'}</span>`}</div>`;
+  const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
+  const blk=(t,body,cls)=>`<div class="rb ${cls||''}"><div class="rt">${t}</div>${body}</div>`;
+  const meta=`<div class="rmeta">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
+     <span class="m st ${E?'stpick':''}" ${E?'data-pickstatus':''}><b>추진 단계</b>${statusBadge(p.status)}${chev}</span><i class="sep"></i>
+     <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)||'<span class="nil">미지정</span>'}</span>${chev}</span>
+     <span class="m dt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}</span><span class="m dt"><b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</span></div>`;
+  const c1=blk('요약',`${SC?schOpsRow(pid):''}${fr('위치','lsite','site','시·도 시·군·구')}${fr('사업주체','ldev','dev')}${fr('대지면적(m²)','larea','area')}${fr('연면적(m²)','lgfa','gfa')}${fr('IT LOAD','lload','load','IT 용량 (수전용량)')}${fr('비고','memo','memo')}${E?'<small class="rhint">메인 페이지의 프로젝트 목록에 그대로 표시되는 값입니다.</small>':''}`,'sum')
+    +blk('핵심 지표',kp('kpi',''))+blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>${d.finNote||E?`<div class="rnote${EC}" ${edk('finNote','지표의 기준 · 출처 (예: 2026.04 IM 기준 추정치)')}>${E?esc(d.finNote):schRepTxt(d.finNote)}</div>`:''}`)
+    +blk('위치 지도',mapBox(d.loc,''),'rmap');
+  const c2=blk('사업 개요',text('main','사업의 내용을 적습니다',false))+blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true))+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false))+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'))
+    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt');
+  const c3=blk('사업 개요 표',`<div class="rtb">${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}</div>`).join('')}${!d.rows.length&&!E?nil:''}${add('rows','+ 행')}</div>`)
+    +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`)
+    +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true));
+  const src=lines(d.src);
+  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+    ${d.sub||E?`<div class="rsub${EC}" ${edk('sub','부제 (한 줄 설명)')}>${esc(d.sub)}</div>`:''}
+    <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
+    <div class="rep-in">${meta}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div><div class="rc rc3">${c3}</div></div>
+     ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
+    <div class="hr bt"></div></div>`; }
+// What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
+function schRepMirror(h,p){ const row=l=>{ const r=(h.rows||[]).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
+  set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=(h.fin||[]).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
+
+/* ---------- the cards of the main page ---------- */
+function schRepCards(ids){ const nos=schRepNos(), line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;
+  return ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null, ops=m&&m.res.operationDate;
+    return `<div class="pcard rep ${r.focus?'focus':''}" data-go="project:${k}"><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
+  <h3 style="color:${p.color}"><em>${nos[k]||''}</em>${esc(p.full)}</h3><div class="sub" title="${esc(r.sub)}">${esc([r.grp,r.sub].filter(Boolean).join(' · '))||'&nbsp;'}</div>
+  <div class="info">${ops?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}${line('위치',r.site)}${line('사업주체',r.dev)}${line('대지면적',r.area)}${line('연면적',r.gfa)}${line('IT LOAD',r.load)}${line('최초자료일',r.first)}</div></div>`; }).join(''); }
+
+/* ---------- the table of the main page (the list itself) ---------- */
+function schRepTable(){ const ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos(), grouped=!c.sort;
+  const th=t=>`<span><em>${t}</em></span>`, tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
+  const cell=(v,cls)=>`<div class="tx ${cls||''}" title="${esc(v||'')}"><span class="e">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;
+  const row=k=>{ const p=PROJECTS[k], r=schRepOf(k);
+    return `<div class="rw ${r.focus?'focus':''}" data-go="project:${esc(k)}"><div class="w no"><span>${nos[k]||''}</span></div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}${r.sub?' — '+esc(r.sub):''}"><span class="e">${esc(p.full||pname(p))}</span></div>${cell(r.site)}${cell(r.dev)}${cell(r.area,'num')}${cell(r.gfa,'num')}${cell(r.load)}<div class="st"><span style="color:${esc(PSTATUS[r.stage]||'#8e8e8e')}"><i></i>${esc(r.stage||'미정')}</span></div>${cell(r.first,'dt')}${cell(r.memo)}</div>`; };
+  let h=`<div class="tbl sch-proc sch-vtbl vt-proj vt-rep"><div class="hd">${th('NO.')}${tm('name','프로젝트',!!c.grp||!!c.focus,!!c.sort&&c.sort!=='first')}${tm('region','위치',!!c.region,false)}${th('사업주체')}${th('대지면적(m²)')}${th('연면적(m²)')}${th('IT LOAD (수전용량)')}${tm('st','추진 단계',!!c.st,false)}${tm('first','최초자료일',false,c.sort==='first')}${th('비고')}</div>`;
+  if(grouped){ for(const g of REP_GRPS.concat('')){ const part=ids.filter(k=>schRepOf(k).grp===g); if(!part.length)continue; h+=`<div class="grp" data-grp="${esc(g)}"><b>${esc(REP_GRP_T[g])}</b><span>${part.length}건</span></div>`+part.map(row).join(''); } }
+  else h+=ids.map(row).join('');
+  if(!ids.length)h+=`<div class="none">조건에 맞는 프로젝트가 없습니다.</div>`;
+  return h+`<div class="ft"></div></div><div class="rep-foot">* 최초자료일: 프로젝트별로 처음 받은 자료의 작성일(작성일이 없으면 수신일). 각 묶음 안에서 최초자료일이 오래된 순으로 정렬. 빨간 번호 · 바탕은 현재 집중 추진 중인 프로젝트.</div>`; }
+
+/* ---------- the overview while it is edited: rows of its lists, the state of a step, the group ---------- */
+document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; let el; const h=()=>PHEAD[S.proj];
+  if(el=T.closest('[data-repadd]')){ if(!S.editProj)return; saveProjectHead(); const a=el.dataset.repadd; h()[a]=(h()[a]||[]).concat([a==='plan'?['','','예정']:['','']]); render(true);
+    const last=$$(`.page.on .phead [data-k^="${a}:"]`).filter(x=>x.dataset.k.endsWith(':0')).pop(); last&&last.focus(); return; }
+  // a row is taken away by emptying it: saving drops the rows left empty (so no place has to be counted)
+  if(el=T.closest('[data-repdel]')){ if(!S.editProj)return; const was=el.closest('.r,.k'); if(was)was.querySelectorAll('[data-k]').forEach(x=>{x.textContent='';}); saveProjectHead(); render(true); return; }
+  // the state of a step is the text of its cell (read when the overview is saved like the cells beside it)
+  if(el=T.closest('[data-repstate]')){ if(!S.editProj)return; e.stopPropagation(); const cur=(el.textContent||'').trim();
+    menuPop(el,Object.keys(REP_PLAN_ST).map(s=>({t:s,html:schRepState(s),k:s,sel:cur===s,fn:()=>{ if(el.isConnected)el.innerHTML=schRepState(s)+svg('i-chev-d',7.2,3.6,'color:#8e8e8e'); }})),{cls:'sch-colmenu'}); return; }
+  if(el=T.closest('[data-reppick="grp"]')){ if(!S.editProj)return; e.stopPropagation(); menuPop(el,REP_GRPS.map(g=>({t:g,k:g,sel:h().grp===g,fn:()=>{ saveProjectHead(); h().grp=g; render(true); }})),{cls:'sch-colmenu'}); return; }
+  if(el=T.closest('[data-repfocus]')){ if(!S.editProj)return; saveProjectHead(); h().focus=!h().focus; render(true); return; }
+  if(el=T.closest('[data-repio]')){ e.stopPropagation(); menuPop(el,[{t:'자료 파일 가져오기 (.json)',k:'in',fn:schRepPick},{t:'자료 파일로 내보내기 (.json)',k:'out',fn:schRepExport}],{cls:'sch-colmenu'}); return; }
+});
+
+/* ---------- a data file of the list: read ---------- */
+// One project of a data file -> what the workspace stores. Lists may be given as arrays of lines.
+function schRepNorm(e){ const s=x=>x==null?'':String(x).trim(), L=x=>Array.isArray(x)?x.map(s).filter(Boolean).join('\n'):s(x), l=e.list&&typeof e.list==='object'?e.list:{};
+  const P=(a,n)=>Array.isArray(a)?a.filter(Array.isArray).map(r=>Array.from({length:n},(_,i)=>s(r[i]))).filter(r=>r.some(Boolean)):[];
+  return { id:/^[a-z0-9][a-z0-9-]{1,40}$/.test(s(e.id))?s(e.id):'', name:s(e.name).replace(/\s+/g,' '), alias:(Array.isArray(e.match)?e.match:[]).map(s).filter(Boolean), stage:normStatus(e.stage), owner:s(e.owner),
+    head:{ grp:REP_GRPS.includes(s(e.grp))?s(e.grp):'', focus:!!e.focus, sub:s(e.sub), first:s(e.first), asof:s(e.asof), lsite:s(l.site), ldev:s(l.dev), larea:s(l.area), lgfa:s(l.gfa), lload:s(l.load), memo:s(l.memo),
+      kpi:P(e.kpi,2), fin:P(e.fin,2), finNote:s(e.finNote), main:L(e.ov), infra:L(e.infra), struct:L(e.model), stat:L(e.stat), rows:P(e.rows,2), plan:P(e.plan,3), risk:L(e.risk), src:L(e.src) } }; }
+// Which project of the workspace an entry is: its id, else its name (or one of the names it had before).
+function schRepPlan(data){ const used=new Set(), bin=SETTINGS.projTrash||{}, list=(data.projects||[]).filter(x=>x&&typeof x==='object').map(schRepNorm).filter(x=>x.name);
+  const rows=list.map(x=>{ const names=[x.name,...x.alias].map(norm); let k=x.id&&PROJECTS[x.id]&&!used.has(x.id)?x.id:Object.keys(PROJECTS).find(id=>!used.has(id)&&names.includes(norm(PROJECTS[id].full)))||'';
+    const back=!k&&x.id&&bin[x.id]?x.id:''; if(k)used.add(k); return {x,k,back}; });
+  return { rows, rest:Object.keys(PROJECTS).filter(k=>!used.has(k)) }; }
+function schRepApply(data,others){ const plan=schRepPlan(data), ids=[]; let made=0, upd=0, n=0;
+  for(const {x,k,back} of plan.rows){ let id=k;
+    if(!id&&back){ restoreProject(back); id=back; }
+    if(!id){ id=x.id&&!PROJECTS[x.id]?x.id:'p'+(Date.now()+(n++)); const ci=PROJ_ORDER.length%6, T=REP_TONES[ci];
+      PROJECTS[id]={id,tag:x.name,full:x.name,cls:'pj-c'+ci,color:T[0],status:'',stColor:'#9a9a9a',grad:T[1],imgH:207.8,owner:x.owner||'',site:'',cost:'',area:'',power:'',it:'',server:''};
+      PHEAD[id]={owner:x.owner||'',partners:[]}; if(!PROJ_ORDER.includes(id))PROJ_ORDER.push(id); S.filters[id]=true; made++; } else upd++;
+    // the overview is the file's now: what the sheet does not have (진행도, 대체부지, 사업형태, 자금조달 …) is emptied, the old fields that
+    // other screens read follow the new ones; 담당자 and 협력업체 stay unless the file names an owner
+    const p=PROJECTS[id], h=headOf(id); p.full=x.name; Object.assign(h,copy(x.head),{prog:'',alt:'',kind:'',land:'',fund:'',fundType:'',cost:'',loc:'',zone:'',dev:''});
+    if(x.owner){h.owner=x.owner;p.owner=x.owner;} if(x.stage)applyProjectStatus(id,x.stage); schRepMirror(h,p);
+    h.scale=[['공사면적:',h.lgfa],['IT 용량:',h.lload],['총 수전용량 :',''],['서버:','']]; p.area=h.lgfa; p.it=h.lload; p.power=''; p.server=''; p.site=h.loc; p.cost=h.cost; ids.push(id); }
+  // the saved order follows the file, so equal dates stand as the list has them
+  const rest=PROJ_ORDER.filter(q=>!ids.includes(q)); PROJ_ORDER.splice(0,PROJ_ORDER.length,...ids,...rest);
+  let gone=0; if(others)for(const k of plan.rest){ if(PROJECTS[k]){ trashProject(k); gone++; } }
+  if(typeof data.asof==='string'&&data.asof.trim())META_FLAGS.repAsof=data.asof.trim().slice(0,20);
+  return {made,upd,gone}; }
+// the file chooser, then a window that says what will happen before anything is changed
+function schRepPick(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json'; inp.style.display='none'; inp.dataset.repfile='1'; document.body.appendChild(inp);
+  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; inp.remove(); if(!f)return; let data=null; try{ data=JSON.parse(await f.text()); }catch(err){ data=null; }
+    if(!data||data.kind!==REP_KIND||!Array.isArray(data.projects)||!data.projects.length){ toast('개발검토 리스트 자료 파일이 아닙니다. "자료 파일로 내보내기"로 만든 .json 파일을 올려 주세요.',5200); return; }
+    schRepAsk(data,f.name); }); inp.click(); }
+function schRepAsk(data,fname){ closePop(); const old=$('#dlg'); if(old)old.remove(); const plan=schRepPlan(data), make=plan.rows.filter(r=>!r.k&&!r.back), upd=plan.rows.filter(r=>r.k||r.back);
+  const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-repin'; const names=a=>a.map(r=>`<li>${esc(r.x.name)}${r.k&&norm(PROJECTS[r.k].full)!==norm(r.x.name)?` <span>← ${esc(PROJECTS[r.k].full)}</span>`:r.back?' <span>← 휴지통에서 되살림</span>':''}</li>`).join('');
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="자료 파일 가져오기"><div class="np-hd"><b>자료 파일 가져오기</b><span>${esc(fname||'')}${data.asof?` · 기준일 ${esc(String(data.asof))}`:''} · ${plan.rows.length}건</span></div>
+    <div class="rin">${make.length?`<div class="g"><b>새로 만들기 ${make.length}건</b><ul>${names(make)}</ul></div>`:''}${upd.length?`<div class="g"><b>덮어쓰기 ${upd.length}건</b><small>사업개요만 파일 내용으로 바뀝니다. 일정 · 액션 · 미팅 · 담당자 · 협력업체는 그대로 둡니다.</small><ul>${names(upd)}</ul></div>`:''}
+      ${plan.rest.length?`<div class="g"><b>파일에 없는 프로젝트 ${plan.rest.length}건</b><ul>${plan.rest.map(k=>`<li>${esc(PROJECTS[k].full)}</li>`).join('')}</ul><label class="ck"><input type="checkbox" id="rin-others" ${data.others==='trash'?'checked':''}> 이 프로젝트들을 휴지통으로 보내기 <em>(30일 안에 되살릴 수 있습니다)</em></label></div>`:''}</div>
+    <div class="np-bt"><button data-rin="x">취소</button><button class="pri" data-rin="ok">가져오기</button></div></div>`;
+  document.body.appendChild(d); const close=()=>d.remove();
+  d.addEventListener('click',e=>{ e.stopPropagation(); const a=e.target.closest('[data-rin]'); if(e.target===d||(a&&a.dataset.rin==='x')){close();return;} if(!a)return;
+    if(S.editProj){ toast('사업개요를 수정하는 중에는 가져올 수 없습니다. 먼저 저장하거나 취소해 주세요.',4600); return; }
+    const others=!!(d.querySelector('#rin-others')||{}).checked, here=S.page==='project'?S.proj:'', r=schRepApply(data,others); close();
+    if(here&&!PROJECTS[here])go('main'); else render(true);
+    toast(`자료를 가져왔습니다 · 새로 만들기 ${r.made}건 · 덮어쓰기 ${r.upd}건${r.gone?` · 휴지통 ${r.gone}건`:''}`,5200); });
+  d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} }); }
+// everything the list holds, in the shape it is read in (a file the same workspace, or another one, can take back)
+function schRepExport(){ const L=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean), ids=orderedProjects();
+  const projects=ids.map(k=>{ const p=PROJECTS[k], h={...headOf(k)}; return { id:k, name:p.full, grp:h.grp, focus:!!h.focus, sub:h.sub, stage:normStatus(p.status), owner:h.owner||p.owner||'', first:h.first, asof:h.asof,
+    list:{site:h.lsite,dev:h.ldev,area:h.larea,gfa:h.lgfa,load:h.lload,memo:h.memo}, kpi:h.kpi, fin:h.fin, finNote:h.finNote, ov:h.main, infra:L(h.infra), model:h.struct, stat:L(h.stat).length>1?L(h.stat):h.stat, rows:h.rows, plan:h.plan, risk:L(h.risk), src:L(h.src) }; });
+  const out={kind:REP_KIND,v:1,asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',exported:TODAY,projects};
+  schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.json`,new Blob([JSON.stringify(out,null,1)],{type:'application/json'})); toast(`자료 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
 
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).

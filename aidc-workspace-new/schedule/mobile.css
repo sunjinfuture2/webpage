@@ -77,7 +77,7 @@ html.mob .sch-vtools .srch.box{flex:1 1 150px;min-width:0}
 html.mob .sch-vtools .srch.box input{width:100%;min-width:0}
 html.mob .sch-vtools .sch-filters{flex:1 1 100%;margin:0 0 4px;order:9}
 html.mob .projects .pfil{position:static;width:auto;margin-top:6px}
-html.mob .projects .track,html.mob .meet .track,html.mob.sch-on .projects .track{position:static!important;width:auto;margin:22px -16px 0;padding:4px 16px 12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none}
+html.mob .projects .track,html.mob .meet .track,html.mob.sch-on .projects .track{position:static!important;width:auto;margin:22px -16px 0;padding:4px 16px 12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding:0 16px;scrollbar-width:none}
 html.mob .projects .track::-webkit-scrollbar,html.mob .meet .track::-webkit-scrollbar{display:none}
 html.mob .projects .inner,html.mob .meet .inner{transform:none!important;width:max-content}
 html.mob .projects .pcard,html.mob .meet .mcard{scroll-snap-align:start;flex:none;max-width:82vw}
@@ -198,3 +198,25 @@ html.mob .modal .readall{right:14px}
 /* ---- menus and windows ---- */
 html.mob .pop{max-width:calc(100vw - 16px)}
 html.mob .dlg .box{min-width:0;width:calc(100vw - 28px);max-width:460px;max-height:calc(100vh - 28px);overflow:auto;padding:20px 18px 16px}
+
+/* the overview and the list of the development review list (twenty-fourth round) */
+html.mob .phead.rep,html.mob .phead.rep.collapsed{padding-bottom:0}
+html.mob .phead.rep .rsub{position:static;max-width:none;white-space:normal;overflow:visible;margin:8px 0 0;font-size:14px}
+html.mob .phead.rep .rep-in{width:auto;margin:22px 0 26px}
+html.mob .phead.rep .rmeta{gap:8px;margin-bottom:26px}
+html.mob .phead.rep .rmeta .sep{display:none}
+html.mob .phead.rep .rmeta .m.who + .m.dt,html.mob .phead.rep .rmeta .m.dt{margin-left:0}
+html.mob .phead.rep .rcols{grid-template-columns:minmax(0,1fr);row-gap:34px}
+html.mob .phead.rep .rb.sum .fr > b{width:98px!important}
+html.mob .phead.rep .rtb .r{grid-template-columns:96px minmax(0,1fr)}
+html.mob .phead.rep .rtb.plan .r{grid-template-columns:86px minmax(0,1fr) 60px}
+html.mob .phead.rep.ed .rtb .r,html.mob .phead.rep.ed .rkp .k{padding-right:24px}
+html.mob .phead.rep .rx{right:0}
+html.mob .phead.rep .rsrc{flex-direction:column;gap:4px}
+html.mob .phead.rep .rsrc span{overflow-wrap:anywhere}
+html.mob .rep-foot{width:auto}
+html.mob .sec-title .rep-cnt{margin-left:10px;font-size:12px}
+html.mob .projects .pfil .sch-filters .right{margin-left:0}
+html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
+html.mob .dlg.sch-repin .box{width:auto}
+html.mob .sch-repin .rin ul{columns:1}

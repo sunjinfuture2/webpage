@@ -358,7 +358,11 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
  // One-time data fixes, recorded in meta:flags so they run once per database.
  if(!ARCH_TABS.includes('기타')){ARCH_TABS.push('기타');if(!ARCH_ROWS['기타'])ARCH_ROWS['기타']=[];}
- if(!META_FLAGS.projectStatusV2){const want={pangyo:'진행중',incheon:'완료',sunlight:'초기기획사업'};Object.keys(PROJECTS).forEach(id=>applyProjectStatus(id,want[id]||PROJECTS[id].status));META_FLAGS.projectStatusV2=1;}
+ if(!META_FLAGS.projectStatusV2)META_FLAGS.projectStatusV2=1;   // (it set the old 분류 of the demo projects; those words gave way to 추진 단계 on 2026-11-24)
+ if(!META_FLAGS.stagesV1){ // 추진 단계 took the place of 분류 (2026-11-24): the demo projects of a database from before get the stage and the group the fixtures carry now
+  const old=new Set(['진행중','계획중','완료','초기기획사업','취소']), want={pangyo:['사업계획','Small AIDC'],busan:['사업구상','AIDC'],incheon:['기초검토','AIDC'],sunlight:['기초검토','Small AIDC']};
+  for(const [id,[st,grp]] of Object.entries(want)){const p=PROJECTS[id];if(!p)continue;if(old.has(normStatus(p.status)))applyProjectStatus(id,st);if(PHEAD[id]&&!PHEAD[id].grp)PHEAD[id].grp=grp;}
+  META_FLAGS.stagesV1=1;}
  if(!META_FLAGS.projectTagV1){ // saving the overview used to overwrite the short project name with the long one
   const short={'판교 AI 데이터센터':'판교 AIDC','부산 AI 데이터센터':'부산 AIDC','인천 청라 AI 데이터센터':'인천 청라 AIDC','인천 청라 AI 데이터센':'인천 청라 AIDC'};
   Object.values(PROJECTS).forEach(p=>{if(short[p.tag])p.tag=short[p.tag];});META_FLAGS.projectTagV1=1;}

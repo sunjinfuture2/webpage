@@ -55,29 +55,24 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 /* ---------- projects of the main page ---------- */
 const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${searchBox('proj','프로젝트 검색')}</div>`;
 const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
-function schProjTable(){ const ids=schProjFilter(orderedProjects()), total=Math.max(1,Math.ceil(ids.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total); const from=(S.pjPage-1)*SCH_V_PER, page=ids.slice(from,from+SCH_V_PER), c=schPf(), th=t=>`<span><em>${t}</em></span>`;
-  const tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-proj"><div class="hd">${th('No.')}${tm('name','프로젝트',false,c.sort==='name'||c.sort==='new')}${tm('st','분류',!!c.st,false)}${tm('ops','운영개시 예상',false,c.sort==='ops')}${tm('owner','담당자',!!c.owner,false)}${th('부지')}${th('총사업비')}${th('공사 면적')}${th('총 수전용량')}${th('IT 용량')}${th('서버')}</div>`;
-  page.forEach((k,i)=>{ const p=PROJECTS[k], hd=PHEAD[k]||{}, cell=v=>`<div class="tx" title="${esc(v||'')}"><span class="e">${esc(v||'-')}</span></div>`;
-    h+=`<div class="rw" data-go="project:${esc(k)}"><div class="w">${from+i+1}</div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}"><span class="e">${esc(p.full||pname(p))}</span></div><div class="st"><span style="color:${esc(p.stColor||'#4f4f4f')}"><i></i>${esc(p.status||'-')}</span></div><div class="ops">${schCardOps(k)}</div>
-      <div class="who"><span>${av()}${esc(hd.owner||p.owner||'-')}</span></div>${cell(siteOf(p,hd))}${cell(hd.cost||p.cost)}${cell(scaleOf(hd,0,p.area))}${cell(scaleOf(hd,2,p.power))}${cell(scaleOf(hd,1,p.it))}${cell(scaleOf(hd,3,p.server))}</div>`; });
-  if(!ids.length)h+=`<div class="none">조건에 맞는 프로젝트가 없습니다.</div>`;
-  return h+`<div class="ft"></div></div>${ids.length>SCH_V_PER?schVPager('proj',S.pjPage,total):''}`; }
-const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
+// (since the twenty-fourth round the table is the development review list itself: schRepTable in 88-report.js, all of it on one page)
+const schProjTable=()=>schRepTable();
+const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${schRepCount()}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
 function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$('#proj-inner');
   if(body)body.innerHTML=schProjTable(); else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); S.car.proj=0; applyCarousel('proj'); } afterNav(); }
-// The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order.
+// The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order, with the
+// columns of the development review list.
 async function schProjXlsx(){ toast('엑셀 파일을 만드는 중입니다…',20000);
-  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.st?'분류: '+c.st:'',c.owner?'담당자: '+c.owner:'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
-    const rows=[['No.','프로젝트','분류','운영개시 예상','목표 대비(일)','담당자','부지','총사업비','공사 면적','총 수전용량','IT 용량','서버']].concat(ids.map((k,i)=>{ const p=PROJECTS[k], hd=PHEAD[k]||{}, m=schHas(k)?schModel(k):null;
-      return [i+1,p.full||pname(p),p.status||'',(m&&m.res.operationDate)||'',m&&m.res.operationDate?(m.res.operationDelay||0):'',hd.owner||p.owner||'',siteOf(p,hd),hd.cost||p.cost||'',scaleOf(hd,0,p.area),scaleOf(hd,2,p.power),scaleOf(hd,1,p.it),scaleOf(hd,3,p.server)]; }));
-    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,40,12,16,14,16,34,18,16,16,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
+  try{ const X=await schXlsx(), ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos();
+    const cond=[(S.q.proj||'').trim()?'검색: '+S.q.proj.trim():'',c.grp?'구분: '+c.grp:'',c.st?'추진 단계: '+c.st:'',c.region?'위치: '+c.region:'',c.owner?'담당자: '+c.owner:'',c.focus?'집중 추진만':'',c.sort?'정렬: '+SCH_PSORT[c.sort]:''].filter(Boolean).join(' / ')||'조건 없음 (전체)';
+    const rows=[['NO.','구분','프로젝트','부제','위치','사업주체','대지면적(m²)','연면적(m²)','IT LOAD (수전용량)','추진 단계','집중 추진','최초자료일','기준일','비고','담당자','운영개시 예상']].concat(ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null;
+      return [nos[k]||'',r.grp,p.full||pname(p),r.sub,r.site,r.dev,r.area,r.gfa,r.load,r.stage,r.focus?'집중 추진':'',r.first,r.asof,r.memo,r.owner,(m&&m.res.operationDate)||'']; }));
+    const bytes=await X.makeBook([{name:'프로젝트',rows,widths:[7,12,30,36,16,30,16,16,30,12,10,14,12,44,14,14]},{name:'내보낸 조건',rows:[['항목','값'],['내보낸 날',TODAY],['목록 기준일',typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:''],['조건',cond],['프로젝트 수',ids.length]],widths:[18,60]}],'프로젝트');
     schExpSave(`프로젝트 목록_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
   catch(e){ console.error(e); toast('엑셀 파일을 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.',4200); } }
-
 // The menu of a column title of the two tables. Meetings: the conditions of schMtf (the pickers show them too); projects: the
-// section's own menus (schProjMenu: 분류, 담당자, 정렬).
-function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col==='st'?'st':col==='owner'?'owner':'sort'); return; }
+// section's own menus (schProjMenu: 프로젝트 = 정렬 · 구분 · 집중 추진, 위치, 추진 단계, 최초자료일 = 정렬).
+function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col); return; }
   const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}); let items=[];
   if(col==='date')items=[{hd:'정렬'},fl('sort','',{t:'최신 순'}),fl('sort','old',{t:'오래된 순'}),'-',{hd:'기간'},fl('when','',{t:'전체 기간'}),...Object.entries(SCH_MT_WHEN).map(([v,t])=>fl('when',v,{t}))];
   else if(col==='name')items=[{hd:'정렬'},fl('sort','name',{t:'제목 순'}),fl('sort','',{t:'최신 순'})];

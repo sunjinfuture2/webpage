@@ -1557,3 +1557,121 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .tbl.sch-vtbl .hd span.flt{color:#000;font-weight:600}
 .tbl.sch-vtbl .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px;flex:none}
 .sch-vtools .sch-filters .sch-chip{align-self:center}
+
+/* Twenty-fourth round (owner, 2026-11-24): the overview of a project and the list of projects follow the development review list
+   (schedule/ui/88-report.js). The overview is as tall as what it says: its parts stand in the page's flow below the title. */
+.sch-on em.rq{font-style:normal;font-weight:600;color:#e07a00}
+.sch-on em.na{font-style:normal;color:#b5b5b5}
+.phead.rep{height:auto;padding:203.2px 0 46px}
+.phead.rep.collapsed{height:196px;padding:0}
+.phead.rep.collapsed .rep-in{display:none}
+.phead.rep .hr.bt{top:auto;bottom:0}
+.phead.rep.collapsed .hr.bt{top:195.6px;bottom:auto}
+.phead.rep .rsub{position:absolute;left:0;top:121px;max-width:calc(1338.9px + var(--d));font-size:15px;line-height:20px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phead.rep .rsub.editable{min-width:240px;overflow:visible}
+.phead.rep .nil{color:#c4c4c4}
+.rep-in{width:calc(1338.9px + var(--d));font-size:15px;color:var(--t2);word-break:keep-all}
+.rmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 32px;font-size:13px;line-height:20px;color:#3d3d3d}
+.rmeta .m{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.rmeta .m > b{font-weight:600;color:#8e8e8e;font-size:12px}
+.rmeta .m.no{font-weight:700;color:#1c1c1c;font-variant-numeric:tabular-nums;margin-right:2px}
+.rmeta .m.grp{height:22px;padding:0 10px;border-radius:11px;background:#f1f1f0;font-weight:600;font-size:12px;color:#3d3d3d}
+.rmeta .m.fo{height:22px;padding:0 10px;border-radius:11px;border:1px solid #dcdcdc;background:#fff;font-size:12px;font-weight:600;color:#a0a0a0}
+.rmeta .m.fo.on{background:#d9202e;border-color:#d9202e;color:#fff}
+.rmeta button.m.fo{cursor:pointer}
+.rmeta .m.st{margin-left:4px}
+.rmeta .sep{width:1px;height:14px;background:#e0e0e0;margin:0 8px}
+.rmeta .m.pk,.rmeta .m.stpick{cursor:pointer}
+.rmeta .m.who .avatar{width:15.4px;height:15.4px}
+.rmeta .m.who + .m.dt{margin-left:auto}
+.rmeta .m.dt{margin-left:14px;font-variant-numeric:tabular-nums}
+.rmeta .m.dt .editable{min-width:74px}
+.rcols{display:grid;grid-template-columns:calc(300px + var(--d) * .2) minmax(0,1fr) minmax(0,1.06fr);column-gap:52px;align-items:start}
+.rc{min-width:0}
+.rb{margin-bottom:36px}
+.rb:last-child{margin-bottom:0}
+.rt{font-size:14px;font-weight:600;color:#000;line-height:20px;padding-bottom:9px;margin-bottom:13px;border-bottom:1px solid #e3e3e3}
+.phead.rep .rb.sum .fr{margin-bottom:10px;font-size:13.5px}
+.phead.rep .rb.sum .fr > b{width:98px;color:#1c1c1c}
+.phead.rep .rb.sum .fr .v{min-width:0;overflow-wrap:anywhere;white-space:pre-line;color:#3d3d3d}
+.phead.rep .rb.sum .fr .v.editable{flex:1}
+.phead.rep .rhint{display:block;font-size:11px;line-height:16px;color:#a6a6a6;margin-top:2px}
+.rkp .k{position:relative;margin-bottom:15px}
+.rkp .k:last-of-type{margin-bottom:0}
+.rkp .k > b{display:block;font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:28px;color:#111;overflow-wrap:anywhere}
+.rkp.fin .k > b{color:var(--pc,#111)}
+.rkp .k > b em.rq{font-weight:700}
+.rkp .k > span{display:block;margin-top:1px;font-size:12px;line-height:17px;color:#8e8e8e;overflow-wrap:anywhere}
+.rnote{margin-top:12px;font-size:11.5px;font-style:italic;line-height:17px;color:#a0a0a0}
+.phead.rep .map,.phead.rep .ph-img{width:100%;height:150px;margin-top:0}
+.rtx{font-size:14.5px;line-height:23px;white-space:pre-line;overflow-wrap:anywhere;color:#3d3d3d}
+.rul{margin:0;padding:0;list-style:none;font-size:14.5px;line-height:22px;color:#3d3d3d}
+.rul li{position:relative;padding-left:13px;margin-bottom:6px;overflow-wrap:anywhere}
+.rul li:last-child{margin-bottom:0}
+.rul li::before{content:"";position:absolute;left:1px;top:9px;width:4px;height:4px;border-radius:50%;background:#b5b5b5}
+.phead.rep .rb.pt .partners{display:flex;flex-direction:column;gap:6.6px;align-items:flex-start}
+.rtb .r{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);column-gap:14px;padding:7px 0;border-bottom:1px solid #f1f1f1;font-size:13.5px;line-height:20px}
+.rtb .r:first-child{padding-top:0}
+.rtb .r > b{font-weight:600;color:#1c1c1c;overflow-wrap:anywhere;min-width:0}
+.rtb .r > span{color:#3d3d3d;overflow-wrap:anywhere;min-width:0}
+.rtb.plan .r{grid-template-columns:112px minmax(0,1fr) 64px}
+.rtb.plan .r > b{font-weight:500;font-variant-numeric:tabular-nums}
+.rtb.plan .r > i{font-style:normal;display:inline-flex;align-items:center;gap:4px;font-size:12.5px;height:20px;white-space:nowrap}
+.rtb.plan .r > i.pk{cursor:pointer}
+.rtb .r.th{padding:0 0 6px;font-size:11.5px;line-height:16px}
+.rtb .r.th > b,.rtb .r.th > span,.rtb .r.th > i{font-weight:500;color:#a0a0a0;font-size:11.5px;height:auto}
+.phead.rep .rx{position:absolute;right:-22px;top:7px;width:18px;height:18px;border-radius:4px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:#b5b5b5;cursor:pointer}
+.phead.rep .rkp .rx{top:5px}
+.phead.rep .rx:hover{background:#f1f1f1;color:#d30000}
+.phead.rep .radd{margin-top:10px;height:22px;font-size:12px}
+.phead.rep.ed .rtb .r > b,.phead.rep.ed .rtb .r > span,.phead.rep.ed .rkp .k > b,.phead.rep.ed .rkp .k > span{display:block;min-height:20px}
+.phead.rep.ed .rtx.editable{min-height:46px}
+.rsrc{display:flex;gap:12px;margin-top:34px;padding-top:13px;border-top:1px solid #f1f1f1;font-size:12px;line-height:18px;color:#8e8e8e}
+.rsrc > b{font-weight:600;color:#6f6f6f;flex:none}
+.rsrc i{font-style:normal;margin:0 7px;color:#c4c4c4}
+.rsrc .rtx{flex:1;font-size:12.5px;line-height:19px}
+
+/* the cards of the list */
+.sec-title .rep-cnt{align-self:flex-end;margin:0 0 6px 16px;font-size:12.5px;font-weight:500;letter-spacing:0;color:#8e8e8e;font-variant-numeric:tabular-nums}
+.sch-on .pcard.rep h3{overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep h3 em{font-style:normal;font-size:14px;font-weight:700;margin-right:7px;color:#b5b5b5;font-variant-numeric:tabular-nums}
+.sch-on .pcard.rep.focus h3 em{color:#d9202e}
+.sch-on .pcard.rep .sub{margin:3px 0 0 -1.4px;height:18px;font-size:12px;line-height:18px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep .info{margin-top:7px}
+.sch-on .pcard.rep .info b{width:64px;flex:none;margin-right:6px}
+.sch-on .pcard.rep .info .e{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sch-on .pcard.rep .info .ops b{width:auto}
+.sch-on .pcard.rep .fo{position:absolute;left:6.6px;top:31px;height:16.6px;padding:0 7.4px;border-radius:8.3px;background:#d9202e;color:#fff;display:flex;align-items:center;font-size:9px;font-weight:600;white-space:nowrap;box-shadow:0 0.4px 2.6px rgba(0,0,0,.14)}
+
+/* the table of the list: two lines a cell, the groups with their count, the ones being pushed red */
+.tbl.sch-proc.vt-rep .hd,.tbl.sch-proc.vt-rep .rw{grid-template-columns:56px minmax(170px,1.25fr) 112px minmax(140px,1.1fr) 106px 106px minmax(150px,1.2fr) 98px 106px minmax(180px,1.7fr)}
+.tbl.sch-proc.vt-rep .rw{height:56px}
+.tbl.sch-proc.vt-rep .rw > div{font-size:13.5px;word-break:keep-all}
+.tbl.sch-proc.vt-rep .rw .e{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:18px;overflow-wrap:anywhere}
+.tbl.sch-proc.vt-rep .rw .nm{font-size:14.5px}
+.tbl.sch-proc.vt-rep .rw .nm .e{-webkit-line-clamp:2}
+.tbl.sch-proc.vt-rep .rw .dt{font-variant-numeric:tabular-nums}
+.tbl.sch-proc.vt-rep .rw .no span{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums}
+.tbl.sch-proc.vt-rep .rw.focus{background:#fdf0f1}
+.tbl.sch-proc.vt-rep .rw.focus:hover{background:#fbe5e7}
+.tbl.sch-proc.vt-rep .rw.focus .no span{background:#d9202e;color:#fff}
+.tbl.sch-proc.vt-rep .rw.focus .nm{color:#d9202e!important}
+.tbl.sch-proc.vt-rep .grp{display:flex;align-items:baseline;gap:8px;height:46px;padding:20px 0 0 10px;font-size:14px;color:#000;border-bottom:1px solid #e3e3e3}
+.tbl.sch-proc.vt-rep .grp b{font-weight:600}
+.tbl.sch-proc.vt-rep .grp span{font-size:12.5px;color:#8e8e8e;font-variant-numeric:tabular-nums}
+.rep-foot{width:calc(1337.9px + var(--d));margin-top:10px;font-size:11.5px;font-style:italic;line-height:17px;color:#a0a0a0}
+.projects .pfil .sch-filters .right{display:flex;align-items:center;gap:8px}
+.projects .pfil .sch-filters .right [data-repio]{display:inline-flex;align-items:center;gap:6px}
+
+/* the window of a data file: what will be made, written over, sent to the trash */
+.dlg.sch-repin .box{width:560px}
+.sch-repin .rin{margin-top:22px;max-height:min(56vh,520px);overflow:auto;font-size:13.5px;color:#3d3d3d}
+.sch-repin .rin .g{padding:14px 0;border-top:1px solid #f1f1f1}
+.sch-repin .rin .g:first-child{border-top:0;padding-top:0}
+.sch-repin .rin .g > b{display:block;font-weight:600;color:#000}
+.sch-repin .rin .g > small{display:block;margin-top:3px;font-size:12px;color:#8e8e8e;line-height:17px}
+.sch-repin .rin ul{margin:8px 0 0;padding:0;list-style:none;columns:2;column-gap:22px}
+.sch-repin .rin li{line-height:22px;break-inside:avoid;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-repin .rin li span{font-size:12px;color:#8e8e8e}
+.sch-repin .rin .ck{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;color:#1c1c1c;cursor:pointer}
+.sch-repin .rin .ck em{font-style:normal;font-size:12px;color:#8e8e8e}
