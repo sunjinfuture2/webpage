@@ -5,9 +5,12 @@
 
 const SCH_SOURCES={pangyo:'/schedule/pangyo.json'};           // projects whose plan came from a workbook (static source plans)
 const SCH={src:{},base:{},memo:{},loading:{},failed:{},undo:[],redo:[],virt:{},note:{},last:{},tick:0,srcId:{},arch:{},failWant:{}};
-// Preview (owner, 2026-11-19): the combined page is shown only to a browser that opened the site with ?v=2 once; ?v=1 turns it off again.
-(function(){try{const v=new URLSearchParams(location.search).get('v');if(v==='2')localStorage.setItem('aidc-preview','1');else if(v==='1')localStorage.removeItem('aidc-preview');}catch(e){}})();
-const schPreview=()=>{try{return localStorage.getItem('aidc-preview')==='1';}catch(e){return false;}};
+// The combined page is the page everybody gets (owner, 2026-11-24: "미리보기로 안 하고 원래대로 얹고 싶어"; from 2026-11-19 until
+// then only a browser that had opened the site with ?v=2 saw it). The page as it was before stays reachable for a browser that
+// opens the site with ?v=1 (remembered as '0'; ?v=2 takes that back). The same rule is written three times and must stay the
+// same: here, PREVIEW_ON in original.html and the guard against a dark flash in its head.
+(function(){try{const v=new URLSearchParams(location.search).get('v');if(v==='2')localStorage.setItem('aidc-preview','1');else if(v==='1')localStorage.setItem('aidc-preview','0');}catch(e){}})();
+const schPreview=()=>{try{return localStorage.getItem('aidc-preview')!=='0';}catch(e){return true;}};
 // Every project has the schedule sections (owner, 2026-11-20: the layout, functions and structure of 판교, without its contents).
 // A project without a workbook starts from an empty plan; what members add is stored the same way (meta:sched:<project>).
 const schHas=pid=>!!pid&&schPreview()&&!!PROJECTS[pid]&&!!window.AIDCSchedule;

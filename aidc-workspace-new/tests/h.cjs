@@ -1,7 +1,9 @@
 // Shared helpers for the local verification scripts (Playwright against wrangler dev on 127.0.0.1:8787).
 const { chromium } = require('playwright');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const URL0 = 'http://127.0.0.1:8787/';
+// Since 2026-11-24 the combined page is what everybody gets. A suite that does not say which page it wants gets the page as it was
+// before (?v=1): the editor, leave and panel suites were written against that one. A suite of the combined page passes ?v=2.
+const URL0 = 'http://127.0.0.1:8787/?v=1';
 let passed = 0, failed = 0;
 function check(name, ok, detail) {
   if (ok) { passed++; console.log('  ok   ' + name); }

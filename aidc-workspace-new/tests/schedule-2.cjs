@@ -125,10 +125,20 @@ const sfx = Date.now().toString(36).slice(-5);
   await ev(() => { SCHP.tab = 'links'; rerenderItem(S.full); }); await sleep(300);
   check('…with its relation map', await ev(() => document.querySelectorAll('#item-pin .sl-node').length >= 8));
   await ev(() => { SCHP.tab = 'info'; go('project:pangyo'); }); await sleep(600);
-  const badge = await ev(() => ({ b: (document.querySelector('#sch-pv') || {}).textContent, title: document.title }));
-  check('the top bar says this is the preview', badge.b === '미리보기', badge);
-  await a.click('#sch-pv'); await sleep(200); await a.click('.pop .it:has-text("기존 화면으로")'); await a.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady, null, { timeout: 20000 }); await sleep(1200);
-  check('“기존 화면으로 돌아가기” turns it off: the old page, no badge', await ev(() => !schPreview() && !document.querySelector('#sch-pv') && !document.querySelector('#sch-actions') && S.page === 'project' && !!document.querySelector('.road')));
+  // the combined page is the page itself since 2026-11-24: no badge; the page as it was only with ?v=1
+  check('the top bar has no “미리보기” badge any more', await ev(() => !document.querySelector('#sch-pv') && schPreview() && PREVIEW_ON));
+  const plain = await browser.newContext({ viewport: { width: 1920, height: 1080 } }), pp = await plain.newPage();
+  await pp.goto('http://127.0.0.1:8787/'); await pp.waitForSelector('#lg-id', { state: 'visible' });
+  check('a browser that opens the plain address gets the combined page', await pp.evaluate(() => schPreview() && PREVIEW_ON && document.documentElement.classList.contains('sch-on') && localStorage.getItem('aidc-preview') === null));
+  await pp.goto('http://127.0.0.1:8787/?v=1'); await pp.waitForSelector('#lg-id', { state: 'visible' });
+  const off1 = await pp.evaluate(() => ({ off: !schPreview() && !PREVIEW_ON && !document.documentElement.classList.contains('sch-on'), ls: localStorage.getItem('aidc-preview') }));
+  await pp.goto('http://127.0.0.1:8787/'); await pp.waitForSelector('#lg-id', { state: 'visible' });
+  const off2 = await pp.evaluate(() => !schPreview() && !PREVIEW_ON);
+  await pp.goto('http://127.0.0.1:8787/?v=2'); await pp.waitForSelector('#lg-id', { state: 'visible' });
+  const on3 = await pp.evaluate(() => schPreview() && PREVIEW_ON); await plain.close();
+  check('?v=1 shows the page as it was and that browser remembers it; ?v=2 takes it back', off1.off && off1.ls === '0' && off2 && on3, { off1, off2, on3 });
+  await a.goto('http://127.0.0.1:8787/?v=1' + await ev(() => location.hash)); await a.waitForFunction(() => typeof sharedReady !== 'undefined' && sharedReady, null, { timeout: 20000 }); await sleep(1200);
+  check('with ?v=1: the old page, no schedule sections', await ev(() => !schPreview() && !document.querySelector('#sch-pv') && !document.querySelector('#sch-actions') && S.page === 'project' && !!document.querySelector('.road')));
   check('the linked action item is an ordinary action there (its link is kept)', await ev(s => { const it = ITEMS.find(i => (i.title || '').includes(s)); return !!it && !!it.task && [...document.querySelectorAll('#page-project .tbl.actions .rw')].length > 0; }, sfx));
 
   console.log('— cleaning up');

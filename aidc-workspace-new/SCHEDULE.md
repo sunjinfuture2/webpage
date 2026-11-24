@@ -678,3 +678,17 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   from card to card); schResPer counts with the same 15.
 - tests: schedule-13 (66 checks: the picker of a place, the numbers after it, the gantt, one 되돌리기, a move and 취소),
   schedule-14 (33: the list's date and rows, the two gaps), schedule-7 (the gap is 15).
+
+## The combined page is the page (owner, 2026-11-24)
+
+- The owner opened the plain address on another computer, saw the old page and asked for the combined screens without the
+  switch. Since then a browser gets the combined page unless it asked for the old one: `?v=1` stores `aidc-preview` = `0`
+  (that browser keeps the old page), `?v=2` stores `1` again, no value means on. A browser that had turned the preview off
+  through the old badge has no value and therefore gets the combined page too.
+- The rule lives in three places that must agree: `schPreview()` (schedule/ui/00-state.js), `PREVIEW_ON` (original.html) and
+  the guard against a dark flash in the head of original.html. Where localStorage cannot be read the page is the combined one.
+- The orange "미리보기" badge (with "기존 화면으로 돌아가기" and "미리보기 주소 복사") is gone; the moon / sun stands before the
+  profile.
+- Tests: tests/h.cjs opens `?v=1` when a suite names no address, so the editor, leave and panel suites keep testing the page
+  they were written for; the schedule suites pass `?v=2` as before. tests/schedule-2.cjs checks the rule itself (a fresh
+  browser at the plain address, `?v=1` remembered, `?v=2` back) — 33 checks.
