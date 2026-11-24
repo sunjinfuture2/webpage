@@ -1586,7 +1586,7 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .rmeta .m.who + .m.dt{margin-left:auto}
 .rmeta .m.dt{margin-left:14px;font-variant-numeric:tabular-nums}
 .rmeta .m.dt .editable{min-width:74px}
-.rcols{display:grid;grid-template-columns:calc(300px + var(--d) * .2) minmax(0,1fr) minmax(0,1.06fr);column-gap:52px;align-items:start}
+.rcols{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);column-gap:64px;align-items:start}
 .rc{min-width:0}
 .rb{margin-bottom:36px}
 .rb:last-child{margin-bottom:0}
@@ -1692,3 +1692,53 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .projects .arr{top:214px}
 .sch-on .projects .fade{top:71px}
 .sch-on .projects.tv [data-vbody]{padding-top:147px}
+
+/* Twenty-sixth round (owner, 2026-11-24): the overview without 요약 — the figures as two rows of tiles across the page, two columns
+   below (the texts / the table, the steps, the partners, the PDFs), the map inside the row 위치 of the table */
+.rstats{margin-bottom:38px}
+.rstats .rb{margin-bottom:26px}
+.rstats .rkp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px 30px;align-items:start}
+.rstats .rkp .k{margin-bottom:0;min-width:0}
+.rstats .rkp > .nil,.rstats .rkp > .radd{grid-column:1/-1;justify-self:start}
+.rstats .rnote{margin-top:10px}
+.phead.rep .rb.rcells{margin-bottom:34px;padding:16px 18px 14px;border-radius:8px;background:#f8f8f7}
+.phead.rep .rb.rcells .rt{border-bottom:0;padding-bottom:0;margin-bottom:12px;font-size:13px}
+.phead.rep .rlf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 30px}
+.phead.rep .rlf label{display:block;min-width:0}
+.phead.rep .rlf label > b{display:block;font-size:12px;font-weight:600;color:#6f6f6f;margin-bottom:3px}
+.phead.rep .rlf label > .v{display:block;min-height:21px;font-size:14px;line-height:21px;overflow-wrap:anywhere}
+.rtb .r.ops > span.v{white-space:normal}
+.rtb .r .rmapbox{grid-column:2;margin-top:9px}
+.phead.rep .rmapbox .map,.phead.rep .rmapbox .ph-img{display:block;width:100%;height:170px;margin:0}
+.phead.rep .rdl{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.phead.rep .rd{position:relative;display:flex;align-items:center;gap:10px;max-width:100%;font-size:13.5px;line-height:20px}
+.phead.rep .rd a.nm{display:inline-flex;align-items:center;gap:6px;min-width:0;color:#1c1c1c;border-bottom:1px solid rgba(61,61,61,.35)}
+.phead.rep .rd a.nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phead.rep .rd a.nm i{width:15px;height:15px;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.phead.rep .rd a.nm i .pict{width:13px;height:13px}
+.phead.rep .rd a.nm:hover{border-bottom-color:#0f0f0f;color:#000}
+.phead.rep .rd em{font-style:normal;font-size:12px;color:#a0a0a0;flex:none}
+.phead.rep .rd a.dl{font-size:12px;color:#8e8e8e;flex:none}
+.phead.rep .rd a.dl:hover{color:#1c1c1c;text-decoration:underline;text-underline-offset:3px}
+.phead.rep .rd .rx{position:static;flex:none}
+/* the window that makes a project: its PDF */
+.sch-np .np-pdf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding-top:3px}
+.sch-np .np-pdf .sh-btn{height:24px;padding:0 10px;font-size:12px;border-radius:8px}
+.sch-np .np-pdf .nm{font-size:13px;color:#a6a6a6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:250px}
+.sch-np .np-pdf .nm.on{color:#1c1c1c}
+.sch-np .np-pdf .x{width:18px;height:18px;border-radius:4px;background:transparent;border:0;font-size:10px;color:#a0a0a0;cursor:pointer}
+.sch-np .np-pdf .x:hover{background:#f1f1f1;color:#d30000}
+.sch-np .np-pdf small{flex:1 1 100%;font-size:11.5px;line-height:16px;color:#a6a6a6}
+.sch-np .np-pdf small.err{color:#e02020}
+.sch-np .np-pdf small.err:empty{display:none}
+
+/* Twenty-sixth round (owner, 2026-11-24: "프로젝트페이지 안에 있는것도 다 타이틀과 컨텐츠, 필터 간의 거리 통일"): the sections of a project page
+   keep the distances of the main page too — the pickers 93 below the top of the title, the content 34 below the pickers.
+   액션 (리스트), the lower section and 리서치 had them; the gantt stood 24 and the relation map 26 below the pickers; 미팅 had its
+   pickers in the row of the title and its cards 76.7 below it (now a row of pickers of its own, the cards at 147). */
+.sch-gantt{margin-top:34px}
+.sch-net{margin-top:34px}
+.sch-on .meet .sch-filters.meetf{position:absolute;left:-0.2px;top:39px;margin:54px 0 0 0;z-index:2}
+.sch-on .meet .fade{top:147px}
+.sch-on .meet .circ{top:266.4px}
+.meet.tv [data-vbody]{padding-top:147px}

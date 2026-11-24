@@ -283,6 +283,14 @@ function dropDemoActionsV1(){ const one=t=>String(t||'').replace(/\s+/g,' ').tri
   for(const it of ITEMS)if(Array.isArray(it.actions)&&it.actions.some(x=>gone.has(x)))it.actions=it.actions.filter(x=>!gone.has(x));
   for(const p of PARTNERS)if(p.meet&&gone.has(p.meet))p.meet=null;
   return gone.size; }
+// The development review list (owner, 2026-11-24: "코드에 넣어"): its 18 projects are put into a database once. 판교 and 부산 are written
+// over (their schedule, actions, meetings, owner and partners stay), 인천 청라 and 햇빛 — not in the list — go to the trash (30 days).
+// The data comes from the Worker for a member who is logged in; it is not in this page's code. Fixed ids, so two pages doing it
+// at the same moment write the same records.
+async function applyDevReportV1(){ if(typeof schRepApply!=='function')return false;
+  try{ const r=await apiFetch('/api/devreport'); if(!r.ok)return false; const data=await r.json(); if(!data||data.kind!=='aidc-dev-report'||!Array.isArray(data.projects)||!data.projects.length)return false;
+    schRepApply(data,false); for(const id of ['incheon','sunlight'])if(PROJECTS[id])trashProject(id); META_FLAGS.devReportV1=1; return true; }
+  catch(e){ console.error(e); return false; } }
 function addReferenceLinksV1(){
  const L=referenceLinks(), now=Date.now(); let n=0;
  for(const [want,rows] of Object.entries(L.tabs)){const tab=ARCH_TABS.includes(want)?want:(ARCH_TABS.includes('기타')?'기타':ARCH_TABS[0]);
@@ -371,6 +379,8 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
+ // (not on a local development database: the tests make their own projects; tests/schedule-17.cjs calls the routine itself)
+ if(!META_FLAGS.devReportV1&&!/^(127\.0\.0\.1|localhost)$/.test(location.hostname))await applyDevReportV1();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;
  restoreLocal();
  for(const [id,l] of Object.entries(sharedLocks))if(l.employee===sharedUser&&!ownedLocks.has(id)){ownedLocks.add(id);await sharedRelease(id);} // locks left over from a closed tab

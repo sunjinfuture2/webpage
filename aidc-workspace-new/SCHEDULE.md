@@ -827,9 +827,8 @@ asked for the project overview and the project list of the main page to follow i
   lines). 가져오기 first shows a window with what will be made, what will be written over (by id, else by name) and which projects
   are not in the file (a box sends those to the trash; ticked when the file asks for it); nothing changes before 가져오기. Written
   over means: the overview is the file's and the name too; schedule, actions, meetings, owner and partners stay. 내보내기 writes
-  the same kind of file. This is how the list gets into a workspace: **the repository is public, so the list's own data (the
-  owner's PDF, the file made from it) is never committed** — not in the fixtures, not in a test, not in a note. The tests use
-  made-up projects.
+  the same kind of file. (At first the list's own data was kept out of the repository, which is public; the owner then decided
+  to keep it in the code — see the twenty-sixth round below. The owner's PDF itself is still not committed.)
 - A phone: the three columns stand below each other; the table is moved sideways (schedule/mobile.css).
 - Not built (the owner's wish for later): reading the PDF itself. The data file is the form such an upload would be turned into.
 - tests/schedule-16.cjs (38 checks at first, three members, one on the page as it was; 45 since the twenty-fifth round).
@@ -851,3 +850,32 @@ asked for the project overview and the project list of the main page to follow i
   with the lists of the review list the save stopped without a word while the list of actions was open. Records that carry
   such junk are harmless (headOf puts lists back, the rest is never read).
 - tests/schedule-16.cjs (45 checks).
+
+## The list in the code, the overview without 요약, one distance on the project page, a PDF of a project (owner, 2026-11-24, twenty-sixth round)
+
+- **The list is in the code** (the owner, told that the repository is public: "코드에 넣어"). `devreport.mjs` is the data file of the
+  review list as a module of the Worker (made from the owner's PDF; change it there when the list changes). It is not part of the
+  page: `GET /api/devreport` hands it to a member who is logged in. The page puts it into a database once (applyDevReportV1 in
+  shared-client.js, meta:flags `devReportV1`): schRepApply with the file — 판교 (`pangyo`) and 부산 (`busan`) are written over and
+  keep their schedule, actions, meetings, owner and partners, the other 16 are made with fixed ids — and 인천 청라 and 햇빛, which are
+  not in the list, go to the trash. Not on a local development database (127.0.0.1 / localhost): the suites count on the demo
+  projects; tests/schedule-17.cjs calls the routine itself and therefore runs last. A later edition of the list is a new routine
+  with a new flag (or the "자료 파일" of the main page), never a change of what `devReportV1` did.
+- **The overview has no 요약** ("요약쪽은 메인페이지 … 그 내용이 같이 연동되기만 하면 돼 … 요약은 빼고 다른식으로 배치"). Read: the line with
+  number, group, stage, owner, dates; 핵심 지표 and 사업성 지표 as two rows of tiles across the page (five in a row); below, two columns
+  — the texts, 주요 리스크, 협력업체, 첨부 자료 / 사업 개요 표 (its first row is 운영개시 예상, computed), 추진 일정 — and 출처. The cells of the
+  main page's list are not shown there: a cell left empty follows the sheet (schRepOf: the rows 위치 · 사업주체 · 대지면적 · 연면적 of the
+  table, the first 핵심 지표 that speaks of IT / 수전), a cell that is filled in wins. They are filled in while the overview is edited
+  (the block "메인 페이지 목록에 표시되는 값"; the placeholder shows what the list uses otherwise).
+- **The map stands where the place is written**: inside the row 위치 of 사업 개요 표 (`.rmapbox`, the address the row mirrors into
+  `loc`); no map for a place that is not known (자료 없음 / 확인 필요 / 보완 필요) or when the table has no such row.
+- **One distance on the project page too** ("프로젝트페이지 안에 있는것도 다 … 통일"): 미팅 (cards and table), 액션 (일정 · 리스트 · 관계도), the
+  lower section (외부설비 조달 · 승인게이트 · 근거 및 확약) and 리서치 keep the pickers 93 below the top of the title and the content 34 below
+  the pickers. The gantt stood 24 and the relation map 26 below; 미팅 had its pickers in the row of the title and its cards at
+  76.7 (the owner's earlier "2배") — its pickers are a row of their own now (`.sch-filters.meetf`), the views and the search stay
+  beside the title, the cards start at 147 and the section is 441.7 tall.
+- **A PDF of a project** ("프로젝트 만들때 pdf 첨부하는 칸"): the window that makes a project has a row 자료 PDF; the file is stored first
+  (POST /api/file, 1.8 MB, item `proj-doc-<project>`) and the project is made with `docs: [{id, name, size}]`. The overview lists
+  them under 첨부 자료 (PDF): the name opens the browser's PDF view in a new tab, 내려받기 saves it; while the overview is edited a
+  file can be added or taken away. Reading the PDF into the sheet is not built.
+- tests/schedule-16.cjs (51 checks), tests/schedule-17.cjs (12 checks, last of the run).

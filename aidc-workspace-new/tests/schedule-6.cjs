@@ -152,7 +152,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const w0 = await ev(() => [...document.querySelectorAll('#page-project .phead .rc')].map(c => Math.round(c.getBoundingClientRect().width)));
   await a.click('#sb-collapse'); await sleep(700);
   const w1 = await ev(() => ({ w: [...document.querySelectorAll('#page-project .phead .rc')].map(c => Math.round(c.getBoundingClientRect().width)), per: schResPer(), cols: getComputedStyle(document.querySelector('#page-project .rgrid')).gridTemplateColumns.split(' ').length, cards: document.querySelectorAll('#page-project .rcard').length, total: liveItems('research', 'pangyo').length }));
-  check('folded sidebar: the three columns of 사업개요 all get wider', w1.w[0] > w0[0] + 20 && w1.w[1] > w0[1] + 20 && w1.w[2] > w0[2] + 20, { w0, w1: w1.w });
+  check('folded sidebar: the columns of 사업개요 (two since the twenty-sixth round) both get wider', w0.length === 2 && w1.w[0] > w0[0] + 20 && w1.w[1] > w0[1] + 20, { w0, w1: w1.w });
   check('…and research shows whole rows (two rows of as many cards as fit)', w1.per === w1.cols * 2 && w1.cards === Math.min(w1.total, w1.per) && w1.cols === 7, w1);
   await a.click('#sb-open'); await sleep(600);
   // the day window

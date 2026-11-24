@@ -1,5 +1,6 @@
 import seedText from './seed.json';
 import { fetchHolidays } from './holiday-service.mjs';
+import devReport from './devreport.mjs'; // the development review list (owner, 2026-11-24: "코드에 넣어"); never part of the page's own code
 import { mergeUpdates } from 'yjs'; // editing one body together: the Worker only relays and merges the editors' updates
 const seed = JSON.parse(seedText);
 const toB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
@@ -290,6 +291,7 @@ export class Workspace {
         log.push(t); this.unfurls.set(me, log);
         return json(await unfurl(url.searchParams.get('url') || ''));
       }
+      if (path === '/api/devreport' && req.method === 'GET') return json(devReport);   // the review list's data file, for a member who is logged in (the page applies it once: applyDevReportV1)
       if (path === '/api/holidays' && req.method === 'GET') { // the public holidays of one year: red dates in the calendars
         const y = Number(url.searchParams.get('y')); if (!Number.isInteger(y) || y < 2000 || y > 2100) return json({ error: '연도를 확인해주세요.' }, 400);
         return json(await this.holidays(y));

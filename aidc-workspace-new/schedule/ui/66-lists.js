@@ -142,21 +142,29 @@ function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); 
       <label>구분</label><div class="np-st" id="np2-grp">${REP_GRPS.map(g=>`<button type="button" data-grp="${g}" class="${g===grp?'on':''}">${g}</button>`).join('')}</div>
       <label>추진 단계</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
       <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
-      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div></div>
+      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div>
+      <label>자료 PDF</label><div class="np-pdf"><button type="button" class="sh-btn lib" data-np2pdf>PDF 첨부</button><span class="nm" id="np2-pdfname">선택한 파일 없음</span><button type="button" class="x" data-np2pdfx title="첨부 빼기" aria-label="첨부 빼기" hidden>✕</button><input type="file" id="np2-pdf" accept="application/pdf,.pdf" hidden><small>프로젝트 검토 자료(PDF)를 붙여 둡니다 · 1.8MB까지 · 사업개요에서 열어 볼 수 있습니다</small><small class="err" id="np2-pdferr"></small></div></div>
     <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
-  const close=()=>d.remove();
-  const make=()=>{ const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+  const close=()=>d.remove(); let pdf=null, busy=false;
+  const setPdf=f=>{ const bad=f?schRepDocBad(f):''; pdf=bad?null:f||null; $n('#np2-pdfname').textContent=pdf?`${pdf.name} · ${fmtSize(pdf.size)}`:'선택한 파일 없음'; $n('#np2-pdfname').classList.toggle('on',!!pdf); $n('[data-np2pdfx]').hidden=!pdf; $n('#np2-pdferr').textContent=bad; if(!pdf)$n('#np2-pdf').value=''; };
+  $n('#np2-pdf').addEventListener('change',e=>setPdf(e.target.files&&e.target.files[0]));
+  const make=async()=>{ if(busy)return; const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
     if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
     const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
-    const id='p'+Date.now(), ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
+    const id='p'+Date.now(); let docs=[];
+    if(pdf){ const ok=$n('[data-np2="ok"]'); busy=true; ok.disabled=true; ok.textContent='PDF 올리는 중…';   // the file first: a project is not made with a PDF that could not be stored
+      try{ docs=[await schRepDocUpload(pdf,id)]; }catch(e){ $n('#np2-pdferr').textContent=String(e&&e.message||'PDF를 올리지 못했습니다.'); busy=false; ok.disabled=false; ok.textContent='프로젝트 만들기'; return; }
+      busy=false; if(!d.isConnected)return; }
+    const ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
     PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
-    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site};
+    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site,docs};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
     toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
   d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
     const gb=e.target.closest('[data-grp]'); if(gb){grp=gb.dataset.grp; d.querySelectorAll('[data-grp]').forEach(x=>x.classList.toggle('on',x===gb)); return;}
+    if(e.target.closest('[data-np2pdf]')){ $n('#np2-pdf').click(); return; } if(e.target.closest('[data-np2pdfx]')){ setPdf(null); return; }
     const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
 

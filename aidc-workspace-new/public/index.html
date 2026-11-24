@@ -2779,7 +2779,7 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .rmeta .m.who + .m.dt{margin-left:auto}
 .rmeta .m.dt{margin-left:14px;font-variant-numeric:tabular-nums}
 .rmeta .m.dt .editable{min-width:74px}
-.rcols{display:grid;grid-template-columns:calc(300px + var(--d) * .2) minmax(0,1fr) minmax(0,1.06fr);column-gap:52px;align-items:start}
+.rcols{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);column-gap:64px;align-items:start}
 .rc{min-width:0}
 .rb{margin-bottom:36px}
 .rb:last-child{margin-bottom:0}
@@ -2885,6 +2885,56 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .projects .arr{top:214px}
 .sch-on .projects .fade{top:71px}
 .sch-on .projects.tv [data-vbody]{padding-top:147px}
+
+/* Twenty-sixth round (owner, 2026-11-24): the overview without 요약 — the figures as two rows of tiles across the page, two columns
+   below (the texts / the table, the steps, the partners, the PDFs), the map inside the row 위치 of the table */
+.rstats{margin-bottom:38px}
+.rstats .rb{margin-bottom:26px}
+.rstats .rkp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px 30px;align-items:start}
+.rstats .rkp .k{margin-bottom:0;min-width:0}
+.rstats .rkp > .nil,.rstats .rkp > .radd{grid-column:1/-1;justify-self:start}
+.rstats .rnote{margin-top:10px}
+.phead.rep .rb.rcells{margin-bottom:34px;padding:16px 18px 14px;border-radius:8px;background:#f8f8f7}
+.phead.rep .rb.rcells .rt{border-bottom:0;padding-bottom:0;margin-bottom:12px;font-size:13px}
+.phead.rep .rlf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 30px}
+.phead.rep .rlf label{display:block;min-width:0}
+.phead.rep .rlf label > b{display:block;font-size:12px;font-weight:600;color:#6f6f6f;margin-bottom:3px}
+.phead.rep .rlf label > .v{display:block;min-height:21px;font-size:14px;line-height:21px;overflow-wrap:anywhere}
+.rtb .r.ops > span.v{white-space:normal}
+.rtb .r .rmapbox{grid-column:2;margin-top:9px}
+.phead.rep .rmapbox .map,.phead.rep .rmapbox .ph-img{display:block;width:100%;height:170px;margin:0}
+.phead.rep .rdl{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.phead.rep .rd{position:relative;display:flex;align-items:center;gap:10px;max-width:100%;font-size:13.5px;line-height:20px}
+.phead.rep .rd a.nm{display:inline-flex;align-items:center;gap:6px;min-width:0;color:#1c1c1c;border-bottom:1px solid rgba(61,61,61,.35)}
+.phead.rep .rd a.nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phead.rep .rd a.nm i{width:15px;height:15px;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.phead.rep .rd a.nm i .pict{width:13px;height:13px}
+.phead.rep .rd a.nm:hover{border-bottom-color:#0f0f0f;color:#000}
+.phead.rep .rd em{font-style:normal;font-size:12px;color:#a0a0a0;flex:none}
+.phead.rep .rd a.dl{font-size:12px;color:#8e8e8e;flex:none}
+.phead.rep .rd a.dl:hover{color:#1c1c1c;text-decoration:underline;text-underline-offset:3px}
+.phead.rep .rd .rx{position:static;flex:none}
+/* the window that makes a project: its PDF */
+.sch-np .np-pdf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding-top:3px}
+.sch-np .np-pdf .sh-btn{height:24px;padding:0 10px;font-size:12px;border-radius:8px}
+.sch-np .np-pdf .nm{font-size:13px;color:#a6a6a6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:250px}
+.sch-np .np-pdf .nm.on{color:#1c1c1c}
+.sch-np .np-pdf .x{width:18px;height:18px;border-radius:4px;background:transparent;border:0;font-size:10px;color:#a0a0a0;cursor:pointer}
+.sch-np .np-pdf .x:hover{background:#f1f1f1;color:#d30000}
+.sch-np .np-pdf small{flex:1 1 100%;font-size:11.5px;line-height:16px;color:#a6a6a6}
+.sch-np .np-pdf small.err{color:#e02020}
+.sch-np .np-pdf small.err:empty{display:none}
+
+/* Twenty-sixth round (owner, 2026-11-24: "프로젝트페이지 안에 있는것도 다 타이틀과 컨텐츠, 필터 간의 거리 통일"): the sections of a project page
+   keep the distances of the main page too — the pickers 93 below the top of the title, the content 34 below the pickers.
+   액션 (리스트), the lower section and 리서치 had them; the gantt stood 24 and the relation map 26 below the pickers; 미팅 had its
+   pickers in the row of the title and its cards 76.7 below it (now a row of pickers of its own, the cards at 147). */
+.sch-gantt{margin-top:34px}
+.sch-net{margin-top:34px}
+.sch-on .meet .sch-filters.meetf{position:absolute;left:-0.2px;top:39px;margin:54px 0 0 0;z-index:2}
+.sch-on .meet .fade{top:147px}
+.sch-on .meet .circ{top:266.4px}
+.meet.tv [data-vbody]{padding-top:147px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3645,6 +3695,15 @@ html.mob .sch-repin .rin ul{columns:1}
 html.mob .projects .pfil .sch-filters{margin-top:6px}
 html.mob .pcard.rep .pstar{width:32px;height:32px}
 html.mob .pcard.rep .img-btn{right:48px}
+
+/* (twenty-sixth round) the figures two in a row, the two columns below each other */
+html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+html.mob .phead.rep .rlf{grid-template-columns:minmax(0,1fr)}
+html.mob .phead.rep .rb.rcells{padding:14px 14px 12px}
+html.mob .phead.rep .rd{flex-wrap:wrap}
+
+/* (twenty-sixth round) the pickers of 미팅 are a row of their own; on a phone it stands in the flow like the others */
+html.mob.sch-on .meet .sch-filters.meetf{position:static;margin:14px 0 0}
 </style>
 </head>
 <body>
@@ -4347,7 +4406,7 @@ function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]=
   const okRows=(a,n)=>Array.isArray(a)&&a.every(r=>Array.isArray(r)&&r.length>=n&&r.every(x=>typeof x==='string'));
   if(!okRows(h.kpi,2))h.kpi=[]; if(!okRows(h.fin,2))h.fin=[]; if(!okRows(h.plan,3))h.plan=[];
   if(!okRows(h.rows,2))h.rows=[['위치',mapQuery(h.loc)||h.loc.split('\n')[0].trim()],['용도지역',h.zone],['대지면적',''],['연면적',scaleOf(h,0,p.area)],['건폐율 / 용적률',''],['규모',''],['사업주체',h.dev],['운영사 / 임차인',''],['수전 계획',scaleOf(h,2,p.power)]];
-  h.focus=!!h.focus; return h;}
+  h.focus=!!h.focus; if(!Array.isArray(h.docs))h.docs=[]; return h;}
 function renderProject(pid){
   const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
@@ -4366,8 +4425,8 @@ function renderProject(pid){
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>`}
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
-   ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:${PV?371.4:352.1}px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
-     <div class="track" style="top:${PV?76.7:57.4}px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
+   ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:${PV?441.7:352.1}px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
+     <div class="track" style="top:${PV?147:57.4}px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
      <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>`}
    ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">${ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
@@ -5423,6 +5482,14 @@ function dropDemoActionsV1(){ const one=t=>String(t||'').replace(/\s+/g,' ').tri
   for(const it of ITEMS)if(Array.isArray(it.actions)&&it.actions.some(x=>gone.has(x)))it.actions=it.actions.filter(x=>!gone.has(x));
   for(const p of PARTNERS)if(p.meet&&gone.has(p.meet))p.meet=null;
   return gone.size; }
+// The development review list (owner, 2026-11-24: "코드에 넣어"): its 18 projects are put into a database once. 판교 and 부산 are written
+// over (their schedule, actions, meetings, owner and partners stay), 인천 청라 and 햇빛 — not in the list — go to the trash (30 days).
+// The data comes from the Worker for a member who is logged in; it is not in this page's code. Fixed ids, so two pages doing it
+// at the same moment write the same records.
+async function applyDevReportV1(){ if(typeof schRepApply!=='function')return false;
+  try{ const r=await apiFetch('/api/devreport'); if(!r.ok)return false; const data=await r.json(); if(!data||data.kind!=='aidc-dev-report'||!Array.isArray(data.projects)||!data.projects.length)return false;
+    schRepApply(data,false); for(const id of ['incheon','sunlight'])if(PROJECTS[id])trashProject(id); META_FLAGS.devReportV1=1; return true; }
+  catch(e){ console.error(e); return false; } }
 function addReferenceLinksV1(){
  const L=referenceLinks(), now=Date.now(); let n=0;
  for(const [want,rows] of Object.entries(L.tabs)){const tab=ARCH_TABS.includes(want)?want:(ARCH_TABS.includes('기타')?'기타':ARCH_TABS[0]);
@@ -5511,6 +5578,8 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
+ // (not on a local development database: the tests make their own projects; tests/schedule-17.cjs calls the routine itself)
+ if(!META_FLAGS.devReportV1&&!/^(127\.0\.0\.1|localhost)$/.test(location.hostname))await applyDevReportV1();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;
  restoreLocal();
  for(const [id,l] of Object.entries(sharedLocks))if(l.employee===sharedUser&&!ownedLocks.has(id)){ownedLocks.add(id);await sharedRelease(id);} // locks left over from a closed tab
@@ -7599,21 +7668,29 @@ function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); 
       <label>구분</label><div class="np-st" id="np2-grp">${REP_GRPS.map(g=>`<button type="button" data-grp="${g}" class="${g===grp?'on':''}">${g}</button>`).join('')}</div>
       <label>추진 단계</label><div class="np-st" id="np2-st">${sts.map(s=>`<button type="button" data-st="${s}" class="${s===st?'on':''}"><i style="background:${PSTATUS[s]}"></i>${s}</button>`).join('')}</div>
       <label for="np2-owner">담당자</label><div><input id="np2-owner" maxlength="40" value="${esc(sharedName)}" autocomplete="off"></div>
-      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div></div>
+      <label for="np2-site">부지</label><div><input id="np2-site" maxlength="120" placeholder="주소 또는 위치" autocomplete="off"></div>
+      <label>자료 PDF</label><div class="np-pdf"><button type="button" class="sh-btn lib" data-np2pdf>PDF 첨부</button><span class="nm" id="np2-pdfname">선택한 파일 없음</span><button type="button" class="x" data-np2pdfx title="첨부 빼기" aria-label="첨부 빼기" hidden>✕</button><input type="file" id="np2-pdf" accept="application/pdf,.pdf" hidden><small>프로젝트 검토 자료(PDF)를 붙여 둡니다 · 1.8MB까지 · 사업개요에서 열어 볼 수 있습니다</small><small class="err" id="np2-pdferr"></small></div></div>
     <div class="np-bt"><button data-np2="x">취소</button><button class="pri" data-np2="ok">프로젝트 만들기</button></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s); setTimeout(()=>$n('#np2-name').focus(),0);
-  const close=()=>d.remove();
-  const make=()=>{ const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
+  const close=()=>d.remove(); let pdf=null, busy=false;
+  const setPdf=f=>{ const bad=f?schRepDocBad(f):''; pdf=bad?null:f||null; $n('#np2-pdfname').textContent=pdf?`${pdf.name} · ${fmtSize(pdf.size)}`:'선택한 파일 없음'; $n('#np2-pdfname').classList.toggle('on',!!pdf); $n('[data-np2pdfx]').hidden=!pdf; $n('#np2-pdferr').textContent=bad; if(!pdf)$n('#np2-pdf').value=''; };
+  $n('#np2-pdf').addEventListener('change',e=>setPdf(e.target.files&&e.target.files[0]));
+  const make=async()=>{ if(busy)return; const n=$n('#np2-name').value.replace(/\s+/g,' ').trim(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}
     if(Object.values(PROJECTS).some(p=>norm(p.full)===norm(n))){$n('#np2-err').textContent='같은 이름의 프로젝트가 있습니다.';$n('#np2-name').focus();return;}
     const tag=n, owner=$n('#np2-owner').value.trim()||sharedName, site=$n('#np2-site').value.trim();
-    const id='p'+Date.now(), ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
+    const id='p'+Date.now(); let docs=[];
+    if(pdf){ const ok=$n('[data-np2="ok"]'); busy=true; ok.disabled=true; ok.textContent='PDF 올리는 중…';   // the file first: a project is not made with a PDF that could not be stored
+      try{ docs=[await schRepDocUpload(pdf,id)]; }catch(e){ $n('#np2-pdferr').textContent=String(e&&e.message||'PDF를 올리지 못했습니다.'); busy=false; ok.disabled=false; ok.textContent='프로젝트 만들기'; return; }
+      busy=false; if(!d.isConnected)return; }
+    const ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
     PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
-    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site};
+    PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site,docs};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}
     toast('프로젝트를 만들었습니다. 사업개요를 채운 뒤 저장하세요.',3200); };
   d.addEventListener('click',e=>{ e.stopPropagation(); const b=e.target.closest('[data-st]'); if(b){st=b.dataset.st; d.querySelectorAll('[data-st]').forEach(x=>x.classList.toggle('on',x===b)); return;}
     const gb=e.target.closest('[data-grp]'); if(gb){grp=gb.dataset.grp; d.querySelectorAll('[data-grp]').forEach(x=>x.classList.toggle('on',x===gb)); return;}
+    if(e.target.closest('[data-np2pdf]')){ $n('#np2-pdf').click(); return; } if(e.target.closest('[data-np2pdfx]')){ setPdf(null); return; }
     const a=e.target.closest('[data-np2]'); if(e.target===d||(a&&a.dataset.np2==='x')){close();return;} if(a&&a.dataset.np2==='ok')make(); });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){e.stopPropagation();close();} else if(e.key==='Enter'&&!e.isComposing&&e.target.tagName==='INPUT'){e.preventDefault();make();} else if(e.target.id==='np2-name')$n('#np2-err').textContent=''; }); }
 
@@ -8550,8 +8627,9 @@ const schMeetFiltered=()=>{ const c=schMtf(); return !!((S.q.meeting||'').trim()
 const SCH_MT_YN={file:['회의록',{y:'있음',n:'없음'}],guest:['외부 참석',{y:'있음',n:'없음'}]};
 function schMeetPicks(){ const c=schMtf(), tags=['file','guest'].filter(k=>c[k]).map(k=>`<button class="sch-chip" data-mtchip="${k}" title="이 조건 지우기">${SCH_MT_YN[k][0]}: ${SCH_MT_YN[k][1][c[k]]}<i>✕</i></button>`).join('');   // what only the table's head can choose shows as a tag
   return tags+schSf2('mtpick','when',c.when?SCH_MT_WHEN[c.when]:'전체 기간',!!c.when)+schSf2('mtpick','who',c.who?userName(c.who):'전체 참석자',!!c.who)+schSf2('mtpick','sort',c.sort?SCH_MT_SORT[c.sort]:'최신 순',!!c.sort); }
-// what stands at the right of the title 미팅: the pickers, the two views, the search box
-const schMeetTools=()=>`<div class="sch-vtools"><div class="sch-filters" data-vpick="meet">${schMeetPicks()}</div>${schViewToggle('meet')}${searchBox('meeting','미팅 검색')}</div>`;
+// at the right of the title 미팅: the two views and the search box; below the title, where every section has them, the row of pickers
+// (twenty-sixth round: they stood in the row of the title)
+const schMeetTools=()=>`<div class="sch-vtools">${schViewToggle('meet')}${searchBox('meeting','미팅 검색')}</div><div class="sch-filters meetf" data-vpick="meet">${schMeetPicks()}</div>`;
 function schMeetMenu(el,k){ const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
   if(k==='when')items=[fl('',{t:'전체 기간'}),...Object.entries(SCH_MT_WHEN).map(([v,t])=>fl(v,{t}))];
   else if(k==='who'){ const ppl=[...new Set(liveItems('meeting',S.proj).flatMap(m=>m.people||[]))].sort((x,y)=>userName(x).localeCompare(userName(y),'ko')); items=[fl('',{t:'전체 참석자'}),...ppl.map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))]; }
@@ -8670,9 +8748,15 @@ const REP_TONES=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7
 // a value as it is shown: the three marks of the list
 const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em class="rq">$1</em>').replace(/자료 없음/g,'<em class="na">자료 없음</em>');
 // What the list says of a project (nothing is written). A project from before the list answers with what its overview held.
+// (twenty-sixth round: the overview no longer shows these cells as a block of their own — "요약쪽은 메인페이지 … 그 내용이 같이 연동되기만
+// 하면 돼". A cell left empty follows the sheet: the rows 위치 · 사업주체 · 대지면적 · 연면적 of the table, the first 핵심 지표 that speaks of IT /
+// 수전; a cell that is filled in — the short form the list has — wins.)
 function schRepOf(k){ const p=PROJECTS[k]||{}, h=PHEAD[k]||{}, s=x=>typeof x==='string'?x.trim():'', sc=i=>scaleOf(h,i,p[SCALE_FB[i]]), it=sc(1), pw=sc(2);
+  const rows=Array.isArray(h.rows)?h.rows.filter(Array.isArray):[], row=l=>s((rows.find(r=>norm(r[0])===norm(l))||[])[1]);
+  const kp=(Array.isArray(h.kpi)?h.kpi.filter(Array.isArray):[]).find(r=>/IT|수전|전력/i.test(String(r[1]||'')));
   return { grp:REP_GRPS.includes(h.grp)?h.grp:'', focus:!!h.focus, sub:s(h.sub), first:s(h.first), asof:s(h.asof), stage:normStatus(p.status),
-    site:s(h.lsite)||siteOf(p,h), dev:s(h.ldev)||s(h.dev), area:s(h.larea), gfa:s(h.lgfa)||sc(0), load:s(h.lload)||(it&&pw?`${it} (수전 ${pw})`:it||pw), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
+    site:s(h.lsite)||row('위치')||siteOf(p,h), dev:s(h.ldev)||row('사업주체')||s(h.dev), area:s(h.larea)||row('대지면적'), gfa:s(h.lgfa)||row('연면적')||sc(0),
+    load:s(h.lload)||s(kp&&kp[0])||(it&&pw?`${it} (수전 ${pw})`:it||pw), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
 // 2024.04.22 / 2025.12 / "2026.11.12 수신" -> a key that orders them (a month alone comes before its days, as in the list)
 const schRepKey=s=>{ const m=String(s||'').match(/(\d{4})(?:\D{1,3}(\d{1,2}))?(?:\D{1,3}(\d{1,2}))?/); return m?[m[1],m[2],m[3]].filter(Boolean).map(x=>x.padStart(2,'0')).join('.'):'9999'; };
 function schRepSort(ids){ const o=id=>{const i=PROJ_ORDER.indexOf(id);return i<0?1e6:i;}, g=id=>{const i=REP_GRPS.indexOf((PHEAD[id]||{}).grp);return i<0?REP_GRPS.length:i;}, f=id=>schRepKey((PHEAD[id]||{}).first);
@@ -8695,32 +8779,53 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
   const del=(a,i)=>E?`<button class="rx" data-repdel="${a}:${i}" title="이 줄 삭제" aria-label="이 줄 삭제">✕</button>`:'', add=(a,t)=>E?`<button class="sh-btn lib radd" data-repadd="${a}">${t}</button>`:'';
   const cell=(tag,k,ph,v,cls)=>`<${tag} class="${cls||''}${EC}" ${edk(k,ph)}>${E?esc(v):schRepTxt(v)}</${tag}>`;
   const kp=(a,cls)=>`<div class="rkp ${cls}">${d[a].map((r,i)=>`<div class="k">${cell('b',`${a}:${i}:0`,'값',r[0])}${cell('span',`${a}:${i}:1`,'무엇의 값인지',r[1])}${del(a,i)}</div>`).join('')}${!d[a].length&&!E?nil:''}${add(a,'+ 지표')}</div>`;
-  // 요약 shows what the list shows (schRepOf: a project from before the list answers with what its overview held); edited, the stored value
-  const R=schRepOf(pid), fr=(label,k,rk,ph)=>`<div class="fr"><b>${label}</b>${E?cell('span',k,(!d[k]&&R[rk])||ph||'입력',d[k],'v'):`<span class="v">${R[rk]?schRepTxt(R[rk]):'<span class="nil">-</span>'}</span>`}</div>`;
+  // The cells of the main page's list are not a block of the overview (twenty-sixth round): read, they follow the sheet (schRepOf); while
+  // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
+  const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,R[rk]&&!d[k]?R[rk]:(ph||'입력'),d[k],'v')}</label>`;
   const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
   const blk=(t,body,cls)=>`<div class="rb ${cls||''}"><div class="rt">${t}</div>${body}</div>`;
   const meta=`<div class="rmeta">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
      <span class="m st ${E?'stpick':''}" ${E?'data-pickstatus':''}><b>추진 단계</b>${statusBadge(p.status)}${chev}</span><i class="sep"></i>
      <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)||'<span class="nil">미지정</span>'}</span>${chev}</span>
      <span class="m dt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}</span><span class="m dt"><b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</span></div>`;
-  const c1=blk('요약',`${SC?schOpsRow(pid):''}${fr('위치','lsite','site','시·도 시·군·구')}${fr('사업주체','ldev','dev')}${fr('대지면적(m²)','larea','area')}${fr('연면적(m²)','lgfa','gfa')}${fr('IT LOAD','lload','load','IT 용량 (수전용량)')}${fr('비고','memo','memo')}${E?'<small class="rhint">메인 페이지의 프로젝트 목록에 그대로 표시되는 값입니다.</small>':''}`,'sum')
-    +blk('핵심 지표',kp('kpi',''))+blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>${d.finNote||E?`<div class="rnote${EC}" ${edk('finNote','지표의 기준 · 출처 (예: 2026.04 IM 기준 추정치)')}>${E?esc(d.finNote):schRepTxt(d.finNote)}</div>`:''}`)
-    +blk('위치 지도',mapBox(d.loc,''),'rmap');
-  const c2=blk('사업 개요',text('main','사업의 내용을 적습니다',false))+blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true))+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false))+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'))
-    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt');
-  const c3=blk('사업 개요 표',`<div class="rtb">${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}</div>`).join('')}${!d.rows.length&&!E?nil:''}${add('rows','+ 행')}</div>`)
-    +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`)
-    +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true));
+  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}${lf('비고','memo','memo','목록의 비고 칸')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
+  // the two rows of figures
+  const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''))}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>${d.finNote||E?`<div class="rnote${EC}" ${edk('finNote','지표의 기준 · 출처 (예: 2026.04 IM 기준 추정치)')}>${E?esc(d.finNote):schRepTxt(d.finNote)}</div>`:''}`)}</div>`;
+  // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)
+  const mapOf=r=>norm(r[0])===norm('위치')&&mapQuery(d.loc)&&!/자료 없음|확인 필요|보완 필요/.test(d.loc)?`<div class="rmapbox">${mapBox(d.loc,'')}</div>`:'';
+  const ops=SC?schOpsRow(pid).replace('<div class="fr">','<div class="r ops">'):'';
+  const c1=blk('사업 개요',text('main','사업의 내용을 적습니다',false))+blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true))+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false))+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'))
+    +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true))
+    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt')
+    +schRepDocs(pid,d,E);
+  const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${!d.rows.length&&!E&&!ops?nil:''}${add('rows','+ 행')}</div>`)
+    +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
   const src=lines(d.src);
   return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     ${d.sub||E?`<div class="rsub${EC}" ${edk('sub','부제 (한 줄 설명)')}>${esc(d.sub)}</div>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
-    <div class="rep-in">${meta}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div><div class="rc rc3">${c3}</div></div>
+    <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div>
      ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
     <div class="hr bt"></div></div>`; }
 // What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
 function schRepMirror(h,p){ const arr=a=>Array.isArray(a)?a.filter(Array.isArray):[], row=l=>{ const r=arr(h.rows).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };
   set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=arr(h.fin).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
+
+/* ---------- PDFs put to a project ---------- */
+// (twenty-sixth round, owner 2026-11-24: "프로젝트 만들때 pdf 첨부하는 칸") The window that makes a project takes one, the overview takes more
+// while it is edited. They are ordinary stored files (POST /api/file, 1.8 MB each, item "proj-doc-<project>"); the record keeps
+// {id, name, size} in `docs`. Opening is the browser's own PDF view in a new tab.
+const SCH_DOC_MAX=1887436;
+const schRepDocList=h=>(Array.isArray(h&&h.docs)?h.docs:[]).filter(x=>x&&typeof x.id==='string'&&/^[0-9a-f-]{36}$/.test(x.id));
+const schRepDocBad=f=>!f?'파일을 고르지 못했습니다.':!(/\.pdf$/i.test(f.name||'')||f.type==='application/pdf')?'PDF 파일만 첨부할 수 있습니다.':f.size>SCH_DOC_MAX?`PDF는 한 파일 1.8MB까지 첨부할 수 있습니다. (${fmtSize(f.size)})`:'';
+async function schRepDocUpload(f,pid){ const d=await sharedUploadFile(f,'proj-doc-'+pid); return {id:d.id,name:d.name||f.name,size:d.size||f.size}; }
+function schRepDocs(pid,d,E){ const docs=schRepDocList(d); if(!docs.length&&!E)return '';
+  return `<div class="rb rdocs"><div class="rt">첨부 자료 (PDF)</div><div class="rdl">${docs.map((x,i)=>`<div class="rd"><a class="nm" href="/api/file/${esc(x.id)}?inline=1" target="_blank" rel="noopener" title="새 탭에서 열기"><i><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg></i><span>${esc(x.name||'PDF')}</span></a><em>${x.size?fmtSize(x.size):''}</em><a class="dl" href="/api/file/${esc(x.id)}" download="${esc(x.name||'')}">내려받기</a>${E?`<button class="rx" data-docdel="${i}" title="이 파일 빼기" aria-label="이 파일 빼기">✕</button>`:''}</div>`).join('')}${E?`<button class="sh-btn lib radd" data-docadd>+ PDF 첨부</button><small class="rhint">PDF, 한 파일 1.8MB까지</small>`:''}</div></div>`; }
+function schRepDocPick(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/pdf,.pdf'; inp.style.display='none'; inp.dataset.repdoc='1'; document.body.appendChild(inp);
+  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; inp.remove(); if(!f)return; const bad=schRepDocBad(f); if(bad){toast(bad,4600);return;} if(!S.editProj)return; const pid=S.proj;
+    toast('PDF를 올리는 중입니다…',20000);
+    try{ const doc=await schRepDocUpload(f,pid); if(S.proj!==pid||!S.editProj||!PHEAD[pid]){toast('올린 파일을 붙이지 못했습니다. 다시 시도해 주세요.',4200);return;} saveProjectHead(); PHEAD[pid].docs=schRepDocList(PHEAD[pid]).concat(doc); render(true); toast('PDF를 붙였습니다. 저장하면 반영됩니다.',3200); }
+    catch(e){ toast(String(e&&e.message||'PDF를 올리지 못했습니다.'),4600); } }); inp.click(); }
 
 /* ---------- the cards of the main page ---------- */
 // (twenty-fifth round, owner 2026-11-24) A card has a star: it is the page's own favourite (the star at the top right of a project
@@ -8755,6 +8860,8 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
     menuPop(el,Object.keys(REP_PLAN_ST).map(s=>({t:s,html:schRepState(s),k:s,sel:cur===s,fn:()=>{ if(el.isConnected)el.innerHTML=schRepState(s)+svg('i-chev-d',7.2,3.6,'color:#8e8e8e'); }})),{cls:'sch-colmenu'}); return; }
   if(el=T.closest('[data-reppick="grp"]')){ if(!S.editProj)return; e.stopPropagation(); menuPop(el,REP_GRPS.map(g=>({t:g,k:g,sel:h().grp===g,fn:()=>{ saveProjectHead(); h().grp=g; render(true); }})),{cls:'sch-colmenu'}); return; }
   if(el=T.closest('[data-repfocus]')){ if(!S.editProj)return; saveProjectHead(); h().focus=!h().focus; render(true); return; }
+  if(el=T.closest('[data-docadd]')){ if(!S.editProj)return; schRepDocPick(); return; }
+  if(el=T.closest('[data-docdel]')){ if(!S.editProj)return; saveProjectHead(); const a=schRepDocList(h()); a.splice(+el.dataset.docdel,1); h().docs=a; render(true); return; }
   if(el=T.closest('[data-repio]')){ e.stopPropagation(); menuPop(el,[{t:'자료 파일 가져오기 (.json)',k:'in',fn:schRepPick},{t:'자료 파일로 내보내기 (.json)',k:'out',fn:schRepExport}],{cls:'sch-colmenu'}); return; }
 });
 

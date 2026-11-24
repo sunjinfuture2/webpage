@@ -225,3 +225,12 @@ html.mob .sch-repin .rin ul{columns:1}
 html.mob .projects .pfil .sch-filters{margin-top:6px}
 html.mob .pcard.rep .pstar{width:32px;height:32px}
 html.mob .pcard.rep .img-btn{right:48px}
+
+/* (twenty-sixth round) the figures two in a row, the two columns below each other */
+html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+html.mob .phead.rep .rlf{grid-template-columns:minmax(0,1fr)}
+html.mob .phead.rep .rb.rcells{padding:14px 14px 12px}
+html.mob .phead.rep .rd{flex-wrap:wrap}
+
+/* (twenty-sixth round) the pickers of 미팅 are a row of their own; on a phone it stands in the flow like the others */
+html.mob.sch-on .meet .sch-filters.meetf{position:static;margin:14px 0 0}

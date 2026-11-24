@@ -8,7 +8,10 @@
 //  - the page as it was (?v=1) keeps its overview and offers the same stages;
 //  - (twenty-fifth round) the sections of the main page keep one distance between title, pickers and content (the action section's);
 //    a project card has a star (the page's favourite) and starred cards stand first;
-//  - saving an overview reads the overview's own fields only (the schedule sections below use data-k too).
+//  - saving an overview reads the overview's own fields only (the schedule sections below use data-k too);
+//  - (twenty-sixth round) the overview has no 요약: the figures are a band, the map stands in the row 위치, the cells of the list follow
+//    the sheet unless they are given a short form while it is edited; the sections of a project page keep the same distances;
+//    a project can be made with a PDF.
 // Needs wrangler dev on 127.0.0.1:8787. The data files of this suite are made up (no project of the company is in them).
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
 const fs = require('fs'), os = require('os'), path = require('path');
@@ -28,16 +31,27 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   check('추진 단계 are the six of the list, in the order a project goes through them', await ev(() => PSTATUS_ORDER.join()) === '기초검토,사업구상,사업제안,사업계획,계통협의,인허가');
   await a.click('.page.on .projects .new-proj'); await sleep(400);
   const np = await ev(() => { const d = document.querySelector('#dlg.sch-np'); return d ? { grp: [...d.querySelectorAll('#np2-grp button')].map(x => x.textContent + (x.classList.contains('on') ? '*' : '')).join(), st: [...d.querySelectorAll('#np2-st button')].map(x => x.textContent).join(), labels: [...d.querySelectorAll('.np-f label')].map(x => x.textContent.replace('필수', '').trim()).join() } : null; });
-  check('the window that makes a project asks for 구분 and 추진 단계', np && np.grp === 'AIDC*,Small AIDC' && np.st === '기초검토,사업구상,사업제안,사업계획,계통협의,인허가' && np.labels === '사업명,구분,추진 단계,담당자,부지', np);
+  check('the window that makes a project asks for 구분 and 추진 단계', np && np.grp === 'AIDC*,Small AIDC' && np.st === '기초검토,사업구상,사업제안,사업계획,계통협의,인허가' && np.labels === '사업명,구분,추진 단계,담당자,부지,자료 PDF', np);
   const NAME = '검토 시험 ' + sfx;
-  await a.fill('#np2-name', NAME); await a.fill('#np2-site', '경기 시험시'); await a.click('.sch-np [data-grp="Small AIDC"]'); await a.click('.sch-np [data-st="사업제안"]'); await a.click('.sch-np [data-np2="ok"]'); await sleep(1000);
+  await a.fill('#np2-name', NAME); await a.fill('#np2-site', '경기 시험시'); await a.click('.sch-np [data-grp="Small AIDC"]'); await a.click('.sch-np [data-st="사업제안"]');
+  const PDF = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
+  await a.setInputFiles('#np2-pdf', { name: '메모.txt', mimeType: 'text/plain', buffer: Buffer.from('x') }); await sleep(200);
+  const bad1 = await ev(() => document.querySelector('#np2-pdferr').textContent + '|' + document.querySelector('#np2-pdfname').textContent);
+  await a.setInputFiles('#np2-pdf', { name: '큰 자료.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(1900000, 32) }); await sleep(200);
+  const bad2 = await ev(() => document.querySelector('#np2-pdferr').textContent);
+  await a.setInputFiles('#np2-pdf', { name: '검토 자료 ' + sfx + '.pdf', mimeType: 'application/pdf', buffer: PDF }); await sleep(200);
+  const good = await ev(() => document.querySelector('#np2-pdferr').textContent + '|' + document.querySelector('#np2-pdfname').textContent + '|' + document.querySelector('[data-np2pdfx]').hidden);
+  check('the window takes a PDF: another kind of file and one over 1.8 MB are refused there, a PDF is named with its size', /^PDF 파일만 첨부할 수 있습니다\.\|선택한 파일 없음$/.test(bad1) && /1\.8MB까지/.test(bad2) && new RegExp(`^\\|검토 자료 ${sfx}\\.pdf · \\d+ B\\|false$`).test(good), { bad1, bad2, good });
+  await a.click('.sch-np [data-np2="ok"]'); await a.waitForFunction(() => S.page === 'project' && !document.querySelector('#dlg'), null, { timeout: 15000 }); await sleep(900);
   const pid = await ev(() => S.proj);
   const made = await ev(id => ({ page: S.page, edit: !!S.editProj, st: PROJECTS[id].status, grp: PHEAD[id].grp, first: PHEAD[id].first, lsite: PHEAD[id].lsite }), pid);
   check('it is made with its group, its stage and today as 최초자료일, and opens for its overview', made.page === 'project' && made.edit && made.st === '사업제안' && made.grp === 'Small AIDC' && /^\d{4}\.\d{2}\.\d{2}$/.test(made.first) && made.lsite === '경기 시험시', made);
+  const doc0 = await ev(async id => { const d = (PHEAD[id].docs || [])[0], el = document.querySelector('.page.on .phead .rdocs .rd'); if (!d) return null; const r = await fetch('/api/file/' + d.id); return { n: PHEAD[id].docs.length, name: d.name, size: d.size, row: el && el.textContent, href: el && el.querySelector('a.nm').getAttribute('href'), status: r.status, type: r.headers.get('Content-Type'), bytes: (await r.arrayBuffer()).byteLength, x: !!document.querySelector('.page.on .phead .rdocs [data-docdel]'), add: !!document.querySelector('.page.on .phead .rdocs [data-docadd]') }; }, pid);
+  check('the PDF is the project\'s: stored, listed in the overview with a link that opens it, and can be taken away or added to while it is edited', doc0 && doc0.n === 1 && doc0.name === '검토 자료 ' + sfx + '.pdf' && doc0.status === 200 && /pdf/.test(doc0.type || '') && doc0.bytes === doc0.size && doc0.href === `/api/file/${await ev(id => PHEAD[id].docs[0].id, pid)}?inline=1` && doc0.x && doc0.add, doc0);
 
   console.log('— the overview while it is edited');
-  const ed0 = await ev(() => { const p = document.querySelector('.page.on .phead'); return { rep: p.classList.contains('rep'), ed: p.classList.contains('ed'), titles: [...p.querySelectorAll('.rt')].map(x => x.textContent).join(), rows: [...p.querySelectorAll('.rtb:not(.plan) .r > b')].map(x => x.textContent).join(), adds: [...p.querySelectorAll('[data-repadd]')].map(x => x.dataset.repadd).join() }; });
-  check('the sheet of the list: its blocks, the table with the usual rows, a button to add to each list', ed0.rep && ed0.ed && ed0.titles === '요약,핵심 지표,사업성 지표,위치 지도,사업 개요,입지 및 전력 인프라,사업 구조 및 수익 모델,추진 현황 및 주요 특성,협력업체,사업 개요 표,추진 일정,주요 리스크 및 검토사항' && ed0.rows === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,규모,사업주체,운영사 / 임차인,수전 계획' && ed0.adds === 'kpi,fin,rows,plan', ed0);
+  const ed0 = await ev(() => { const p = document.querySelector('.page.on .phead'); return { rep: p.classList.contains('rep'), ed: p.classList.contains('ed'), titles: [...p.querySelectorAll('.rt')].map(x => x.textContent).join(), rows: [...p.querySelectorAll('.rtb:not(.plan) .r:not(.ops) > b')].map(x => x.textContent).join(), ops: !!p.querySelector('.rtb .r.ops'), adds: [...p.querySelectorAll('[data-repadd]')].map(x => x.dataset.repadd).join() }; });
+  check('the sheet of the list: its blocks, the table with the usual rows, a button to add to each list', ed0.rep && ed0.ed && ed0.titles === '메인 페이지 목록에 표시되는 값,핵심 지표,사업성 지표,사업 개요,입지 및 전력 인프라,사업 구조 및 수익 모델,추진 현황 및 주요 특성,주요 리스크 및 검토사항,협력업체,첨부 자료 (PDF),사업 개요 표,추진 일정' && ed0.rows === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,규모,사업주체,운영사 / 임차인,수전 계획' && ed0.adds === 'kpi,fin,rows,plan', ed0);
   await setText('.rsub', '시험용 소형 데이터센터 ' + sfx);
   await setText('[data-k="ldev"]', '보완 필요 (시험 주체 ' + sfx + ')'); await setText('[data-k="larea"]', '1,234'); await setText('[data-k="lgfa"]', '자료 없음'); await setText('[data-k="lload"]', '5MW (수전 9MW)'); await setText('[data-k="memo"]', '검사 비고 ' + sfx);
   await a.click('.page.on .phead [data-repadd="kpi"]'); await sleep(300);
@@ -49,7 +63,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await setText('[data-k="fin:0:0"]', '확인 필요 (100억 / 120억)'); await setText('[data-k="fin:0:1"]', '총사업비 (추정)');
   await setText('[data-k="rows:0:1"]', '경기 시험시 시험동 12-3');
   await a.click('.page.on .phead .rtb .r:has([data-k="rows:5:0"]) [data-repdel]'); await sleep(300);
-  check('the x of a row takes the row away', await ev(() => [...document.querySelectorAll('.page.on .phead .rtb:not(.plan) .r > b')].map(x => x.textContent).join()) === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,사업주체,운영사 / 임차인,수전 계획');
+  check('the x of a row takes the row away', await ev(() => [...document.querySelectorAll('.page.on .phead .rtb:not(.plan) .r:not(.ops) > b')].map(x => x.textContent).join()) === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,사업주체,운영사 / 임차인,수전 계획');
   await a.click('.page.on .phead [data-repadd="plan"]'); await sleep(300);
   await setText('[data-k="plan:0:0"]', '2027.03'); await setText('[data-k="plan:0:1"]', '착공');
   await a.click('.page.on .phead [data-repstate]'); await sleep(300);
@@ -66,11 +80,12 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
 
   console.log('— the overview as it is read');
   const vw = await ev(() => { const p = document.querySelector('.page.on .phead'), q = s => p.querySelector(s), t = s => (q(s) || {}).textContent || '', cal = document.querySelector('.page.on [data-sec="cal"]');
-    return { meta: [...p.querySelectorAll('.rmeta .m')].map(x => x.textContent.trim()).join('|'), sub: t('.rsub'), kpi: t('.rkp:not(.fin) .k b'), finRq: t('.rkp.fin .k b em.rq'), devRq: !!p.querySelector('.rb.sum .fr .v em.rq'), na: [...p.querySelectorAll('em.na')].length, infra: [...p.querySelectorAll('.rc2 .rb:nth-child(2) .rul li')].map(x => x.textContent).join('|'),
-      planSt: (q('.rtb.plan .r:not(.th) i .sch-st') || {}).className, src: t('.rsrc span'), flow: Math.round(cal.getBoundingClientRect().top - p.getBoundingClientRect().bottom), editables: p.querySelectorAll('[contenteditable]').length, ops: !!p.querySelector('.rb.sum [data-sch="ops"]') }; });
+    return { meta: [...p.querySelectorAll('.rmeta .m')].map(x => x.textContent.trim()).join('|'), sub: t('.rsub'), kpi: t('.rkp:not(.fin) .k b'), finRq: t('.rkp.fin .k b em.rq'), titles: [...p.querySelectorAll('.rt')].map(x => x.textContent).join(), cols: p.querySelectorAll('.rc').length, band: getComputedStyle(p.querySelector('.rstats .rkp')).gridTemplateColumns.split(' ').length, cells: !!p.querySelector('.rcells'), map: (p.querySelector('.rtb .r .rmapbox iframe.map') || {}).src || '', mapRow: ((p.querySelector('.rtb .r:has(.rmapbox) > b') || {}).textContent || ''), doc: (p.querySelector('.rdocs .rd a.nm') || {}).textContent || '', docX: !!p.querySelector('.rdocs [data-docdel]'), na: [...p.querySelectorAll('em.na')].length, infra: [...p.querySelectorAll('.rc1 .rb:nth-child(2) .rul li')].map(x => x.textContent).join('|'),
+      planSt: (q('.rtb.plan .r:not(.th) i .sch-st') || {}).className, src: t('.rsrc span'), flow: Math.round(cal.getBoundingClientRect().top - p.getBoundingClientRect().bottom), editables: p.querySelectorAll('[contenteditable]').length, ops: !!p.querySelector('.rtb .r.ops [data-sch="ops"]') }; });
   check('number, group, 집중 추진, stage, owner and the two dates in one line under the title; the sub title', /^No\. \d\d\|Small AIDC\|집중 추진\|추진 단계사업제안\|담당자열여섯 일\|최초자료일\d{4}\.\d{2}\.\d{2}\|기준일-$/.test(vw.meta) && vw.sub === '시험용 소형 데이터센터 ' + sfx, vw);
-  check('the three marks are coloured by themselves; several lines are a list; a step shows its state', vw.kpi === '5MW / 9MW' && vw.finRq === '확인 필요' && vw.devRq && vw.na >= 2 && vw.infra === '수전 9MW 계획|변전소 2km' && /st-cond/.test(vw.planSt) && /시험 자료 1\s*\/\s*시험 자료 2/.test(vw.src), vw);
+  check('the three marks are coloured by themselves; several lines are a list; a step shows its state', vw.kpi === '5MW / 9MW' && vw.finRq === '확인 필요' && vw.na >= 1 && vw.infra === '수전 9MW 계획|변전소 2km' && /st-cond/.test(vw.planSt) && /시험 자료 1\s*\/\s*시험 자료 2/.test(vw.src), vw);
   check('the overview is as tall as what it says (the calendar stands below it) and nothing is editable while it is read', vw.flow >= 0 && vw.flow < 40 && vw.editables === 0 && vw.ops, vw);
+  check('no 요약 and no block for the map: the figures are a band of five across, two columns below, the map stands inside the row 위치, the PDF is listed', vw.titles === '핵심 지표,사업성 지표,사업 개요,입지 및 전력 인프라,사업 구조 및 수익 모델,추진 현황 및 주요 특성,주요 리스크 및 검토사항,협력업체,첨부 자료 (PDF),사업 개요 표,추진 일정' && vw.cols === 2 && vw.band === 5 && !vw.cells && vw.mapRow === '위치' && /maps\.google\.com\/maps\?q=/.test(vw.map) && decodeURIComponent(vw.map).includes('경기 시험시 시험동 12-3') && vw.doc === '검토 자료 ' + sfx + '.pdf' && !vw.docX, vw);
   await sleep(600);
   const bSees = await b.evaluate(id => PROJECTS[id] && PHEAD[id] ? { st: PROJECTS[id].status, kpi: JSON.stringify(PHEAD[id].kpi), plan: JSON.stringify(PHEAD[id].plan), grp: PHEAD[id].grp, focus: PHEAD[id].focus } : null, pid);
   check('another member has it', bSees && bSees.st === '사업제안' && bSees.kpi === sv.kpi && bSees.plan === sv.plan && bSees.grp === 'Small AIDC' && bSees.focus === true, bSees);
@@ -110,6 +125,9 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const cd = await ev(id => { const c = document.querySelector(`.page.on #proj-inner .pcard[data-go="project:${id}"]`); return c ? { no: c.querySelector('h3 em').textContent === schRepNos()[id], name: c.querySelector('h3').textContent, sub: c.querySelector('.sub').textContent, st: c.querySelector('.st').textContent, fo: !!c.querySelector('.fo'), labels: [...c.querySelectorAll('.info b')].map(x => x.textContent).join(), rq: !!c.querySelector('.info em.rq') } : null; }, pid);
   check('a card: number and name, group and sub title, the stage, 집중 추진, the cells of the list', cd && cd.no && cd.name.endsWith(NAME) && cd.sub === 'Small AIDC · 시험용 소형 데이터센터 ' + sfx && cd.st === '사업제안' && cd.fo && cd.labels === '위치,사업주체,대지면적,연면적,IT LOAD,최초자료일' && cd.rq, cd);
 
+  const fol = await ev(id => { const h = PHEAD[id], keep = [h.lsite, h.ldev, h.lload]; h.lsite = ''; h.ldev = ''; h.lload = ''; h.rows.find(r => r[0] === '사업주체')[1] = '표의 사업주체'; render(true); const c = document.querySelector(`.page.on #proj-inner .pcard[data-go="project:${id}"] .info`).textContent, r = schRepOf(id); [h.lsite, h.ldev, h.lload] = keep; h.rows.find(r => r[0] === '사업주체')[1] = ''; render(true); return { site: r.site, dev: r.dev, load: r.load, card: c }; }, pid);
+  check('a cell of the list that is left empty follows the sheet (the rows 위치 · 사업주체 of the table, the 핵심 지표 of IT / 수전)', fol.site === '경기 시험시 시험동 12-3' && fol.dev === '표의 사업주체' && fol.load === '5MW / 9MW' && fol.card.includes('경기 시험시 시험동 12-3') && fol.card.includes('표의 사업주체'), fol);
+
   console.log('— one distance in every section of the main page; the star of a card');
   const dist = () => ev(() => { const z = LAYOUT.zoom || 1, R = el => el.getBoundingClientRect(), f = n => Math.round(n / z * 10) / 10;
     const one = (box, filt, content) => { const b = document.querySelector('.page.on ' + box), t = R(b.querySelector('.sec-title')), fl = R(b.querySelector(filt)), c = R(b.querySelector(content)); return [f(fl.top - t.top), f(c.top - fl.bottom)].join('/'); };
@@ -131,6 +149,17 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await a.click('#tb-star'); await sleep(300); await ev(() => go('main')); await sleep(800);
   const s3 = await stars();
   check('taken back there, the card stands in its place again', !s3.on[s3.order.indexOf(pid)] && s3.order.join() === s0.order.join(), { s0, s3 });
+  // the sections of a project page keep the same distances (pangyo: it has meetings, a plan, packages, gates, records)
+  const pdist = () => ev(() => { const z = LAYOUT.zoom || 1, R = el => el.getBoundingClientRect(), f = n => Math.round(n / z * 10) / 10;
+    const one = (b, filt, content) => { const t = R(b.querySelector('.sec-title')), fl = R(b.querySelector(filt)), c = R(b.querySelector(content)); return [f(fl.top - t.top), f(c.top - fl.bottom)].join('/'); }, P = s => document.querySelector('.page.on ' + s);
+    return { meet: one(P('.meet'), '.sch-filters', P('.meet .tbl') ? '.tbl' : '.mcard'), act: one(P('#sch-actions'), '.sch-filters', '#sch-gantt, .tbl.sch-list, #sch-net'), low: one(P('#sch-lower'), '.sch-filters', '.tbl, .sch-gates'), res: one([...document.querySelectorAll('.page.on .sec')].find(s => s.querySelector('[data-sec="research"]')), '.sch-filters', '.rcard, .rgrid') }; });
+  await ev(() => { SCHU.tab = 'gantt'; SCHU.sec = 'proc'; go('project:pangyo'); }); await a.waitForFunction(() => schReady('pangyo') && !!document.querySelector('#sch-gantt .sg-row'), null, { timeout: 20000 }); await sleep(900);
+  const pd = [await pdist()];
+  await a.click('#sch-actions [data-sch="tab"][data-k="list"]'); await sleep(600); await a.click('#sch-lower [data-sch="sec"][data-k="gate"]'); await sleep(600); await a.click('.page.on .meet [data-vt="meet:table"]'); await sleep(600); pd.push(await pdist());
+  await a.click('#sch-actions [data-sch="tab"][data-k="net"]'); await sleep(700); await a.click('#sch-lower [data-sch="sec"][data-k="evid"]'); await sleep(600); await a.click('.page.on .meet [data-vt="meet:cards"]'); await sleep(600); pd.push(await pdist());
+  await a.click('#sch-actions [data-sch="tab"][data-k="gantt"]'); await sleep(500); await a.click('#sch-lower [data-sch="sec"][data-k="proc"]'); await sleep(400);
+  check('a project page: 미팅 (cards, table) · 액션 (일정, 리스트, 관계도) · 외부설비 조달 / 승인게이트 / 근거 및 확약 · 리서치 all keep 93 / 34', pd.every(x => Object.values(x).every(v => v === '93/34')), pd);
+  check('the pickers of 미팅 are a row of their own below the title (the views and the search stay beside it)', await ev(() => { const m = document.querySelector('.page.on .meet'); return !!m.querySelector('.sch-filters.meetf [data-mtpick]') && !m.querySelector('.sch-vtools [data-mtpick]') && !!m.querySelector('.sch-vtools [data-vt]') && !!m.querySelector('.sch-vtools input[data-q="meeting"]'); }));
   // an overview saved while the list of actions is open (its columns carry data-k too: plan, fin …)
   await ev(id => { SCHU.tab = 'list'; go('project:' + id); }, pid); await sleep(1100);
   await a.click('.page.on .phead [data-editproj]'); await sleep(900);

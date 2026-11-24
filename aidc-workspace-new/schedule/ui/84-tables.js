@@ -29,8 +29,9 @@ const schMeetFiltered=()=>{ const c=schMtf(); return !!((S.q.meeting||'').trim()
 const SCH_MT_YN={file:['회의록',{y:'있음',n:'없음'}],guest:['외부 참석',{y:'있음',n:'없음'}]};
 function schMeetPicks(){ const c=schMtf(), tags=['file','guest'].filter(k=>c[k]).map(k=>`<button class="sch-chip" data-mtchip="${k}" title="이 조건 지우기">${SCH_MT_YN[k][0]}: ${SCH_MT_YN[k][1][c[k]]}<i>✕</i></button>`).join('');   // what only the table's head can choose shows as a tag
   return tags+schSf2('mtpick','when',c.when?SCH_MT_WHEN[c.when]:'전체 기간',!!c.when)+schSf2('mtpick','who',c.who?userName(c.who):'전체 참석자',!!c.who)+schSf2('mtpick','sort',c.sort?SCH_MT_SORT[c.sort]:'최신 순',!!c.sort); }
-// what stands at the right of the title 미팅: the pickers, the two views, the search box
-const schMeetTools=()=>`<div class="sch-vtools"><div class="sch-filters" data-vpick="meet">${schMeetPicks()}</div>${schViewToggle('meet')}${searchBox('meeting','미팅 검색')}</div>`;
+// at the right of the title 미팅: the two views and the search box; below the title, where every section has them, the row of pickers
+// (twenty-sixth round: they stood in the row of the title)
+const schMeetTools=()=>`<div class="sch-vtools">${schViewToggle('meet')}${searchBox('meeting','미팅 검색')}</div><div class="sch-filters meetf" data-vpick="meet">${schMeetPicks()}</div>`;
 function schMeetMenu(el,k){ const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
   if(k==='when')items=[fl('',{t:'전체 기간'}),...Object.entries(SCH_MT_WHEN).map(([v,t])=>fl(v,{t}))];
   else if(k==='who'){ const ppl=[...new Set(liveItems('meeting',S.proj).flatMap(m=>m.people||[]))].sort((x,y)=>userName(x).localeCompare(userName(y),'ko')); items=[fl('',{t:'전체 참석자'}),...ppl.map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))]; }
