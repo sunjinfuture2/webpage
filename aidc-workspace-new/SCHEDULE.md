@@ -879,3 +879,24 @@ asked for the project overview and the project list of the main page to follow i
   them under 첨부 자료 (PDF): the name opens the browser's PDF view in a new tab, 내려받기 saves it; while the overview is edited a
   file can be added or taken away. Reading the PDF into the sheet is not built.
 - tests/schedule-16.cjs (51 checks), tests/schedule-17.cjs (12 checks, last of the run).
+
+## Colours of projects, the calendar's tags on one line, a lighter list (owner, 2026-11-24, twenty-seventh round)
+
+- **A project that is made gets a colour of its own** ("비슷한 컬러가 반복 … 다 다르게 … 조금 더 고채도, 판교랑 부산기장 컬러랑 비슷한 톤"):
+  PROJ_TONES in original.html holds twenty saturated tones ([colour, tint for the card's picture]; classes `pj-n0` … `pj-n19` carry
+  `--cc` / `--cbg` / `--csq` for pills and chips). nextProjTone() hands out one that no project has yet (when all are taken, the
+  one used least); the window that makes a project, the data file and the old page's window all use it. The six pale tones
+  `pj-c0` … `pj-c5` are no longer handed out; a database from before gives the projects that carry them a tone of their own once
+  (meta:flags `projColorsV1`). 판교 (`pj-g`), 부산 (`pj-p`) and the other demo projects keep theirs.
+- **The main calendar's project tags stand on one line** ("1줄만 나오고 접히게"): `.cal > .filters` is one line high; a button at its
+  end (`[data-calpills]`) says how many tags are folded away ("+14"), opens them all ("접기") and folds them again (S.calPillsOpen,
+  this page's own). schCalPillsFit runs after every draw (schAfterNav) and hides the button when all tags fit.
+- **The title 프로젝트** carries the number of projects listed, in the title's own size, light grey, before the + ("프로젝트 17 +");
+  the search and the pickers change it. "기준일 … · 총 n건" is no longer written there (META_FLAGS.repAsof is kept: the Excel file
+  names it).
+- **A card**: the star has no box — a white line (a soft shadow keeps it readable on a pale picture), yellow inside when it is on;
+  no number before the name and no line "구분 · 부제" below it (the sub title is the name's tooltip).
+- **The table**: a project being pushed has a small mark "집중" before its name; no red row, no red number, the name in the
+  project's colour. The row keeps the class `focus`.
+- **자료 없음 is a dash in the list** (cards and table: schRepListTxt); the overview keeps the words.
+- tests/schedule-16.cjs (53 checks), tests/schedule-17.cjs (14 checks).

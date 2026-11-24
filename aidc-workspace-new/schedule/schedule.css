@@ -1643,7 +1643,7 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .pcard.rep .info .ops b{width:auto}
 .sch-on .pcard.rep .fo{position:absolute;left:6.6px;top:31px;height:16.6px;padding:0 7.4px;border-radius:8.3px;background:#d9202e;color:#fff;display:flex;align-items:center;font-size:9px;font-weight:600;white-space:nowrap;box-shadow:0 0.4px 2.6px rgba(0,0,0,.14)}
 
-/* the table of the list: two lines a cell, the groups with their count, the ones being pushed red */
+/* the table of the list: two lines a cell, the groups with their count (the ones being pushed: a small mark at the name, see the twenty-seventh round) */
 .tbl.sch-proc.vt-rep .hd,.tbl.sch-proc.vt-rep .rw{grid-template-columns:56px minmax(170px,1.25fr) 112px minmax(140px,1.1fr) 106px 106px minmax(150px,1.2fr) 98px 106px minmax(180px,1.7fr)}
 .tbl.sch-proc.vt-rep .rw{height:56px}
 .tbl.sch-proc.vt-rep .rw > div{font-size:13.5px;word-break:keep-all}
@@ -1652,10 +1652,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .tbl.sch-proc.vt-rep .rw .nm .e{-webkit-line-clamp:2}
 .tbl.sch-proc.vt-rep .rw .dt{font-variant-numeric:tabular-nums}
 .tbl.sch-proc.vt-rep .rw .no span{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums}
-.tbl.sch-proc.vt-rep .rw.focus{background:#fdf0f1}
-.tbl.sch-proc.vt-rep .rw.focus:hover{background:#fbe5e7}
-.tbl.sch-proc.vt-rep .rw.focus .no span{background:#d9202e;color:#fff}
-.tbl.sch-proc.vt-rep .rw.focus .nm{color:#d9202e!important}
 .tbl.sch-proc.vt-rep .grp{display:flex;align-items:baseline;gap:8px;height:46px;padding:20px 0 0 10px;font-size:14px;color:#000;border-bottom:1px solid #e3e3e3}
 .tbl.sch-proc.vt-rep .grp b{font-weight:600}
 .tbl.sch-proc.vt-rep .grp span{font-size:12.5px;color:#8e8e8e;font-variant-numeric:tabular-nums}
@@ -1742,3 +1738,21 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .meet .fade{top:147px}
 .sch-on .meet .circ{top:266.4px}
 .meet.tv [data-vbody]{padding-top:147px}
+
+/* Twenty-seventh round (owner, 2026-11-24) */
+/* the title 프로젝트: the count in the title's own size, light grey */
+.sec-title .rep-n{margin-left:10px;color:#c9c9c9;font-variant-numeric:tabular-nums}
+/* the star of a card: no box, a white line (yellow inside when it is on); a soft shadow keeps it readable on a pale picture */
+.sch-on .pcard.rep .pstar{background:transparent;box-shadow:none;border-radius:0;width:26px;height:26px;filter:drop-shadow(0 0 1.6px rgba(0,0,0,.42))}
+.sch-on .pcard.rep .pstar:hover{transform:scale(1.12)}
+.sch-on .pcard.rep .info{margin-top:8.2px}
+/* the table: 집중 추진 is a small mark at the left of the name, nothing more */
+.tbl.sch-proc.vt-rep .rw .nm{display:flex;align-items:center;gap:7px}
+.tbl.sch-proc.vt-rep .rw .nm .e{flex:1;min-width:0}
+.tbl.sch-proc.vt-rep .rw .nm .fo{flex:none;font-style:normal;font-size:10px;font-weight:600;line-height:15px;height:15px;padding:0 5px;border-radius:3px;background:#fdecee;color:#d9202e;white-space:nowrap}
+/* the main calendar's project tags: one line; the rest behind a button at the end of the line */
+.sch-on .cal > .filters{position:relative;top:auto;left:auto;max-height:19.6px;overflow:hidden;padding-right:64px}
+.sch-on .cal > .filters.open{max-height:none;overflow:visible}
+.sch-on .cal > .filters .fmore{position:absolute;right:0;top:0;height:19.6px;padding:0 8px 0 9px;border-radius:9.8px;border:0;background:#f1f1f0;color:#4f4f4f;font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.sch-on .cal > .filters .fmore[hidden]{display:none}
+.sch-on .cal > .filters .fmore:hover{background:#e7e7e6;color:#000}

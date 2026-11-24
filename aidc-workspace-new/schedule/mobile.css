@@ -234,3 +234,6 @@ html.mob .phead.rep .rd{flex-wrap:wrap}
 
 /* (twenty-sixth round) the pickers of 미팅 are a row of their own; on a phone it stands in the flow like the others */
 html.mob.sch-on .meet .sch-filters.meetf{position:static;margin:14px 0 0}
+
+/* (twenty-seventh round) the calendar's project tags: one line here too; the button that opens them stands at the end of that line */
+html.mob.sch-on .cal > .filters{position:relative}

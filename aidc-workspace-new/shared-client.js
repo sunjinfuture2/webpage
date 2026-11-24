@@ -379,6 +379,9 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!META_FLAGS.archLinksV1){addReferenceLinksV1();META_FLAGS.archLinksV1=1;META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archLinksStyleV2){restyleReferenceLinksV2();META_FLAGS.archLinksStyleV2=1;}
  if(!META_FLAGS.archCardsV3){reorganizeArchiveV3();META_FLAGS.archCardsV3=1;}
+ if(!META_FLAGS.projColorsV1){ // 2026-11-24: the six pale tones projects used to get, by turns, give way to tones of their own (nextProjTone)
+  for(const id of [...new Set(PROJ_ORDER.concat(Object.keys(PROJECTS)))]){const p=PROJECTS[id];if(p&&/^pj-c\d$/.test(p.cls||''))Object.assign(p,nextProjTone());}
+  META_FLAGS.projColorsV1=1;}
  // (not on a local development database: the tests make their own projects; tests/schedule-17.cjs calls the routine itself)
  if(!META_FLAGS.devReportV1&&!/^(127\.0\.0\.1|localhost)$/.test(location.hostname))await applyDevReportV1();
  PEOPLE[sharedUser]=sharedName;sharedReady=true;sharedRetryAt=0;

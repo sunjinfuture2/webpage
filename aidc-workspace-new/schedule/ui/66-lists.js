@@ -156,8 +156,8 @@ function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); 
     if(pdf){ const ok=$n('[data-np2="ok"]'); busy=true; ok.disabled=true; ok.textContent='PDF 올리는 중…';   // the file first: a project is not made with a PDF that could not be stored
       try{ docs=[await schRepDocUpload(pdf,id)]; }catch(e){ $n('#np2-pdferr').textContent=String(e&&e.message||'PDF를 올리지 못했습니다.'); busy=false; ok.disabled=false; ok.textContent='프로젝트 만들기'; return; }
       busy=false; if(!d.isConnected)return; }
-    const ci=(PROJ_ORDER.length-4+6)%6, TONE=[['#5b6b8a','#d7dde7'],['#7a6a5a','#e4ddd6'],['#5e7a5a','#d9e4d7'],['#8a5a6b','#e8d9df'],['#4f7a7a','#d4e3e3'],['#8a7a4a','#e6e1d1']][ci];
-    PROJECTS[id]={id,tag,full:n,cls:'pj-c'+ci,color:TONE[0],status:st,stColor:PSTATUS[st],grad:TONE[1],imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
+    const T=nextProjTone();   // a colour no project has yet
+    PROJECTS[id]={id,tag,full:n,cls:T.cls,color:T.color,status:st,stColor:PSTATUS[st],grad:T.grad,imgH:207.8,owner,site,cost:'',area:'',power:'',it:'',server:''};
     PHEAD[id]={cls:st,prog:'',owner,loc:site,alt:'',zone:'',kind:'',dev:'',land:'',fund:'',cost:'',fundType:'',scale:[['공사면적:',''],['IT 용량:',''],['총 수전용량 :',''],['서버:','']],partners:[],struct:'',main:'',grp,first:dateDot(TODAY).replace(/ /g,''),lsite:site,docs};
     PROJ_ORDER.push(id); S.filters[id]=true; close(); go('project:'+id);
     if(S.page==='project'&&S.proj===id){S._projSnap={id,project:copy(PROJECTS[id]),head:copy(PHEAD[id])}; S.editProj=true; render(true);}

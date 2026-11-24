@@ -58,8 +58,8 @@ const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${search
 const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
 // (since the twenty-fourth round the table is the development review list itself: schRepTable in 88-report.js, all of it on one page)
 const schProjTable=()=>schRepTable();
-const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${schRepCount()}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
-function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$('#proj-inner');
+const schProjTableSection=()=>`<div class="projects tv" style="margin-top:111.5px"><div class="sec-title" style="top:0">프로젝트${schRepCount()}${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${schProjTools()}${schProjBar()}<div data-vbody="proj">${schProjTable()}</div></div>`;
+function schProjRedraw(){ const body=$('.page.on [data-vbody="proj"]'), inner=$('#proj-inner'), n=$('.page.on .projects .rep-n'); if(n)n.textContent=schProjFilter(orderedProjects()).length;
   if(body)body.innerHTML=schProjTable(); else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); S.car.proj=0; applyCarousel('proj'); } afterNav(); }
 // The Excel file of the projects: one sheet with what the list holds now (the search and the pickers apply), in its order, with the
 // columns of the development review list.
