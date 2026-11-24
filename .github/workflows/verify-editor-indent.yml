@@ -20,3 +20,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node tests/indent-browser.mjs
       - run: npm run build
+      - name: Test persistence against isolated local worker
+        run: |
+          npx wrangler dev --local --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/indent-worker.log" 2>&1 &
+          for i in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/indent-persistence.cjs
