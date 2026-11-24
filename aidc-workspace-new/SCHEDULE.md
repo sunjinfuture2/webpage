@@ -832,4 +832,22 @@ asked for the project overview and the project list of the main page to follow i
   made-up projects.
 - A phone: the three columns stand below each other; the table is moved sideways (schedule/mobile.css).
 - Not built (the owner's wish for later): reading the PDF itself. The data file is the form such an upload would be turned into.
-- tests/schedule-16.cjs (38 checks, three members, one on the page as it was).
+- tests/schedule-16.cjs (38 checks at first, three members, one on the page as it was; 45 since the twenty-fifth round).
+
+## One distance in the sections of the main page, a star on project cards (owner, 2026-11-24, twenty-fifth round)
+
+- **Distances** ("타이틀과 컨텐츠, 필터 간의 거리가 다 다르잖아 … 기준은 액션으로"): on the main page the pickers of 프로젝트 · 액션 · 리서치
+  stand 93 below the top of the section's title and the content (cards or table) 34 below the pickers; the tags of chosen
+  conditions stand 56 below the title's top. 프로젝트 had 56 / 44 (its row of cards now starts at 147, the section is 777 tall),
+  리서치 93 / 37.1. A phone keeps its own small distances (schedule/mobile.css). 미팅 of a project page was set by the owner
+  earlier and is left as it is.
+- **The star of a project card** (schRepCards, `[data-pstar]`): it is the page's own favourite — the same list as the star at the
+  top right of a project page and the sidebar's 즐겨찾기 (S.favs, localStorage `aidc-favs`, this browser's own). Starred cards
+  stand first, in the list's order among themselves, whatever order is chosen for the rest. The click is taken in the capture
+  phase so the card does not open. The table (the list itself, with its numbers and groups) is not reordered and has no star.
+  A browser that never chose favourites starts with 판교 starred (the list's old default), so its card stands first there.
+- **Saving an overview reads `.phead [data-k]` only.** saveProjectHead used to read every data-k of the project page, and the
+  schedule sections use that attribute too (tabs, pickers, the list's columns `plan`, `fin` …): junk went into the record, and
+  with the lists of the review list the save stopped without a word while the list of actions was open. Records that carry
+  such junk are harmless (headOf puts lists back, the rest is never read).
+- tests/schedule-16.cjs (45 checks).

@@ -220,3 +220,8 @@ html.mob .projects .pfil .sch-filters .right{margin-left:0}
 html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
 html.mob .dlg.sch-repin .box{width:auto}
 html.mob .sch-repin .rin ul{columns:1}
+
+/* (twenty-fifth round) the desktop's 54 above the project pickers is not the phone's */
+html.mob .projects .pfil .sch-filters{margin-top:6px}
+html.mob .pcard.rep .pstar{width:32px;height:32px}
+html.mob .pcard.rep .img-btn{right:48px}

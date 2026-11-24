@@ -5,7 +5,10 @@
 //  - "확인 필요" / "보완 필요" are written orange, "자료 없음" grey;
 //  - the main page lists the projects as the list does (number, groups with their count, the pushed ones red), with pickers,
 //    a search, an Excel file, and a data file (.json) that makes or updates projects in one go and can be written out again;
-//  - the page as it was (?v=1) keeps its overview and offers the same stages.
+//  - the page as it was (?v=1) keeps its overview and offers the same stages;
+//  - (twenty-fifth round) the sections of the main page keep one distance between title, pickers and content (the action section's);
+//    a project card has a star (the page's favourite) and starred cards stand first;
+//  - saving an overview reads the overview's own fields only (the schedule sections below use data-k too).
 // Needs wrangler dev on 127.0.0.1:8787. The data files of this suite are made up (no project of the company is in them).
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
 const fs = require('fs'), os = require('os'), path = require('path');
@@ -106,6 +109,35 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await a.click('.page.on .projects [data-vt="proj:cards"]'); await sleep(700);
   const cd = await ev(id => { const c = document.querySelector(`.page.on #proj-inner .pcard[data-go="project:${id}"]`); return c ? { no: c.querySelector('h3 em').textContent === schRepNos()[id], name: c.querySelector('h3').textContent, sub: c.querySelector('.sub').textContent, st: c.querySelector('.st').textContent, fo: !!c.querySelector('.fo'), labels: [...c.querySelectorAll('.info b')].map(x => x.textContent).join(), rq: !!c.querySelector('.info em.rq') } : null; }, pid);
   check('a card: number and name, group and sub title, the stage, 집중 추진, the cells of the list', cd && cd.no && cd.name.endsWith(NAME) && cd.sub === 'Small AIDC · 시험용 소형 데이터센터 ' + sfx && cd.st === '사업제안' && cd.fo && cd.labels === '위치,사업주체,대지면적,연면적,IT LOAD,최초자료일' && cd.rq, cd);
+
+  console.log('— one distance in every section of the main page; the star of a card');
+  const dist = () => ev(() => { const z = LAYOUT.zoom || 1, R = el => el.getBoundingClientRect(), f = n => Math.round(n / z * 10) / 10;
+    const one = (box, filt, content) => { const b = document.querySelector('.page.on ' + box), t = R(b.querySelector('.sec-title')), fl = R(b.querySelector(filt)), c = R(b.querySelector(content)); return [f(fl.top - t.top), f(c.top - fl.bottom)].join('/'); };
+    return [one('.projects', '.pfil .sch-filters', document.querySelector('.page.on .projects .tbl') ? '.tbl' : '.pcard'), one('#sec-actions', '.sch-filters', '.tbl'), one('#sec-research', '.sch-filters', '.rcard, .rgrid')]; });
+  const d1 = await dist(); await a.click('.page.on .projects [data-vt="proj:table"]'); await sleep(600); const d2 = await dist(); await a.click('.page.on .projects [data-vt="proj:cards"]'); await sleep(600);
+  check('프로젝트 · 액션 · 리서치: the pickers 93 below the top of the title, the content 34 below the pickers (cards and table alike)', d1.join() === '93/34,93/34,93/34' && d2[0] === '93/34', { d1, d2 });
+  const stars = () => ev(() => { const cs = [...document.querySelectorAll('#proj-inner .pcard')]; return { order: cs.map(c => c.dataset.go.slice(8)), on: cs.map(c => c.querySelector('[data-pstar]').classList.contains('on')), page: S.page }; });
+  const s0 = await stars();
+  await ev(id => document.querySelector(`#proj-inner .pcard [data-pstar="${id}"]`).click(), pid); await sleep(600);
+  const s1 = await stars(), sv1 = await ev(id => ({ fav: S.favs.includes('project:' + id), stored: JSON.parse(localStorage.getItem('aidc-favs') || '[]').includes('project:' + id), side: !!document.querySelector(`#sb .item[data-go="project:${id}"]`), toast: document.querySelector('#toast').textContent }), pid);
+  const firstOff = s => s.on.indexOf(false) < 0 ? s.on.length : s.on.indexOf(false);
+  check('every card has a star; pressed, the card is a favourite (kept in this browser, listed in the sidebar) and the project is not opened', s0.on.length === s0.order.length && !s0.on[s0.order.indexOf(pid)] && s1.on[s1.order.indexOf(pid)] && s1.page === 'main' && sv1.fav && sv1.stored && sv1.side && /맨 앞에 고정/.test(sv1.toast), { s0, s1, sv1 });
+  check('starred cards stand first, the others after them in their order', s1.on.slice(0, firstOff(s1)).every(Boolean) && !s1.on.slice(firstOff(s1)).some(Boolean) && s1.order.indexOf(pid) < firstOff(s1) && s1.order.filter((k, i) => !s1.on[i]).join() === s0.order.filter(k => k !== pid && !s0.on[s0.order.indexOf(k)]).join(), { s0, s1 });
+  await ev(() => { S.pf = { sort: 'name' }; render(true); }); await sleep(500); const s2 = await stars();
+  check('…whatever order is chosen for the rest', s2.order.indexOf(pid) < firstOff(s2) && s2.on.slice(0, firstOff(s2)).every(Boolean), s2);
+  await ev(() => { S.pf = {}; render(true); }); await sleep(400);
+  await ev(id => go('project:' + id), pid); await sleep(900);
+  check('it is the star of the project page', await ev(() => !!document.querySelector('#tb-star use[href="#i-star"]')));
+  await a.click('#tb-star'); await sleep(300); await ev(() => go('main')); await sleep(800);
+  const s3 = await stars();
+  check('taken back there, the card stands in its place again', !s3.on[s3.order.indexOf(pid)] && s3.order.join() === s0.order.join(), { s0, s3 });
+  // an overview saved while the list of actions is open (its columns carry data-k too: plan, fin …)
+  await ev(id => { SCHU.tab = 'list'; go('project:' + id); }, pid); await sleep(1100);
+  await a.click('.page.on .phead [data-editproj]'); await sleep(900);
+  await setText('[data-k="memo"]', '리스트 탭에서 저장 ' + sfx); await a.click('.page.on .phead [data-editproj]'); await sleep(1600);
+  const lsv = await ev(id => { const h = PHEAD[id]; return { edit: !!S.editProj, list: !!document.querySelector('#sch-actions .tbl.sch-list'), memo: h.memo, kpi: Array.isArray(h.kpi) && h.kpi.length, fin: Array.isArray(h.fin) && h.fin.length, plan: Array.isArray(h.plan) && h.plan.length, junk: ['wbs', 'name', 'pri', 'st', 'who', 'due', 'url', 'gantt', 'list', 'net'].filter(k => k in h) }; }, pid);
+  check('saving with the list of actions open saves, keeps the lists and writes nothing else into the record', !lsv.edit && lsv.list && lsv.memo === '리스트 탭에서 저장 ' + sfx && lsv.kpi === 1 && lsv.fin === 1 && lsv.plan === 1 && lsv.junk.length === 0, lsv);
+  await ev(() => { SCHU.tab = 'gantt'; go('main'); }); await sleep(800);
 
   console.log('— a data file of the list');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rep16-')), idA = 't16a' + sfx, idB = 't16b' + sfx;

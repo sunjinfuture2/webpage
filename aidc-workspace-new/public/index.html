@@ -2868,6 +2868,23 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-repin .rin li span{font-size:12px;color:#8e8e8e}
 .sch-repin .rin .ck{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;color:#1c1c1c;cursor:pointer}
 .sch-repin .rin .ck em{font-style:normal;font-size:12px;color:#8e8e8e}
+
+/* Twenty-fifth round (owner, 2026-11-24): the star of a project card (a favourite; starred cards stand first) */
+.sch-on .pcard.rep .pstar{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;padding:0;border:0;cursor:pointer;z-index:2;transition:transform .12s}
+.sch-on .pcard.rep .pstar:hover{transform:scale(1.08)}
+.sch-on .pcard.rep .pstar:not(.on) svg path{stroke:#9a9a9a}
+.sch-on .pcard.rep .img-btn{right:40px}
+
+/* Twenty-fifth round (owner, 2026-11-24: "타이틀과 컨텐츠, 필터 간의 거리가 다 다르잖아 … 기준은 액션으로"): on the main page the pickers of
+   a section stand 93 below the top of its title and its content 34 below the pickers, as in 액션 (the tags of chosen conditions
+   17 below the title). 프로젝트 had 56 / 44, 리서치 93 / 37.1 (its 34 is set where the section is built). */
+.sch-on .projects .pfil{top:39px}
+.sch-on .projects .pfil .sch-chiprow{min-height:0}
+.sch-on .projects .pfil .sch-filters{margin-top:54px}
+.sch-on .projects .track{top:144px}
+.sch-on .projects .arr{top:214px}
+.sch-on .projects .fade{top:71px}
+.sch-on .projects.tv [data-vbody]{padding-top:147px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3623,6 +3640,11 @@ html.mob .projects .pfil .sch-filters .right{margin-left:0}
 html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
 html.mob .dlg.sch-repin .box{width:auto}
 html.mob .sch-repin .rin ul{columns:1}
+
+/* (twenty-fifth round) the desktop's 54 above the project pickers is not the phone's */
+html.mob .projects .pfil .sch-filters{margin-top:6px}
+html.mob .pcard.rep .pstar{width:32px;height:32px}
+html.mob .pcard.rep .img-btn{right:48px}
 </style>
 </head>
 <body>
@@ -4282,7 +4304,7 @@ const actRows=pid=>sortActs(liveItems('action',pid).filter(i=>matchQ(S.q.action,
 function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const acts=actRows(pid); const total=Math.max(1,Math.ceil(acts.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const rows=acts.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
 function researchSecHtml(pid){const found=liveItems('research',PREVIEW_ON?null:pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), per=PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
-  return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
+  return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${PREVIEW_ON?34:pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
 const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||(PREVIEW_ON?partnerCategories(p.cat).includes(S.partnerCat):p.cat===S.partnerCat))&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.site));
 function partnerSecHtml(){const pts=partnerRows(); const total=Math.max(1,Math.ceil(pts.length/10)); S.ptPage=Math.min(Math.max(1,S.ptPage),total);
   return `<div style="margin-top:28.5px">${partnerTable(pts.slice((S.ptPage-1)*10,S.ptPage*10))}</div>${pager(S.ptPage,total,'pg-pt').replace('class="pager','style="margin-top:50.3px" class="pager')}`;}
@@ -4293,7 +4315,7 @@ function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.pa
 function renderMain(){ if(schPreview())schPids().forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
-   ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?750:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${PREVIEW_ON?schRepCount():''}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
+   ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?777:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}${PREVIEW_ON?schRepCount():''}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>`}
    <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${schPreview()?'':perBox()}${searchBox('action',ACT+' 검색')}</div>
@@ -8701,9 +8723,12 @@ function schRepMirror(h,p){ const arr=a=>Array.isArray(a)?a.filter(Array.isArray
   set('loc',row('위치')); set('zone',row('용도지역')); set('dev',row('사업주체')); const c=arr(h.fin).find(r=>/총\s*(사업비|투자비|CAPEX)/i.test(r[1])); if(c&&c[0])h.cost=c[0]; }
 
 /* ---------- the cards of the main page ---------- */
-function schRepCards(ids){ const nos=schRepNos(), line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;
+// (twenty-fifth round, owner 2026-11-24) A card has a star: it is the page's own favourite (the star at the top right of a project
+// page, the list in the sidebar; kept in this browser like those), and starred cards stand first, whatever the order of the rest.
+const schRepPinned=k=>S.favs.includes('project:'+k);
+function schRepCards(ids){ ids=[...ids.filter(schRepPinned),...ids.filter(k=>!schRepPinned(k))]; const nos=schRepNos(), line=(l,v)=>`<div><b>${l}</b><span class="e" title="${esc(v||'')}">${v?schRepTxt(v):'<span class="nil">-</span>'}</span></div>`;
   return ids.map(k=>{ const p=PROJECTS[k], r=schRepOf(k), m=schHas(k)?schModel(k):null, ops=m&&m.res.operationDate;
-    return `<div class="pcard rep ${r.focus?'focus':''}" data-go="project:${k}"><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
+    return `<div class="pcard rep ${r.focus?'focus':''} ${schRepPinned(k)?'pinned':''}" data-go="project:${k}"><div class="img" style="height:${schCardImgH(p)}px">${p.img?`<img class="photo" src="${esc(p.img)}" alt="" data-pk="${esc(k)}">`:''}<button class="img-btn" data-pimg="${k}" title="이미지 교체">${svg('i-img',14,14)}</button><button type="button" class="pstar ${schRepPinned(k)?'on':''}" data-pstar="${k}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 카드를 맨 앞에 고정'}">${svg(schRepPinned(k)?'i-star':'i-star-o',17,16.2)}</button><div class="grad" style="height:90px;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 28%,${p.grad} 100%)"></div><span class="st" style="color:${PSTATUS[r.stage]||'#8e8e8e'}"><i></i>${esc(r.stage||'미정')}</span>${r.focus?'<span class="fo">집중 추진</span>':''}</div>
   <h3 style="color:${p.color}"><em>${nos[k]||''}</em>${esc(p.full)}</h3><div class="sub" title="${esc(r.sub)}">${esc([r.grp,r.sub].filter(Boolean).join(' · '))||'&nbsp;'}</div>
   <div class="info">${ops?`<div class="ops"><b>운영개시 예상</b>${schCardOps(k)}</div>`:''}${line('위치',r.site)}${line('사업주체',r.dev)}${line('대지면적',r.area)}${line('연면적',r.gfa)}${line('IT LOAD',r.load)}${line('최초자료일',r.first)}</div></div>`; }).join(''); }
 
@@ -8785,6 +8810,12 @@ function schRepExport(){ const L=s=>String(s||'').split('\n').map(x=>x.trim()).f
     list:{site:h.lsite,dev:h.ldev,area:h.larea,gfa:h.lgfa,load:h.lload,memo:h.memo}, kpi:h.kpi, fin:h.fin, finNote:h.finNote, ov:h.main, infra:L(h.infra), model:h.struct, stat:L(h.stat).length>1?L(h.stat):h.stat, rows:h.rows, plan:h.plan, risk:L(h.risk), src:L(h.src) }; });
   const out={kind:REP_KIND,v:1,asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',exported:TODAY,projects};
   schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.json`,new Blob([JSON.stringify(out,null,1)],{type:'application/json'})); toast(`자료 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
+
+/* ---------- the star of a card ---------- */
+// (before the page's own click handler, which would open the project the card stands for)
+document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-pstar]'); if(!el)return; e.stopPropagation(); e.preventDefault();
+  const on=toggleFav('project:'+el.dataset.pstar); S.car.proj=0; const inner=$('#proj-inner'); if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); applyCarousel('proj'); if(typeof schMobApply==='function'){ const t=inner.closest('.track'); if(t)t.scrollLeft=0; } }
+  toast(on?'즐겨찾기에 추가했습니다 · 카드가 맨 앞에 고정됩니다.':'즐겨찾기를 해제했습니다.',2600); },true);
 
 /* ---- schedule/ui/90-events.js ---- */
 // Clicks, typing and keys of the schedule views. Opening a task is the page's own data-open (the right panel).

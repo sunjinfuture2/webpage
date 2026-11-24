@@ -285,11 +285,11 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
 
   console.log('— without the preview nothing of this shows');
   const C = await newUser(browser, 'R8C' + sfx, '여덟 삼'), c = C.page; await sleep(600);
-  const np0 = await c.evaluate(() => ({ pv: PREVIEW_ON, hol: document.querySelectorAll('.cal .cell.hol').length, pill: (document.querySelector('.cal .filters .pill') || {}).textContent, pfil: !!document.querySelector('.projects .pfil'), foot: !!document.querySelector('#pfoot') }));
+  const np0 = await c.evaluate(() => ({ pv: PREVIEW_ON, hol: document.querySelectorAll('.cal .cell.hol').length, pill: [...document.querySelectorAll('.cal .filters .pill')].map(x => x.textContent.trim()).join('|'), pfil: !!document.querySelector('.projects .pfil'), foot: !!document.querySelector('#pfoot') }));
   await c.evaluate(() => toast('알림', 1800)); const nt = await c.evaluate(() => ({ x: !!document.querySelector('#toast button.tx'), pv: document.querySelector('#toast').classList.contains('pv') }));
   await c.evaluate(() => { go('project:busan'); }); await sleep(900);
   const np1 = await c.evaluate(() => ({ sch: !!document.querySelector('#sch-actions'), has: schHas('busan') }));
-  check('the page everybody else sees: short names, no holidays, no pickers above the cards, plain toasts, no schedule sections', np0.pv === false && np0.hol === 0 && /판교 AIDC/.test(np0.pill || '') && !np0.pfil && !np0.foot && !nt.x && !nt.pv && !np1.sch && !np1.has, { np0, nt, np1 });
+  check('the page everybody else sees: short names, no holidays, no pickers above the cards, plain toasts, no schedule sections', np0.pv === false && np0.hol === 0 && /(^|\|)판교 AIDC(\||$)/.test(np0.pill || '') && !np0.pfil && !np0.foot && !nt.x && !nt.pv && !np1.sch && !np1.has, { np0, nt, np1 });
 
   // tidy up: what this run made
   await ev(([p, aid, ids]) => { for (const id of ids.concat(aid)) { const it = item(id); if (it) { it.status = 'trash'; it.trashedAt = new Date().toISOString(); } } for (const it of ITEMS) if (it.proj === p && it.status !== 'trash') { it.status = 'trash'; it.trashedAt = new Date().toISOString(); } if (PROJECTS[p]) trashProject(p); S.rf = {}; S.pf = {}; }, [pid, aid, ids]);
