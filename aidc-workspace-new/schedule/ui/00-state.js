@@ -124,7 +124,11 @@ function schRestoreScroll(k){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .s
 /* ---------- formatters ---------- */
 const schD2=d=>d?dateDot(d).slice(2):'';                                           // 2026-11-02 -> 26. 11. 02: only the rows of the list beside the calendar (owner, 2026-11-24)
 const schD=d=>d?dateDot(d):'';                                                     // 2026-11-02 -> 2026. 11. 02 (owner, 2026-11-23: one way to write a date everywhere)
-const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schD(b)}</span></span>`;
+// The finish of a pair of dates: its year is written only when it is another one than the start's (owner, 2026-11-24:
+// "연도가 바뀔 때만 완료일에 연도를 적어주고, 아니면 월일만"). 2026. 11. 03 → 11. 20 / 2026. 12. 18 → 2027. 01. 08. A finish that stands
+// alone (no start, a column of its own) stays whole.
+const schDto=(a,b)=>b?(a&&String(a).slice(0,4)===String(b).slice(0,4)?dateDot(b).slice(6):dateDot(b)):'';
+const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schDto(a,b)}</span></span>`;
 const schWbs=w=>String(w||'').replace(/^W/,'').replace('.','-');                    // W1.1 -> 1-1 (display only)
 // The number a task SHOWS. Its `wbs` is the key the calculation (W8.6), the gates, the procurement sheet and the workbook know it
 // by, so it never changes. When an action is put in between (owner, 2026-11-24: "끼워넣을 수 있게, 그 다음부턴 밀리는 식으로"),

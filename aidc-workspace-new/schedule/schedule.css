@@ -1459,12 +1459,22 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .sch-stage button.wbno.pick{color:#3d3d3d}
 .sch-stage button.wbno:hover{opacity:.72}
 .pop.sch-nopick{max-height:min(430px,calc(100vh - 24px));min-width:250px;max-width:420px}
-.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:nowrap}
+.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:normal;line-height:1.45}
+/* the action's own row: pulled to its place; the rows it passes slide (off under html.mp-calm) */
+.pop.sch-nopick{overscroll-behavior:contain}
+.pop.sch-nopick .it{position:relative}
+.pop.sch-nopick .it.self{background:#eef8ea;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-weight:600;z-index:2}
+.pop.sch-nopick .it.self:hover{background:#e4f4de}
+.pop.sch-nopick .it.self .grip{flex:none;width:8px;height:14px;margin:0 -2px 0 -3px;align-self:center;opacity:.55;background:radial-gradient(circle,#1f8e00 1.1px,transparent 1.3px) 0 0/4px 4.7px}
+.pop.sch-nopick .it.self.drag{cursor:grabbing;box-shadow:0 6px 18px rgba(0,0,0,.16),0 0 0 .5px rgba(0,0,0,.1);background:#e4f4de}
+.pop.sch-nopick .it.self.drop{transition:transform .17s cubic-bezier(.2,.8,.2,1),box-shadow .17s}
+.pop.sch-nopick.dragging .it:not(.self){transition:transform .17s cubic-bezier(.2,.8,.2,1)}
+.pop.sch-nopick.dragging .it:not(.self):hover{background:transparent}
+.pop.sch-nopick.dragging{cursor:grabbing}
+html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .pop.sch-nopick .it{display:flex;align-items:baseline;gap:8px}
 .pop.sch-nopick .it .no{flex:none;min-width:38px;font-weight:600;color:#1f8e00;font-variant-numeric:tabular-nums}
 .pop.sch-nopick .it .phn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html.dark .sch-stage button.wbno.pick{color:#d6d6d6}
-html.dark .pop.sch-nopick .it .no{color:#6fd858}
 
 /* Nineteenth round (owner, 2026-11-24) */
 /* the list beside the calendar: the date above it stands at the left end of the line; in a row the assignee is 3 px nearer to the
@@ -1474,3 +1484,21 @@ html.dark .pop.sch-nopick .it .no{color:#6fd858}
 .rlist.sch .ra .dt{width:auto;min-width:56px;white-space:nowrap}
 /* research cards: the same whole number between columns and between rows (15.2 / 15.3 fell on 15 or 16 px from card to card) */
 .sch-on .rgrid{column-gap:15px;row-gap:15px}
+
+/* Twentieth round (owner, 2026-11-24) */
+/* the archive: twice the room between the two views and what stands below them (it was 58) */
+.arch .ar-top{margin-bottom:116px}
+/* its document table: column titles that order and filter, the tags of what is chosen above it */
+.tbl.archive.pv .hd span[data-arcol]{cursor:pointer;display:flex;align-items:center;gap:5px;color:#4f4f4f}
+.tbl.archive.pv .hd span[data-arcol] em{font-style:normal}
+.tbl.archive.pv .hd span[data-arcol] svg{color:#6f6f6f;flex:none}
+.tbl.archive.pv .hd span[data-arcol]:hover{color:#000}
+.tbl.archive.pv .hd span.sorted{color:#000;font-weight:600}
+.tbl.archive.pv .hd span.up svg{transform:rotate(180deg)}
+.tbl.archive.pv .hd span.flt{color:#000;font-weight:600}
+.tbl.archive.pv .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px;flex:none}
+.arch .ar-chips{display:flex;align-items:center;gap:12px;margin:26px 0 -34px 1px;min-height:22px}
+.arch .ar-chips .sch-chiprow{position:static;display:flex;flex-wrap:wrap;gap:6px}
+.arch .ar-chips .n{font-size:12.5px;color:#8e8e8e;white-space:nowrap}
+/* a site card: what it says runs on, no line of its own for a break of the description */
+.arch .agrid.g5 .acard p{white-space:normal}

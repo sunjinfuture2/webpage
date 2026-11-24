@@ -692,3 +692,26 @@ Four requests of one afternoon. Preview only, except the fix of the address.
 - Tests: tests/h.cjs opens `?v=1` when a suite names no address, so the editor, leave and panel suites keep testing the page
   they were written for; the schedule suites pass `?v=2` as before. tests/schedule-2.cjs checks the rule itself (a fresh
   browser at the plain address, `?v=1` remembered, `?v=2` back) — 33 checks.
+
+## Pulling an action to its place; the archive's column menus; dates of a pair (owner, 2026-11-24, the twentieth round)
+
+- **The place menu is pulled** (`schNoPick` / `schNoDrag`, 30-panel.js): the action itself is a row of the menu (green, a
+  grip at its left) at the place it has — a task that is being moved — or will get — a new action, by its title. Pulled with
+  the pointer it follows it, the rows it passes slide out of its way (a CSS transition on their transform; nothing is
+  redrawn while it is pulled) and every row shows the number it would get; let go, it settles and `pick(beforeId)` runs as
+  for a press on a row (the menu closes). A pull of less than 4 px is a press and does nothing; the menu scrolls near its
+  edges. "맨 뒤로 보내기" shows only when the action is not last. menuPop rows may carry a class of their own (`cls`).
+  Off under html.mp-calm (no transition).
+- **The archive** (76-archive.js): twice the room between 문서 목록 · 참고사이트 and what stands below them (`.ar-top`
+  116). The document table's column titles are menus like those of the other tables (`data-arcol`; `SCH_ARCH.col` /
+  `SCH_ARCH.sort`, this browser's own, not stored): 제목 (order), 담당자 (order, a member, 미지정), 기한 (order; 지난 기한 /
+  이번 달 / 30일 안 / 기한 없음), 중요도 (order, a value), 최종수정일자 (order), 드롭박스 URL (있음 / 없음). What is chosen
+  shows as tags above the table (`.ar-chips`, with "shown / all"), holds for every kind of document and for a search.
+  A site card writes its description on one run (`oneLine`; the description keeps its line breaks, the panel shows them).
+- **The finish of a pair of dates** (`schDto(a, b)`): its year is written only when it is another one than the start's —
+  2026. 11. 03 → 11. 20, 2026. 12. 18 → 2027. 01. 08. Used by schRange (gantt table, relation map cards, the procurement
+  sheet), the two date pairs of a panel (task and ordinary action, read and edit), the change card, the period picker and
+  its tag. A date that stands alone (a column, a milestone) stays whole.
+- The page is darkened by one filter (html.dark): never write a `html.dark` colour rule for a new part.
+- tests: schedule-13 (70: the menu's own row, a pull with the mouse, a press, 취소), schedule-14 (39: the archive's menus,
+  tags and room, a card on one run, the pair of dates).

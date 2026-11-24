@@ -4,7 +4,8 @@
 //  - a section of the 자료실 goes to the trash with its cards (restoring a card brings it back), an empty one is simply removed;
 //  - a research 구분 and a partner 구분 can be renamed everywhere at once;
 //  - choosing a partner 구분 (or searching the partners) leaves the screen where it is (2026-11-24);
-//  - the list beside the project calendar (short year in its rows) and one gap for the research cards (2026-11-24).
+//  - the list beside the project calendar (short year in its rows) and one gap for the research cards (2026-11-24);
+//  - the archive's column menus and room, a site card on one run, the finish of a pair of dates (2026-11-24).
 // (The upload window with one master field and six rows is in tests/schedule-12.cjs.)
 // Needs wrangler dev on 127.0.0.1:8787.
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
@@ -18,6 +19,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const flush = async () => { await ev(() => sharedFlush(true)); await sleep(1600); };
   const toastText = () => ev(() => { const t = document.querySelector('#toast'); return t && t.classList.contains('on') ? t.textContent : ''; });
   const ask = async v => { await a.fill('#ask-in', v); await a.click('[data-ask="o"]'); await sleep(500); };
+  const pops = () => ev(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
 
   console.log('— a notice can be edited');
   await a.click('#notice .msg'); await sleep(300); await a.click('#notice [data-nt="add"]'); await sleep(300);   // the + shows while the list is open
@@ -128,6 +130,31 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const rg = await ev(() => { const g = document.querySelector('.page.on #sec-research .rgrid'), cs = [...g.querySelectorAll('.rcard')].map(c => c.getBoundingClientRect()), cols = new Set(cs.map(r => Math.round(r.left))).size, z = LAYOUT.zoom || 1;
     return { n: cs.length, cols, col: cs.slice(1, cols).map((r, i) => Math.round((r.left - cs[i].right) / z * 100) / 100), row: cs.length > cols ? Math.round((cs[cols].top - Math.max(...cs.slice(0, cols).map(r => r.bottom))) / z * 100) / 100 : null }; });
   check('research cards: the same gap between columns and between rows', rg.cols > 1 && rg.col.every(x => x === 15) && rg.row === 15, rg);
+
+  console.log('— the archive: column menus, room, a site card on one run; the finish of a pair of dates');
+  // (owner, 2026-11-24, the twentieth round.)
+  await ev(() => go('archive')); await sleep(800); await ev(() => { SCH_ARCH.view = 'docs'; SCH_ARCH.q = ''; SCH_ARCH.col = {}; SCH_ARCH.sort = { k: '', dir: 1 }; S.archPage = 1; schArchBody(); }); await sleep(300);
+  const ar = () => ev(() => { const pw = document.querySelector('#arch-pw'), rows = [...pw.querySelectorAll('.tbl.archive.pv .rw')]; return { cols: [...pw.querySelectorAll('.tbl.archive.pv .hd [data-arcol]')].map(x => x.dataset.arcol).join(), rows: rows.length, pris: [...new Set(rows.map(r => r.querySelector('.pr').textContent.trim()))], titles: rows.map(r => r.querySelector('.tx').textContent), chips: [...pw.querySelectorAll('.ar-chips .sch-chip')].map(x => x.firstChild.textContent), n: (pw.querySelector('.ar-chips .n') || {}).textContent || '', flt: [...pw.querySelectorAll('.hd span.flt')].map(x => x.textContent), sorted: [...pw.querySelectorAll('.hd span.sorted')].map(x => x.textContent), gap: getComputedStyle(pw.querySelector('.ar-top')).marginBottom }; });
+  const ar0 = await ar();
+  check('twice the room below 문서 목록 · 참고사이트 (116); every column title of the table is a menu', ar0.gap === '116px' && ar0.cols === 'name,who,due,pri,mod,dbx' && ar0.rows > 0 && !ar0.chips.length, ar0);
+  await a.click('#arch-pw [data-arcol="pri"]'); await sleep(300); const am = await pops();
+  await a.click('.pop .it:has-text("높음")'); await sleep(400); const ar1 = await ar();
+  check('중요도 › 높음: only those rows, a tag above the table with the count, the title marked', am.join().includes('높은 순') && am.includes('전체') && ar1.rows > 0 && ar1.pris.join() === '높음' && ar1.chips.join() === '중요도: 높음' && /^\d+ \/ \d+건$/.test(ar1.n) && ar1.flt.join() === '중요도', { am, ar1 });
+  await a.click('#arch-pw [data-arcol="name"]'); await sleep(300); await a.click('.pop .it:has-text("가나다 역순")'); await sleep(400); const ar2 = await ar();
+  const desc = ar2.titles.every((t, i) => !i || ar2.titles[i - 1].toLowerCase().replace(/\s+/g, ' ').trim() >= t.toLowerCase().replace(/\s+/g, ' ').trim());
+  check('제목 › 가나다 역순 orders what the filter left; the kinds of document keep it', desc && ar2.sorted.join() === '제목' && ar2.chips.length === 1 && await ev(() => { const t = ARCH_TABS[1]; if (!t) return true; document.querySelector(`#arch-pw .tabs [data-tab="${t}"]`).click(); return SCH_ARCH.col.pri === 'high' && SCH_ARCH.sort.k === 'name' && !!document.querySelector('#arch-pw .ar-chips .sch-chip'); }), ar2);
+  await sleep(300); await a.click('#arch-pw [data-archip="pri"]'); await sleep(300); const ar3 = await ar();
+  check('the tag taken off: every row again', !ar3.chips.length && !ar3.flt.length && ar3.sorted.join() === '제목', ar3);
+  await ev(() => { SCH_ARCH.sort = { k: '', dir: 1 }; S.archTab = ARCH_TABS[0]; SCH_ARCH.view = 'sites'; schArchBody(); }); await sleep(400);
+  const cardP = await ev(() => { const sec = ARCH_SECTIONS.find(x => !x.gone && x.cards.some(c => !c.trash)), c = sec.cards.find(x => !x.trash), was = c.desc; c.desc = '첫 줄 설명\n둘째 줄 설명'; schArchBody(); const p = document.querySelector(`#arch-pw .acard[data-acard$=":${c.id}"] p`), r = { text: p.textContent, ws: getComputedStyle(p).whiteSpace, kept: c.desc.includes('\n') }; c.desc = was; schArchBody(); return r; });
+  check('a site card writes its description on one run (the description itself keeps its line break)', cardP.text === '첫 줄 설명 둘째 줄 설명' && cardP.ws === 'normal' && cardP.kept, cardP);
+  await ev(() => { SCH_ARCH.view = 'docs'; go('project:pangyo'); }); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 20000 }); await sleep(700);
+  await ev(() => { SCHU.tab = 'gantt'; SCHU.phase = ''; SCHU.q = ''; SCHU.open = schModel('pangyo').phases.map(g => g.code); schRefresh(); }); await sleep(700);
+  const dp = await ev(() => { const m = schModel('pangyo'), rows = [...document.querySelectorAll('#sch-gantt .sg-left .sg-row.tk')], pick = same => m.plan.tasks.find(t => { const r = m.res.tasks[t.id]; return t.kind !== 'milestone' && (r.start.slice(0, 4) === r.finish.slice(0, 4)) === same && rows.some(x => x.dataset.row === t.id); });
+    const txt = t => { const r = m.res.tasks[t.id], el = rows.find(x => x.dataset.row === t.id).querySelector('.rg'); return { start: r.start, finish: r.finish, parts: [...el.querySelectorAll('.sch-rg > span')].map(x => x.textContent) }; }, a1 = pick(true), b1 = pick(false);
+    return { f: [schDto('2026-11-03', '2026-11-20'), schDto('2026-12-18', '2027-01-08'), schDto('', '2026-11-20'), schDto('2026-11-03', '')], same: a1 && txt(a1), other: b1 && txt(b1) }; });
+  check('the finish of a pair of dates has its year only when it is another one than the start\'s', dp.f.join('|') === '11. 20|2027. 01. 08|2026. 11. 20|' && dp.same && dp.same.parts[0] === dp.same.start.replace(/-/g, '. ') && dp.same.parts[1] === dp.same.finish.slice(5).replace('-', '. ') && dp.other && dp.other.parts[1] === dp.other.finish.replace(/-/g, '. '), dp);
+  await ev(() => { SCHU.open = []; schRefresh(); }); await sleep(300);
 
   console.log('— choosing a partner 구분 leaves the screen where it is');
   // (owner, 2026-11-24: the list's title was pulled to the very top of the screen, and a shorter list let the page slide.)

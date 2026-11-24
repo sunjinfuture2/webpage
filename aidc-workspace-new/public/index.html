@@ -2650,12 +2650,22 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .sch-stage button.wbno.pick{color:#3d3d3d}
 .sch-stage button.wbno:hover{opacity:.72}
 .pop.sch-nopick{max-height:min(430px,calc(100vh - 24px));min-width:250px;max-width:420px}
-.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:nowrap}
+.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:normal;line-height:1.45}
+/* the action's own row: pulled to its place; the rows it passes slide (off under html.mp-calm) */
+.pop.sch-nopick{overscroll-behavior:contain}
+.pop.sch-nopick .it{position:relative}
+.pop.sch-nopick .it.self{background:#eef8ea;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-weight:600;z-index:2}
+.pop.sch-nopick .it.self:hover{background:#e4f4de}
+.pop.sch-nopick .it.self .grip{flex:none;width:8px;height:14px;margin:0 -2px 0 -3px;align-self:center;opacity:.55;background:radial-gradient(circle,#1f8e00 1.1px,transparent 1.3px) 0 0/4px 4.7px}
+.pop.sch-nopick .it.self.drag{cursor:grabbing;box-shadow:0 6px 18px rgba(0,0,0,.16),0 0 0 .5px rgba(0,0,0,.1);background:#e4f4de}
+.pop.sch-nopick .it.self.drop{transition:transform .17s cubic-bezier(.2,.8,.2,1),box-shadow .17s}
+.pop.sch-nopick.dragging .it:not(.self){transition:transform .17s cubic-bezier(.2,.8,.2,1)}
+.pop.sch-nopick.dragging .it:not(.self):hover{background:transparent}
+.pop.sch-nopick.dragging{cursor:grabbing}
+html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .pop.sch-nopick .it{display:flex;align-items:baseline;gap:8px}
 .pop.sch-nopick .it .no{flex:none;min-width:38px;font-weight:600;color:#1f8e00;font-variant-numeric:tabular-nums}
 .pop.sch-nopick .it .phn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html.dark .sch-stage button.wbno.pick{color:#d6d6d6}
-html.dark .pop.sch-nopick .it .no{color:#6fd858}
 
 /* Nineteenth round (owner, 2026-11-24) */
 /* the list beside the calendar: the date above it stands at the left end of the line; in a row the assignee is 3 px nearer to the
@@ -2665,6 +2675,24 @@ html.dark .pop.sch-nopick .it .no{color:#6fd858}
 .rlist.sch .ra .dt{width:auto;min-width:56px;white-space:nowrap}
 /* research cards: the same whole number between columns and between rows (15.2 / 15.3 fell on 15 or 16 px from card to card) */
 .sch-on .rgrid{column-gap:15px;row-gap:15px}
+
+/* Twentieth round (owner, 2026-11-24) */
+/* the archive: twice the room between the two views and what stands below them (it was 58) */
+.arch .ar-top{margin-bottom:116px}
+/* its document table: column titles that order and filter, the tags of what is chosen above it */
+.tbl.archive.pv .hd span[data-arcol]{cursor:pointer;display:flex;align-items:center;gap:5px;color:#4f4f4f}
+.tbl.archive.pv .hd span[data-arcol] em{font-style:normal}
+.tbl.archive.pv .hd span[data-arcol] svg{color:#6f6f6f;flex:none}
+.tbl.archive.pv .hd span[data-arcol]:hover{color:#000}
+.tbl.archive.pv .hd span.sorted{color:#000;font-weight:600}
+.tbl.archive.pv .hd span.up svg{transform:rotate(180deg)}
+.tbl.archive.pv .hd span.flt{color:#000;font-weight:600}
+.tbl.archive.pv .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px;flex:none}
+.arch .ar-chips{display:flex;align-items:center;gap:12px;margin:26px 0 -34px 1px;min-height:22px}
+.arch .ar-chips .sch-chiprow{position:static;display:flex;flex-wrap:wrap;gap:6px}
+.arch .ar-chips .n{font-size:12.5px;color:#8e8e8e;white-space:nowrap}
+/* a site card: what it says runs on, no line of its own for a break of the description */
+.arch .agrid.g5 .acard p{white-space:normal}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3554,7 +3582,7 @@ function openPop(anchor,html,opt={}){closePop();const p=document.createElement('
 let popAgain=null;
 function popOut(e){if(popEl&&!popEl.contains(e.target)){const a=popEl._anchor; if(PREVIEW_ON&&a&&a.isConnected&&a.contains(e.target)&&!a.matches('input,textarea,[contenteditable="true"]'))popAgain={el:a,at:Date.now()}; closePop();}else if(popEl){setTimeout(()=>document.addEventListener('mousedown',popOut,{once:true}),0);}}
 window.addEventListener('click',e=>{ const s=popAgain; popAgain=null; if(s&&!popEl&&Date.now()-s.at<800&&s.el.contains(e.target)){ e.stopPropagation(); e.preventDefault(); } },true);
-function menuPop(anchor,items,opt){const p=openPop(anchor,items.map(i=>i==='-'?'<div class="sep"></div>':(i.hd?`<div class="hd">${esc(i.hd)}</div>`:`<div class="it ${i.sel?'sel':''} ${i.danger?'danger':''}" data-k="${i.k||''}">${i.ico||''}${i.html!==undefined?i.html:esc(i.t)}${i.badge?`<span class="badge-red">${esc(String(i.badge))}</span>`:''}${i.sel&&opt&&opt.multi?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':''}</div>`)).join(''),opt);p.addEventListener('click',e=>{const it=e.target.closest('.it');if(!it)return;const f=items.find(x=>x&&x.k===it.dataset.k);closePop();f&&f.fn&&f.fn();});return p;}
+function menuPop(anchor,items,opt){const p=openPop(anchor,items.map(i=>i==='-'?'<div class="sep"></div>':(i.hd?`<div class="hd">${esc(i.hd)}</div>`:`<div class="it ${i.sel?'sel':''} ${i.danger?'danger':''} ${i.cls||''}" data-k="${i.k||''}">${i.ico||''}${i.html!==undefined?i.html:esc(i.t)}${i.badge?`<span class="badge-red">${esc(String(i.badge))}</span>`:''}${i.sel&&opt&&opt.multi?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':''}</div>`)).join(''),opt);p.addEventListener('click',e=>{const it=e.target.closest('.it');if(!it)return;const f=items.find(x=>x&&x.k===it.dataset.k);closePop();f&&f.fn&&f.fn();});return p;}
 function notConnected(anchor,name){openPop(anchor,`<div class="hd">${esc(name)}</div><div class="msg">외부 서비스 연결 전입니다. 연결된 주소가 없어 이 시안에서는 이동하지 않습니다.</div>`);}
 
 /* layout: the design is 1920 wide. A wider window gives the extra room to the content (--d); a narrower one first tightens --d, then scales the whole app. */
@@ -5531,7 +5559,11 @@ function schRestoreScroll(k){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .s
 /* ---------- formatters ---------- */
 const schD2=d=>d?dateDot(d).slice(2):'';                                           // 2026-11-02 -> 26. 11. 02: only the rows of the list beside the calendar (owner, 2026-11-24)
 const schD=d=>d?dateDot(d):'';                                                     // 2026-11-02 -> 2026. 11. 02 (owner, 2026-11-23: one way to write a date everywhere)
-const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schD(b)}</span></span>`;
+// The finish of a pair of dates: its year is written only when it is another one than the start's (owner, 2026-11-24:
+// "연도가 바뀔 때만 완료일에 연도를 적어주고, 아니면 월일만"). 2026. 11. 03 → 11. 20 / 2026. 12. 18 → 2027. 01. 08. A finish that stands
+// alone (no start, a column of its own) stays whole.
+const schDto=(a,b)=>b?(a&&String(a).slice(0,4)===String(b).slice(0,4)?dateDot(b).slice(6):dateDot(b)):'';
+const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schDto(a,b)}</span></span>`;
 const schWbs=w=>String(w||'').replace(/^W/,'').replace('.','-');                    // W1.1 -> 1-1 (display only)
 // The number a task SHOWS. Its `wbs` is the key the calculation (W8.6), the gates, the procurement sheet and the workbook know it
 // by, so it never changes. When an action is put in between (owner, 2026-11-24: "끼워넣을 수 있게, 그 다음부턴 밀리는 식으로"),
@@ -6016,11 +6048,11 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
   const drv=r.drivers.map(d=>{const e=m.plan.dependencies.find(x=>x.id===d);if(e){const b=m.byId.get(e.from);return `${schNo(b)}) ${b.name} (${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''})`;}return d.startsWith('납기:')?'조달 납기 '+d.slice(3):d;});
   const moved=r.start!==t.plannedStart||r.finish!==t.plannedFinish, why='일정 계산 결과입니다.'+(drv.length?'\n결정 요인: '+drv.join(' · '):'')+(moved?`\n입력한 관리일정: ${schD(t.plannedStart)}${ms?'':' → '+schD(t.plannedFinish)}`:'');
   // one row for the dates (owner: 관리일정 and 예상 기한 said nearly the same): the forecast is shown, what is typed is the managed date behind it
-  const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schD(r.finish)}</span>`:f('plannedFinish',schD(r.finish),E?'완료일 변경\n'+why:why))}</span>`;
+  const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schDto(r.start,r.finish)}</span>`:f('plannedFinish',schDto(r.start,r.finish),E?'완료일 변경\n'+why:why))}</span>`;
   const refs=schRefs(pid,t.id);
   const L=[V('사업명',pill(proj(pid),'nosq').replace('class="pill',`data-go="project:${esc(pid)}" title="프로젝트 페이지로 이동" class="pill`)),
     V('예상 기한'+schInfo('dates'),dates+(done?'':schWhyMark(schDdayHtml(r.finish,false,schLateWhy(m,t)),E,'schp'))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
-    V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schD(t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
+    V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schDto(t.actualStart,t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
     ...(t.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(t.why)}</span>`,'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),   // shown once there is one; it is entered through the "n일 지연" mark above (수정 first)
     V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><button type="button" class="wbno pick" data-schp="wbs-move" title="눌러서 이 단계 안의 다른 자리로 옮기기 · 그 뒤 번호는 한 칸씩 밀립니다">${esc(schNo(t))})</button></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schNo(t))})</span></span>`),
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
@@ -6098,9 +6130,34 @@ function schPutBefore(d,x,beforeId,pull){ const set=(t,n)=>{ if(n===schKeyNo(t))
   const n=schNoOf(at); let k=n; for(const t of ps){ const v=schNoOf(t); if(v<k)continue; if(v>k)break; set(t,v+1); k=v+1; }
   set(x,n); const prev=all[all.indexOf(at)-1]; x.order=prev?(prev.order+at.order)/2:at.order-1; }
 // The picker of a place: the actions of the phase with their numbers; a press puts the action before that row.
-function schNoPick(el,m,code,selfId,cur,pick){ const g=m.phases.find(x=>x.code===code); if(!g)return; const self=selfId&&m.byId.get(selfId), list=g.tasks.filter(t=>t.id!==selfId).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order), top=Math.max(0,...list.map(schNoOf)), end=self?Math.max(top,schNoOf(self)):top+1;   // (a task that moves leaves its own number behind)
-  return menuPop(el,[{hd:'들어갈 자리 · 고른 번호부터 뒤는 한 칸씩 밀립니다'}].concat(list.map(t=>({k:t.id,sel:cur===t.id,html:`<b class="no">${esc(schNo(t))})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)})),
-    [{k:'end',sel:!cur,html:`<b class="no">${esc(schWbs(code+'.'+end))})</b><span class="phn">맨 뒤</span>`,fn:()=>pick('')}]),{cls:'sch-nopick'}); }
+function schNoPick(el,m,code,selfId,cur,pick,label){ const g=m.phases.find(x=>x.code===code); if(!g)return; const self=selfId&&m.byId.get(selfId), list=g.tasks.filter(t=>t.id!==selfId).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order), top=Math.max(0,...list.map(schNoOf));
+  // The action itself is a row of the list too, at the place it has (or will get): it is pulled to another place (owner, 2026-11-24:
+  // "순서 변경 드래그해서 옮길 수 있게, 애니메이션까지"); a press on another row still puts it before that one.
+  // every row shows the number it has with the action standing where it stands now: for a new action the rows after it are one up already
+  const at=cur?list.findIndex(t=>t.id===cur):-1, i0=at<0?list.length:at, seq=(self?list.concat(self):list).map(schNoOf).sort((x,y)=>x-y); if(!self)seq.push(top+1);
+  const vis=list.slice(); vis.splice(i0,0,null); const lab=k=>esc(schWbs(code+'.'+seq[k]));
+  const rows=vis.map((t,k)=>t?{k:t.id,html:`<b class="no">${lab(k)})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)}:{k:'self',cls:'self',html:`<i class="grip" aria-hidden="true"></i><b class="no">${lab(k)})</b><span class="phn">${esc(self?self.name:(label||'이 액션'))}</span>`});
+  const pop=menuPop(el,[{hd:'들어갈 자리 · 초록 줄을 끌어서 옮기거나 다른 줄을 누르면 그 앞으로 들어갑니다. 뒤 번호는 한 칸씩 밀립니다'}].concat(rows,i0<list.length?[{k:'end',cls:'end',html:`<b class="no"></b><span class="phn">맨 뒤로 보내기</span>`,fn:()=>pick('')}]:[]),{cls:'sch-nopick'});
+  { const s=pop.querySelector('.it[data-k="self"]'), e2=pop.querySelector('.it[data-k="end"]'); if(s){s.classList.add('self');s.title='끌어서 자리 옮기기';} if(e2)e2.classList.add('end'); if(s&&s.scrollIntoView)s.scrollIntoView({block:'nearest'}); }
+  schNoDrag(pop,pick); return pop; }
+// Pulling the own row of that menu: it follows the pointer, the rows it passes slide out of its way and every row shows the number
+// it would get; let go, it settles and the place is taken (the row it now stands before, or the end). A pull of less than 4 px is
+// a press and does nothing. The menu scrolls when the pointer nears its upper or lower edge.
+function schNoDrag(pop,pick){ const self=pop.querySelector('.it.self'); if(!self)return; let d=null, eat=false;
+  const others=()=>[...pop.querySelectorAll('.it[data-k]')].filter(x=>x!==self&&!x.classList.contains('end'));
+  const place=()=>{ const dy=d.y-d.y0+(pop.scrollTop-d.s0), j=Math.max(0,Math.min(d.n-1,Math.round(d.i0+dy/d.h))); self.style.transform=`translateY(${dy}px)`; if(j===d.j)return; d.j=j;
+    d.rest.forEach((r,k)=>{ const idx=k<d.i0?k:k+1, sh=idx>d.i0&&idx<=j?-d.h:idx<d.i0&&idx>=j?d.h:0; r.style.transform=sh?`translateY(${sh}px)`:''; });
+    const order=d.rest.slice(); order.splice(j,0,self); order.forEach((r,k)=>{ const b=r.querySelector('.no'); if(b)b.textContent=d.nos[k]; }); };
+  const edge=()=>{ if(!d)return; const r=pop.getBoundingClientRect(), v=d.y<r.top+26?-7:d.y>r.bottom-26?7:0; if(v){ const was=pop.scrollTop; pop.scrollTop+=v; if(pop.scrollTop!==was)place(); } d.raf=requestAnimationFrame(edge); };
+  self.addEventListener('pointerdown',e=>{ if(e.button||d)return; e.preventDefault(); const rest=others(), all=[...pop.querySelectorAll('.it[data-k]')].filter(x=>!x.classList.contains('end')), i0=all.indexOf(self), h=self.getBoundingClientRect().height;
+    d={y0:e.clientY,y:e.clientY,s0:pop.scrollTop,i0,j:i0,n:all.length,h,rest,nos:all.map(r=>(r.querySelector('.no')||{}).textContent||''),moved:false,id:e.pointerId}; try{self.setPointerCapture(e.pointerId);}catch(_){} });
+  self.addEventListener('pointermove',e=>{ if(!d||e.pointerId!==d.id)return; d.y=e.clientY; if(!d.moved){ if(Math.abs(d.y-d.y0)<4)return; d.moved=true; pop.classList.add('dragging'); self.classList.add('drag'); d.raf=requestAnimationFrame(edge); } place(); });
+  const done=e=>{ if(!d||e.pointerId!==d.id)return; const x=d; d=null; cancelAnimationFrame(x.raf); try{self.releasePointerCapture(x.id);}catch(_){} if(!x.moved)return; eat=true; setTimeout(()=>{eat=false;},400);
+    self.classList.add('drop'); self.style.transform=`translateY(${(x.j-x.i0)*x.h}px)`;
+    const next=x.rest[x.j], before=next?next.dataset.k:''; if(e.type==='pointercancel'||x.j===x.i0){ setTimeout(()=>{ pop.classList.remove('dragging'); self.classList.remove('drag','drop'); self.style.transform=''; x.rest.forEach(r=>{r.style.transform='';}); [...pop.querySelectorAll('.it[data-k]')].filter(r=>!r.classList.contains('end')).forEach((r,k)=>{const b=r.querySelector('.no');if(b)b.textContent=x.nos[k];}); },170); return; }
+    setTimeout(()=>{ closePop(); pick(before); },html.classList.contains('mp-calm')?0:190); };
+  const html=document.documentElement; self.addEventListener('pointerup',done); self.addEventListener('pointercancel',done);
+  pop.addEventListener('click',e=>{ const it=e.target.closest('.it'); if(eat||(it&&it===self)){ e.stopPropagation(); e.preventDefault(); } },true); }
 // The list of phases of a picker: a press chooses one; the x of a row removes that phase; below it "new" and the rename of the chosen one.
 function schPhasePick(el,pid,m,sel,pick,after){ const p=menuPop(el,m.phases.map(g=>({k:g.code,sel:sel===g.code,html:`<span class="phn">${esc(schPhaseLabel(g))}</span><button type="button" class="phx" data-phx="${esc(g.code)}" title="이 단계 삭제" aria-label="${esc(schPhaseLabel(g))} 단계 삭제">${svg('i-x',8,8)}</button>`,fn:()=>pick(g.code,g.label)}))
     .concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>pick(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===sel),after)),{cls:'sch-phpick'});
@@ -6155,7 +6212,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='more'){SCHP.more=!SCHP.more;if(it.editing&&schOwn(it))schPropsRefresh(it);else rerenderItem(it.id);return;}
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.
   if(k==='wbs-at'){ if(!canEditItem(it)||schOwn(it)||!it.phase)return; e.stopPropagation(); const at=it.wbsAt&&m.byId.get(it.wbsAt);   // where a new action goes in its phase
-    schNoPick(el,m,it.phase,'',at&&at.phase===it.phase?at.id:'',id=>{ if(id)it.wbsAt=id; else delete it.wbsAt; it.dirty=true; rerenderItem(it.id); }); return; }
+    schNoPick(el,m,it.phase,'',at&&at.phase===it.phase?at.id:'',id=>{ if(id)it.wbsAt=id; else delete it.wbsAt; it.dirty=true; rerenderItem(it.id); },(it.title||'').split('\n').join(' ').trim()||'새 액션'); return; }
   if(k==='link-phase'||k==='link-task'){ if(!canEditItem(it))return; e.stopPropagation(); const cur=it.task&&m.byId.get(it.task), again=()=>{it.dirty=true;rerenderItem(it.id);};
     const setPhase=code=>{ if(it.phase!==code)delete it.wbsAt; it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
     if(k==='link-phase'){ schPhasePick(el,pid,m,(cur?cur.phase:it.phase)||'',code=>setPhase(code),(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();}); return; }
@@ -6234,13 +6291,13 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   const arrow=svg('i-sch-arr',11,8,'color:#4f4f4f;margin:0 2px'), end=itemEnd(it), ms=!!it.ms, links=SCHP.tab==='links';
   const tabs=`<div class="sp-tabs"><button class="${links?'':'on'}" data-schp="atab" data-k="info">정보</button><button class="${links?'on':''}" data-schp="atab" data-k="links">연결된 액션<small>${t?(m.pred.get(t.id).length+m.succ.get(t.id).length||''):''}</small></button></div>`;
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
-  const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
+  const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schDto(it.date,end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
     :E?schStageEdit(m,g,t,it)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
-    V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schD(it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
+    V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schDto(it.actualStart,it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
     ...(it.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(it.why)}</span>`,'지연 사유'),'wide')]:[]),
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
@@ -7017,7 +7074,7 @@ function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, 
   else items=[fl('',{t:k==='when'?'전체 기간':'첨부 전체'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   if(k==='when')items.push('-',{t:'직접 설정…',sel:c.when==='range',fn:()=>schRangePick(el,c.from||'',c.to||'',(a,b)=>{ if(a||b){c.when='range';c.from=a;c.to=b;} else{delete c.when;delete c.from;delete c.to;} go(); })});
   menuPop(el,items.map((x,i)=>x==='-'?x:({...x,k:String(i)})),{cls:'sch-colmenu'}); }
-const schRangeTxt=c=>`${c.from?schD(c.from):'처음'} ~ ${c.to?schD(c.to):'오늘'}`;
+const schRangeTxt=c=>`${c.from?schD(c.from):'처음'} ~ ${c.to?schDto(c.from,c.to):'오늘'}`;
 // Two months side by side: the first press is the first day, the second the last (pressing an earlier day starts over), the days
 // between are shaded while the pointer moves. 적용 hands both back; 지우기 hands back none.
 function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m]=(a||TODAY).split('-').map(Number);
@@ -7025,7 +7082,7 @@ function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m
     const hi=b||(a&&hov&&hov>=a?hov:'');
     for(let n=1;n<=dim;n++){ const ds=ymd(yy,mm,n), cls=[ds===a?'a':'',ds===b?'b':'',a&&hi&&ds>a&&ds<hi?'in':'',!b&&a&&ds===hi&&ds!==a?'hv':'',ds===TODAY?'tdy':''].filter(Boolean).join(' '); g+=`<button data-rd="${ds}" class="${cls}">${n}</button>`; }
     return g+'</div></div>'; };
-  const draw=()=>{ const m2=m===12?1:m+1, y2=m===12?y+1:y; return `<div class="rp"><div class="rp-h"><button data-rn="-1" aria-label="이전 달">‹</button><span class="rp-s"><em class="${a?'':'ph'}">${a?schD(a):'시작일'}</em>${svg('i-sch-arr',12,8)}<em class="${b?'':'ph'}">${b?schD(b):'종료일'}</em></span><button data-rn="1" aria-label="다음 달">›</button></div><div class="rp-ms">${month(y,m)}${month(y2,m2)}</div><div class="rp-f"><span>${!a?'시작일을 누르세요':!b?'종료일을 누르세요':'기간이 정해졌습니다'}</span><button data-rx="clear">지우기</button><button data-rx="ok" class="pri" ${a?'':'disabled'}>적용</button></div></div>`; };
+  const draw=()=>{ const m2=m===12?1:m+1, y2=m===12?y+1:y; return `<div class="rp"><div class="rp-h"><button data-rn="-1" aria-label="이전 달">‹</button><span class="rp-s"><em class="${a?'':'ph'}">${a?schD(a):'시작일'}</em>${svg('i-sch-arr',12,8)}<em class="${b?'':'ph'}">${b?schDto(a,b):'종료일'}</em></span><button data-rn="1" aria-label="다음 달">›</button></div><div class="rp-ms">${month(y,m)}${month(y2,m2)}</div><div class="rp-f"><span>${!a?'시작일을 누르세요':!b?'종료일을 누르세요':'기간이 정해졌습니다'}</span><button data-rx="clear">지우기</button><button data-rx="ok" class="pri" ${a?'':'disabled'}>적용</button></div></div>`; };
   const p=openPop(anchor,draw(),{cls:'sch-rp'}), redraw=()=>{p.innerHTML=draw();};
   p.addEventListener('click',e=>{ e.stopPropagation(); const t=e.target.closest('button'); if(!t)return;
     if(t.dataset.rn){ m+=+t.dataset.rn; if(m<1){m=12;y--;} if(m>12){m=1;y++;} redraw(); }
@@ -7145,7 +7202,7 @@ function schCardHide(){ clearTimeout(schCardT); const c=$('#sch-card'); if(c)c.r
 // o: {title, focus (task id), want (the start that was asked for, to say when a predecessor holds the task)}
 function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D=AIDCSchedule.dates, moved=[];
   for(const t of m.plan.tasks){ const a=snap.t[t.id], r=m.res.tasks[t.id]; if(a&&(a[0]!==r.start||a[1]!==r.finish))moved.push({t,a,b:[r.start,r.finish],dl:D.diffDays(r.finish,a[1])}); }
-  const f=o.focus&&m.byId.get(o.focus), fm=moved.find(x=>x.t.id===o.focus), others=moved.filter(x=>x.t.id!==o.focus), opD=m.res.operationDate&&snap.op?D.diffDays(m.res.operationDate,snap.op):0, rg=(x,t)=>t.kind==='milestone'?schD(x[0]):`${schD(x[0])} → ${schD(x[1])}`;
+  const f=o.focus&&m.byId.get(o.focus), fm=moved.find(x=>x.t.id===o.focus), others=moved.filter(x=>x.t.id!==o.focus), opD=m.res.operationDate&&snap.op?D.diffDays(m.res.operationDate,snap.op):0, rg=(x,t)=>t.kind==='milestone'?schD(x[0]):`${schD(x[0])} → ${schDto(x[0],x[1])}`;
   const held=f&&o.want&&m.res.tasks[f.id].start!==o.want;
   schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.dataset.pid=pid; c.setAttribute('role','status');
   c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>
@@ -7576,7 +7633,33 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
 //    the last column is the Dropbox address (an arrow, as in the action lists) instead of the source's name.
 //  - The search looks through every kind at once (title, source, address, assignees, text) and through the site cards.
 // renderArchive (original.html) hands over to schArchRender; every handler of the page (tabs, + buttons, menus, pages) is the old one.
-const SCH_ARCH={q:'',view:'docs'};
+const SCH_ARCH={q:'',view:'docs',col:{},sort:{k:'',dir:1}};
+// The column titles of the document table order and filter it, like the other tables (owner, 2026-11-24): 제목 (order), 담당자,
+// 기한 (order, a period), 중요도, 최종수정일자 (order), 드롭박스 URL. What is chosen shows as tags above the table; it holds for
+// every kind and for a search, and is this browser's own (not stored).
+const SCH_AF_NAMES={pri:['중요도',{high:'높음',mid:'중간',low:'낮음'}],due:['기한',{past:'지난 기한',month:'이번 달','30':'30일 안',none:'기한 없음'}],dbx:['드롭박스 URL',{y:'주소 있음',n:'주소 없음'}]};
+const SCH_ASORT={name:r=>norm(oneLine(r.title)),who:r=>userName((r.people||[])[0])||'~',due:r=>r.date||'9',pri:r=>({high:0,mid:1,low:2})[r.pri||'mid']??9,mod:r=>{const d=modDate(r);return d?d.getTime():0;}};
+function schArchTest(r){ const c=SCH_ARCH.col, ppl=r.people||[];
+  if(c.who&&(c.who==='none'?ppl.length>0:!ppl.includes(c.who)))return false; if(c.pri&&(r.pri||'mid')!==c.pri)return false; if(c.dbx&&(c.dbx==='y')!==!!schArchDbx(r))return false;
+  if(c.due){ const d=r.date||''; if(c.due==='none')return !d; if(!d)return false; if(c.due==='past')return d<TODAY; if(c.due==='month')return d.slice(0,7)===TODAY.slice(0,7);
+    if(c.due==='30'){ const t=new Date(TODAY+'T00:00:00'); t.setDate(t.getDate()+30); const e=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; return d>=TODAY&&d<=e; } }
+  return true; }
+const schArchFiltered=()=>Object.keys(SCH_ARCH.col).length>0;
+function schArchChips(){ const c=SCH_ARCH.col, out=[], chip=(k,label)=>out.push(`<button class="sch-chip" data-archip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`);
+  if(c.who)chip('who','담당자: '+(c.who==='none'?'미지정':userName(c.who))); for(const k of ['due','pri','dbx'])if(c[k])chip(k,SCH_AF_NAMES[k][0]+': '+(SCH_AF_NAMES[k][1][c[k]]||c[k]));
+  return out.join(''); }
+function schArchColMenu(el,v){ const c=SCH_ARCH.col, go=()=>{S.archPage=1;schArchBody();}, so=SCH_ARCH.sort;
+  const srt=(label,dir)=>({t:label,sel:so.k===v&&(so.dir||1)===dir,fn:()=>{SCH_ARCH.sort={k:v,dir};go();}});
+  const fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}});
+  const all=SCH_ARCH.q.trim()?schArchFind(SCH_ARCH.q.trim()).docs.map(x=>x.r):archList(S.archTab), ppl=[...new Set(all.flatMap(r=>r.people||[]))].sort((x,y)=>userName(x).localeCompare(userName(y))); let items=[];
+  if(v==='name')items=[{hd:'정렬'},srt('가나다 순',1),srt('가나다 역순',-1)];
+  else if(v==='who')items=[{hd:'정렬'},srt('이름 순',1),srt('이름 역순',-1),'-',{hd:'담당자'},fl('who','',{t:'전체 담당자'}),...ppl.map(u=>fl('who',u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')})),fl('who','none',{t:'미지정',html:'<span class="sch-role none">미지정</span>'})];
+  else if(v==='due')items=[{hd:'정렬'},srt('빠른 순',1),srt('늦은 순',-1),'-',{hd:'기한'},fl('due','',{t:'전체'}),fl('due','past',{t:'지난 기한'}),fl('due','month',{t:'이번 달'}),fl('due','30',{t:'30일 안'}),fl('due','none',{t:'기한 없음'})];
+  else if(v==='pri')items=[{hd:'정렬'},srt('높은 순',1),srt('낮은 순',-1),'-',{hd:'중요도'},fl('pri','',{t:'전체'}),...['high','mid','low'].map(x=>fl('pri',x,{t:priTxt[x],html:`<span class="pri pri-${x}">${priTxt[x]}</span>`}))];
+  else if(v==='mod')items=[{hd:'정렬'},srt('오래된 순',1),srt('최근 순',-1)];
+  else if(v==='dbx')items=[{hd:'드롭박스 URL'},fl('dbx','',{t:'전체'}),fl('dbx','y',{t:'주소 있음'}),fl('dbx','n',{t:'주소 없음'})];
+  if(so.k===v&&v!=='dbx')items.splice(3,0,{t:'기본 순서로',fn:()=>{SCH_ARCH.sort={k:'',dir:1};go();}});
+  menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
 const schArchDbx=r=>{ const d=String(r.dbx||'').trim(); if(d)return d; const u=String(r.url||'').trim(); return /^(https?:\/\/)?(www\.)?dropbox\.com\/\S+/i.test(u)&&!/^dropbox\.com\.{3,}$/.test(u)?u:''; };
 const schArchLink=r=>{ const u=urlHref(r.url); return u&&!/^dropbox\.com\.{3,}$/.test(String(r.url||'').trim())?u:''; };   // the address the title opens, if it opens one
 const schArchText=r=>String(r.body||'').replace(/<[^>]+>/g,' ');
@@ -7585,11 +7668,15 @@ function schArchFind(q){ const docs=[], cards=[]; for(const t of ARCH_TABS)for(c
 function schArchRow(r,t){ const u=schArchLink(r), ttl=esc(oneLine(r.title)), dbx=schArchDbx(r);
   return `<div class="rw" data-open="${r.id}"><div class="ttl">${(r.dot||isFresh(r)||(r.dots||[]).includes('g'))?'<i class="gd"></i>':''}${t?`<span class="ar-cat">${esc(t)}</span>`:''}${u?`<a class="tx ttl-link" href="${esc(u)}" target="_blank" rel="noopener" data-stop title="사이트 열기">${ttl}</a><i class="ttl-ic" title="제목을 누르면 사이트가 새 탭에서 열립니다">${svg('i-sch-link',13,13)}</i>`:`<span class="tx">${ttl}</span>`}<span class="acts"><button class="sh-btn" data-act="open" data-id="${r.id}">열기</button>${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</span></div>
     <div class="who">${(r.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')||'<span class="nil">-</span>'}</div><div class="d">${esc(dateShow(r))}</div><div class="pr"><span class="pri pri-${r.pri||'mid'}">${priTxt[r.pri||'mid']}</span></div><div class="mod">${esc(modTxt(r,true))}</div><div class="src">${schUrlCell(dbx)}</div></div>`; }
-function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), rows=q?found.docs:archList(S.archTab).map(r=>({r,t:''})), total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
+function schArchDocsHtml(found){ const q=SCH_ARCH.q.trim(), c=SCH_ARCH.col, so=SCH_ARCH.sort, key=SCH_ASORT[so.k]; let rows=(q?found.docs:archList(S.archTab).map(r=>({r,t:''}))); const before=rows.length; rows=rows.filter(x=>schArchTest(x.r));
+  if(key)rows=rows.map((x,i)=>({x,i,v:key(x.r)})).sort((a,b)=>((a.v<b.v?-1:a.v>b.v?1:0)*(so.dir||1))||a.i-b.i).map(o=>o.x);
+  const on={who:!!c.who,due:!!c.due,pri:!!c.pri,dbx:!!c.dbx}, th=(k,t)=>`<span data-arcol="${k}" class="${so.k===k?'sorted':''} ${so.k===k&&so.dir<0?'up':''} ${on[k]?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`, chips=schArchChips();
+  const total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
   return `<div class="tabs ${q?'searching':''}" style="--tabn:${ARCH_TABS.length};--tabidx:${Math.max(0,ARCH_TABS.indexOf(S.archTab))}">${plusBtn('addtab','이 구분에 자료 추가').replace('class="sh-btn','data-addrow class="sh-btn')}<button class="tabmenu" data-tabmenu title="탭 추가 · 이름 변경 · 삭제">${svg('i-more2',2.5,13.7)}</button><ul style="height:53.5px">${ARCH_TABS.map(t=>`<li class="${!q&&t===S.archTab?'on':''}" data-tab="${esc(t)}">${esc(t)}${q?`<small>${found.docs.filter(x=>x.t===t).length}</small>`:''}</li>`).join('')}</ul><div class="bar"><i style="left:calc(100%/${ARCH_TABS.length}*${Math.max(0,ARCH_TABS.indexOf(S.archTab))})"></i></div></div>
     ${q?`<div class="ar-note">모든 분류에서 찾은 문서 <b>${rows.length}</b>건 · 분류 이름을 누르면 검색을 지우고 그 분류로 이동</div>`:''}
-    <div class="tbl archive pv"><div class="hd"><span><em>제목</em></span><span><em>담당자</em></span><span><em>기한</em></span><span><em>중요도</em></span><span><em>최종수정일자</em></span><span><em>드롭박스 URL</em></span></div>
-    ${page.map(x=>schArchRow(x.r,x.t)).join('')}${page.length?'':`<div class="none">${q?'검색어에 맞는 문서가 없습니다.':'등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.'}</div>`}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:44px" class="pager')}`; }
+    ${chips?`<div class="ar-chips"><div class="sch-chiprow" data-chips="arch">${chips}</div><span class="n">${rows.length} / ${before}건</span></div>`:''}
+    <div class="tbl archive pv ${chips?'flt':''}"><div class="hd">${th('name','제목')}${th('who','담당자')}${th('due','기한')}${th('pri','중요도')}${th('mod','최종수정일자')}${th('dbx','드롭박스 URL')}</div>
+    ${page.map(x=>schArchRow(x.r,x.t)).join('')}${page.length?'':`<div class="none">${before&&chips?'고른 조건에 맞는 문서가 없습니다. 위의 조건 표시를 눌러 지울 수 있습니다.':q?'검색어에 맞는 문서가 없습니다.':'등록된 자료가 없습니다. 탭 위의 + 버튼으로 추가하세요.'}</div>`}<div class="ft"></div></div>${pager(S.archPage,total,'pg-arch').replace('class="pager','style="margin-top:44px" class="pager')}`; }
 function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
   ARCH_SECTIONS.forEach((sec,si)=>{ if(sec.gone)return; const live=sec.cards.filter(c=>!c.trash&&(!q||found.cards.some(x=>x.c===c))); if(q&&!live.length)return;
     h+=`<div class="asec" style="${n++===0?'padding-top:0':'padding-top:58px'}"><div class="h"><span class="nm" data-secname="${si}">${esc(sec.name)}</span><button class="menu" data-secmenu="${si}">${svg('i-more2',2.5,13.7)}</button></div>`;
@@ -7598,7 +7685,7 @@ function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
       if(!cell){h+=`<div class="cell" style="border-left:0"></div>`;continue;}
       h+=`<div class="cell ${k===0?'first':''} ${cell.add?'addc':''} ${cell.add&&k===0&&r>0?'alone':''}">`;
       if(cell.add)h+=plusBtn('add','자료 추가').replace('class="sh-btn','data-addcard="'+si+'" class="sh-btn');
-      else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic"><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg>${logoImg(cell.c.url)}</div><h4 title="${esc(cell.c.name)}">${urlHref(cell.c.url==='#'?'':cell.c.url)?`<a class="ttl-link" href="${esc(urlHref(cell.c.url))}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc(cell.c.name)}</a>`:esc(cell.c.name)}</h4><p>${esc(cell.c.desc)}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
+      else h+=`<div class="acard" data-acard="${si}:${cell.c.id}"><div class="ic"><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg>${logoImg(cell.c.url)}</div><h4 title="${esc(cell.c.name)}">${urlHref(cell.c.url==='#'?'':cell.c.url)?`<a class="ttl-link" href="${esc(urlHref(cell.c.url))}" target="_blank" rel="noopener" data-stop title="사이트 열기">${esc(cell.c.name)}</a>`:esc(cell.c.name)}</h4><p>${esc(oneLine(cell.c.desc))}</p><button class="more" data-cardmenu="${si}:${cell.c.id}">${svg('i-more2',2.5,13.7)}</button></div>`;
       h+=`</div>`; }
     h+=`</div></div>`; });
   if(q&&!n)h+='<div class="ar-none">검색어에 맞는 참고사이트가 없습니다.</div>';
@@ -7614,6 +7701,8 @@ function schArchRender(){ if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[
 let schArchT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!t||!t.matches||!t.matches('input[data-arq]'))return; SCH_ARCH.q=t.value; S.archPage=1; clearTimeout(schArchT); schArchT=setTimeout(schArchBody,140); });
 document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return; const v=e.target.closest('#arch-pw [data-arview]');
+  { const col=e.target.closest('#arch-pw [data-arcol]'); if(col){ e.stopPropagation(); schArchColMenu(col,col.dataset.arcol); return; }
+    const chip=e.target.closest('#arch-pw [data-archip]'); if(chip){ e.stopPropagation(); delete SCH_ARCH.col[chip.dataset.archip]; S.archPage=1; schArchBody(); return; } }
   if(v){ e.stopPropagation(); SCH_ARCH.view=v.dataset.arview; S.archPage=1; schArchBody(); return; }
   const tab=e.target.closest('#arch-pw .tabs.searching [data-tab]'); if(tab){ SCH_ARCH.q=''; const i=$('#arch-pw input[data-arq]'); if(i){i.value='';const x=i.parentElement.querySelector('.q-x');if(x)x.hidden=true;} }   // the page's own handler then opens that kind
 },true);

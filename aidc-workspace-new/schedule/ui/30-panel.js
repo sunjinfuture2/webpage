@@ -23,11 +23,11 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
   const drv=r.drivers.map(d=>{const e=m.plan.dependencies.find(x=>x.id===d);if(e){const b=m.byId.get(e.from);return `${schNo(b)}) ${b.name} (${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''})`;}return d.startsWith('납기:')?'조달 납기 '+d.slice(3):d;});
   const moved=r.start!==t.plannedStart||r.finish!==t.plannedFinish, why='일정 계산 결과입니다.'+(drv.length?'\n결정 요인: '+drv.join(' · '):'')+(moved?`\n입력한 관리일정: ${schD(t.plannedStart)}${ms?'':' → '+schD(t.plannedFinish)}`:'');
   // one row for the dates (owner: 관리일정 and 예상 기한 said nearly the same): the forecast is shown, what is typed is the managed date behind it
-  const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schD(r.finish)}</span>`:f('plannedFinish',schD(r.finish),E?'완료일 변경\n'+why:why))}</span>`;
+  const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schDto(r.start,r.finish)}</span>`:f('plannedFinish',schDto(r.start,r.finish),E?'완료일 변경\n'+why:why))}</span>`;
   const refs=schRefs(pid,t.id);
   const L=[V('사업명',pill(proj(pid),'nosq').replace('class="pill',`data-go="project:${esc(pid)}" title="프로젝트 페이지로 이동" class="pill`)),
     V('예상 기한'+schInfo('dates'),dates+(done?'':schWhyMark(schDdayHtml(r.finish,false,schLateWhy(m,t)),E,'schp'))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
-    V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schD(t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
+    V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schDto(t.actualStart,t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
     ...(t.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(t.why)}</span>`,'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),   // shown once there is one; it is entered through the "n일 지연" mark above (수정 first)
     V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><button type="button" class="wbno pick" data-schp="wbs-move" title="눌러서 이 단계 안의 다른 자리로 옮기기 · 그 뒤 번호는 한 칸씩 밀립니다">${esc(schNo(t))})</button></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schNo(t))})</span></span>`),
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
@@ -105,9 +105,34 @@ function schPutBefore(d,x,beforeId,pull){ const set=(t,n)=>{ if(n===schKeyNo(t))
   const n=schNoOf(at); let k=n; for(const t of ps){ const v=schNoOf(t); if(v<k)continue; if(v>k)break; set(t,v+1); k=v+1; }
   set(x,n); const prev=all[all.indexOf(at)-1]; x.order=prev?(prev.order+at.order)/2:at.order-1; }
 // The picker of a place: the actions of the phase with their numbers; a press puts the action before that row.
-function schNoPick(el,m,code,selfId,cur,pick){ const g=m.phases.find(x=>x.code===code); if(!g)return; const self=selfId&&m.byId.get(selfId), list=g.tasks.filter(t=>t.id!==selfId).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order), top=Math.max(0,...list.map(schNoOf)), end=self?Math.max(top,schNoOf(self)):top+1;   // (a task that moves leaves its own number behind)
-  return menuPop(el,[{hd:'들어갈 자리 · 고른 번호부터 뒤는 한 칸씩 밀립니다'}].concat(list.map(t=>({k:t.id,sel:cur===t.id,html:`<b class="no">${esc(schNo(t))})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)})),
-    [{k:'end',sel:!cur,html:`<b class="no">${esc(schWbs(code+'.'+end))})</b><span class="phn">맨 뒤</span>`,fn:()=>pick('')}]),{cls:'sch-nopick'}); }
+function schNoPick(el,m,code,selfId,cur,pick,label){ const g=m.phases.find(x=>x.code===code); if(!g)return; const self=selfId&&m.byId.get(selfId), list=g.tasks.filter(t=>t.id!==selfId).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order), top=Math.max(0,...list.map(schNoOf));
+  // The action itself is a row of the list too, at the place it has (or will get): it is pulled to another place (owner, 2026-11-24:
+  // "순서 변경 드래그해서 옮길 수 있게, 애니메이션까지"); a press on another row still puts it before that one.
+  // every row shows the number it has with the action standing where it stands now: for a new action the rows after it are one up already
+  const at=cur?list.findIndex(t=>t.id===cur):-1, i0=at<0?list.length:at, seq=(self?list.concat(self):list).map(schNoOf).sort((x,y)=>x-y); if(!self)seq.push(top+1);
+  const vis=list.slice(); vis.splice(i0,0,null); const lab=k=>esc(schWbs(code+'.'+seq[k]));
+  const rows=vis.map((t,k)=>t?{k:t.id,html:`<b class="no">${lab(k)})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)}:{k:'self',cls:'self',html:`<i class="grip" aria-hidden="true"></i><b class="no">${lab(k)})</b><span class="phn">${esc(self?self.name:(label||'이 액션'))}</span>`});
+  const pop=menuPop(el,[{hd:'들어갈 자리 · 초록 줄을 끌어서 옮기거나 다른 줄을 누르면 그 앞으로 들어갑니다. 뒤 번호는 한 칸씩 밀립니다'}].concat(rows,i0<list.length?[{k:'end',cls:'end',html:`<b class="no"></b><span class="phn">맨 뒤로 보내기</span>`,fn:()=>pick('')}]:[]),{cls:'sch-nopick'});
+  { const s=pop.querySelector('.it[data-k="self"]'), e2=pop.querySelector('.it[data-k="end"]'); if(s){s.classList.add('self');s.title='끌어서 자리 옮기기';} if(e2)e2.classList.add('end'); if(s&&s.scrollIntoView)s.scrollIntoView({block:'nearest'}); }
+  schNoDrag(pop,pick); return pop; }
+// Pulling the own row of that menu: it follows the pointer, the rows it passes slide out of its way and every row shows the number
+// it would get; let go, it settles and the place is taken (the row it now stands before, or the end). A pull of less than 4 px is
+// a press and does nothing. The menu scrolls when the pointer nears its upper or lower edge.
+function schNoDrag(pop,pick){ const self=pop.querySelector('.it.self'); if(!self)return; let d=null, eat=false;
+  const others=()=>[...pop.querySelectorAll('.it[data-k]')].filter(x=>x!==self&&!x.classList.contains('end'));
+  const place=()=>{ const dy=d.y-d.y0+(pop.scrollTop-d.s0), j=Math.max(0,Math.min(d.n-1,Math.round(d.i0+dy/d.h))); self.style.transform=`translateY(${dy}px)`; if(j===d.j)return; d.j=j;
+    d.rest.forEach((r,k)=>{ const idx=k<d.i0?k:k+1, sh=idx>d.i0&&idx<=j?-d.h:idx<d.i0&&idx>=j?d.h:0; r.style.transform=sh?`translateY(${sh}px)`:''; });
+    const order=d.rest.slice(); order.splice(j,0,self); order.forEach((r,k)=>{ const b=r.querySelector('.no'); if(b)b.textContent=d.nos[k]; }); };
+  const edge=()=>{ if(!d)return; const r=pop.getBoundingClientRect(), v=d.y<r.top+26?-7:d.y>r.bottom-26?7:0; if(v){ const was=pop.scrollTop; pop.scrollTop+=v; if(pop.scrollTop!==was)place(); } d.raf=requestAnimationFrame(edge); };
+  self.addEventListener('pointerdown',e=>{ if(e.button||d)return; e.preventDefault(); const rest=others(), all=[...pop.querySelectorAll('.it[data-k]')].filter(x=>!x.classList.contains('end')), i0=all.indexOf(self), h=self.getBoundingClientRect().height;
+    d={y0:e.clientY,y:e.clientY,s0:pop.scrollTop,i0,j:i0,n:all.length,h,rest,nos:all.map(r=>(r.querySelector('.no')||{}).textContent||''),moved:false,id:e.pointerId}; try{self.setPointerCapture(e.pointerId);}catch(_){} });
+  self.addEventListener('pointermove',e=>{ if(!d||e.pointerId!==d.id)return; d.y=e.clientY; if(!d.moved){ if(Math.abs(d.y-d.y0)<4)return; d.moved=true; pop.classList.add('dragging'); self.classList.add('drag'); d.raf=requestAnimationFrame(edge); } place(); });
+  const done=e=>{ if(!d||e.pointerId!==d.id)return; const x=d; d=null; cancelAnimationFrame(x.raf); try{self.releasePointerCapture(x.id);}catch(_){} if(!x.moved)return; eat=true; setTimeout(()=>{eat=false;},400);
+    self.classList.add('drop'); self.style.transform=`translateY(${(x.j-x.i0)*x.h}px)`;
+    const next=x.rest[x.j], before=next?next.dataset.k:''; if(e.type==='pointercancel'||x.j===x.i0){ setTimeout(()=>{ pop.classList.remove('dragging'); self.classList.remove('drag','drop'); self.style.transform=''; x.rest.forEach(r=>{r.style.transform='';}); [...pop.querySelectorAll('.it[data-k]')].filter(r=>!r.classList.contains('end')).forEach((r,k)=>{const b=r.querySelector('.no');if(b)b.textContent=x.nos[k];}); },170); return; }
+    setTimeout(()=>{ closePop(); pick(before); },html.classList.contains('mp-calm')?0:190); };
+  const html=document.documentElement; self.addEventListener('pointerup',done); self.addEventListener('pointercancel',done);
+  pop.addEventListener('click',e=>{ const it=e.target.closest('.it'); if(eat||(it&&it===self)){ e.stopPropagation(); e.preventDefault(); } },true); }
 // The list of phases of a picker: a press chooses one; the x of a row removes that phase; below it "new" and the rename of the chosen one.
 function schPhasePick(el,pid,m,sel,pick,after){ const p=menuPop(el,m.phases.map(g=>({k:g.code,sel:sel===g.code,html:`<span class="phn">${esc(schPhaseLabel(g))}</span><button type="button" class="phx" data-phx="${esc(g.code)}" title="이 단계 삭제" aria-label="${esc(schPhaseLabel(g))} 단계 삭제">${svg('i-x',8,8)}</button>`,fn:()=>pick(g.code,g.label)}))
     .concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>pick(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===sel),after)),{cls:'sch-phpick'});
@@ -162,7 +187,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='more'){SCHP.more=!SCHP.more;if(it.editing&&schOwn(it))schPropsRefresh(it);else rerenderItem(it.id);return;}
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.
   if(k==='wbs-at'){ if(!canEditItem(it)||schOwn(it)||!it.phase)return; e.stopPropagation(); const at=it.wbsAt&&m.byId.get(it.wbsAt);   // where a new action goes in its phase
-    schNoPick(el,m,it.phase,'',at&&at.phase===it.phase?at.id:'',id=>{ if(id)it.wbsAt=id; else delete it.wbsAt; it.dirty=true; rerenderItem(it.id); }); return; }
+    schNoPick(el,m,it.phase,'',at&&at.phase===it.phase?at.id:'',id=>{ if(id)it.wbsAt=id; else delete it.wbsAt; it.dirty=true; rerenderItem(it.id); },(it.title||'').split('\n').join(' ').trim()||'새 액션'); return; }
   if(k==='link-phase'||k==='link-task'){ if(!canEditItem(it))return; e.stopPropagation(); const cur=it.task&&m.byId.get(it.task), again=()=>{it.dirty=true;rerenderItem(it.id);};
     const setPhase=code=>{ if(it.phase!==code)delete it.wbsAt; it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
     if(k==='link-phase'){ schPhasePick(el,pid,m,(cur?cur.phase:it.phase)||'',code=>setPhase(code),(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();}); return; }

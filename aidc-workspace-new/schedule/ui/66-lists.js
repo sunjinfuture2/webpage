@@ -66,7 +66,7 @@ function schResMenu(el,k){ const c=schRf(), pid=S.page==='project'?S.proj:null, 
   else items=[fl('',{t:k==='when'?'전체 기간':'첨부 전체'}),...Object.entries(SCH_RF[k][1]).map(([v,t])=>fl(v,{t}))];
   if(k==='when')items.push('-',{t:'직접 설정…',sel:c.when==='range',fn:()=>schRangePick(el,c.from||'',c.to||'',(a,b)=>{ if(a||b){c.when='range';c.from=a;c.to=b;} else{delete c.when;delete c.from;delete c.to;} go(); })});
   menuPop(el,items.map((x,i)=>x==='-'?x:({...x,k:String(i)})),{cls:'sch-colmenu'}); }
-const schRangeTxt=c=>`${c.from?schD(c.from):'처음'} ~ ${c.to?schD(c.to):'오늘'}`;
+const schRangeTxt=c=>`${c.from?schD(c.from):'처음'} ~ ${c.to?schDto(c.from,c.to):'오늘'}`;
 // Two months side by side: the first press is the first day, the second the last (pressing an earlier day starts over), the days
 // between are shaded while the pointer moves. 적용 hands both back; 지우기 hands back none.
 function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m]=(a||TODAY).split('-').map(Number);
@@ -74,7 +74,7 @@ function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m
     const hi=b||(a&&hov&&hov>=a?hov:'');
     for(let n=1;n<=dim;n++){ const ds=ymd(yy,mm,n), cls=[ds===a?'a':'',ds===b?'b':'',a&&hi&&ds>a&&ds<hi?'in':'',!b&&a&&ds===hi&&ds!==a?'hv':'',ds===TODAY?'tdy':''].filter(Boolean).join(' '); g+=`<button data-rd="${ds}" class="${cls}">${n}</button>`; }
     return g+'</div></div>'; };
-  const draw=()=>{ const m2=m===12?1:m+1, y2=m===12?y+1:y; return `<div class="rp"><div class="rp-h"><button data-rn="-1" aria-label="이전 달">‹</button><span class="rp-s"><em class="${a?'':'ph'}">${a?schD(a):'시작일'}</em>${svg('i-sch-arr',12,8)}<em class="${b?'':'ph'}">${b?schD(b):'종료일'}</em></span><button data-rn="1" aria-label="다음 달">›</button></div><div class="rp-ms">${month(y,m)}${month(y2,m2)}</div><div class="rp-f"><span>${!a?'시작일을 누르세요':!b?'종료일을 누르세요':'기간이 정해졌습니다'}</span><button data-rx="clear">지우기</button><button data-rx="ok" class="pri" ${a?'':'disabled'}>적용</button></div></div>`; };
+  const draw=()=>{ const m2=m===12?1:m+1, y2=m===12?y+1:y; return `<div class="rp"><div class="rp-h"><button data-rn="-1" aria-label="이전 달">‹</button><span class="rp-s"><em class="${a?'':'ph'}">${a?schD(a):'시작일'}</em>${svg('i-sch-arr',12,8)}<em class="${b?'':'ph'}">${b?schDto(a,b):'종료일'}</em></span><button data-rn="1" aria-label="다음 달">›</button></div><div class="rp-ms">${month(y,m)}${month(y2,m2)}</div><div class="rp-f"><span>${!a?'시작일을 누르세요':!b?'종료일을 누르세요':'기간이 정해졌습니다'}</span><button data-rx="clear">지우기</button><button data-rx="ok" class="pri" ${a?'':'disabled'}>적용</button></div></div>`; };
   const p=openPop(anchor,draw(),{cls:'sch-rp'}), redraw=()=>{p.innerHTML=draw();};
   p.addEventListener('click',e=>{ e.stopPropagation(); const t=e.target.closest('button'); if(!t)return;
     if(t.dataset.rn){ m+=+t.dataset.rn; if(m<1){m=12;y--;} if(m>12){m=1;y++;} redraw(); }

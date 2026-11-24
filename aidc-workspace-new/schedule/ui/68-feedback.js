@@ -14,7 +14,7 @@ function schCardHide(){ clearTimeout(schCardT); const c=$('#sch-card'); if(c)c.r
 // o: {title, focus (task id), want (the start that was asked for, to say when a predecessor holds the task)}
 function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D=AIDCSchedule.dates, moved=[];
   for(const t of m.plan.tasks){ const a=snap.t[t.id], r=m.res.tasks[t.id]; if(a&&(a[0]!==r.start||a[1]!==r.finish))moved.push({t,a,b:[r.start,r.finish],dl:D.diffDays(r.finish,a[1])}); }
-  const f=o.focus&&m.byId.get(o.focus), fm=moved.find(x=>x.t.id===o.focus), others=moved.filter(x=>x.t.id!==o.focus), opD=m.res.operationDate&&snap.op?D.diffDays(m.res.operationDate,snap.op):0, rg=(x,t)=>t.kind==='milestone'?schD(x[0]):`${schD(x[0])} → ${schD(x[1])}`;
+  const f=o.focus&&m.byId.get(o.focus), fm=moved.find(x=>x.t.id===o.focus), others=moved.filter(x=>x.t.id!==o.focus), opD=m.res.operationDate&&snap.op?D.diffDays(m.res.operationDate,snap.op):0, rg=(x,t)=>t.kind==='milestone'?schD(x[0]):`${schD(x[0])} → ${schDto(x[0],x[1])}`;
   const held=f&&o.want&&m.res.tasks[f.id].start!==o.want;
   schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.dataset.pid=pid; c.setAttribute('role','status');
   c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>

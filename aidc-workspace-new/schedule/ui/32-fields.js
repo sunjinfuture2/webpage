@@ -10,13 +10,13 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   const arrow=svg('i-sch-arr',11,8,'color:#4f4f4f;margin:0 2px'), end=itemEnd(it), ms=!!it.ms, links=SCHP.tab==='links';
   const tabs=`<div class="sp-tabs"><button class="${links?'':'on'}" data-schp="atab" data-k="info">정보</button><button class="${links?'on':''}" data-schp="atab" data-k="links">연결된 액션<small>${t?(m.pred.get(t.id).length+m.succ.get(t.id).length||''):''}</small></button></div>`;
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
-  const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
+  const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schDto(it.date,end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
     :E?schStageEdit(m,g,t,it)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
-    V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schD(it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
+    V('실제 기한',!E&&!it.actualStart&&!it.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',it.actualStart?schD(it.actualStart):ph('시작일'),'실제 시작일')}${ms?'':arrow+f('actualFinish',it.actualFinish?schDto(it.actualStart,it.actualFinish):ph('완료일'),'실제 완료일')}</span>`),
     ...(it.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(it.why)}</span>`,'지연 사유'),'wide')]:[]),
     V('개발 단계',stage),V('마일스톤',f('ms',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-pick="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-pick="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
