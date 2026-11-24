@@ -2982,6 +2982,9 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-on .pcard.rep h3 .pnm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sch-on .pcard.rep h3 .gtag{margin:1px 0 0}
 .sch-on .gtag.gfo{background:#fdecee;color:#d9202e}
+/* resting on a card underlines its name only, not the badges after it */
+.sch-on .pcard.rep:hover h3{text-decoration:none}
+.sch-on .pcard.rep:hover h3 .pnm{text-decoration:underline}
 /* a star that is not on is white, inside and out (the old grey line is gone); the shadow keeps it readable on a pale picture */
 .sch-on .pcard.rep .pstar{filter:drop-shadow(0 0 1.8px rgba(0,0,0,.5)) drop-shadow(0 1px 1.5px rgba(0,0,0,.18))}
 </style>
