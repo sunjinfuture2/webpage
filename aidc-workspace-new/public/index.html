@@ -6399,6 +6399,11 @@ function schNoPick(el,m,code,selfId,cur,pick,label){ const g=m.phases.find(x=>x.
   // every row shows the number it has with the action standing where it stands now: for a new action the rows after it are one up already
   const at=cur?list.findIndex(t=>t.id===cur):-1, i0=at<0?list.length:at, seq=(self?list.concat(self):list).map(schNoOf).sort((x,y)=>x-y); if(!self)seq.push(top+1);
   const vis=list.slice(); vis.splice(i0,0,null); const lab=k=>esc(schWbs(code+'.'+seq[k]));
+  // Before the place is taken a window asks once more (owner, 2026-11-24: "자리 옮길 때 옮길 거냐고 물어봐"): from which number to
+  // which; 취소 leaves everything as it was. The same for a row that was pressed and for a row that was pulled.
+  const name=self?self.name:(label||'이 액션'), take=pick; pick=beforeId=>{ const j=beforeId?list.findIndex(t=>t.id===beforeId):list.length; if(j<0||j===i0)return;
+    const from=schWbs(code+'.'+seq[i0]), to=schWbs(code+'.'+seq[j>i0?j-1:j]);
+    confirmDlg(self?`“${name}” 액션을 ${from} 자리에서 ${to} 자리로 옮길까요? 그 사이 번호는 한 칸씩 밀립니다.`:`“${name}” 액션을 ${from} 대신 ${to} 자리에 넣을까요? 저장하면 그 뒤 번호는 한 칸씩 밀립니다.`,[{t:'옮기기',pri:true,fn:()=>take(beforeId)},{t:'취소',fn:()=>{}}]); };
   const rows=vis.map((t,k)=>t?{k:t.id,html:`<b class="no">${lab(k)})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)}:{k:'self',cls:'self',html:`<i class="grip" aria-hidden="true"></i><b class="no">${lab(k)})</b><span class="phn">${esc(self?self.name:(label||'이 액션'))}</span>`});
   const pop=menuPop(el,[{hd:'들어갈 자리 · 초록 줄을 끌어서 옮기거나 다른 줄을 누르면 그 앞으로 들어갑니다. 뒤 번호는 한 칸씩 밀립니다'}].concat(rows,i0<list.length?[{k:'end',cls:'end',html:`<b class="no"></b><span class="phn">맨 뒤로 보내기</span>`,fn:()=>pick('')}]:[]),{cls:'sch-nopick'});
   { const s=pop.querySelector('.it[data-k="self"]'), e2=pop.querySelector('.it[data-k="end"]'); if(s){s.classList.add('self');s.title='끌어서 자리 옮기기';} if(e2)e2.classList.add('end'); if(s&&s.scrollIntoView)s.scrollIntoView({block:'nearest'}); }

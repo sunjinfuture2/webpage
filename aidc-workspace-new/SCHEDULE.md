@@ -775,3 +775,10 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   both start 76.7 below the top of the section (renderProject sets the row's `top` and the section's height 371.4 for the
   combined page; the `?v=1` page keeps 57.4 / 352.1), the soft edges and the arrows moved down with them.
 - tests/schedule-15.cjs (25 checks).
+
+## The place menu asks before it moves (owner, 2026-11-24)
+
+- A row pressed or the own row pulled and let go in the place menu of an action (schNoPick) no longer takes the place at
+  once: a window says from which number to which ("…1-6 자리에서 1-2 자리로 옮길까요?", for a new action "…1-17 대신 1-3 자리에
+  넣을까요?") with 옮기기 / 취소. 취소 changes nothing; the same place as before asks nothing.
+- tests/schedule-13.cjs (74 checks).
