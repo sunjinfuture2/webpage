@@ -119,9 +119,17 @@ function schKeepScroll(){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-sc
 function schRestoreScroll(k){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-scroll');if(g&&k.gx!=null){g.scrollLeft=k.gx;g.scrollTop=k.gy;}if(n&&k.nx!=null){n.scrollLeft=k.nx;n.scrollTop=k.ny;}}
 
 /* ---------- formatters ---------- */
+const schD2=d=>d?dateDot(d).slice(2):'';                                           // 2026-11-02 -> 26. 11. 02: only the rows of the list beside the calendar (owner, 2026-11-24)
 const schD=d=>d?dateDot(d):'';                                                     // 2026-11-02 -> 2026. 11. 02 (owner, 2026-11-23: one way to write a date everywhere)
 const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schD(b)}</span></span>`;
 const schWbs=w=>String(w||'').replace(/^W/,'').replace('.','-');                    // W1.1 -> 1-1 (display only)
+// The number a task SHOWS. Its `wbs` is the key the calculation (W8.6), the gates, the procurement sheet and the workbook know it
+// by, so it never changes. When an action is put in between (owner, 2026-11-24: "끼워넣을 수 있게, 그 다음부턴 밀리는 식으로"),
+// the tasks after it carry `no`: the number they show within their phase. Everything that shows a number goes through schNo.
+const schKeyNo=t=>Number(String(t&&t.wbs||'').split('.')[1])||0;
+const schNoOf=t=>(t&&Number(t.no))||schKeyNo(t);
+const schWk=t=>t?(Number(t.no)?String(t.wbs).split('.')[0]+'.'+Number(t.no):String(t.wbs||'')):'';     // in the workbook's form (W1.5)
+const schNo=t=>schWbs(schWk(t));
 const schPhaseNo=c=>String(c||'').replace(/^W/,'');
 const schPhaseName=l=>String(l||'').replace(/^\d+\s*/,'');                          // "1 사업정의·RFP" -> "사업정의·RFP"
 const schPhaseLabel=g=>`${schPhaseNo(g.code)}) ${schPhaseName(g.label)}`;
@@ -152,7 +160,7 @@ function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==
   return '<span class="sch-role none">미지정</span>'; }   // owner, 2026-11-19: nothing else is written where nobody is assigned
 // the whole page knows that the preview is on (styles of the item panel that only the preview changes hang on this)
 if(schPreview())document.documentElement.classList.add('sch-on');
-const schTaskTitle=t=>`${schWbs(t.wbs)}) ${t.name}`;
+const schTaskTitle=t=>`${schNo(t)}) ${t.name}`;
 const schMine=t=>!!sharedUser&&schPeople(t).includes(sharedUser);
 const schOpen=(m,t)=>!AIDCSchedule.progress.isDone(t);
 const schLate=(m,t)=>schOpen(m,t)&&m.res.tasks[t.id].finish<schToday();

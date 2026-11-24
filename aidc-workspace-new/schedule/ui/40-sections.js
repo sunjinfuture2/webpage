@@ -10,7 +10,7 @@ const SCH_GATE_ST=['확인 전','준비 중','검토 요청','승인','보완·�
 const SCH_EV=[['commitmentReviews','보완·확약'],['assumptionsAndReferences','전제·근거'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS 일정검토'],['offtakers','오프테이커 후보'],['sourceMappings','원자료 대조']];
 const SCH_EV_ST=['확인 필요','확인 중','반영 완료','조건부 미발동','보류'];
 // "W7.10~W7.18", "W6.8/W6.27" ...: every WBS in a text becomes a link to its task
-function schWbsLinks(m,text){ return esc(String(text??'')).replace(/W(\d+)\.(\d+)/g,(w,a,b)=>{const t=m.byWbs.get(w);return t?`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(schTaskTitle(t))}">${a}-${b}</a>`:`${a}-${b}`;}); }
+function schWbsLinks(m,text){ return esc(String(text??'')).replace(/W(\d+)\.(\d+)/g,(w,a,b)=>{const t=m.byWbs.get(w);return t?`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(schTaskTitle(t))}">${schNo(t)}</a>`:`${a}-${b}`;}); }   // (a text names a task by its key; it shows the number the task shows now)
 const schDayOnly=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}/.test(v)?v.slice(0,10):'';
 const schPkgNo=x=>String(x.id).replace(/^\D+/,'')||x.id;
 const schSrcFields=(pid,kind,i)=>(((SCH.src[pid]||{})[kind]||[])[i]||{}).fields||{};
@@ -47,7 +47,7 @@ function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.pro
   let h=`<div class="sch-filters">${schSf('procState',SCHU.procState||'전체 상태',!!SCHU.procState)}<div class="right">${schXlBtn('proc')}</div></div>
     <div class="tbl sch-proc"><div class="hd">${th('No.')}${th('설비')}${th('계약·PO 업무')}${th('예상 PO → 예상 설치완료')}${th('PO 추가지연')}${th('상태')}${th('담당자')}${th('운영 여유')}${th('확약 납기')}</div>`;
   for(const x of list){ const po=m.byId.get(x.poTaskId), pr=m.res.tasks[x.poTaskId], ins=m.res.tasks[x.installTaskId], f=schSrcFields(pid,'procurementPackages',x.sourceIndex), ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
-    h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schWbs(po.wbs)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
+    h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schNo(po)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
       <div class="rg">${pr&&ins?schRange(pr.start,ins.finish):'-'}</div><div class="dl"><span class="sf-e" data-schc="pdelay" data-k="${esc(x.id)}" title="PO 추가지연 (일) 변경">${x.delay?x.delay+'일':'-'}</span></div>
       <div>${schStateMark(x.commitment||'미확약','sf-e',`data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경"`)}</div>
       <div class="who">${ppl.length?ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>

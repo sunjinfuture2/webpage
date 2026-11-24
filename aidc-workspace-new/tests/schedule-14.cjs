@@ -3,7 +3,8 @@
 //  - the image of a project card can be taken away;
 //  - a section of the 자료실 goes to the trash with its cards (restoring a card brings it back), an empty one is simply removed;
 //  - a research 구분 and a partner 구분 can be renamed everywhere at once;
-//  - choosing a partner 구분 (or searching the partners) leaves the screen where it is (2026-11-24).
+//  - choosing a partner 구분 (or searching the partners) leaves the screen where it is (2026-11-24);
+//  - the list beside the project calendar (short year in its rows) and one gap for the research cards (2026-11-24).
 // (The upload window with one master field and six rows is in tests/schedule-12.cjs.)
 // Needs wrangler dev on 127.0.0.1:8787.
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
@@ -115,6 +116,18 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   await a.click('#toast button'); await sleep(500);
   await ev(() => { S.editSimple = null; closePanel(true); render(true); }); await sleep(400);
   check('되돌리기 puts every partner back', await ev(was => JSON.stringify(PARTNERS.filter(p => !p.trash).map(p => [p.id, p.cat])) === JSON.stringify(was), pc.was));
+
+  console.log('— the list beside the project calendar; the gaps of the research cards');
+  // (owner, 2026-11-24: the assignee 3 px nearer, the date of a row as yy. mm. dd, the date above at the left; one gap for the cards.)
+  await ev(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 20000 }); await sleep(800);
+  const rl = await ev(() => { const l = document.querySelector('.page.on .rlist.sch'), z = LAYOUT.zoom || 1, X = e => e.getBoundingClientRect(), row = l.querySelector('.ra'), d = l.querySelector('.rdate'), ln = l.querySelector('.rline');
+    return { date: d.textContent, left: Math.round((X(d).left - X(ln).left) / z), above: X(d).bottom <= X(ln).top, rows: l.querySelectorAll('.ra').length, dts: [...l.querySelectorAll('.ra .dt')].map(x => x.textContent), oneLine: [...l.querySelectorAll('.ra .dt')].every(x => X(x).height / z < 24), av: row ? Math.round((X(row.querySelector('.avstack')).left - X(row.querySelector('.tt')).right) / z) : null, end: row ? Math.round((X(ln).right - X(row.querySelector('.dt')).right) / z) : null }; });
+  check('the date above the list is whole (yyyy. mm. dd) and stands at the left end of the line', /^\d{4}\. \d{2}\. \d{2} \(.\)$/.test(rl.date) && Math.abs(rl.left) <= 1 && rl.above, rl);
+  check('a row writes its date as yy. mm. dd on one line, at the right end; the assignee is 7 from the title', rl.rows > 0 && rl.dts.every(x => /^\d{2}\. \d{2}\. \d{2}$/.test(x)) && rl.oneLine && rl.av === 7 && Math.abs(rl.end) <= 1, rl);
+  await ev(() => go('main')); await sleep(700);
+  const rg = await ev(() => { const g = document.querySelector('.page.on #sec-research .rgrid'), cs = [...g.querySelectorAll('.rcard')].map(c => c.getBoundingClientRect()), cols = new Set(cs.map(r => Math.round(r.left))).size, z = LAYOUT.zoom || 1;
+    return { n: cs.length, cols, col: cs.slice(1, cols).map((r, i) => Math.round((r.left - cs[i].right) / z * 100) / 100), row: cs.length > cols ? Math.round((cs[cols].top - Math.max(...cs.slice(0, cols).map(r => r.bottom))) / z * 100) / 100 : null }; });
+  check('research cards: the same gap between columns and between rows', rg.cols > 1 && rg.col.every(x => x === 15) && rg.row === 15, rg);
 
   console.log('— choosing a partner 구분 leaves the screen where it is');
   // (owner, 2026-11-24: the list's title was pulled to the very top of the screen, and a shorter list let the page slide.)

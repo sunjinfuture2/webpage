@@ -18,10 +18,10 @@ function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D
   const held=f&&o.want&&m.res.tasks[f.id].start!==o.want;
   schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.dataset.pid=pid; c.setAttribute('role','status');
   c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>
-    ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schWbs(f.wbs))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
+    ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schNo(f))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
     ${held?`<div class="c-note">선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(m.res.tasks[f.id].start)}입니다.</div>`:''}${o.note?`<div class="c-note">${esc(o.note)}</div>`:''}
     <div class="c-facts"><span class="${others.length?'on':''}">함께 바뀐 업무 <b>${others.length}</b>건</span><span class="${opD>0?'late':opD<0?'early':''}">운영개시 예상 <b>${schD(m.res.operationDate)}</b>${opD?` (${opD>0?'+':''}${opD}일)`:' · 변화 없음'}</span></div>
-    ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schWbs(x.t.wbs))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
+    ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schNo(x.t))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
     <div class="c-bt">${others.length?'<button data-card="more">바뀐 업무 보기</button>':''}<span class="sp"></span><button class="pri" data-card="undo">되돌리기</button></div>`;
   document.body.appendChild(c);
   // it stays until it is closed (owner, 2026-11-20): 되돌리기 must not slip away while one is still looking at what moved
@@ -56,7 +56,7 @@ function schBarDrag(e,bar){ const pid=S.proj, m=schModel(pid), host=$('#sch-gant
     la.textContent=schD(a); la.style.cssText=`left:${ms?L+9.35:L}px;top:${top}px`; la.className='sg-dlab '+(ms?'c':'l')+(mode!=='end'&&days?' on':''); if(lb){ lb.textContent=schD(b); lb.style.cssText=`left:${L+W}px;top:${top}px`; lb.className='sg-dlab r'+(mode!=='start'&&days?' on':''); }
     tip.innerHTML=`<b>${days>0?'+':''}${days}일</b>${mode==='move'?'기간 이동':mode==='start'?'시작일 변경':'종료일 변경'}${ms?'':` · ${D.diffDays(b,a)+1}일간`}`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; SCH.drag=false; for(const n of [tip,ghost,la,lb])if(n)n.remove(); if(!moved)return; swallowClick(); bar.classList.remove('drag'); bar.style.left=left0+'px'; if(!ms)bar.style.width=w0+'px'; if(lock||!days)return;
-    const len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schWbs(t.wbs); let label, want=null, fn, note;
+    const len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schNo(t); let label, want=null, fn, note;
     if(mode==='move'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 기간 이동 ${sign}`; note=`막대를 ${sign} 옮겼습니다 · 시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);}; }
     else if(mode==='start'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 시작일 ${sign}`; note=`시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=D.addDays(ns,Math.max(0,span-days));}; }
     else { label=`${w} 종료일 ${sign}`; note=`완료일 ${schD(r.finish)} → ${schD(D.addDays(r.finish,days))}`; fn=x=>{x.plannedFinish=D.addDays(x.plannedFinish,days);}; }
@@ -77,7 +77,7 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
       // exactly the line the chart will draw for this pair and this kind (out of the end that was pulled, into the half under the pointer)
       const ga=host._rows.get(from), gb=host._rows.get(target.dataset.bar), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined?schLinkPath(ga,gb,kind()):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else { const tx=(toEnd==='s'?r.left:r.right)-b.left, ty=r.top+r.height/2-b.top; line.setAttribute('d',`M${x0},${y0} L${tx/z},${ty/z}`); head.setAttribute('d',''); }
-      tip.innerHTML=`<b>${kind()}</b>${esc(schWbs(ta.wbs))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schWbs(tb.wbs))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
+      tip.innerHTML=`<b>${kind()}</b>${esc(schNo(ta))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schNo(tb))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
     else { // not on a bar yet: the same rule towards the pointer (down from the task, a round turn, into where the pointer is)
       const ga=host._rows.get(from), c=ga&&ga.x1!==undefined?schLinkPath(ga,{cy:my,cx:mx,x1:mx+2,x2:mx-2,top:my-11,bottom:my+11,ms:false},fromEnd==='f'?'FS':'SS'):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else {line.setAttribute('d',`M${x0},${y0} L${mx},${my}`); head.setAttribute('d','');}
@@ -94,7 +94,7 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
 function schLinkPull(e,g){ const pid=S.proj, m=schModel(pid), rel=m&&m.plan.dependencies.find(x=>x.id===g.dataset.link), svgEl=g.ownerSVGElement; if(!rel||!svgEl)return;
   const net=!!g.closest('#sch-net'), host=net?null:$('#sch-gantt .sg-scroll'), rows=host&&host._rows; if(!net&&!rows)return;
   e.preventDefault();   // no text selection and no drag of a selection left on the page by something else: either would swallow the pointer's moves
-  const NS='http://www.w3.org/2000/svg', x0=e.clientX, y0=e.clientY, z=LAYOUT.zoom||1, A=AIDCSchedule, W=id=>schWbs(m.byId.get(id).wbs);
+  const NS='http://www.w3.org/2000/svg', x0=e.clientX, y0=e.clientY, z=LAYOUT.zoom||1, A=AIDCSchedule, W=id=>schNo(m.byId.get(id));
   const pt=net?((x,y)=>{const M=svgEl.getScreenCTM();return M?[(x-M.e)/M.a,(y-M.f)/M.d]:[0,0];}):((x,y)=>{const b=svgEl.getBoundingClientRect();return [(x-b.left)/z,(y-b.top)/z];});
   let loose='to';   // which end comes loose: the half of the line that was taken hold of
   try{ const hp=g.querySelector('path.hit')||g.querySelector('path'), L=hp.getTotalLength(), p0=pt(x0,y0); let best=Infinity, at=1; for(let i=0;i<=40;i++){ const q=hp.getPointAtLength(L*i/40), dd=Math.hypot(q.x-p0[0],q.y-p0[1]); if(dd<best){best=dd;at=i/40;} } loose=at<.5?'from':'to'; }catch(_){}
@@ -157,7 +157,7 @@ function schNetLink(e,card){ const pid=S.proj, m=schModel(pid), from=card&&card.
   const move=ev=>{ const r=card.getBoundingClientRect(), a=pt(r.right,r.top+r.height*SN.port/SN.h), el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-net .sn-node'); if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.k!==from?hit:null;
     let b=pt(ev.clientX,ev.clientY); if(target){ target.classList.add('target'); const q=target.getBoundingClientRect(); b=pt(q.left,q.top+q.height*SN.port/SN.h); }
     const mid=(a[0]+b[0])/2; line.setAttribute('d',`M${a[0]},${a[1]} C${mid},${a[1]} ${mid},${b[1]} ${b[0]},${b[1]}`);
-    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=target?`<b>FS</b>${esc(schWbs(m.byId.get(from).wbs))} 끝나면 → ${esc(schWbs(m.byId.get(target.dataset.k).wbs))} 시작 · 놓으면 결과를 먼저 보여 줍니다`:'연결할 업무 카드에 놓으세요'; };
+    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=target?`<b>FS</b>${esc(schNo(m.byId.get(from)))} 끝나면 → ${esc(schNo(m.byId.get(target.dataset.k)))} 시작 · 놓으면 결과를 먼저 보여 줍니다`:'연결할 업무 카드에 놓으세요'; };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; card.classList.remove('linking'); if(line)line.remove(); if(tip)tip.remove(); swallowClick(); if(!target)return; target.classList.remove('target');
     schPropose(pid,{kind:'new',from,to:target.dataset.k,type:'FS'}); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }

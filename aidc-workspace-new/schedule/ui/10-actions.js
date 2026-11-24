@@ -50,7 +50,7 @@ function schItemTest(i,q){ const c=schCf(), done=i.st==='done', a=i.date||'', b=
   return schSpanTest(c,a,b)&&schDueTest(c,b,done); }
 // The tasks the three views show, in WBS order (cols: also what the list's column titles filter by).
 function schFiltered(m,cols){ const q=(SCHU.q||'').trim();
-  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!cols||schColTest(m,t))&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs),t.status,...schPeople(t).map(userName)))); }
+  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!cols||schColTest(m,t))&&(!q||matchQ(q,t.name,schWk(t),schNo(t),t.status,...schPeople(t).map(userName)))); }
 const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who||(SCHU.tab==='list'&&schCfOn());
 
 // What is filtered shows beside the title, each with an x that takes it off (owner, 2026-11-19: as the partner list does).
@@ -121,9 +121,9 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   const grouped=SCHU.sort==='wbs', gOf=row=>row.t?row.t.phase:(row.i._ord<1e9?row.i.phase:'none'), gN=new Map(); if(grouped)for(const row of rows){const k=gOf(row);gN.set(k,(gN.get(k)||0)+1);} let gLast=null;
   for(const row of page){ if(grouped){ const k=gOf(row); if(k!==gLast){ gLast=k; const g=m.phases.find(x=>x.code===k); h+=`<div class="gr" data-g="${esc(k)}"><b>${k==='none'?'일정 미연결':esc(g?schPhaseLabel(g):k)}</b><em>${gN.get(k)}</em></div>`; } }
     if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
-    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schWbs(t.wbs)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
+    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schNo(t)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${schD(t.plannedStart)}</div><div class="rg">${t.kind==='milestone'||!t.plannedFinish?'<span class="nil">-</span>':schD(t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false,schLateWhy(m,t))}</div><div class="url">${urlCell(t.url)}</div></div>`;
-    for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schWbs(t.wbs)}`); }
+    for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schNo(t)}`); }
   if(!page.length)h+=`<div class="none">${schFiltering()||SCHU.phase?'조건에 맞는 액션이 없습니다.':'등록된 업무가 없습니다.'}</div>`;
   return h+`<div class="ft"></div></div>${schPager(SCHU.page,total,'page',32)}`; }
 // The menu of a column title: how to order by that column and what to keep.
@@ -214,14 +214,14 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
       if(!r.open)for(const t of g.tasks)if(t.kind==='milestone'){const x=X(m.res.tasks[t.id].start);if(x>=0&&x<=TW)R+=`<i class="sg-dia ${P.isDone(t)?'done':''} ${t.id===sel?'sel':''}" style="left:${x-3.6}px;top:${r.y+20.4}px" data-sch="pickrow" data-k="${t.id}" title="${esc(schTaskTitle(t))} · ${schD(m.res.tasks[t.id].start)}"></i>`;}
       continue; }
     const t=r.t, x=m.res.tasks[t.id], done=P.isDone(t), late=!done&&x.finish<today, isSel=t.id===sel, isNear=near.has(t.id), cls=`${isSel?'sel':''} ${isNear?'near':''} ${done?'done':''}`, ms=t.kind==='milestone';
-    L+=`<div class="sg-row tk ${isSel?'sel':''}" style="top:${r.y}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><span class="bl"><i class="${ms?'ms':''}"></i></span><span class="nm" title="${esc(schTaskTitle(t))}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>${schPeople(t).length?avstack(schPeople(t),3):''}${done?'':schDdayHtml(x.finish,false)}<span class="fill"></span>
+    L+=`<div class="sg-row tk ${isSel?'sel':''}" style="top:${r.y}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><span class="bl"><i class="${ms?'ms':''}"></i></span><span class="nm" title="${esc(schTaskTitle(t))}"><b>${schNo(t)})</b>${esc(t.name)}</span>${schPeople(t).length?avstack(schPeople(t),3):''}${done?'':schDdayHtml(x.finish,false)}<span class="fill"></span>
       <span class="rg">${ms?schD(x.start):schRange(x.start,x.finish)}</span><span class="st" title="${esc(schStatus(t))}">${schStatus(t)==='조건부 미발동'?schMark('cond','조건부'):schStIcon(schStatus(t))}</span></div>`;
     const x1=X(x.start), x2=X(x.finish)+px, cy=r.y+r.h/2, top=cy-SG.bar/2, tip=`${schTaskTitle(t)}\n예상 ${schD(x.start)}${ms?'':' → '+schD(x.finish)+' ('+x.duration+'일)'} · ${schStatus(t)}${x.delta?`\n참조계획 대비 ${x.delta>0?'+':''}${x.delta}일`:''}${x.slack!==null?`\n운영개시 여유 ${x.slack}일`:''}${isSel?'\n한 번 더 누르면 상세가 열립니다':''}`;
     // (the reference plan is drawn on the bar itself, see below)
     if(ms){ Object.assign(r,{ms:true,cx:x1,cy,x1:x1-SG.ms,x2:x1+SG.ms,top:cy-SG.ms,bottom:cy+SG.ms});
-      R+=`<i class="sg-msb ${cls}" style="left:${x1-9.35}px;top:${cy-9.35}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}"></i><span class="sg-tx ${isSel?'sel':''}" style="left:${x1+SG.ms+3}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>`; continue; }
+      R+=`<i class="sg-msb ${cls}" style="left:${x1-9.35}px;top:${cy-9.35}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}"></i><span class="sg-tx ${isSel?'sel':''}" style="left:${x1+SG.ms+3}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><b>${schNo(t)})</b>${esc(t.name)}</span>`; continue; }
     // the name of a task stands inside its bar, cut with … when the bar is short (owner, 2026-11-19); only a bar too short for even the number has it beside it
-    const w=Math.max(4,x2-x1), label=`<b>${schWbs(t.wbs)})</b>${esc(t.name)}`, inside=w>=44, prog=!done&&typeof t.progress==='number'?t.progress:0;
+    const w=Math.max(4,x2-x1), label=`<b>${schNo(t)})</b>${esc(t.name)}`, inside=w>=44, prog=!done&&typeof t.progress==='number'?t.progress:0;
     Object.assign(r,{x1,x2:x1+w,cy,top,bottom:top+SG.bar});
     // the reference plan against the forecast (owner, 2026-11-19): dashed is the reference plan's finish. A dashed line inside the bar: the task now runs
     // longer than the reference plan; a dashed outline after the bar: it now ends earlier (the schedule shrank).

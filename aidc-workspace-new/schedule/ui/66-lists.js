@@ -85,7 +85,7 @@ function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m
 // As many cards on a page as fill whole rows (two rows; the number of columns follows the width, so nothing is left empty when the
 // sidebar is folded).
 function schResPer(){ const t=document.createElement('div'); t.style.cssText='position:absolute;visibility:hidden;height:0;width:var(--pw)'; $('#app').appendChild(t); const w=t.offsetWidth; t.remove();
-  return Math.max(1,Math.floor((w+15.2)/(210.3+15.2)))*2; }
+  return Math.max(1,Math.floor((w+15)/(210.3+15)))*2; }   // (the gap of .sch-on .rgrid)
 // the tag of the partner list's filter (구분)
 const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear title="이 조건 지우기">구분: ${esc(S.partnerCat)}<i>✕</i></button>`:'';
 

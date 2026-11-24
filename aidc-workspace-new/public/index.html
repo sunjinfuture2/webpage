@@ -2646,6 +2646,27 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .pop.sch-phpick .it .phx:hover{background:#f0f0f0;color:#d30000}
 .sch-stage a.wbno.up{font-weight:500;color:#4f4f4f;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .sch-stage a.wbno.up:hover{text-decoration:underline}
+
+/* The number of an action is a button while it is edited: its place in the phase (nineteenth round) */
+.sch-stage button.wbno{appearance:none;border:0;background:none;padding:0 1px;margin:0;font:inherit;font-weight:600;cursor:pointer;border-bottom:1px solid currentColor;line-height:1.25}
+.sch-stage button.wbno.pick{color:#3d3d3d}
+.sch-stage button.wbno:hover{opacity:.72}
+.pop.sch-nopick{max-height:min(430px,calc(100vh - 24px));min-width:250px;max-width:420px}
+.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:nowrap}
+.pop.sch-nopick .it{display:flex;align-items:baseline;gap:8px}
+.pop.sch-nopick .it .no{flex:none;min-width:38px;font-weight:600;color:#1f8e00;font-variant-numeric:tabular-nums}
+.pop.sch-nopick .it .phn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.dark .sch-stage button.wbno.pick{color:#d6d6d6}
+html.dark .pop.sch-nopick .it .no{color:#6fd858}
+
+/* Nineteenth round (owner, 2026-11-24) */
+/* the list beside the calendar: the date above it stands at the left end of the line; in a row the assignee is 3 px nearer to the
+   title and the date is written with a short year, on one line */
+.rlist.sch .rdate{right:auto;left:16px}
+.rlist.sch .ra .avstack{margin-left:-3px}
+.rlist.sch .ra .dt{width:auto;min-width:56px;white-space:nowrap}
+/* research cards: the same whole number between columns and between rows (15.2 / 15.3 fell on 15 or 16 px from card to card) */
+.sch-on .rgrid{column-gap:15px;row-gap:15px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -5507,9 +5528,17 @@ function schKeepScroll(){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-sc
 function schRestoreScroll(k){const g=$('#sch-gantt .sg-scroll'),n=$('#sch-net .sn-scroll');if(g&&k.gx!=null){g.scrollLeft=k.gx;g.scrollTop=k.gy;}if(n&&k.nx!=null){n.scrollLeft=k.nx;n.scrollTop=k.ny;}}
 
 /* ---------- formatters ---------- */
+const schD2=d=>d?dateDot(d).slice(2):'';                                           // 2026-11-02 -> 26. 11. 02: only the rows of the list beside the calendar (owner, 2026-11-24)
 const schD=d=>d?dateDot(d):'';                                                     // 2026-11-02 -> 2026. 11. 02 (owner, 2026-11-23: one way to write a date everywhere)
 const schRange=(a,b)=>`<span class="sch-rg"><span>${schD(a)}</span>${svg('i-sch-arr',11,8)}<span>${schD(b)}</span></span>`;
 const schWbs=w=>String(w||'').replace(/^W/,'').replace('.','-');                    // W1.1 -> 1-1 (display only)
+// The number a task SHOWS. Its `wbs` is the key the calculation (W8.6), the gates, the procurement sheet and the workbook know it
+// by, so it never changes. When an action is put in between (owner, 2026-11-24: "끼워넣을 수 있게, 그 다음부턴 밀리는 식으로"),
+// the tasks after it carry `no`: the number they show within their phase. Everything that shows a number goes through schNo.
+const schKeyNo=t=>Number(String(t&&t.wbs||'').split('.')[1])||0;
+const schNoOf=t=>(t&&Number(t.no))||schKeyNo(t);
+const schWk=t=>t?(Number(t.no)?String(t.wbs).split('.')[0]+'.'+Number(t.no):String(t.wbs||'')):'';     // in the workbook's form (W1.5)
+const schNo=t=>schWbs(schWk(t));
 const schPhaseNo=c=>String(c||'').replace(/^W/,'');
 const schPhaseName=l=>String(l||'').replace(/^\d+\s*/,'');                          // "1 사업정의·RFP" -> "사업정의·RFP"
 const schPhaseLabel=g=>`${schPhaseNo(g.code)}) ${schPhaseName(g.label)}`;
@@ -5540,7 +5569,7 @@ function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==
   return '<span class="sch-role none">미지정</span>'; }   // owner, 2026-11-19: nothing else is written where nobody is assigned
 // the whole page knows that the preview is on (styles of the item panel that only the preview changes hang on this)
 if(schPreview())document.documentElement.classList.add('sch-on');
-const schTaskTitle=t=>`${schWbs(t.wbs)}) ${t.name}`;
+const schTaskTitle=t=>`${schNo(t)}) ${t.name}`;
 const schMine=t=>!!sharedUser&&schPeople(t).includes(sharedUser);
 const schOpen=(m,t)=>!AIDCSchedule.progress.isDone(t);
 const schLate=(m,t)=>schOpen(m,t)&&m.res.tasks[t.id].finish<schToday();
@@ -5668,7 +5697,7 @@ function schItemTest(i,q){ const c=schCf(), done=i.st==='done', a=i.date||'', b=
   return schSpanTest(c,a,b)&&schDueTest(c,b,done); }
 // The tasks the three views show, in WBS order (cols: also what the list's column titles filter by).
 function schFiltered(m,cols){ const q=(SCHU.q||'').trim();
-  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!cols||schColTest(m,t))&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs),t.status,...schPeople(t).map(userName)))); }
+  return m.phases.flatMap(g=>g.tasks).filter(t=>(!SCHU.phase||t.phase===SCHU.phase)&&schScopeTest(m,t)&&schWhoTest(t)&&(!cols||schColTest(m,t))&&(!q||matchQ(q,t.name,schWk(t),schNo(t),t.status,...schPeople(t).map(userName)))); }
 const schFiltering=()=>!!(SCHU.q||'').trim()||SCHU.scope!=='all'||!!SCHU.who||(SCHU.tab==='list'&&schCfOn());
 
 // What is filtered shows beside the title, each with an x that takes it off (owner, 2026-11-19: as the partner list does).
@@ -5739,9 +5768,9 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   const grouped=SCHU.sort==='wbs', gOf=row=>row.t?row.t.phase:(row.i._ord<1e9?row.i.phase:'none'), gN=new Map(); if(grouped)for(const row of rows){const k=gOf(row);gN.set(k,(gN.get(k)||0)+1);} let gLast=null;
   for(const row of page){ if(grouped){ const k=gOf(row); if(k!==gLast){ gLast=k; const g=m.phases.find(x=>x.code===k); h+=`<div class="gr" data-g="${esc(k)}"><b>${k==='none'?'일정 미연결':esc(g?schPhaseLabel(g):k)}</b><em>${gN.get(k)}</em></div>`; } }
     if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
-    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schWbs(t.wbs)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
+    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schNo(t)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${schD(t.plannedStart)}</div><div class="rg">${t.kind==='milestone'||!t.plannedFinish?'<span class="nil">-</span>':schD(t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false,schLateWhy(m,t))}</div><div class="url">${urlCell(t.url)}</div></div>`;
-    for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schWbs(t.wbs)}`); }
+    for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schNo(t)}`); }
   if(!page.length)h+=`<div class="none">${schFiltering()||SCHU.phase?'조건에 맞는 액션이 없습니다.':'등록된 업무가 없습니다.'}</div>`;
   return h+`<div class="ft"></div></div>${schPager(SCHU.page,total,'page',32)}`; }
 // The menu of a column title: how to order by that column and what to keep.
@@ -5832,14 +5861,14 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
       if(!r.open)for(const t of g.tasks)if(t.kind==='milestone'){const x=X(m.res.tasks[t.id].start);if(x>=0&&x<=TW)R+=`<i class="sg-dia ${P.isDone(t)?'done':''} ${t.id===sel?'sel':''}" style="left:${x-3.6}px;top:${r.y+20.4}px" data-sch="pickrow" data-k="${t.id}" title="${esc(schTaskTitle(t))} · ${schD(m.res.tasks[t.id].start)}"></i>`;}
       continue; }
     const t=r.t, x=m.res.tasks[t.id], done=P.isDone(t), late=!done&&x.finish<today, isSel=t.id===sel, isNear=near.has(t.id), cls=`${isSel?'sel':''} ${isNear?'near':''} ${done?'done':''}`, ms=t.kind==='milestone';
-    L+=`<div class="sg-row tk ${isSel?'sel':''}" style="top:${r.y}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><span class="bl"><i class="${ms?'ms':''}"></i></span><span class="nm" title="${esc(schTaskTitle(t))}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>${schPeople(t).length?avstack(schPeople(t),3):''}${done?'':schDdayHtml(x.finish,false)}<span class="fill"></span>
+    L+=`<div class="sg-row tk ${isSel?'sel':''}" style="top:${r.y}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><span class="bl"><i class="${ms?'ms':''}"></i></span><span class="nm" title="${esc(schTaskTitle(t))}"><b>${schNo(t)})</b>${esc(t.name)}</span>${schPeople(t).length?avstack(schPeople(t),3):''}${done?'':schDdayHtml(x.finish,false)}<span class="fill"></span>
       <span class="rg">${ms?schD(x.start):schRange(x.start,x.finish)}</span><span class="st" title="${esc(schStatus(t))}">${schStatus(t)==='조건부 미발동'?schMark('cond','조건부'):schStIcon(schStatus(t))}</span></div>`;
     const x1=X(x.start), x2=X(x.finish)+px, cy=r.y+r.h/2, top=cy-SG.bar/2, tip=`${schTaskTitle(t)}\n예상 ${schD(x.start)}${ms?'':' → '+schD(x.finish)+' ('+x.duration+'일)'} · ${schStatus(t)}${x.delta?`\n참조계획 대비 ${x.delta>0?'+':''}${x.delta}일`:''}${x.slack!==null?`\n운영개시 여유 ${x.slack}일`:''}${isSel?'\n한 번 더 누르면 상세가 열립니다':''}`;
     // (the reference plan is drawn on the bar itself, see below)
     if(ms){ Object.assign(r,{ms:true,cx:x1,cy,x1:x1-SG.ms,x2:x1+SG.ms,top:cy-SG.ms,bottom:cy+SG.ms});
-      R+=`<i class="sg-msb ${cls}" style="left:${x1-9.35}px;top:${cy-9.35}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}"></i><span class="sg-tx ${isSel?'sel':''}" style="left:${x1+SG.ms+3}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><b>${schWbs(t.wbs)})</b>${esc(t.name)}</span>`; continue; }
+      R+=`<i class="sg-msb ${cls}" style="left:${x1-9.35}px;top:${cy-9.35}px" data-sch="pickrow" data-k="${t.id}" data-bar="${t.id}" data-row="${t.id}" title="${esc(tip)}"></i><span class="sg-tx ${isSel?'sel':''}" style="left:${x1+SG.ms+3}px;top:${top}px" data-sch="pickrow" data-k="${t.id}" data-row="${t.id}"><b>${schNo(t)})</b>${esc(t.name)}</span>`; continue; }
     // the name of a task stands inside its bar, cut with … when the bar is short (owner, 2026-11-19); only a bar too short for even the number has it beside it
-    const w=Math.max(4,x2-x1), label=`<b>${schWbs(t.wbs)})</b>${esc(t.name)}`, inside=w>=44, prog=!done&&typeof t.progress==='number'?t.progress:0;
+    const w=Math.max(4,x2-x1), label=`<b>${schNo(t)})</b>${esc(t.name)}`, inside=w>=44, prog=!done&&typeof t.progress==='number'?t.progress:0;
     Object.assign(r,{x1,x2:x1+w,cy,top,bottom:top+SG.bar});
     // the reference plan against the forecast (owner, 2026-11-19): dashed is the reference plan's finish. A dashed line inside the bar: the task now runs
     // longer than the reference plan; a dashed outline after the bar: it now ends earlier (the schedule shrank).
@@ -5947,7 +5976,7 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
     if(isHot)hot+=g; else sv+=g; }
   let h='';
   for(const id of row.keys()){ const t=m.byId.get(id), x=m.res.tasks[id], done=P.isDone(t), ppl=schPeople(t);
-    h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''} ${id===SCH.netPrev&&id!==focus?'prev':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schWbs(t.wbs)})</div><div class="nm">${esc(t.name)}</div>
+    h+=`<div class="sn-node ${id===focus?'sel':''} ${done?'done':''} ${id===SCH.netPrev&&id!==focus?'prev':''}" style="left:${px(id)}px;top:${py(id)}px" data-sch="pickrow" data-k="${id}" title="${esc(schTaskTitle(t)+(id===focus?'\n한 번 더 누르면 상세가 열립니다':''))}"><div class="w">${t.kind==='milestone'?'<i class="sch-ms"></i>':''}${schNo(t)})</div><div class="nm">${esc(t.name)}</div>
       <div class="rg">${t.kind==='milestone'?schD(x.start):schRange(x.start,x.finish)}</div><div class="dd">${done?schStIcon('완료'):schDdayHtml(x.finish,false)}</div><div class="who" title="${esc(ppl.length?ppl.map(userName).join(', '):'담당자 미지정')}"><span class="avstack">${ppl.length?ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span></div>${id===SCH.netPrev&&id!==focus?'<em class="sn-prev" title="바로 전에 누른 업무">이전</em>':''}<u class="sn-port" title="끌어서 다른 업무에 연결"></u></div>`; }
   // the dots of the ground belong to the drawing: they scroll with it and grow and shrink with it
   host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z});--snz:${z}"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
@@ -5968,12 +5997,12 @@ function schNetZoom(dir){ const host=$('#sch-net .sn-scroll'); if(!host||!host._
 // was changed in this edit (every such change carries the item's id as its tag: schEditCancel), 저장 keeps it.
 const SCHP={tab:'info',more:false};
 const schOwn=it=>!!(it&&it.own&&it.task&&schReady(it.proj)&&schModel(it.proj).byId.has(it.task));
-function schTitleAttr(it){ if(!schOwn(it))return ''; const t=schModel(it.proj).byId.get(it.task); return ` data-wbs="${esc(schWbs(t.wbs))}"`; }
+function schTitleAttr(it){ if(!schOwn(it))return ''; const t=schModel(it.proj).byId.get(it.task); return ` data-wbs="${esc(schNo(t))}"`; }
 const schChev=()=>svg('i-chev-d',8,4);
 // rows the panel of an ordinary action gets in a project with a schedule: the phase and, if chosen, the task it belongs to
 function schItemRows(it,E,V){ if(!it||it.type!=='action'||it.own||!schReady(it.proj)||archTabOf(it))return []; const m=schModel(it.proj), t=it.task&&m.byId.get(it.task), none=x=>`<span class="plain" style="color:#c4c4c4">${x}</span>`;
   const g=m.phases.find(x=>x.code===(t?t.phase:it.phase));
-  const stage=E?schStageEdit(m,g,t)
+  const stage=E?schStageEdit(m,g,t,it)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const rows=[V('개발 단계',stage,'sch-v')]; if(t){const r=m.res.tasks[t.id];rows.push(V('예상 기한',`<span class="plain">${t.kind==='milestone'?schD(r.start):schRange(r.start,r.finish)}</span>`,'sch-v'));} return rows; }
 function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj, m=schModel(pid), A=AIDCSchedule, P=A.progress, t=m.byId.get(it.task), r=m.res.tasks[t.id], g=m.phases.find(x=>x.code===t.phase), ms=t.kind==='milestone'; E=!!it.editing;
@@ -5983,7 +6012,7 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
   const tabs=`<div class="sp-tabs"><button class="${SCHP.tab==='info'?'on':''}" data-schp="tab" data-k="info">정보</button><button class="${SCHP.tab==='links'?'on':''}" data-schp="tab" data-k="links">연결된 액션<small>${m.pred.get(t.id).length+m.succ.get(t.id).length||''}</small></button></div>`;
   if(SCHP.tab==='links')return `<div class="props sch-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${schLinksHtml(pid,m,t,full,E)}</div>`;
   const arrow=svg('i-sch-arr',11,8,'color:#4f4f4f;margin:0 2px'), done=P.isDone(t);
-  const drv=r.drivers.map(d=>{const e=m.plan.dependencies.find(x=>x.id===d);if(e){const b=m.byId.get(e.from);return `${schWbs(b.wbs)}) ${b.name} (${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''})`;}return d.startsWith('납기:')?'조달 납기 '+d.slice(3):d;});
+  const drv=r.drivers.map(d=>{const e=m.plan.dependencies.find(x=>x.id===d);if(e){const b=m.byId.get(e.from);return `${schNo(b)}) ${b.name} (${e.type}${e.lag?(e.lag>0?' +':' ')+e.lag+'일':''})`;}return d.startsWith('납기:')?'조달 납기 '+d.slice(3):d;});
   const moved=r.start!==t.plannedStart||r.finish!==t.plannedFinish, why='일정 계산 결과입니다.'+(drv.length?'\n결정 요인: '+drv.join(' · '):'')+(moved?`\n입력한 관리일정: ${schD(t.plannedStart)}${ms?'':' → '+schD(t.plannedFinish)}`:'');
   // one row for the dates (owner: 관리일정 and 예상 기한 said nearly the same): the forecast is shown, what is typed is the managed date behind it
   const dates=ms?f('plannedStart',schD(r.start),E?'눌러서 변경\n'+why:why):`<span class="sch-pair">${f('plannedStart',schD(r.start),E?'시작일 변경\n'+why:why)+arrow+(t.finishRule?`<span class="plain" title="검수 완료 후 ${t.finishRule.months}개월로 정해지는 기간입니다">${schD(r.finish)}</span>`:f('plannedFinish',schD(r.finish),E?'완료일 변경\n'+why:why))}</span>`;
@@ -5992,7 +6021,7 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
     V('예상 기한'+schInfo('dates'),dates+(done?'':schWhyMark(schDdayHtml(r.finish,false,schLateWhy(m,t)),E,'schp'))+(moved?`<em class="sch-mv" title="${esc(why)}">선행 업무 반영</em>`:'')),
     V('실제 기한',!E&&!t.actualStart&&!t.actualFinish?none('-'):`<span class="sch-pair">${f('actualStart',t.actualStart?schD(t.actualStart):ph('시작일'),'실제 시작일')+(ms?'':arrow+f('actualFinish',t.actualFinish?schD(t.actualFinish):ph('완료일'),'실제 완료일'))}</span>`),
     ...(t.why?[V('지연 사유',f('why',`<span class="plain wrap">${esc(t.why)}</span>`,'지연 사유 · 리스트의 ‘n일 지연’에 마우스를 올리면 보입니다'),'wide')]:[]),   // shown once there is one; it is entered through the "n일 지연" mark above (수정 first)
-    V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schWbs(t.wbs))})</span></span>`),
+    V('개발 단계',E?`<span class="sch-stage"><span class="sf" data-schp="phase-move" title="다른 단계로 옮기기 · 새 단계 추가">${esc(schPhaseLabel(g))}${schChev()}</span><button type="button" class="wbno pick" data-schp="wbs-move" title="눌러서 이 단계 안의 다른 자리로 옮기기 · 그 뒤 번호는 한 칸씩 밀립니다">${esc(schNo(t))})</button></span>`:`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span><span class="wbno">${esc(schNo(t))})</span></span>`),
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-schp="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-schp="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const ppl=schPeople(t);
@@ -6015,11 +6044,11 @@ function schLinksHtml(pid,m,t,full,E){ const A=AIDCSchedule, pre=m.pred.get(t.id
   const RH=34, n=Math.max(pre.length,suc.length,1), H=n*RH, cy=H/2, GAP=44, LW=Math.floor((W-2*GAP)*0.335), CW=W-2*GAP-2*LW, used=(pre.length?LW+GAP:0)+CW+(suc.length?GAP+LW:0), LX=Math.round((W-used)/2), CX=LX+(pre.length?LW+GAP:0), RX=CX+CW+GAP;
   const yOf=(i,k)=>(H-k*RH)/2+i*RH+RH/2; let sv='', h='';
   const node=(e,other,x,y,side)=>{const o=m.byId.get(other), lb=e.type+(e.lag?(e.lag>0?'+':'')+e.lag:'');
-    return `<div class="sl-node ${e.active?'':'off'}" style="left:${x}px;top:${y-13}px;width:${LW}px" data-open="${schItemId(o.id)}" title="${esc(schTaskTitle(o)+'\n'+A.relationshipSentence(e.type,side==='pre'?o.name:t.name,side==='pre'?t.name:o.name)+(e.active?'':'\n(조건부 · 지금은 계산에 쓰지 않음)'))}"><b>${schWbs(o.wbs)})</b><span>${esc(o.name)}</span>${E?`<button class="rel" data-schp="rel" data-k="${e.id}" title="관계 수정">${lb}</button>`:`<em class="rel">${lb}</em>`}</div>`;};
+    return `<div class="sl-node ${e.active?'':'off'}" style="left:${x}px;top:${y-13}px;width:${LW}px" data-open="${schItemId(o.id)}" title="${esc(schTaskTitle(o)+'\n'+A.relationshipSentence(e.type,side==='pre'?o.name:t.name,side==='pre'?t.name:o.name)+(e.active?'':'\n(조건부 · 지금은 계산에 쓰지 않음)'))}"><b>${schNo(o)})</b><span>${esc(o.name)}</span>${E?`<button class="rel" data-schp="rel" data-k="${e.id}" title="관계 수정">${lb}</button>`:`<em class="rel">${lb}</em>`}</div>`;};
   const elbow=(x1,y1,x2,y2)=>{const mx=(x1+x2)/2, r=Math.min(6,Math.abs(y2-y1)/2), s=Math.sign(y2-y1);return y1===y2?`M${x1},${y1} L${x2},${y2}`:`M${x1},${y1} L${mx-r},${y1} Q${mx},${y1} ${mx},${y1+s*r} L${mx},${y2-s*r} Q${mx},${y2} ${mx+r},${y2} L${x2},${y2}`;};
   pre.forEach((e,i)=>{const y=yOf(i,pre.length);h+=node(e,e.from,LX,y,'pre');sv+=`<path class="${e.active?'':'off'}" d="${elbow(LX+LW,y,CX-1,cy)}" marker-end="url(#sl-arrow)"/>`;});
   suc.forEach((e,i)=>{const y=yOf(i,suc.length);h+=node(e,e.to,RX,y,'suc');sv+=`<path class="${e.active?'':'off'}" d="${elbow(CX+CW,cy,RX-1,y)}" marker-end="url(#sl-arrow)"/>`;});
-  h+=`<div class="sl-node cur" style="left:${CX}px;top:${cy-13}px;width:${CW}px"><b>${schWbs(t.wbs)})</b><span>${esc(t.name)}</span></div>`;
+  h+=`<div class="sl-node cur" style="left:${CX}px;top:${cy-13}px;width:${CW}px"><b>${schNo(t)})</b><span>${esc(t.name)}</span></div>`;
   return `<div class="sp-links"><div class="sl-wrap" style="width:${W}px"><div class="sl-map" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}"><defs><marker id="sl-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1l6 3-6 3" fill="none" stroke="#4f4f4f" stroke-width="1.1"/></marker></defs>${sv}</svg>${h}</div>${pre.length||suc.length?'':'<div class="sl-none">이 업무와 선후 관계로 이어진 액션이 없습니다. 일정이나 관계도에서 막대·카드를 끌어다 놓으면 연결됩니다.</div>'}</div></div>`; }
 
 /* ---------- changing a field (only while the panel is being edited) ---------- */
@@ -6031,7 +6060,7 @@ function schEditCancel(it){ if(!it)return; const mine=SCH.undo.filter(u=>u.tag==
   schRedraw(true); }
 const schEditKeep=it=>{ if(it)for(const u of SCH.undo)if(u.tag===it.id)u.tag=''; };
 // the number of a task that joins a phase: one more than the highest there; its place: after that phase's last task
-function schMoveToPhase(d,x,code,label){ const inPh=d.tasks.filter(q=>q.phase===code&&q.id!==x.id), max=Math.max(0,...inPh.map(q=>Number(q.wbs.split('.')[1])||0)); x.phase=code; x.phaseLabel=inPh.length?inPh[0].phaseLabel:label; x.wbs=code+'.'+(max+1);
+function schMoveToPhase(d,x,code,label){ const inPh=d.tasks.filter(q=>q.phase===code&&q.id!==x.id), max=Math.max(0,...inPh.map(q=>Number(q.wbs.split('.')[1])||0)); x.phase=code; x.phaseLabel=inPh.length?inPh[0].phaseLabel:label; x.wbs=code+'.'+(max+1); { const shown=Math.max(0,...inPh.map(schNoOf))+1; if(shown!==max+1)x.no=shown; else delete x.no; }
   const sorted=d.tasks.filter(q=>q.id!==x.id).sort((p,q)=>p.order-q.order), last=inPh.length?Math.max(...inPh.map(q=>q.order)):Math.max(0,...sorted.filter(q=>q.phase.localeCompare(code,undefined,{numeric:true})<0).map(q=>q.order)), next=sorted.find(q=>q.order>last); x.order=next?(last+next.order)/2:last+1; }
 // A phase can be renamed (any phase: the record ph:<code> carries the name; a phase of the workbook can be given its own name back)
 // and, while it holds no task, removed (owner, 2026-11-23: "만든 거 수정도 할 수 있어야지"). Actions that stood in a removed phase
@@ -6056,15 +6085,30 @@ function schPhaseEditItems(pid,m,g,after,withDel){ if(!g)return []; const rec=(S
   if(rec&&rec.label&&own&&schPhaseName(own)!==schPhaseName(rec.label))out.push({t:`원래 이름으로 (${schPhaseName(own)})`,k:'ph-reset',fn:()=>{schSet(pid,'ph:'+g.code,null,`${schPhaseNo(g.code)}) 단계 이름을 되돌렸습니다`);if(after)after(g.code);}});
   if(withDel)out.push({t:`“${schPhaseLabel(g)}” 단계 삭제`,k:'ph-del',danger:true,fn:()=>schPhaseDelete(pid,g.code,after)});
   return out; }
+// The numbers of a phase as they show, and a task put before another one of its phase: it takes that one's number, that one
+// and those after it move one up (as far as the numbers run on without a gap), and it stands there in the order of the plan too.
+// `pull`: the task had a place in this phase already; what stood after it closes up first. No `beforeId`: the end of the phase.
+const schNextNo=(m,code)=>Math.max(0,...m.plan.tasks.filter(t=>t.phase===code).map(schNoOf))+1;
+const schAtNo=(m,code,it)=>{ const at=it&&it.wbsAt&&m.byId.get(it.wbsAt); return at&&at.phase===code?schNoOf(at):schNextNo(m,code); };
+function schPutBefore(d,x,beforeId,pull){ const set=(t,n)=>{ if(n===schKeyNo(t))delete t.no; else t.no=n; }, peers=()=>d.tasks.filter(t=>t.phase===x.phase&&t.id!==x.id).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order);
+  if(pull){ let k=schNoOf(x); for(const t of peers()){ const v=schNoOf(t); if(v<=k)continue; if(v>k+1)break; set(t,v-1); k=v; } }
+  const ps=peers(), at=beforeId?ps.find(t=>t.id===beforeId):null, all=d.tasks.filter(t=>t.id!==x.id).sort((a,b)=>a.order-b.order);
+  if(!at){ set(x,Math.max(0,...ps.map(schNoOf))+1); if(pull&&ps.length){ const last=ps.reduce((a,b)=>b.order>a.order?b:a), nx=all[all.indexOf(last)+1]; x.order=nx?(last.order+nx.order)/2:last.order+1; } return; }
+  const n=schNoOf(at); let k=n; for(const t of ps){ const v=schNoOf(t); if(v<k)continue; if(v>k)break; set(t,v+1); k=v+1; }
+  set(x,n); const prev=all[all.indexOf(at)-1]; x.order=prev?(prev.order+at.order)/2:at.order-1; }
+// The picker of a place: the actions of the phase with their numbers; a press puts the action before that row.
+function schNoPick(el,m,code,selfId,cur,pick){ const g=m.phases.find(x=>x.code===code); if(!g)return; const self=selfId&&m.byId.get(selfId), list=g.tasks.filter(t=>t.id!==selfId).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order), top=Math.max(0,...list.map(schNoOf)), end=self?Math.max(top,schNoOf(self)):top+1;   // (a task that moves leaves its own number behind)
+  return menuPop(el,[{hd:'들어갈 자리 · 고른 번호부터 뒤는 한 칸씩 밀립니다'}].concat(list.map(t=>({k:t.id,sel:cur===t.id,html:`<b class="no">${esc(schNo(t))})</b><span class="phn">${esc(t.name)}</span>`,fn:()=>pick(t.id)})),
+    [{k:'end',sel:!cur,html:`<b class="no">${esc(schWbs(code+'.'+end))})</b><span class="phn">맨 뒤</span>`,fn:()=>pick('')}]),{cls:'sch-nopick'}); }
 // The list of phases of a picker: a press chooses one; the x of a row removes that phase; below it "new" and the rename of the chosen one.
 function schPhasePick(el,pid,m,sel,pick,after){ const p=menuPop(el,m.phases.map(g=>({k:g.code,sel:sel===g.code,html:`<span class="phn">${esc(schPhaseLabel(g))}</span><button type="button" class="phx" data-phx="${esc(g.code)}" title="이 단계 삭제" aria-label="${esc(schPhaseLabel(g))} 단계 삭제">${svg('i-x',8,8)}</button>`,fn:()=>pick(g.code,g.label)}))
     .concat(['-',{t:'＋ 새 단계 추가',k:'new',fn:()=>schNewPhase(pid,m,(code,label)=>pick(code,label))}],schPhaseEditItems(pid,m,m.phases.find(g=>g.code===sel),after)),{cls:'sch-phpick'});
   p.addEventListener('click',e=>{ const x=e.target.closest('[data-phx]'); if(!x)return; e.stopPropagation(); e.preventDefault(); closePop(); schPhaseDelete(pid,x.dataset.phx,after); },true); return p; }
 // 개발 단계 of an action that is not a task yet, while it is edited: the same as a task's row (the phase, the number beside it) with an x that
 // takes the phase off again. An action that hangs under a task from before shows that task instead of the number.
-const schStageEdit=(m,g,t)=>`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${t?`<a class="wbno up" data-open="${schItemId(t.id)}" title="이 업무 아래에 붙어 있습니다 · 눌러서 열기">↳ ${esc(schTaskTitle(t))}</a>`:g?`<span class="wbno auto" title="저장하면 받는 WBS 번호">${esc(schWbs(schNextWbs(m,g.code)))})</span>`:''}${g||t?`<button class="x" data-schp="unlink" title="${t?'업무 연결 해제':'개발 단계 지우기'}">${svg('i-x',8,8)}</button>`:''}</span>`;
+const schStageEdit=(m,g,t,it)=>`<span class="sch-stage"><span class="sf" data-schp="link-phase" title="단계를 고르면 그 단계의 WBS 번호를 받아 액션 일정 · 리스트 · 관계도에 올라갑니다">${g?esc(schPhaseLabel(g)):'단계 선택'}${schChev()}</span>${t?`<a class="wbno up" data-open="${schItemId(t.id)}" title="이 업무 아래에 붙어 있습니다 · 눌러서 열기">↳ ${esc(schTaskTitle(t))}</a>`:g?`<button type="button" class="wbno auto" data-schp="wbs-at" title="저장하면 받는 WBS 번호 · 눌러서 들어갈 자리를 고르면 그 뒤 번호는 한 칸씩 밀립니다">${esc(schWbs(g.code+'.'+schAtNo(m,g.code,it)))})</button>`:''}${g||t?`<button class="x" data-schp="unlink" title="${t?'업무 연결 해제':'개발 단계 지우기'}">${svg('i-x',8,8)}</button>`:''}</span>`;
 function schNewPhase(pid,m,done){ askInput('새 개발 단계 이름','',v=>{ v=(v||'').trim(); if(!v)return; const no=Math.max(0,...m.phases.map(g=>Number(schPhaseNo(g.code))||0),...ITEMS.filter(i=>i.proj===pid&&i.phase).map(i=>Number(schPhaseNo(i.phase))||0))+1, code='W'+no; schSet(pid,'ph:'+code,{label:v,by:sharedUser,at:new Date().toISOString()},`${no}) ${v} 단계를 추가했습니다`); done(code,v); }); }
-function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule, D=A.dates, t=m.byId.get(it.task), r=m.res.tasks[t.id], k=el.dataset.k, id=t.id, name=schWbs(t.wbs), ms=t.kind==='milestone';
+function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule, D=A.dates, t=m.byId.get(it.task), r=m.res.tasks[t.id], k=el.dataset.k, id=t.id, name=schNo(t), ms=t.kind==='milestone';
   const edit=(label,fn)=>schTagged(it,()=>schEditTask(pid,id,`${name} ${label}`,fn));
   // what moves the schedule (dates, state, kind) says so in the card of the gantt, with 되돌리기
   const editCard=(label,fn,want)=>{ const snap=schSnap(pid); if(schTagged(it,()=>schEditTask(pid,id,`${name} ${label}`,fn,true)))schChangeCard(pid,snap,{title:`${name} ${label}`,focus:id,want:want||null}); };
@@ -6085,7 +6129,7 @@ function schFieldEdit(el,it){ const pid=it.proj, m=schModel(pid), A=AIDCSchedule
   if(k==='why'){askInput('지연 사유',t.why||'',v=>edit('지연 사유 입력',q=>{q.why=(v||'').replace(/\s+/g,' ').trim();}));return;}
   if(k==='criteria'||k==='conditions'||k==='evidence'){const lb={criteria:'완료 기준',conditions:'조건·확약',evidence:'증빙'}[k];askInput(lb,t[k]||'',v=>edit(lb+' 수정',q=>{q[k]=(v||'').trim();}));return;} }
 // what can be done with one relation: its kind, its gap, leaving it out of the calculation, deleting it
-function schRelMenu(el,pid,relId){ const m=schModel(pid), A=AIDCSchedule, rel=m&&m.plan.dependencies.find(x=>x.id===relId); if(!rel)return; const a=m.byId.get(rel.from), b=m.byId.get(rel.to), nm=`${schWbs(a.wbs)} → ${schWbs(b.wbs)}`;
+function schRelMenu(el,pid,relId){ const m=schModel(pid), A=AIDCSchedule, rel=m&&m.plan.dependencies.find(x=>x.id===relId); if(!rel)return; const a=m.byId.get(rel.from), b=m.byId.get(rel.to), nm=`${schNo(a)} → ${schNo(b)}`;
   // every change of a relation is shown with its effect first and saved by 확인 (schPropose)
   const ch=(title,note,label,fn,gone)=>schPropose(pid,{kind:'change',from:rel.from,to:rel.to,title,note,label,gone,mutate:d=>{const x=d.dependencies.find(q=>q.id===rel.id);if(x)fn(x,d);}});
   menuPop(el,[{hd:`${nm} 관계`}].concat(['FS','SS','FF','SF'].map(ty=>({t:ty+' · '+A.relationshipNames[ty],k:ty,sel:rel.type===ty,fn:()=>{if(rel.type!==ty)ch('관계 유형 변경',`${rel.type} → ${ty} · `+A.relationshipSentence(ty,a.name,b.name),'관계 유형 '+ty,x=>{x.type=ty;});}})),['-',
@@ -6095,7 +6139,7 @@ function schRelMenu(el,pid,relId){ const m=schModel(pid), A=AIDCSchedule, rel=m&
     {t:'관계 삭제',k:'del',danger:true,fn:()=>schPropose(pid,{kind:'change',from:rel.from,to:rel.to,title:'관계 삭제',note:`${nm} 관계를 지웁니다.`,label:`${nm} 관계 삭제`,gone:true,mutate:d=>{d.dependencies=d.dependencies.filter(q=>q.id!==rel.id);}})}])); }
 // a list of tasks to choose from (linking an action); extra: entries above the list
 function schTaskMenu(el,m,title,filter,pick,extra){ const p=openPop(el,`<div style="padding:6px 6px 4px"><input id="sch-tm-q" placeholder="WBS 또는 업무명 검색"></div><div class="hd">${esc(title)}</div>${(extra||[]).map((x,i)=>`<div class="it ex" data-x="${i}">${esc(x.t)}</div>`).join('')}<div class="sch-tm"></div>`,{cls:'link'}); const box=p.querySelector('.sch-tm'), inp=p.querySelector('#sch-tm-q');
-  const draw=()=>{const q=inp.value.trim();const list=m.plan.tasks.filter(t=>filter(t)&&(!q||matchQ(q,t.name,t.wbs,schWbs(t.wbs)))).slice(0,60);box.innerHTML=list.map(t=>`<div class="it" data-t="${t.id}"><b style="font-weight:600;min-width:38px">${schWbs(t.wbs)}</b>${esc(t.name)}</div>`).join('')||'<div class="msg">맞는 업무가 없습니다.</div>';};
+  const draw=()=>{const q=inp.value.trim();const list=m.plan.tasks.filter(t=>filter(t)&&(!q||matchQ(q,t.name,schWk(t),schNo(t)))).slice(0,60);box.innerHTML=list.map(t=>`<div class="it" data-t="${t.id}"><b style="font-weight:600;min-width:38px">${schNo(t)}</b>${esc(t.name)}</div>`).join('')||'<div class="msg">맞는 업무가 없습니다.</div>';};
   draw(); inp.oninput=draw; inp.focus(); p.addEventListener('click',e=>{const ex=e.target.closest('.it.ex');if(ex){e.stopPropagation();closePop();extra[+ex.dataset.x].fn();return;}const x=e.target.closest('.it[data-t]');if(!x)return;e.stopPropagation();closePop();pick(x.dataset.t);}); }
 // meetings and research notes to hang on a task: the search field first, then the list
 function schRefMenu(el,it,pid,t){ const cur=((SCHED[pid]||{})['c:'+t.id]||{}).ids||[], all=ITEMS.filter(i=>(i.type==='meeting'||i.type==='research')&&isLive(i)&&!cur.includes(i.id)).sort(newestFirst), short=x=>{x=(x||'제목 없음').split('\n').join(' ');return x.length>38?x.slice(0,38)+'…':x;};
@@ -6109,21 +6153,27 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='tab'){SCHP.tab=el.dataset.k;if(it.editing)schPropsRefresh(it);else rerenderItem(it.id);return;}
   if(k==='more'){SCHP.more=!SCHP.more;if(it.editing&&schOwn(it))schPropsRefresh(it);else rerenderItem(it.id);return;}
   // an ordinary action: the phase and the task it belongs to (part of its own edit, saved with 저장). A phase alone is enough; a new phase or a new task can be made here.
+  if(k==='wbs-at'){ if(!canEditItem(it)||schOwn(it)||!it.phase)return; e.stopPropagation(); const at=it.wbsAt&&m.byId.get(it.wbsAt);   // where a new action goes in its phase
+    schNoPick(el,m,it.phase,'',at&&at.phase===it.phase?at.id:'',id=>{ if(id)it.wbsAt=id; else delete it.wbsAt; it.dirty=true; rerenderItem(it.id); }); return; }
   if(k==='link-phase'||k==='link-task'){ if(!canEditItem(it))return; e.stopPropagation(); const cur=it.task&&m.byId.get(it.task), again=()=>{it.dirty=true;rerenderItem(it.id);};
-    const setPhase=code=>{ it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
+    const setPhase=code=>{ if(it.phase!==code)delete it.wbsAt; it.phase=code; if(cur&&cur.phase!==code)delete it.task; again(); };
     if(k==='link-phase'){ schPhasePick(el,pid,m,(cur?cur.phase:it.phase)||'',code=>setPhase(code),(code,gone)=>{if(gone&&it.phase===code)delete it.phase;again();}); return; }
     const ph=(cur&&cur.phase)||it.phase||'', g=ph&&m.phases.find(x=>x.code===ph), extra=[];
     if(g){ if(it.task)extra.push({t:`${schPhaseLabel(g)} 단계에만 두기 (업무 선택 해제)`,fn:()=>{delete it.task;again();}});
       extra.push({t:`＋ ${schPhaseNo(g.code)}) 단계에 새 업무 추가`,fn:()=>askInput('새 업무 이름','',v=>{v=(v||'').trim();if(!v)return;let nid='';if(schCommit(pid,d=>{const x=A.newTask(d,g.code);x.name=v;x.phaseLabel=g.label;x.plannedStart=x.referenceStart=it.date||schToday();x.plannedFinish=x.referenceFinish=A.dates.addDays(x.plannedStart,4);schMoveToPhase(d,x,g.code,g.label);d.tasks.push(x);nid=x.id;},`${v} 업무를 추가했습니다`)){it.task=nid;it.phase=g.code;again();}})}); }
     schTaskMenu(el,m,g?'업무 선택 · '+schPhaseLabel(g):'업무 선택',t=>!ph||t.phase===ph,id=>{it.task=id;it.phase=m.byId.get(id).phase;again();},extra); return; }
-  if(k==='unlink'){ if(!canEditItem(it))return; delete it.task; delete it.phase; it.dirty=true; rerenderItem(it.id); return; }
+  if(k==='unlink'){ if(!canEditItem(it))return; delete it.task; delete it.phase; delete it.wbsAt; it.dirty=true; rerenderItem(it.id); return; }
   if(!schOwn(it))return; const t=m.byId.get(it.task);
   // the trash of a task's panel deletes the task (with what hangs on it); it can be taken back from the toast
-  if(k==='del'){e.stopPropagation();confirmDlg(`“${schTaskTitle(t)}” 업무를 삭제할까요? 이 업무에 걸린 관계도 함께 지워집니다. (삭제 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'삭제',pri:true,fn:()=>{const was=it.editing;if(was)revertItem(it);closePanel(true);schCommit(pid,d=>A.removeTasks(d,[t.id]),schWbs(t.wbs)+' 업무 삭제');}},{t:'취소',fn:()=>{}}]);return;}
+  if(k==='del'){e.stopPropagation();confirmDlg(`“${schTaskTitle(t)}” 업무를 삭제할까요? 이 업무에 걸린 관계도 함께 지워집니다. (삭제 뒤 알림의 ‘되돌리기’로 되살릴 수 있습니다)`,[{t:'삭제',pri:true,fn:()=>{const was=it.editing;if(was)revertItem(it);closePanel(true);schCommit(pid,d=>A.removeTasks(d,[t.id]),schNo(t)+' 업무 삭제');}},{t:'취소',fn:()=>{}}]);return;}
   if(!it.editing)return;   // everything below changes the task: only after 수정
   if(k==='f'){e.stopPropagation();schFieldEdit(el,it);return;}
+  if(k==='wbs-move'){ e.stopPropagation(); const g=m.phases.find(x=>x.code===t.phase), rest=g?g.tasks.filter(x=>x.id!==t.id).sort((a,b)=>schNoOf(a)-schNoOf(b)||a.order-b.order):[], nx=rest.find(x=>schNoOf(x)>schNoOf(t));
+    if(!rest.length){toast('이 단계에 다른 액션이 없습니다.',2800);return;}
+    schNoPick(el,m,t.phase,t.id,nx?nx.id:'',id=>{ if(id===(nx?nx.id:''))return; const was=schNo(t);
+      if(schTagged(it,()=>schEditTask(pid,t.id,'',(x,d)=>schPutBefore(d,x,id,true),true))){ const now=schNo(schModel(pid).byId.get(t.id)); toast(`${was} → ${now} · 그 사이 번호가 한 칸씩 옮겨졌습니다`,4200); schPropsRefresh(it); } }); return; }
   if(k==='phase-move'){ e.stopPropagation(); if(t.wbs==='W8.6'){toast('운영개시 기준 업무는 다른 단계로 옮길 수 없습니다.',3600);return;}
-    const move=(code,label)=>{ const snap=schSnap(pid), ttl=`${schWbs(t.wbs)} 단계 이동`; if(schTagged(it,()=>schEditTask(pid,t.id,ttl,(x,d)=>schMoveToPhase(d,x,code,label),true)))schChangeCard(pid,snap,{title:ttl,focus:t.id,note:`${schPhaseNo(code)}) ${schPhaseName(label)} 단계로 옮겼습니다.`}); };
+    const move=(code,label)=>{ const snap=schSnap(pid), ttl=`${schNo(t)} 단계 이동`; if(schTagged(it,()=>schEditTask(pid,t.id,ttl,(x,d)=>schMoveToPhase(d,x,code,label),true)))schChangeCard(pid,snap,{title:ttl,focus:t.id,note:`${schPhaseNo(code)}) ${schPhaseName(label)} 단계로 옮겼습니다.`}); };
     schPhasePick(el,pid,m,t.phase,(code,label)=>{if(t.phase!==code)move(code,label);},(code,gone)=>{ if(gone&&!schOwn(it)){closePanel(true);return;} schPropsRefresh(it); }); return;}
   if(k==='rel'){e.stopPropagation();e.preventDefault();schRelMenu(el,pid,el.dataset.k);return;}
   if(k==='addref'){e.stopPropagation();schRefMenu(el,it,pid,t);return;}
@@ -6140,7 +6190,7 @@ function schActionToTask(it,quiet){ if(!schPreview()||!it||it.type!=='action'||i
   const pid=it.proj, m=schModel(pid), g=m.phases.find(x=>x.code===it.phase); if(!g||schScenario(pid))return false;
   const A=AIDCSchedule, ms=!!it.ms, today=schToday(), start=it.date||today, e0=itemEnd(it), end=ms?start:(e0&&e0>start?e0:start), st=it.st==='done'?'완료':(SCH_STATUSES.includes(it.stx)?it.stx:(start<=today?'진행':'계획')); let nid='';
   const ok=schCommit(pid,d=>{ const x=A.newTask(d,g.code); x.name=(it.title||'').split('\n').join(' ').trim()||'제목 없음'; x.kind=ms?'milestone':'task'; x.plannedStart=x.referenceStart=start; x.plannedFinish=x.referenceFinish=end;
-      schMoveToPhase(d,x,g.code,g.label); if(!g.tasks.length)x.phaseLabel=g.label; x.status=st;
+      schMoveToPhase(d,x,g.code,g.label); if(!g.tasks.length)x.phaseLabel=g.label; schPutBefore(d,x,it.wbsAt||''); x.status=st;
       let as=it.actualStart||null, af=it.actualFinish||null; if(af&&!as)as=af<start?af:start; if(as&&af&&af<as)af=as;
       if(st==='완료'){ if(!as)as=start<=today?start:today; if(!af)af=ms?as:(today>=as?today:as); }
       else{ af=null; if(st==='진행'&&!as&&!ms)as=start<=today?start:today; if(st==='계획'||st==='확인 전'||st==='조건부 미발동')as=null; }
@@ -6148,14 +6198,14 @@ function schActionToTask(it,quiet){ if(!schPreview()||!it||it.type!=='action'||i
       if((it.people||[]).length)x.people=it.people.slice(); if(it.pri&&it.pri!=='std')x.pri=it.pri; if(it.url)x.url=it.url; if(it.why)x.why=it.why;
       for(const k of ['criteria','conditions','evidence'])if(it[k])x[k]=String(it[k]); d.tasks.push(x); nid=x.id; },'',true,true);
   if(!ok||!nid)return false;
-  it.own=true; it.task=nid; delete it.wbsOff; schOwnIds.c=null; SCH.memo[pid]=null;
+  it.own=true; it.task=nid; delete it.wbsOff; delete it.wbsAt; schOwnIds.c=null; SCH.memo[pid]=null;
   if((it.refs||[]).length)schWrite(pid,{['c:'+nid]:{ids:it.refs.slice()}});
   (SCH.conv||(SCH.conv={}))[nid]=it.id; if(quiet)return true;
   if(!SCHU.open.includes(g.code))SCHU.open.push(g.code); SCHU.sel=nid; schUiSave(); SCH.convSay=it.id;   // remembered for undo / redo (schConvSettle) and for the toast of this save (schSavedSay)
   return true; }
 // The toast of 게시 / 저장: an action that has just become a task says under which number it now stands.
 function schSavedSay(it,text){ if(!it||SCH.convSay!==it.id)return null; SCH.convSay=''; const t=schOwn(it)&&schModel(it.proj).byId.get(it.task); if(!t)return null;
-  return {text:`${text.replace(/\.$/,'')} · ${schWbs(t.wbs)}) 번호로 액션 일정 · 리스트 · 관계도에 올렸습니다.`,act:{t:'되돌리기',fn:schUndo}}; }
+  return {text:`${text.replace(/\.$/,'')} · ${schNo(t)}) 번호로 액션 일정 · 리스트 · 관계도에 올렸습니다.`,act:{t:'되돌리기',fn:schUndo}}; }
 // After undo / redo: the step that made an action a task took the task away (or brought it back). The action follows: without its
 // task it is an ordinary action again (it still carries its phase, so it is listed with it), with it the task's own item.
 function schConvSettle(pid){ const c=SCH.conv; if(!c||!schReady(pid))return; const m=schModel(pid); let ch=false;
@@ -6168,7 +6218,7 @@ function schLegacyToTasks(pid){ if(!schPreview()||typeof sharedReady==='undefine
   const m=schModel(pid), list=liveItems('action',pid).filter(i=>!i.own&&!i.task&&i.phase&&!i.wbsOff&&i.status==='published'&&i.authorId===sharedUser&&!i.editing&&m.phases.some(g=>g.code===i.phase)&&!otherLock('item:'+i.id)); if(!list.length)return;
   const u0=SCH.undo.length; let n=0; for(const it of list.sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||''))||String(a.id).localeCompare(String(b.id))))if(schActionToTask(it,true))n++;
   if(!n)return; const label=`개발 단계가 있던 액션 ${n}건에 WBS 번호를 붙였습니다`; schUndoJoin(pid,u0,label); toast(label+' · 액션 일정 · 리스트 · 관계도에 올라갑니다.',6000,{t:'되돌리기',fn:schUndo,keep:true}); schRedraw(true); }
-function schAfterSave(it){ schEditKeep(it); if(schActionToTask(it))return; if(!schOwn(it))return; const m=schModel(it.proj), t=m.byId.get(it.task), name=(it.title||'').split('\n').join(' ').trim(); if(name&&name!==t.name)schEditTask(it.proj,t.id,schWbs(t.wbs)+' 업무명 변경',x=>{x.name=name;},true,true); } // the caller redraws
+function schAfterSave(it){ schEditKeep(it); if(schActionToTask(it))return; if(!schOwn(it))return; const m=schModel(it.proj), t=m.byId.get(it.task), name=(it.title||'').split('\n').join(' ').trim(); if(name&&name!==t.name)schEditTask(it.proj,t.id,schNo(t)+' 업무명 변경',x=>{x.name=name;},true,true); } // the caller redraws
 
 /* ---- schedule/ui/32-fields.js ---- */
 // Eighth round (owner, 2026-11-20): one panel for every action, and the fields of a meeting's three lines.
@@ -6185,7 +6235,7 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
   const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
-    :E?schStageEdit(m,g,t)
+    :E?schStageEdit(m,g,t,it)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
@@ -6241,7 +6291,7 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
   let cur=calc(); if(cur.err&&o.kind!=='new'){toast(cur.err,3600);return;}
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg'; document.body.appendChild(d);
   const close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
-  const ok=()=>{ if(cur.err)return; close(); SCHU.sel=o.to; schCommit(pid,mut(),o.kind==='new'?`${schWbs(a.wbs)} → ${schWbs(b.wbs)} 관계 추가 (${type})`:o.label); };
+  const ok=()=>{ if(cur.err)return; close(); SCHU.sel=o.to; schCommit(pid,mut(),o.kind==='new'?`${schNo(a)} → ${schNo(b)} 관계 추가 (${type})`:o.label); };
   const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} else if(e.key==='Enter'){e.stopPropagation();e.preventDefault();ok();} };
   const rg=(x,t)=>t.kind==='milestone'?schD(x.start):`${schD(x.start)} → ${schD(x.finish)}`;
   const draw=()=>{ const r0=m.res, res=cur.res, err=cur.err; let body='';
@@ -6250,13 +6300,13 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
       const shown=[a,b].concat(moved.filter(t=>t.id!==a.id&&t.id!==b.id)).slice(0,10);
       // the outcome in one line, before the figures
       const ds=D.diffDays(b1.start,b0.start), df=D.diffDays(b1.finish,b0.finish), dm=ds||df, sum=!moved.length&&!opD?`<div class="pp-sum">일정은 바뀌지 않습니다. 관계만 ${o.gone?'지워집니다':'기록됩니다'}.</div>`
-        :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schWbs(b.wbs))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
-      body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(b.wbs))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
+        :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schNo(b))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
+      body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schNo(b))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
         <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${schD(r0.operationDate)}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?(opD>0?'+':'')+opD+'일':'변화 없음'}</em></div></div>
         ${schProposeChart(m,cur,shown,o.kind==='new'||!o.gone?[a.id,b.id]:null,o.kind==='new'?type:((plan.dependencies.find(x=>x.from===a.id&&x.to===b.id)||{}).type||'FS'))}
         <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
         ${moved.length?`<div class="pp-tbl"><div class="hd"><span>업무</span><span>변경 전 → 변경 후</span><span>완료일 차이</span></div>${moved.map(t=>{const x=r0.tasks[t.id], y=res.tasks[t.id], dl=D.diffDays(y.finish,x.finish);
-          return `<div class="rw"><span class="nm"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
+          return `<div class="rw"><span class="nm"><b>${esc(schNo(t))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
           :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 다른 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}`; }
     d.innerHTML=`<div class="box" role="dialog" aria-label="${esc(o.kind==='new'?'관계 연결':o.title)}"><div class="pp-hd"><b>${esc(o.kind==='new'?'관계 연결':o.title)}</b><span><em>${esc(schTaskTitle(a))}</em>${svg('i-sch-arr',13,9)}<em>${esc(schTaskTitle(b))}</em></span></div>
       ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}">${schRelGlyph(ty)}<b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
@@ -6272,7 +6322,7 @@ function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r
   tasks.forEach((t,i)=>{ const a=r0.tasks[t.id], b=r1.tasks[t.id], ms=t.kind==='milestone', ch=!a||a.start!==b.start||a.finish!==b.finish, cy=top+i*RH+RH/2, bar=(r,cls)=>{ const x1=X(r.start), w=Math.max(3,X(r.finish)+px-x1);
       return ms?`<i class="ms ${cls}" style="left:${LW+x1-5}px;top:${cy-5}px"></i>`:`<i class="br ${cls}" style="left:${LW+x1}px;top:${cy-7}px;width:${w}px"></i>`; };
     const x1=X(b.start), w=Math.max(3,X(b.finish)+px-x1); geo.set(t.id,ms?{ms:true,cx:x1,cy,x1:x1-6,x2:x1+6,top:cy-6,bottom:cy+6,rh:RH}:{x1,x2:x1+w,cy,top:cy-7,bottom:cy+7,rh:RH});
-    rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
+    rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schNo(t))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
   let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1]),relType); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
   const nx=today>=D.fromDay(lo)&&today<=D.fromDay(hi)?`<i class="td" style="left:${LW+X(today)+px/2}px;top:${top-4}px;height:${H-top+2}px"></i>`:'';
   return `<div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div>`; }
@@ -6288,7 +6338,7 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
   const say=ds&&df&&ds===df?`기간이 ${how(ds)}`:ds&&df?`시작 ${sg(ds)}일 · 완료 ${sg(df)}일`:ds?`시작이 ${how(ds)}`:df?`완료가 ${how(df)}`:'의 예상 일정은 그대로입니다';
   const held=o.want&&a1.start!==o.want, shown=[t1].concat(others).slice(0,10);
   const sum=!moved.length&&!opD?`<div class="pp-sum">예상 일정은 바뀌지 않습니다. 입력한 날짜만 기록됩니다.</div>`
-    :`<div class="pp-sum ${opD>0||(!opD&&(df||ds)>0)?'late':'early'}"><b>${esc(schWbs(t.wbs))})</b> ${say}<i></i>함께 바뀌는 업무 <b>${others.length}</b>개<i></i>운영개시 ${opD?`<b>${sg(opD)}일</b>`:'변화 없음'}</div>`;
+    :`<div class="pp-sum ${opD>0||(!opD&&(df||ds)>0)?'late':'early'}"><b>${esc(schNo(t))})</b> ${say}<i></i>함께 바뀌는 업무 <b>${others.length}</b>개<i></i>운영개시 ${opD?`<b>${sg(opD)}일</b>`:'변화 없음'}</div>`;
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg'; document.body.appendChild(d);
   const close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
   const ok=()=>{ close(); const snap=schSnap(pid), done=o.commit?o.commit():schCommit(pid,o.mutate,o.label); if(done===false)return;
@@ -6296,12 +6346,12 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
   const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} else if(e.key==='Enter'){e.stopPropagation();e.preventDefault();ok();} };
   d.innerHTML=`<div class="box pp-dates" role="dialog" aria-label="${esc(o.title||'일정 변경')}"><div class="pp-hd"><b>${esc(o.title||'일정 변경')}</b><span><em>${esc(schTaskTitle(t))}</em></span></div>
     <p class="pp-sent">${esc(o.note||'')}${held?`${o.note?' · ':''}선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(a1.start)}입니다.`:''}</p>${sum}
-    <div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(t.wbs))}</span><strong>${rg(a0,t)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${ds||df?'new':''}"><span>변경 후 예상</span><strong>${rg(a1,t1)}</strong></div>
+    <div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schNo(t))}</span><strong>${rg(a0,t)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${ds||df?'new':''}"><span>변경 후 예상</span><strong>${rg(a1,t1)}</strong></div>
       <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${r0.operationDate?schD(r0.operationDate):'미정'}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?sg(opD)+'일':'변화 없음'}</em></div></div>
     ${schProposeChart(m,cur,shown,null,'FS')}
     <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
     ${moved.length?`<div class="pp-tbl"><div class="hd"><span>업무</span><span>변경 전 → 변경 후</span><span>완료일 차이</span></div>${moved.map(q=>{const x=r0.tasks[q.id], y=res.tasks[q.id], dl=D.diffDays(y.finish,x.finish);
-      return `<div class="rw"><span class="nm"><b>${esc(schWbs(q.wbs))})</b>${esc(q.name)}</span><span class="rg"><s>${rg(x,m.byId.get(q.id)||q)}</s><strong>${rg(y,q)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
+      return `<div class="rw"><span class="nm"><b>${esc(schNo(q))})</b>${esc(q.name)}</span><span class="rg"><s>${rg(x,m.byId.get(q.id)||q)}</s><strong>${rg(y,q)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
       :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}
     <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri">적용</button></div></div>`;
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; if(bt.dataset.pp==='x')close(); else if(bt.dataset.pp==='ok')ok(); });
@@ -6320,7 +6370,7 @@ const SCH_GATE_ST=['확인 전','준비 중','검토 요청','승인','보완·�
 const SCH_EV=[['commitmentReviews','보완·확약'],['assumptionsAndReferences','전제·근거'],['responsibilityBoundaries','책임경계'],['nvisScheduleReview','NVIS 일정검토'],['offtakers','오프테이커 후보'],['sourceMappings','원자료 대조']];
 const SCH_EV_ST=['확인 필요','확인 중','반영 완료','조건부 미발동','보류'];
 // "W7.10~W7.18", "W6.8/W6.27" ...: every WBS in a text becomes a link to its task
-function schWbsLinks(m,text){ return esc(String(text??'')).replace(/W(\d+)\.(\d+)/g,(w,a,b)=>{const t=m.byWbs.get(w);return t?`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(schTaskTitle(t))}">${a}-${b}</a>`:`${a}-${b}`;}); }
+function schWbsLinks(m,text){ return esc(String(text??'')).replace(/W(\d+)\.(\d+)/g,(w,a,b)=>{const t=m.byWbs.get(w);return t?`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(schTaskTitle(t))}">${schNo(t)}</a>`:`${a}-${b}`;}); }   // (a text names a task by its key; it shows the number the task shows now)
 const schDayOnly=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}/.test(v)?v.slice(0,10):'';
 const schPkgNo=x=>String(x.id).replace(/^\D+/,'')||x.id;
 const schSrcFields=(pid,kind,i)=>(((SCH.src[pid]||{})[kind]||[])[i]||{}).fields||{};
@@ -6357,7 +6407,7 @@ function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.pro
   let h=`<div class="sch-filters">${schSf('procState',SCHU.procState||'전체 상태',!!SCHU.procState)}<div class="right">${schXlBtn('proc')}</div></div>
     <div class="tbl sch-proc"><div class="hd">${th('No.')}${th('설비')}${th('계약·PO 업무')}${th('예상 PO → 예상 설치완료')}${th('PO 추가지연')}${th('상태')}${th('담당자')}${th('운영 여유')}${th('확약 납기')}</div>`;
   for(const x of list){ const po=m.byId.get(x.poTaskId), pr=m.res.tasks[x.poTaskId], ins=m.res.tasks[x.installTaskId], f=schSrcFields(pid,'procurementPackages',x.sourceIndex), ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
-    h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schWbs(po.wbs)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
+    h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schNo(po)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
       <div class="rg">${pr&&ins?schRange(pr.start,ins.finish):'-'}</div><div class="dl"><span class="sf-e" data-schc="pdelay" data-k="${esc(x.id)}" title="PO 추가지연 (일) 변경">${x.delay?x.delay+'일':'-'}</span></div>
       <div>${schStateMark(x.commitment||'미확약','sf-e',`data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경"`)}</div>
       <div class="who">${ppl.length?ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
@@ -6494,14 +6544,14 @@ const schDayItems=(pid,day)=>liveItems('action',pid).filter(i=>!i.own&&i.date&&i
 // nearest deadline. Today's list also carries the red ones that are not under way today, so that a change never goes unnoticed.
 function schDayRows(pid,D){ const P=AIDCSchedule.progress, m=schHas(pid)?schModel(pid):null, n=schNotices(pid), rows=[];
   const taskRow=t=>{const r=m.res.tasks[t.id], id=schItemId(t.id);return {id,title:schTaskTitle(t),ms:t.kind==='milestone',ppl:schPeople(t),role:'미지정',due:r.finish,done:P.isDone(t),red:n.red.has(id),green:n.green.has(id)};};
-  const itemRow=i=>({id:i.id,ms:!!i.ms,title:(i.task&&m&&m.byId.get(i.task)?schWbs(m.byId.get(i.task).wbs)+') ':'')+(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',due:itemEnd(i),done:i.st==='done',red:n.red.has(i.id),green:n.green.has(i.id)});
+  const itemRow=i=>({id:i.id,ms:!!i.ms,title:(i.task&&m&&m.byId.get(i.task)?schNo(m.byId.get(i.task))+') ':'')+(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',due:itemEnd(i),done:i.st==='done',red:n.red.has(i.id),green:n.green.has(i.id)});
   if(m)for(const t of schDayTasks(pid,D))rows.push(taskRow(t));
   for(const i of schDayItems(pid,D))rows.push(itemRow(i));
   if(D===TODAY){ const have=new Set(rows.map(r=>r.id)); for(const id of n.red){ if(have.has(id))continue; const tid=schTaskIdOf(id);
       if(tid){const t=m&&m.byId.get(tid); if(t)rows.push(taskRow(t));} else{const i=ITEMS.find(x=>x.id===id); if(i&&isLive(i))rows.push(itemRow(i));} } }
   rows.sort((a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||a.due.localeCompare(b.due)||a.title.localeCompare(b.title,undefined,{numeric:true}));
   return rows.map(r=>Object.assign(r,{dots:schDotsHtml(n,r.id)})); }
-const schDayRowHtml=x=>`<div class="ra" data-open="${esc(x.id)}" title="${esc(x.title)}">${x.dots}${x.ms?'<i class="sch-ms" title="마일스톤"></i>':''}<span class="tt">${esc(x.title)}</span><span class="avstack" title="${esc(x.ppl.length?x.ppl.map(userName).join(', '):'담당자 미지정')}">${x.ppl.length?x.ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span><i class="sp"></i>${x.done?`<span class="sch-dd" style="color:#1acc00">완료</span>`:(schDdayHtml(x.due,false)||'<span class="sch-dd"></span>')}<span class="dt">${schD(x.due)}</span></div>`;
+const schDayRowHtml=(x,yy)=>`<div class="ra" data-open="${esc(x.id)}" title="${esc(x.title)}">${x.dots}${x.ms?'<i class="sch-ms" title="마일스톤"></i>':''}<span class="tt">${esc(x.title)}</span><span class="avstack" title="${esc(x.ppl.length?x.ppl.map(userName).join(', '):'담당자 미지정')}">${x.ppl.length?x.ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span><i class="sp"></i>${x.done?`<span class="sch-dd" style="color:#1acc00">완료</span>`:(schDdayHtml(x.due,false)||'<span class="sch-dd"></span>')}<span class="dt">${yy===true?schD2(x.due):schD(x.due)}</span></div>`;
 function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schHas(pid)?schModel(pid):null, P=AIDCSchedule.progress, today=schToday();
   const add=(a,b)=>{const s=a<mStart?1:+a.slice(8), e=b>mEnd?dim:+b.slice(8);for(let n=s;n<=e;n++)out[n]=(out[n]||0)+1;};
   if(m)for(const t of m.plan.tasks){ if(P.isExcluded(t))continue; const r=m.res.tasks[t.id];
@@ -6527,7 +6577,7 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* t
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
-    h+=rows.slice(0,60).map(schDayRowHtml).join('');
+    h+=rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
     if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
   return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
@@ -6551,7 +6601,7 @@ function schDayPopHide(now){ clearTimeout(schPopT); clearTimeout(schPopHideT); c
 function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.proj; if(!cell||!document.contains(badge)||S.page!=='project'||!schHas(pid))return; clearTimeout(schPopHideT);
   const date=cell.dataset.date; if(schPop&&schPop._date===date&&schPop._a===badge)return; if(schPop)schPop.remove();
   const rows=schDayRows(pid,date), [y,mo,dn]=date.split('-').map(Number), p=document.createElement('div'); p.className='sch-daypop'; p._date=date; p._a=badge; p.setAttribute('role','dialog'); p.setAttribute('aria-label',`${mo}월 ${dn}일의 액션 ${rows.length}건`);
-  p.innerHTML=`<div class="dp-in">${rows.map(schDayRowHtml).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${schD(date)} · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
+  p.innerHTML=`<div class="dp-in">${rows.map(x=>schDayRowHtml(x)).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${schD(date)} · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
   document.body.appendChild(p); const z=(LAYOUT.zoom||1)*.7, r=badge.getBoundingClientRect(); p.style.transform=`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;   /* 0.7: the owner found the window a third too large */
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});
@@ -6600,10 +6650,10 @@ function schHolidayDate(d,n,count){const name=schHolidayName(d);return name?`<sp
 function schMainTasks(pid){ const m=schModel(pid); if(!m)return []; const P=AIDCSchedule.progress, today=schToday(), D=AIDCSchedule.dates, red=schNotices(pid).red;
   return m.plan.tasks.filter(t=>{ if(red.has(schItemId(t.id)))return true;   // a change on a task of mine is shown whatever its dates are
     if(P.isDone(t)||P.isExcluded(t))return false; const r=m.res.tasks[t.id]; return P.isStarted(t)||(r.start<=today&&r.finish>=today)||D.diffDays(r.finish,today)<=30; })
-    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,ps:t.plannedStart,pf:t.plannedFinish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,url:t.url||'',mod:it?modDate(it):null,order:t.order};}); }
+    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schNo(t),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,ps:t.plannedStart,pf:t.plannedFinish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,url:t.url||'',mod:it?modDate(it):null,order:t.order};}); }
 function schMainRows(){ const q=S.q.action, out=[];
   for(const i of liveItems('action')){ if(i.own)continue; const m=i.task&&schHas(i.proj)?schModel(i.proj):null, t=m&&m.byId.get(i.task), end=itemEnd(i);
-    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:!!i.ms,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end,ps:i.date,pf:end,done:i.st==='done',st:schItemSt(i),pri:i.pri||'mid',auto:false,url:i.url||'',mod:modDate(i),item:i,order:t?t.order+.5:1e9}); }
+    out.push({id:i.id,proj:i.proj,wbs:t?schNo(t):'',ms:!!i.ms,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end,ps:i.date,pf:end,done:i.st==='done',st:schItemSt(i),pri:i.pri||'mid',auto:false,url:i.url||'',mod:modDate(i),item:i,order:t?t.order+.5:1e9}); }
   for(const pid of schPids())out.push(...schMainTasks(pid));
   return out.filter(r=>matchQ(q,r.title,r.wbs,proj(r.proj).tag,proj(r.proj).full,...r.ppl.map(userName))); }
 // what the column titles of the main table filter by
@@ -6727,19 +6777,19 @@ async function schXlsxSection(pid,which,part){ const m=schModel(pid); if(!m)retu
     if(view){ // only what the action section shows now: the tasks the filters keep, the relations among them, the actions the filters keep
       const q=(SCHU.q||'').trim(), ph=SCHU.phase, shown=ph==='none'?[]:schFiltered(m,SCHU.tab==='list'), ids=new Set(shown.map(t=>t.id));
       const acts=liveItems('action',pid).filter(i=>{ if(i.own||!schItemTest(i,q))return false; const tk=i.task&&m.byId.get(i.task), code=tk?tk.phase:(i.phase||''); return !ph||(ph==='none'?!code:code===ph); });
-      const trow=t=>{const r=m.res.tasks[t.id];return [t.wbs,schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.plannedStart,t.kind==='milestone'?'':t.plannedFinish,r.start,r.finish,n(t.actualStart),n(t.actualFinish),schStatus(t),schPeople(t).map(userName).join(', '),priTxt[schPri(m,t)],t.url||'',t.why||''];};
+      const trow=t=>{const r=m.res.tasks[t.id];return [schWk(t),schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.plannedStart,t.kind==='milestone'?'':t.plannedFinish,r.start,r.finish,n(t.actualStart),n(t.actualFinish),schStatus(t),schPeople(t).map(userName).join(', '),priTxt[schPri(m,t)],t.url||'',t.why||''];};
       const sheets=[{name:'검토요약',rows:[['항목','값'],['프로젝트',P.full||P.tag||''],['내보낸 범위','현재 시트 (검색·필터 적용)'],['조건',schCondText(pid)],['업무수',shown.length],['액션수',acts.length],['상태일',m.plan.statusDate],['내보낸 날',TODAY]],widths:[24,60]},
         {name:'액션(업무)',rows:[['WBS','단계','업무명','작업유형','시작일','완료일','예상시작','예상완료','실제시작','실제완료','상태','담당자','중요도','URL','지연 사유']].concat(shown.map(trow)),widths:[9,22,44,10,12,12,12,12,12,12,12,20,9,30,36]},
-        {name:'액션(등록)',rows:[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL','지연 사유']].concat(acts.map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?tk.wbs:'',i.date||'',i.end&&i.end>i.date?i.end:'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||'',i.why||''];})),widths:[44,22,10,12,12,10,9,20,30,36]},
-        {name:'업무연결',rows:[['선행 WBS','선행 업무','후행 WBS','후행 업무','유형','간격(일)','계산 적용']].concat(m.plan.dependencies.filter(e=>ids.has(e.from)&&ids.has(e.to)).map(e=>{const a=m.byId.get(e.from),b=m.byId.get(e.to);return [a.wbs,a.name,b.wbs,b.name,e.type,e.lag||0,e.active?'적용':'미적용'];})),widths:[10,40,10,40,8,10,10]}];
+        {name:'액션(등록)',rows:[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL','지연 사유']].concat(acts.map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?schWk(tk):'',i.date||'',i.end&&i.end>i.date?i.end:'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||'',i.why||''];})),widths:[44,22,10,12,12,10,9,20,30,36]},
+        {name:'업무연결',rows:[['선행 WBS','선행 업무','후행 WBS','후행 업무','유형','간격(일)','계산 적용']].concat(m.plan.dependencies.filter(e=>ids.has(e.from)&&ids.has(e.to)).map(e=>{const a=m.byId.get(e.from),b=m.byId.get(e.to);return [schWk(a),a.name,schWk(b),b.name,e.type,e.lag||0,e.active?'적용':'미적용'];})),widths:[10,40,10,40,8,10,10]}];
       const bytes=await X.makeBook(sheets,which==='net'?'업무연결':'액션(업무)'); schExpSave(`${pname(P)}_액션 현재 시트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다. (업무 ${shown.length}건 · 액션 ${acts.length}건)`,3600); return; }
     const tasks=[['WBS','단계','업무명','작업유형','참조시작','참조완료','관리시작','관리완료','예상시작','예상완료','달력기간','실제시작','실제완료','진척률(0~1)','상태','담당 멤버','실행 역할','중요도','URL','추가지연','운영여유','완료기준','조건·확약','증빙']]
-      .concat(m.phases.flatMap(g=>g.tasks).map(t=>{const r=m.res.tasks[t.id];return [t.wbs,schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.referenceStart,t.referenceFinish,t.plannedStart,t.plannedFinish,r.start,r.finish,r.duration,n(t.actualStart),n(t.actualFinish),n(t.progress),schStatus(t),schPeople(t).map(userName).join(', '),schRole(t),priTxt[schPri(m,t)]+(t.pri?'':' (자동)'),t.url||'',t.delay||0,n(r.slack),t.criteria||'',t.conditions||'',t.evidence||''];}));
-    const loose=[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL']].concat(liveItems('action',pid).filter(i=>!i.own).map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?tk.wbs:'',i.date||'',itemEnd(i)||'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||''];}));
-    const deps=[['선행 WBS','선행 업무','후행 WBS','후행 업무','유형','간격(일)','계산 적용']].concat(m.plan.dependencies.map(e=>{const a=m.byId.get(e.from),b=m.byId.get(e.to);return a&&b?[a.wbs,a.name,b.wbs,b.name,e.type,e.lag||0,e.active?'적용':'미적용']:null;}).filter(Boolean));
+      .concat(m.phases.flatMap(g=>g.tasks).map(t=>{const r=m.res.tasks[t.id];return [schWk(t),schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,t.kind==='milestone'?'마일스톤':'작업',t.referenceStart,t.referenceFinish,t.plannedStart,t.plannedFinish,r.start,r.finish,r.duration,n(t.actualStart),n(t.actualFinish),n(t.progress),schStatus(t),schPeople(t).map(userName).join(', '),schRole(t),priTxt[schPri(m,t)]+(t.pri?'':' (자동)'),t.url||'',t.delay||0,n(r.slack),t.criteria||'',t.conditions||'',t.evidence||''];}));
+    const loose=[['제목','단계','연결 업무','시작','종료','상태','중요도','담당자','URL']].concat(liveItems('action',pid).filter(i=>!i.own).map(i=>{const tk=i.task&&m.byId.get(i.task), g=m.phases.find(x=>x.code===(tk?tk.phase:i.phase));return [oneLine(i.title),g?schPhaseLabel(g):'',tk?schWk(tk):'',i.date||'',itemEnd(i)||'',schItemSt(i),priTxt[i.pri||'mid'],(i.people||[]).map(userName).join(', '),i.url||''];}));
+    const deps=[['선행 WBS','선행 업무','후행 WBS','후행 업무','유형','간격(일)','계산 적용']].concat(m.plan.dependencies.map(e=>{const a=m.byId.get(e.from),b=m.byId.get(e.to);return a&&b?[schWk(a),a.name,schWk(b),b.name,e.type,e.lag||0,e.active?'적용':'미적용']:null;}).filter(Boolean));
     const proc=[['패키지','설비','계약·PO 업무','예상 PO','예상 설치완료','PO 추가지연(일)','확약 상태','담당자','운영 여유(일)','확약 납기(주)','확약 기준 예상납품','납기 기산조건','기산조건 충족일','별도 운송(일)','공급사·계약상태','견적·조건 증빙']]
-      .concat(m.plan.procurement.map(x=>{const po=m.byId.get(x.poTaskId),pr=m.res.tasks[x.poTaskId],ins=m.res.tasks[x.installTaskId];return [x.id,x.name,po?po.wbs:'',pr?pr.start:'',ins?ins.finish:'',x.delay||0,x.commitment||'미확약',(Array.isArray(x.people)?x.people:[]).map(userName).join(', '),ins&&ins.slack!==null?ins.slack:'',n(x.leadWeeks),m.res.deliveries[x.id]||'',x.trigger||'',x.triggerDate||'',x.transport||0,x.supplier||'',x.evidence||''];}));
-    const gates=[['게이트','승인 사항','연결 업무','예상 승인일','계획 승인일','상태','승인 역할','통과 증빙','미충족 처리','메모']].concat(schGates(pid,m).map(g=>[g.user?'추가':g.code,g.title,g.t?g.t.wbs:'',g.date||'',g.plan||'',g.st,g.f['승인 역할']||'',g.f['통과 증빙']||'',g.f['미충족 처리']||'',(g.o&&g.o.note)||'']));
+      .concat(m.plan.procurement.map(x=>{const po=m.byId.get(x.poTaskId),pr=m.res.tasks[x.poTaskId],ins=m.res.tasks[x.installTaskId];return [x.id,x.name,po?schWk(po):'',pr?pr.start:'',ins?ins.finish:'',x.delay||0,x.commitment||'미확약',(Array.isArray(x.people)?x.people:[]).map(userName).join(', '),ins&&ins.slack!==null?ins.slack:'',n(x.leadWeeks),m.res.deliveries[x.id]||'',x.trigger||'',x.triggerDate||'',x.transport||0,x.supplier||'',x.evidence||''];}));
+    const gates=[['게이트','승인 사항','연결 업무','예상 승인일','계획 승인일','상태','승인 역할','통과 증빙','미충족 처리','메모']].concat(schGates(pid,m).map(g=>[g.user?'추가':g.code,g.title,g.t?schWk(g.t):'',g.date||'',g.plan||'',g.st,g.f['승인 역할']||'',g.f['통과 증빙']||'',g.f['미충족 처리']||'',(g.o&&g.o.note)||'']));
     const ev=kind=>[['ID','구분','제목','연결 업무','상태','확인 역할','기한','내용','근거','메모']].concat(schEvRows(pid,kind).map(r=>[r.no,r.cat,r.title,r.link,r.st,r.role,r.due,r.body,r.ref||'',r.note||'']));
     const E=k=>({name:SCH_XL_SHEET[k],rows:ev(k),widths:[10,16,40,22,14,18,13,60,40,30]});
     const sheets=[{name:'검토요약',rows:[['항목','값'],['프로젝트',P.full||P.tag||''],['상태일',m.plan.statusDate],['운영개시 예상',m.res.operationDate||'미정'],['목표대비 지연(일)',m.res.operationDelay||0],['업무수',m.plan.tasks.length],['관계수',m.plan.dependencies.length],['일정 미연결 액션',loose.length-1],['내보낸 날',TODAY]],widths:[24,46]},
@@ -6775,8 +6825,8 @@ function schToolPanelHtml(pid,kind){ const m=schModel(pid), A=AIDCSchedule, R=(k
   const wrap=(type,title,body)=>`<div class="itype"><i>${pict('action')}</i>${type}</div><div class="ihead"></div><div class="ititle">${esc(title)}</div><div class="props simple sch-simple"><div>${body}</div></div>`;
   if(kind==='path'){ const steps=A.drivingPath(m.plan,m.res), crit=m.plan.tasks.filter(t=>m.res.tasks[t.id].criticality==='critical');
     return wrap('프로젝트 도구','운영개시를 결정하는 경로',`<p class="sch-p">운영개시 예상 <b>${schD(m.res.operationDate)}</b>${m.res.operationDelay?` (목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)`:''}을 결정하는 대표 경로입니다. 이 업무들이 하루 늦어지면 운영개시도 늦어집니다. 같은 날짜를 만드는 다른 경로가 더 있을 수 있습니다.</p>
-      <div class="sch-path">${steps.map(s=>`<div class="st" data-open="${schItemId(s.taskId)}"><b>${schWbs(s.wbs)})</b><span>${esc(s.name)}</span><em>${schD(s.start)} → ${schD(s.finish)}</em><small>${esc(s.cause)}</small></div>`).join('')}</div>
-      <p class="sch-p" style="margin-top:22px">여유가 0일인 업무 ${crit.length}건: ${crit.map(t=>`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(t.name)}">${schWbs(t.wbs)}</a>`).join(' · ')||'없음'}</p>`); }
+      <div class="sch-path">${steps.map(s=>`<div class="st" data-open="${schItemId(s.taskId)}"><b>${schNo(m.byId.get(s.taskId)||s)})</b><span>${esc(s.name)}</span><em>${schD(s.start)} → ${schD(s.finish)}</em><small>${esc(s.cause)}</small></div>`).join('')}</div>
+      <p class="sch-p" style="margin-top:22px">여유가 0일인 업무 ${crit.length}건: ${crit.map(t=>`<a class="sch-wl" data-open="${schItemId(t.id)}" title="${esc(t.name)}">${schNo(t)}</a>`).join(' · ')||'없음'}</p>`); }
   if(kind==='progress')return wrap('프로젝트 도구','진행률 계산 방식',`<p class="sch-p">단계와 전체의 진행률은 업무마다 <b>가중치 × 달성도</b>를 더해 전체 가중치로 나눈 값입니다.</p>
       ${R('가중치','<span class="plain wrap">√기간(일) × 중요도 × 마일스톤\n· 기간: 길수록 크게, 다만 제곱근으로 완만하게 (12일 → 3.5, 90일 → 9.5)\n· 중요도: 높음 1.5 · 중간 1 · 낮음 0.7 (지정 전에는 운영개시 경로·근접 업무가 높음)\n· 마일스톤: 2주짜리 업무로 보고 1.5배</span>')}
       ${R('달성도','<span class="plain wrap">· 완료: 100%\n· 진척률을 입력한 업무: 그 값\n· 착수만 한 업무: 지난 기간 ÷ 전체 기간 (10~90%)\n· 그 밖: 0%\n· ‘조건부 미발동’ 업무는 계산에서 뺍니다</span>')}
@@ -6789,7 +6839,7 @@ function schToolPanelHtml(pid,kind){ const m=schModel(pid), A=AIDCSchedule, R=(k
   if(kind==='compare'){ const base=schPlanOf(pid,Object.fromEntries(Object.entries(SCHED[pid]||{}).filter(([k])=>A.isPlanKey(k)))); let h=`<p class="sch-p">기본 계획과 각 시나리오의 차이입니다. 운영개시 예상: 기본 계획 <b>${schD(base.res.operationDate)}</b></p>`;
     for(const s of schScenarios(pid)){ let x; try{x=schPlanOf(pid,s.ov);}catch(e){h+=R(esc(s.name),`<span class="plain">계산할 수 없습니다: ${esc(e.message)}</span>`);continue;}
       const d=A.dates.diffDays(x.res.operationDate,base.res.operationDate), diff=x.plan.tasks.filter(t=>{const a=base.res.tasks[t.id],b=x.res.tasks[t.id];return !a||a.start!==b.start||a.finish!==b.finish;});
-      h+=R(esc(s.name),`<span class="plain wrap"><b>운영개시 ${schD(x.res.operationDate)}</b> (${d===0?'차이 없음':(d>0?'+':'')+d+'일'}) · 날짜가 달라지는 업무 ${diff.length}건\n${diff.slice(0,40).map(t=>{const a=base.res.tasks[t.id],b=x.res.tasks[t.id];return `${schWbs(t.wbs)}) ${esc(t.name)}: ${a?schD(a.finish):'-'} → ${schD(b.finish)}`;}).join('\n')}${diff.length>40?`\n… 외 ${diff.length-40}건`:''}</span>`); }
+      h+=R(esc(s.name),`<span class="plain wrap"><b>운영개시 ${schD(x.res.operationDate)}</b> (${d===0?'차이 없음':(d>0?'+':'')+d+'일'}) · 날짜가 달라지는 업무 ${diff.length}건\n${diff.slice(0,40).map(t=>{const a=base.res.tasks[t.id],b=x.res.tasks[t.id];return `${schNo(t)}) ${esc(t.name)}: ${a?schD(a.finish):'-'} → ${schD(b.finish)}`;}).join('\n')}${diff.length>40?`\n… 외 ${diff.length-40}건`:''}</span>`); }
     return wrap('프로젝트 도구','시나리오 비교',h); }
   return ''; }
 // The tools have no way in any more (my-page spec DEL-02, 2026-11-19: the entry of the user menu is gone). The functions stay: schToolsMenu(anchor, pid) opens them.
@@ -6985,7 +7035,7 @@ function schRangePick(anchor,from,to,cb){ let a=from||'', b=to||'', hov='', [y,m
 // As many cards on a page as fill whole rows (two rows; the number of columns follows the width, so nothing is left empty when the
 // sidebar is folded).
 function schResPer(){ const t=document.createElement('div'); t.style.cssText='position:absolute;visibility:hidden;height:0;width:var(--pw)'; $('#app').appendChild(t); const w=t.offsetWidth; t.remove();
-  return Math.max(1,Math.floor((w+15.2)/(210.3+15.2)))*2; }
+  return Math.max(1,Math.floor((w+15)/(210.3+15)))*2; }   // (the gap of .sch-on .rgrid)
 // the tag of the partner list's filter (구분)
 const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear title="이 조건 지우기">구분: ${esc(S.partnerCat)}<i>✕</i></button>`:'';
 
@@ -7098,10 +7148,10 @@ function schChangeCard(pid,snap,o){ const m=schModel(pid); if(!m)return; const D
   const held=f&&o.want&&m.res.tasks[f.id].start!==o.want;
   schCardHide(); const c=document.createElement('div'); c.id='sch-card'; c.className='sch-card'; c.dataset.pid=pid; c.setAttribute('role','status');
   c.innerHTML=`<div class="c-hd"><b>${esc(o.title||'일정을 변경했습니다')}</b><button class="c-x" data-card="x" aria-label="닫기">×</button></div>
-    ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schWbs(f.wbs))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
+    ${f?`<div class="c-ln c-first"><span class="nm"><b>${esc(schNo(f))})</b>${esc(f.name)}</span>${fm?`<span class="rg"><s>${rg(fm.a,f)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(fm.b,f)}</strong></span>`:'<span class="rg mut">예상 일정은 그대로입니다</span>'}</div>`:''}
     ${held?`<div class="c-note">선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(m.res.tasks[f.id].start)}입니다.</div>`:''}${o.note?`<div class="c-note">${esc(o.note)}</div>`:''}
     <div class="c-facts"><span class="${others.length?'on':''}">함께 바뀐 업무 <b>${others.length}</b>건</span><span class="${opD>0?'late':opD<0?'early':''}">운영개시 예상 <b>${schD(m.res.operationDate)}</b>${opD?` (${opD>0?'+':''}${opD}일)`:' · 변화 없음'}</span></div>
-    ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schWbs(x.t.wbs))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
+    ${others.length?`<div class="c-more" hidden>${others.slice(0,40).map(x=>`<div class="c-ln"><span class="nm"><b>${esc(schNo(x.t))})</b>${esc(x.t.name)}</span><span class="rg"><s>${rg(x.a,x.t)}</s>${svg('i-sch-arr',12,8)}<strong>${rg(x.b,x.t)}</strong></span><em class="${x.dl>0?'late':x.dl<0?'early':''}">${x.dl>0?'+':''}${x.dl}일</em></div>`).join('')}${others.length>40?`<div class="c-ln mut">외 ${others.length-40}건</div>`:''}</div>`:''}
     <div class="c-bt">${others.length?'<button data-card="more">바뀐 업무 보기</button>':''}<span class="sp"></span><button class="pri" data-card="undo">되돌리기</button></div>`;
   document.body.appendChild(c);
   // it stays until it is closed (owner, 2026-11-20): 되돌리기 must not slip away while one is still looking at what moved
@@ -7136,7 +7186,7 @@ function schBarDrag(e,bar){ const pid=S.proj, m=schModel(pid), host=$('#sch-gant
     la.textContent=schD(a); la.style.cssText=`left:${ms?L+9.35:L}px;top:${top}px`; la.className='sg-dlab '+(ms?'c':'l')+(mode!=='end'&&days?' on':''); if(lb){ lb.textContent=schD(b); lb.style.cssText=`left:${L+W}px;top:${top}px`; lb.className='sg-dlab r'+(mode!=='start'&&days?' on':''); }
     tip.innerHTML=`<b>${days>0?'+':''}${days}일</b>${mode==='move'?'기간 이동':mode==='start'?'시작일 변경':'종료일 변경'}${ms?'':` · ${D.diffDays(b,a)+1}일간`}`; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; document.body.style.cursor=''; SCH.drag=false; for(const n of [tip,ghost,la,lb])if(n)n.remove(); if(!moved)return; swallowClick(); bar.classList.remove('drag'); bar.style.left=left0+'px'; if(!ms)bar.style.width=w0+'px'; if(lock||!days)return;
-    const len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schWbs(t.wbs); let label, want=null, fn, note;
+    const len=D.diffDays(t.plannedFinish,t.plannedStart), sign=(days>0?'+':'')+days+'일', w=schNo(t); let label, want=null, fn, note;
     if(mode==='move'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 기간 이동 ${sign}`; note=`막대를 ${sign} 옮겼습니다 · 시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=x.kind==='milestone'?ns:D.addDays(ns,len);}; }
     else if(mode==='start'){ const ns=D.addDays(r.start,days); want=ns; label=`${w} 시작일 ${sign}`; note=`시작일 ${schD(r.start)} → ${schD(ns)}`; fn=x=>{x.plannedStart=ns;x.plannedFinish=D.addDays(ns,Math.max(0,span-days));}; }
     else { label=`${w} 종료일 ${sign}`; note=`완료일 ${schD(r.finish)} → ${schD(D.addDays(r.finish,days))}`; fn=x=>{x.plannedFinish=D.addDays(x.plannedFinish,days);}; }
@@ -7157,7 +7207,7 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
       // exactly the line the chart will draw for this pair and this kind (out of the end that was pulled, into the half under the pointer)
       const ga=host._rows.get(from), gb=host._rows.get(target.dataset.bar), c=ga&&gb&&ga.x1!==undefined&&gb.x1!==undefined?schLinkPath(ga,gb,kind()):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else { const tx=(toEnd==='s'?r.left:r.right)-b.left, ty=r.top+r.height/2-b.top; line.setAttribute('d',`M${x0},${y0} L${tx/z},${ty/z}`); head.setAttribute('d',''); }
-      tip.innerHTML=`<b>${kind()}</b>${esc(schWbs(ta.wbs))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schWbs(tb.wbs))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
+      tip.innerHTML=`<b>${kind()}</b>${esc(schNo(ta))} ${fromEnd==='f'?'끝나면':'시작하면'} → ${esc(schNo(tb))} ${toEnd==='s'?'시작':'완료'} · 놓으면 결과를 먼저 보여 줍니다`; }
     else { // not on a bar yet: the same rule towards the pointer (down from the task, a round turn, into where the pointer is)
       const ga=host._rows.get(from), c=ga&&ga.x1!==undefined?schLinkPath(ga,{cy:my,cx:mx,x1:mx+2,x2:mx-2,top:my-11,bottom:my+11,ms:false},fromEnd==='f'?'FS':'SS'):null;
       if(c){line.setAttribute('d',c.d);head.setAttribute('d',c.head);} else {line.setAttribute('d',`M${x0},${y0} L${mx},${my}`); head.setAttribute('d','');}
@@ -7174,7 +7224,7 @@ function schLinkDrag(e,port){ const pid=S.proj, m=schModel(pid), host=$('#sch-ga
 function schLinkPull(e,g){ const pid=S.proj, m=schModel(pid), rel=m&&m.plan.dependencies.find(x=>x.id===g.dataset.link), svgEl=g.ownerSVGElement; if(!rel||!svgEl)return;
   const net=!!g.closest('#sch-net'), host=net?null:$('#sch-gantt .sg-scroll'), rows=host&&host._rows; if(!net&&!rows)return;
   e.preventDefault();   // no text selection and no drag of a selection left on the page by something else: either would swallow the pointer's moves
-  const NS='http://www.w3.org/2000/svg', x0=e.clientX, y0=e.clientY, z=LAYOUT.zoom||1, A=AIDCSchedule, W=id=>schWbs(m.byId.get(id).wbs);
+  const NS='http://www.w3.org/2000/svg', x0=e.clientX, y0=e.clientY, z=LAYOUT.zoom||1, A=AIDCSchedule, W=id=>schNo(m.byId.get(id));
   const pt=net?((x,y)=>{const M=svgEl.getScreenCTM();return M?[(x-M.e)/M.a,(y-M.f)/M.d]:[0,0];}):((x,y)=>{const b=svgEl.getBoundingClientRect();return [(x-b.left)/z,(y-b.top)/z];});
   let loose='to';   // which end comes loose: the half of the line that was taken hold of
   try{ const hp=g.querySelector('path.hit')||g.querySelector('path'), L=hp.getTotalLength(), p0=pt(x0,y0); let best=Infinity, at=1; for(let i=0;i<=40;i++){ const q=hp.getPointAtLength(L*i/40), dd=Math.hypot(q.x-p0[0],q.y-p0[1]); if(dd<best){best=dd;at=i/40;} } loose=at<.5?'from':'to'; }catch(_){}
@@ -7237,7 +7287,7 @@ function schNetLink(e,card){ const pid=S.proj, m=schModel(pid), from=card&&card.
   const move=ev=>{ const r=card.getBoundingClientRect(), a=pt(r.right,r.top+r.height*SN.port/SN.h), el=document.elementFromPoint(ev.clientX,ev.clientY), hit=el&&el.closest&&el.closest('#sch-net .sn-node'); if(target&&target!==hit)target.classList.remove('target'); target=hit&&hit.dataset.k!==from?hit:null;
     let b=pt(ev.clientX,ev.clientY); if(target){ target.classList.add('target'); const q=target.getBoundingClientRect(); b=pt(q.left,q.top+q.height*SN.port/SN.h); }
     const mid=(a[0]+b[0])/2; line.setAttribute('d',`M${a[0]},${a[1]} C${mid},${a[1]} ${mid},${b[1]} ${b[0]},${b[1]}`);
-    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=target?`<b>FS</b>${esc(schWbs(m.byId.get(from).wbs))} 끝나면 → ${esc(schWbs(m.byId.get(target.dataset.k).wbs))} 시작 · 놓으면 결과를 먼저 보여 줍니다`:'연결할 업무 카드에 놓으세요'; };
+    tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+18)+'px'; tip.innerHTML=target?`<b>FS</b>${esc(schNo(m.byId.get(from)))} 끝나면 → ${esc(schNo(m.byId.get(target.dataset.k)))} 시작 · 놓으면 결과를 먼저 보여 줍니다`:'연결할 업무 카드에 놓으세요'; };
   const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.style.userSelect=''; SCH.drag=false; card.classList.remove('linking'); if(line)line.remove(); if(tip)tip.remove(); swallowClick(); if(!target)return; target.classList.remove('target');
     schPropose(pid,{kind:'new',from,to:target.dataset.k,type:'FS'}); };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); }
@@ -7268,7 +7318,7 @@ function schExpModel(it){ const tab=archTabOf(it), p=PROJECTS[it.proj], own=type
   if(it.type==='meeting'){ const mp=meetParts(it); add('사업명',p?p.full:''); add('일자 · 장소',[range(it.date,itemEnd(it)),meetTimeTxt(mp.time),mp.place].filter(Boolean).join(' · ')); add('주요안건',mp.agenda); add('협력업체',it.partner); add('참석자 (선진)',names(it.people)); add('상대 참여자',mp.guests);
     add(ACT,(it.actions||[]).map(id=>item(id)).filter(Boolean).map(x=>oneLine(x.title)).join(', ')); add('리서치',(it.research||[]).map(id=>item(id)).filter(Boolean).map(x=>oneLine(x.title)).join(', ')); add('URL',it.url); }
   else if(own){ const m=schModel(it.proj), t=m.byId.get(it.task), r=m.res.tasks[t.id], g=m.phases.find(x=>x.code===t.phase), ms=t.kind==='milestone';
-    add('사업명',p?p.full:''); add('WBS',schWbs(t.wbs)); add('개발 단계',g?schPhaseLabel(g):''); add('예상 기한',ms?D(r.start):range(r.start,r.finish)); add('관리일정',ms?D(t.plannedStart):range(t.plannedStart,t.plannedFinish)); add('실제 기한',range(t.actualStart,t.actualFinish));
+    add('사업명',p?p.full:''); add('WBS',schNo(t)); add('개발 단계',g?schPhaseLabel(g):''); add('예상 기한',ms?D(r.start):range(r.start,r.finish)); add('관리일정',ms?D(t.plannedStart):range(t.plannedStart,t.plannedFinish)); add('실제 기한',range(t.actualStart,t.actualFinish));
     add('상태',schStatus(t)); add('중요도',priTxt[schPri(m,t)]); add('담당자',names(schPeople(t))||'미지정'); add('마일스톤',ms?'예':''); add('운영개시 여유',r.slack===null?'':r.slack+'일'); add('완료 기준',t.criteria); add('조건 · 확약',t.conditions); add('증빙',t.evidence); add('URL',t.url);
     const rel=[]; for(const e of m.pred.get(t.id)){const o=m.byId.get(e.from);rel.push(['선행',schTaskTitle(o),e.type,e.lag?e.lag+'일':'-',e.active?'':'미사용']);} for(const e of m.succ.get(t.id)){const o=m.byId.get(e.to);rel.push(['후행',schTaskTitle(o),e.type,e.lag?e.lag+'일':'-',e.active?'':'미사용']);}
     if(rel.length)sections.push({h:'선후 관계',blocks:[{k:'tbl',head:['구분','업무','유형','간격','비고'],rows:rel,widths:[800,4100,700,800,800]}]}); }

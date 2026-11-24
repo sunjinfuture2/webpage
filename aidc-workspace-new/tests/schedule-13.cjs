@@ -36,6 +36,43 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   check('a task with both sides takes the whole width, itself in the middle', lk2.n >= 3 && lk2.left <= 2 && lk2.right <= 2 && Math.abs(lk2.curMid) <= 2 && lk2.over <= 0, lk2);
   await ev(() => { SCHP.tab = 'info'; closePanel(true); }); await sleep(300);
 
+  console.log('— an action put in between: the numbers after it move up');
+  // (owner, 2026-11-24. The key `wbs` of a task never changes: the calculation, the gates and the workbook know it by that; `no` is what shows.)
+  const nums = () => ev(() => { const m = schModel('pangyo'), g = m.phases.find(x => x.code === 'W1'); return { shown: g.tasks.map(t => schNo(t)), keys: g.tasks.map(t => t.wbs), ops: m.res.operationDate, n: g.tasks.length, ov: Object.keys(SCHED.pangyo || {}).filter(k => k.startsWith('t:') && SCHED.pangyo[k] && SCHED.pangyo[k].no).length }; });
+  const z0 = await nums();
+  const idN = await newAction('끼움 액션 ' + sfx);
+  await a.click('#panel-pin [data-schp="link-phase"]'); await sleep(250); await a.click('.pop .it[data-k="W1"]'); await sleep(400);
+  const nb0 = await ev(() => { const b = document.querySelector('#panel-pin [data-schp="wbs-at"]'); return b && { tag: b.tagName, txt: b.textContent, title: b.title }; });
+  check('the number a new action will get is a button that says its place can be chosen', nb0 && nb0.tag === 'BUTTON' && nb0.txt === `1-${z0.n + 1})` && /들어갈 자리/.test(nb0.title), nb0);
+  await a.click('#panel-pin [data-schp="wbs-at"]'); await sleep(300);
+  const nm0 = await ev(() => ({ hd: (document.querySelector('.pop.sch-nopick .hd') || {}).textContent, rows: [...document.querySelectorAll('.pop.sch-nopick .it')].map(x => x.querySelector('.no').textContent), sel: (document.querySelector('.pop.sch-nopick .it.sel .phn') || {}).textContent }));
+  check('its menu lists the actions of the phase with their numbers, and "맨 뒤" (chosen)', /한 칸씩 밀립니다/.test(nm0.hd) && nm0.rows.length === z0.n + 1 && nm0.rows[2] === '1-3)' && nm0.sel === '맨 뒤', nm0);
+  const nk3 = await ev(() => schModel('pangyo').byWbs.get('W1.3').id);
+  await a.click(`.pop.sch-nopick .it[data-k="${nk3}"]`); await sleep(300);
+  check('a row chosen: the button shows that number', await ev(() => document.querySelector('#panel-pin [data-schp="wbs-at"]').textContent === '1-3)'));
+  await a.click('#panel-pin [data-ed="publish"]'); await sleep(1400);
+  const z1 = await nums(), st1 = await ev(i => { const it = item(i), m = schModel('pangyo'), t = m.byId.get(it.task); return { no: t && schNo(t), key: t && t.wbs, toast: (document.querySelector('#toast') || {}).textContent, head: (document.querySelector('#panel-pin .ititle') || { dataset: {} }).dataset.wbs, at: it.wbsAt || '', nk3: schNo(m.byWbs.get('W1.3')), link: schWbsLinks(m, 'W1.3').replace(/<[^>]+>/g, ''), w86: !!m.byWbs.get('W8.6') }; }, idN);
+  check('published, it stands at 1-3 and what was 1-3 and after moved one up (the keys and the operation date stay)', st1.no === '1-3' && st1.key === 'W1.' + (z0.n + 1) && JSON.stringify(z1.shown) === JSON.stringify(z0.shown.concat('1-' + (z0.n + 1))) && z1.keys[2] === st1.key && z1.keys[3] === 'W1.3' && z1.ops === z0.ops && st1.w86 && !st1.at, { st1, z1 });
+  check('the toast and the head of the panel say 1-3; a text that names W1.3 shows the number it has now', /1-3\) 번호로/.test(st1.toast) && st1.head === '1-3' && st1.nk3 === '1-4' && st1.link === '1-4', st1);
+  await ev(() => { closePanel(true); SCHU.tab = 'gantt'; SCHU.open = ['W1']; schRefresh(); }); await sleep(500);
+  const gr1 = await ev(() => [...document.querySelectorAll('#sch-gantt .sg-left .sg-row.tk')].slice(0, 4).map(r => r.textContent.trim().slice(0, 9)));
+  check('the gantt lists it between 1-2 and what is 1-4 now', /^1-1\)/.test(gr1[0]) && /^1-2\)/.test(gr1[1]) && gr1[2].startsWith('1-3)끼움 액션') && /^1-4\)/.test(gr1[3]), gr1);
+  await ev(() => schUndo()); await sleep(600); const z2 = await nums();
+  check('one 되돌리기 takes the action out and every number back', JSON.stringify(z2.shown) === JSON.stringify(z0.shown) && z2.ov === z0.ov, z2);
+  await ev(i => { const it = item(i); it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); render(true); }, idN); await sleep(300);
+  // a task that is there already: its number is a button while its panel is edited; 취소 takes the move back
+  await ev(() => openPanel(schItemId(schModel('pangyo').byWbs.get('W1.6').id))); await sleep(600);
+  const nro = await ev(() => !document.querySelector('#panel-pin [data-schp="wbs-move"]'));
+  await a.click('#panel-pin [data-ed="edit"]'); await sleep(600); await a.click('#panel-pin [data-schp="wbs-move"]'); await sleep(300);
+  const nm1 = await ev(() => ({ n: document.querySelectorAll('.pop.sch-nopick .it').length, sel: (document.querySelector('.pop.sch-nopick .it.sel .no') || {}).textContent, end: [...document.querySelectorAll('.pop.sch-nopick .it .no')].pop().textContent }));
+  const nk2 = await ev(() => schModel('pangyo').byWbs.get('W1.2').id);
+  await a.click(`.pop.sch-nopick .it[data-k="${nk2}"]`); await sleep(600);
+  const z3 = await nums(), nmv = await ev(() => ({ btn: document.querySelector('#panel-pin [data-schp="wbs-move"]').textContent, toast: (document.querySelector('#toast') || {}).textContent }));
+  check('an existing action moved before 1-2: it shows 1-2, the ones between moved one up, nothing else changed', nro && nm1.n === z0.n && nm1.sel === '1-7)' && nm1.end === `1-${z0.n})` && JSON.stringify(z3.keys.slice(0, 7)) === JSON.stringify(['W1.1', 'W1.6', 'W1.2', 'W1.3', 'W1.4', 'W1.5', 'W1.7']) && JSON.stringify(z3.shown) === JSON.stringify(z0.shown) && nmv.btn === '1-2)' && /1-6 → 1-2/.test(nmv.toast) && z3.ops === z0.ops, { nm1, z3, nmv });
+  await a.click('#panel-pin [data-ed="cancel"]'); await sleep(700); const z4 = await nums();
+  check('취소 puts it back', JSON.stringify(z4.keys) === JSON.stringify(z0.keys) && JSON.stringify(z4.shown) === JSON.stringify(z0.shown) && z4.ov === z0.ov, z4);
+  await ev(() => closePanel(true)); await sleep(300); await gantt(); await ev(() => { SCHU.open = []; schRefresh(); }); await sleep(300);
+
   console.log('— a phase can be renamed and removed');
   const pm = await ev(() => { const r = document.querySelector('#sch-gantt .sg-left .sg-row.ph[data-k="W1"]'), p = r.querySelector('.pm'); return { has: !!p, hidden: getComputedStyle(p).display === 'none', title: p.title }; });
   await rowMenu('W1'); const m1 = await pops();

@@ -7,14 +7,14 @@ const schDayItems=(pid,day)=>liveItems('action',pid).filter(i=>!i.own&&i.date&&i
 // nearest deadline. Today's list also carries the red ones that are not under way today, so that a change never goes unnoticed.
 function schDayRows(pid,D){ const P=AIDCSchedule.progress, m=schHas(pid)?schModel(pid):null, n=schNotices(pid), rows=[];
   const taskRow=t=>{const r=m.res.tasks[t.id], id=schItemId(t.id);return {id,title:schTaskTitle(t),ms:t.kind==='milestone',ppl:schPeople(t),role:'미지정',due:r.finish,done:P.isDone(t),red:n.red.has(id),green:n.green.has(id)};};
-  const itemRow=i=>({id:i.id,ms:!!i.ms,title:(i.task&&m&&m.byId.get(i.task)?schWbs(m.byId.get(i.task).wbs)+') ':'')+(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',due:itemEnd(i),done:i.st==='done',red:n.red.has(i.id),green:n.green.has(i.id)});
+  const itemRow=i=>({id:i.id,ms:!!i.ms,title:(i.task&&m&&m.byId.get(i.task)?schNo(m.byId.get(i.task))+') ':'')+(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',due:itemEnd(i),done:i.st==='done',red:n.red.has(i.id),green:n.green.has(i.id)});
   if(m)for(const t of schDayTasks(pid,D))rows.push(taskRow(t));
   for(const i of schDayItems(pid,D))rows.push(itemRow(i));
   if(D===TODAY){ const have=new Set(rows.map(r=>r.id)); for(const id of n.red){ if(have.has(id))continue; const tid=schTaskIdOf(id);
       if(tid){const t=m&&m.byId.get(tid); if(t)rows.push(taskRow(t));} else{const i=ITEMS.find(x=>x.id===id); if(i&&isLive(i))rows.push(itemRow(i));} } }
   rows.sort((a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||a.due.localeCompare(b.due)||a.title.localeCompare(b.title,undefined,{numeric:true}));
   return rows.map(r=>Object.assign(r,{dots:schDotsHtml(n,r.id)})); }
-const schDayRowHtml=x=>`<div class="ra" data-open="${esc(x.id)}" title="${esc(x.title)}">${x.dots}${x.ms?'<i class="sch-ms" title="마일스톤"></i>':''}<span class="tt">${esc(x.title)}</span><span class="avstack" title="${esc(x.ppl.length?x.ppl.map(userName).join(', '):'담당자 미지정')}">${x.ppl.length?x.ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span><i class="sp"></i>${x.done?`<span class="sch-dd" style="color:#1acc00">완료</span>`:(schDdayHtml(x.due,false)||'<span class="sch-dd"></span>')}<span class="dt">${schD(x.due)}</span></div>`;
+const schDayRowHtml=(x,yy)=>`<div class="ra" data-open="${esc(x.id)}" title="${esc(x.title)}">${x.dots}${x.ms?'<i class="sch-ms" title="마일스톤"></i>':''}<span class="tt">${esc(x.title)}</span><span class="avstack" title="${esc(x.ppl.length?x.ppl.map(userName).join(', '):'담당자 미지정')}">${x.ppl.length?x.ppl.slice(0,3).map(u=>avOf(u)).join(''):'<span class="avatar nil"></span>'}</span><i class="sp"></i>${x.done?`<span class="sch-dd" style="color:#1acc00">완료</span>`:(schDdayHtml(x.due,false)||'<span class="sch-dd"></span>')}<span class="dt">${yy===true?schD2(x.due):schD(x.due)}</span></div>`;
 function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schHas(pid)?schModel(pid):null, P=AIDCSchedule.progress, today=schToday();
   const add=(a,b)=>{const s=a<mStart?1:+a.slice(8), e=b>mEnd?dim:+b.slice(8);for(let n=s;n<=e;n++)out[n]=(out[n]||0)+1;};
   if(m)for(const t of m.plan.tasks){ if(P.isExcluded(t))continue; const r=m.res.tasks[t.id];
@@ -40,7 +40,7 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* t
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
-    h+=rows.slice(0,60).map(schDayRowHtml).join('');
+    h+=rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
     if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
   return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
@@ -64,7 +64,7 @@ function schDayPopHide(now){ clearTimeout(schPopT); clearTimeout(schPopHideT); c
 function schDayPopShow(badge){ const cell=badge.closest('[data-date]'), pid=S.proj; if(!cell||!document.contains(badge)||S.page!=='project'||!schHas(pid))return; clearTimeout(schPopHideT);
   const date=cell.dataset.date; if(schPop&&schPop._date===date&&schPop._a===badge)return; if(schPop)schPop.remove();
   const rows=schDayRows(pid,date), [y,mo,dn]=date.split('-').map(Number), p=document.createElement('div'); p.className='sch-daypop'; p._date=date; p._a=badge; p.setAttribute('role','dialog'); p.setAttribute('aria-label',`${mo}월 ${dn}일의 액션 ${rows.length}건`);
-  p.innerHTML=`<div class="dp-in">${rows.map(schDayRowHtml).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${schD(date)} · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
+  p.innerHTML=`<div class="dp-in">${rows.map(x=>schDayRowHtml(x)).join('')||'<div class="dp-none">이 날 진행 중인 액션이 없습니다.</div>'}</div>${rows.length>8?`<div class="dp-more">${schD(date)} · 액션 ${rows.length}건 (스크롤)</div>`:''}`;
   document.body.appendChild(p); const z=(LAYOUT.zoom||1)*.7, r=badge.getBoundingClientRect(); p.style.transform=`scale(${z})`; const w=p.offsetWidth*z, h=p.offsetHeight*z;   /* 0.7: the owner found the window a third too large */
   let x=r.left-6*z, top=r.bottom+7*z; if(x+w>innerWidth-8)x=innerWidth-8-w; if(top+h>innerHeight-8&&r.top-7*z-h>=8)top=r.top-7*z-h; top=Math.max(8,Math.min(top,innerHeight-8-h)); x=Math.max(8,x);
   p.style.left=x+'px'; p.style.top=top+'px'; schPop=p; const box=p.firstElementChild; schFitMark(box); box.addEventListener('scroll',()=>schFitMark(box),{passive:true});

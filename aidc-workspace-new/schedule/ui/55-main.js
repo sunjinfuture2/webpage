@@ -5,10 +5,10 @@
 function schMainTasks(pid){ const m=schModel(pid); if(!m)return []; const P=AIDCSchedule.progress, today=schToday(), D=AIDCSchedule.dates, red=schNotices(pid).red;
   return m.plan.tasks.filter(t=>{ if(red.has(schItemId(t.id)))return true;   // a change on a task of mine is shown whatever its dates are
     if(P.isDone(t)||P.isExcluded(t))return false; const r=m.res.tasks[t.id]; return P.isStarted(t)||(r.start<=today&&r.finish>=today)||D.diffDays(r.finish,today)<=30; })
-    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schWbs(t.wbs),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,ps:t.plannedStart,pf:t.plannedFinish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,url:t.url||'',mod:it?modDate(it):null,order:t.order};}); }
+    .map(t=>{const r=m.res.tasks[t.id], it=ITEMS.find(x=>x.id===schItemId(t.id)); return {id:schItemId(t.id),proj:pid,wbs:schNo(t),ms:t.kind==='milestone',title:t.name,ppl:schPeople(t),role:'미지정',start:r.start,end:r.finish,ps:t.plannedStart,pf:t.plannedFinish,done:P.isDone(t),st:schStatus(t),pri:schPri(m,t),auto:!t.pri,url:t.url||'',mod:it?modDate(it):null,order:t.order};}); }
 function schMainRows(){ const q=S.q.action, out=[];
   for(const i of liveItems('action')){ if(i.own)continue; const m=i.task&&schHas(i.proj)?schModel(i.proj):null, t=m&&m.byId.get(i.task), end=itemEnd(i);
-    out.push({id:i.id,proj:i.proj,wbs:t?schWbs(t.wbs):'',ms:!!i.ms,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end,ps:i.date,pf:end,done:i.st==='done',st:schItemSt(i),pri:i.pri||'mid',auto:false,url:i.url||'',mod:modDate(i),item:i,order:t?t.order+.5:1e9}); }
+    out.push({id:i.id,proj:i.proj,wbs:t?schNo(t):'',ms:!!i.ms,title:(i.title||'(제목 없음)').split('\n').join(' '),ppl:i.people||[],role:'미지정',start:i.date,end,ps:i.date,pf:end,done:i.st==='done',st:schItemSt(i),pri:i.pri||'mid',auto:false,url:i.url||'',mod:modDate(i),item:i,order:t?t.order+.5:1e9}); }
   for(const pid of schPids())out.push(...schMainTasks(pid));
   return out.filter(r=>matchQ(q,r.title,r.wbs,proj(r.proj).tag,proj(r.proj).full,...r.ppl.map(userName))); }
 // what the column titles of the main table filter by

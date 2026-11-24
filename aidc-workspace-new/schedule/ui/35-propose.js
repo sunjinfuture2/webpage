@@ -13,7 +13,7 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
   let cur=calc(); if(cur.err&&o.kind!=='new'){toast(cur.err,3600);return;}
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg'; document.body.appendChild(d);
   const close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
-  const ok=()=>{ if(cur.err)return; close(); SCHU.sel=o.to; schCommit(pid,mut(),o.kind==='new'?`${schWbs(a.wbs)} → ${schWbs(b.wbs)} 관계 추가 (${type})`:o.label); };
+  const ok=()=>{ if(cur.err)return; close(); SCHU.sel=o.to; schCommit(pid,mut(),o.kind==='new'?`${schNo(a)} → ${schNo(b)} 관계 추가 (${type})`:o.label); };
   const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} else if(e.key==='Enter'){e.stopPropagation();e.preventDefault();ok();} };
   const rg=(x,t)=>t.kind==='milestone'?schD(x.start):`${schD(x.start)} → ${schD(x.finish)}`;
   const draw=()=>{ const r0=m.res, res=cur.res, err=cur.err; let body='';
@@ -22,13 +22,13 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
       const shown=[a,b].concat(moved.filter(t=>t.id!==a.id&&t.id!==b.id)).slice(0,10);
       // the outcome in one line, before the figures
       const ds=D.diffDays(b1.start,b0.start), df=D.diffDays(b1.finish,b0.finish), dm=ds||df, sum=!moved.length&&!opD?`<div class="pp-sum">일정은 바뀌지 않습니다. 관계만 ${o.gone?'지워집니다':'기록됩니다'}.</div>`
-        :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schWbs(b.wbs))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
-      body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(b.wbs))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
+        :`<div class="pp-sum ${opD>0||(!opD&&dm>0)?'late':'early'}"><b>${esc(schNo(b))})</b> ${dm?`${ds?'시작':'완료'}이 ${Math.abs(dm)}일 ${dm>0?'늦어집니다':'당겨집니다'}`:'는 그대로입니다'}<i></i>함께 바뀌는 업무 <b>${moved.filter(t=>t.id!==b.id).length}</b>개<i></i>운영개시 ${opD?`<b>${opD>0?'+':''}${opD}일</b>`:'변화 없음'}</div>`;
+      body=`${sum}<div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schNo(b))}</span><strong>${rg(b0,b)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${b0.start!==b1.start||b0.finish!==b1.finish?'new':''}"><span>변경 후 예상</span><strong>${rg(b1,b)}</strong></div>
         <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${schD(r0.operationDate)}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?(opD>0?'+':'')+opD+'일':'변화 없음'}</em></div></div>
         ${schProposeChart(m,cur,shown,o.kind==='new'||!o.gone?[a.id,b.id]:null,o.kind==='new'?type:((plan.dependencies.find(x=>x.from===a.id&&x.to===b.id)||{}).type||'FS'))}
         <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
         ${moved.length?`<div class="pp-tbl"><div class="hd"><span>업무</span><span>변경 전 → 변경 후</span><span>완료일 차이</span></div>${moved.map(t=>{const x=r0.tasks[t.id], y=res.tasks[t.id], dl=D.diffDays(y.finish,x.finish);
-          return `<div class="rw"><span class="nm"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
+          return `<div class="rw"><span class="nm"><b>${esc(schNo(t))})</b>${esc(t.name)}</span><span class="rg"><s>${rg(x,t)}</s><strong>${rg(y,t)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
           :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 다른 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}`; }
     d.innerHTML=`<div class="box" role="dialog" aria-label="${esc(o.kind==='new'?'관계 연결':o.title)}"><div class="pp-hd"><b>${esc(o.kind==='new'?'관계 연결':o.title)}</b><span><em>${esc(schTaskTitle(a))}</em>${svg('i-sch-arr',13,9)}<em>${esc(schTaskTitle(b))}</em></span></div>
       ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}">${schRelGlyph(ty)}<b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
@@ -44,7 +44,7 @@ function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r
   tasks.forEach((t,i)=>{ const a=r0.tasks[t.id], b=r1.tasks[t.id], ms=t.kind==='milestone', ch=!a||a.start!==b.start||a.finish!==b.finish, cy=top+i*RH+RH/2, bar=(r,cls)=>{ const x1=X(r.start), w=Math.max(3,X(r.finish)+px-x1);
       return ms?`<i class="ms ${cls}" style="left:${LW+x1-5}px;top:${cy-5}px"></i>`:`<i class="br ${cls}" style="left:${LW+x1}px;top:${cy-7}px;width:${w}px"></i>`; };
     const x1=X(b.start), w=Math.max(3,X(b.finish)+px-x1); geo.set(t.id,ms?{ms:true,cx:x1,cy,x1:x1-6,x2:x1+6,top:cy-6,bottom:cy+6,rh:RH}:{x1,x2:x1+w,cy,top:cy-7,bottom:cy+7,rh:RH});
-    rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schWbs(t.wbs))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
+    rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schNo(t))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
   let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1]),relType); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
   const nx=today>=D.fromDay(lo)&&today<=D.fromDay(hi)?`<i class="td" style="left:${LW+X(today)+px/2}px;top:${top-4}px;height:${H-top+2}px"></i>`:'';
   return `<div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div>`; }
@@ -60,7 +60,7 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
   const say=ds&&df&&ds===df?`기간이 ${how(ds)}`:ds&&df?`시작 ${sg(ds)}일 · 완료 ${sg(df)}일`:ds?`시작이 ${how(ds)}`:df?`완료가 ${how(df)}`:'의 예상 일정은 그대로입니다';
   const held=o.want&&a1.start!==o.want, shown=[t1].concat(others).slice(0,10);
   const sum=!moved.length&&!opD?`<div class="pp-sum">예상 일정은 바뀌지 않습니다. 입력한 날짜만 기록됩니다.</div>`
-    :`<div class="pp-sum ${opD>0||(!opD&&(df||ds)>0)?'late':'early'}"><b>${esc(schWbs(t.wbs))})</b> ${say}<i></i>함께 바뀌는 업무 <b>${others.length}</b>개<i></i>운영개시 ${opD?`<b>${sg(opD)}일</b>`:'변화 없음'}</div>`;
+    :`<div class="pp-sum ${opD>0||(!opD&&(df||ds)>0)?'late':'early'}"><b>${esc(schNo(t))})</b> ${say}<i></i>함께 바뀌는 업무 <b>${others.length}</b>개<i></i>운영개시 ${opD?`<b>${sg(opD)}일</b>`:'변화 없음'}</div>`;
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg'; document.body.appendChild(d);
   const close=()=>{d.remove();document.removeEventListener('keydown',key,true);};
   const ok=()=>{ close(); const snap=schSnap(pid), done=o.commit?o.commit():schCommit(pid,o.mutate,o.label); if(done===false)return;
@@ -68,12 +68,12 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
   const key=e=>{ if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();} else if(e.key==='Enter'){e.stopPropagation();e.preventDefault();ok();} };
   d.innerHTML=`<div class="box pp-dates" role="dialog" aria-label="${esc(o.title||'일정 변경')}"><div class="pp-hd"><b>${esc(o.title||'일정 변경')}</b><span><em>${esc(schTaskTitle(t))}</em></span></div>
     <p class="pp-sent">${esc(o.note||'')}${held?`${o.note?' · ':''}선행 업무가 이 업무를 붙잡고 있어 예상 시작은 ${schD(a1.start)}입니다.`:''}</p>${sum}
-    <div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schWbs(t.wbs))}</span><strong>${rg(a0,t)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${ds||df?'new':''}"><span>변경 후 예상</span><strong>${rg(a1,t1)}</strong></div>
+    <div class="pp-cmp"><div class="bx"><span>현재 예상 · ${esc(schNo(t))}</span><strong>${rg(a0,t)}</strong></div><i>${svg('i-sch-arr',14,10)}</i><div class="bx ${ds||df?'new':''}"><span>변경 후 예상</span><strong>${rg(a1,t1)}</strong></div>
       <div class="bx op ${opD>0?'late':opD<0?'early':''}"><span>운영개시 예상</span><strong>${r0.operationDate?schD(r0.operationDate):'미정'}${opD?` → ${schD(res.operationDate)}`:''}</strong><em>${opD?sg(opD)+'일':'변화 없음'}</em></div></div>
     ${schProposeChart(m,cur,shown,null,'FS')}
     <div class="pp-h">함께 바뀌는 일정 <b>${moved.length}개</b>${moved.length>shown.length?`<small>차트에는 ${shown.length}개까지 그렸습니다</small>`:''}</div>
     ${moved.length?`<div class="pp-tbl"><div class="hd"><span>업무</span><span>변경 전 → 변경 후</span><span>완료일 차이</span></div>${moved.map(q=>{const x=r0.tasks[q.id], y=res.tasks[q.id], dl=D.diffDays(y.finish,x.finish);
-      return `<div class="rw"><span class="nm"><b>${esc(schWbs(q.wbs))})</b>${esc(q.name)}</span><span class="rg"><s>${rg(x,m.byId.get(q.id)||q)}</s><strong>${rg(y,q)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
+      return `<div class="rw"><span class="nm"><b>${esc(schNo(q))})</b>${esc(q.name)}</span><span class="rg"><s>${rg(x,m.byId.get(q.id)||q)}</s><strong>${rg(y,q)}</strong></span><span class="dl ${dl>0?'late':dl<0?'early':''}">${dl>0?'+':''}${dl}일</span></div>`;}).join('')}</div>`
       :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}
     <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri">적용</button></div></div>`;
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; if(bt.dataset.pp==='x')close(); else if(bt.dataset.pp==='ok')ok(); });

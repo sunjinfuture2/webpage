@@ -648,3 +648,33 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   when the head of the list is above it. Never bring a scrollIntoView back there.
 - tests: schedule-13 (57 checks: the picker's x, a phase with its task and one 되돌리기, the legacy action, the chart in the
   middle), schedule-2 (31), schedule-14 (30: the partner list with and without the preview).
+
+## The number an action shows; the list beside the calendar; one gap for the research cards (owner, 2026-11-24, the nineteenth round)
+
+- **A number can be chosen, the ones after it move up.** A task has two numbers now:
+  - `wbs` is its **key** and never changes: the calculation (W8.6 is the operation start), the gates' and the procurement
+    sheet's "연결 WBS", texts that name a task and the workbook (upload matches by it) all know a task by it.
+  - `no` (optional, a field of the task like any other, stored in its `t:` override) is the number it **shows** within its
+    phase when that differs from the key. `schNoOf(t)` reads it, `schNo(t)` writes it as 1-5, `schWk(t)` as W1.5 (the Excel
+    sheets of the page). **Everything that shows a task's number goes through schNo**; `schWbs(t.wbs)` is only for a key
+    that is no task (a phase code, a number that is not given yet). schWbsLinks shows the number the named task has now.
+  - `schPutBefore(d, x, beforeId, pull)` puts a task before another one of its phase: it takes that one's number, that one
+    and those after it move one up (as far as the numbers run on without a gap) and it gets an `order` between its
+    neighbours (orders may be fractions), so gantt, list and relation map list it there. `pull`: it had a place in the phase
+    already and what stood after it closes up first. No `beforeId`: the end of the phase.
+  - A new action: the green number beside 개발 단계 is a button (`data-schp="wbs-at"`); its menu (`schNoPick`,
+    `.pop.sch-nopick`) lists the actions of the phase with their numbers and "맨 뒤". The choice is `wbsAt` on the item (the
+    id of the task it goes before; dropped when the phase changes) and is used when the action becomes a task
+    (schActionToTask), in the same undo step.
+  - A task that is there already: while its panel is edited its number is the same button (`wbs-move`); a move is tagged
+    like every change of an edit, so 취소 takes it back.
+  - A task moved to another phase gets the last shown number there (schMoveToPhase).
+  - Known limits: two members who put something in between at the same moment can give two tasks the same number; a workbook
+    uploaded later is matched by key, so its numbers show moved where something was put in between.
+- **The list beside the calendar**: the date above it stands at the left end of the line (still yyyy. mm. dd, both pages);
+  in a row the assignee is 3 px nearer to the title and the date is written `yy. mm. dd` on one line (`schD2`, used only
+  there: the window of a day and everything else keep the whole date).
+- **Research cards**: the gap between columns and between rows is 15 px both (it was 15.2 / 15.3, which fell on 15 or 16 px
+  from card to card); schResPer counts with the same 15.
+- tests: schedule-13 (66 checks: the picker of a place, the numbers after it, the gantt, one 되돌리기, a move and 취소),
+  schedule-14 (33: the list's date and rows, the two gaps), schedule-7 (the gap is 15).

@@ -1455,3 +1455,24 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .pop.sch-phpick .it .phx:hover{background:#f0f0f0;color:#d30000}
 .sch-stage a.wbno.up{font-weight:500;color:#4f4f4f;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .sch-stage a.wbno.up:hover{text-decoration:underline}
+
+/* The number of an action is a button while it is edited: its place in the phase (nineteenth round) */
+.sch-stage button.wbno{appearance:none;border:0;background:none;padding:0 1px;margin:0;font:inherit;font-weight:600;cursor:pointer;border-bottom:1px solid currentColor;line-height:1.25}
+.sch-stage button.wbno.pick{color:#3d3d3d}
+.sch-stage button.wbno:hover{opacity:.72}
+.pop.sch-nopick{max-height:min(430px,calc(100vh - 24px));min-width:250px;max-width:420px}
+.pop.sch-nopick .hd{font-size:11.5px;font-weight:500;color:#8e8e8e;padding:5px 9px 6px;white-space:nowrap}
+.pop.sch-nopick .it{display:flex;align-items:baseline;gap:8px}
+.pop.sch-nopick .it .no{flex:none;min-width:38px;font-weight:600;color:#1f8e00;font-variant-numeric:tabular-nums}
+.pop.sch-nopick .it .phn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.dark .sch-stage button.wbno.pick{color:#d6d6d6}
+html.dark .pop.sch-nopick .it .no{color:#6fd858}
+
+/* Nineteenth round (owner, 2026-11-24) */
+/* the list beside the calendar: the date above it stands at the left end of the line; in a row the assignee is 3 px nearer to the
+   title and the date is written with a short year, on one line */
+.rlist.sch .rdate{right:auto;left:16px}
+.rlist.sch .ra .avstack{margin-left:-3px}
+.rlist.sch .ra .dt{width:auto;min-width:56px;white-space:nowrap}
+/* research cards: the same whole number between columns and between rows (15.2 / 15.3 fell on 15 or 16 px from card to card) */
+.sch-on .rgrid{column-gap:15px;row-gap:15px}

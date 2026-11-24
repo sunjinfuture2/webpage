@@ -12,7 +12,7 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
   if(links)return `<div class="props sch-props act-props ${E?'ed':''}"><div class="rcol" hidden></div>${tabs}${t?schLinksHtml(pid,m,t,full,false):'<div class="sp-links"><div class="sl-none on">일정의 업무에 연결하면 그 업무의 선후 관계가 여기에 보입니다. 정보 › 개발 단계에서 단계와 업무를 고릅니다.</div></div>'}</div>`;
   const dates=ms?f('date',schD(it.date),'날짜 변경'):`<span class="sch-pair">${f('date',schD(it.date),'시작일 변경')}${arrow}${f('end',end>it.date?schD(end):ph('종료일'),'종료일 변경')}</span>`;
   const stage=!pid?none(E?'사업명을 먼저 고르세요':'일정 미연결')
-    :E?schStageEdit(m,g,t)
+    :E?schStageEdit(m,g,t,it)
     :(g?`<span class="sch-stage ro"><span>${esc(schPhaseLabel(g))}</span>${t?`<a data-open="${schItemId(t.id)}" title="이 업무 열기">${esc(schTaskTitle(t))}</a>`:''}</span>`:none('일정 미연결'));
   const refs=(it.refs||[]).map(id=>item(id)).filter(x=>x&&ITEMS.includes(x)&&isLive(x));
   const L=[V('사업명',h.projV),V('예상 기한'+schInfo('dates'),dates+(it.st==='done'?'':schWhyMark(schDdayHtml(end,false,schLateWhyItem(it)),E,'pick'))),
