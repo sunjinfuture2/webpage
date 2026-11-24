@@ -104,7 +104,7 @@ function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim(); ids
 function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
   const chips=(c.st?chip('st','분류: '+c.st):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
   return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','st',c.st||'전체 분류',!!c.st)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right">${schProjXlBtn()}</div></div></div>`; }
-function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;render(true);}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
+function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;S.pjPage=1;render(true);}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
   if(k==='st')items=[fl('',{t:'전체 분류'}),...[...new Set(orderedProjects().map(p=>normStatus(PROJECTS[p].status)))].map(s=>fl(s,{t:s,html:`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${PSTATUS[s]||'#8e8e8e'}"></i>${esc(s)}</span>`}))];
   else if(k==='owner')items=[fl('',{t:'전체 담당자'}),...[...new Set(orderedProjects().map(schProjOwner).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(o=>fl(o,{t:o,ico:av('av15')}))];
   else items=[fl('',{t:'기본 순서'}),...Object.entries(SCH_PSORT).map(([v,t])=>fl(v,{t}))];

@@ -1520,8 +1520,9 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* the table view: the section is as tall as its table */
 .meet.tv,.projects.tv{height:auto}
 .projects.tv{padding-bottom:118px}
-.meet.tv [data-vbody]{padding-top:74px}
-.projects.tv [data-vbody]{padding-top:124px}
+.meet.tv [data-vbody]{padding-top:57.4px;padding-left:1.1px}
+.projects.tv [data-vbody]{padding-top:120px}
+.meet.tv .tbl.sch-vtbl{width:calc(1337px + var(--d))}
 .tbl.sch-proc.sch-vtbl{margin-top:0}
 .tbl.sch-proc.sch-vtbl .rw > div{overflow:hidden;padding-right:10px}
 .tbl.sch-proc.sch-vtbl .rw .e{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1543,3 +1544,12 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .tbl.sch-proc.vt-proj .rw .ops em.late{color:#d30000}
 .tbl.sch-proc.vt-proj .rw .ops em.early{color:#1f8e00}
 .tbl.sch-proc.vt-proj .rw .ops .nil{color:#c4c4c4}
+
+/* Twenty-third round (owner, 2026-11-24): the column titles of the two new tables are menus */
+.tbl.sch-vtbl .hd span[data-vcol]{cursor:pointer;gap:5px;color:#4f4f4f}
+.tbl.sch-vtbl .hd span[data-vcol] svg{color:#6f6f6f;flex:none}
+.tbl.sch-vtbl .hd span[data-vcol]:hover{color:#000}
+.tbl.sch-vtbl .hd span.sorted{color:#000;font-weight:600}
+.tbl.sch-vtbl .hd span.flt{color:#000;font-weight:600}
+.tbl.sch-vtbl .hd span.flt::after{content:"";width:5px;height:5px;border-radius:50%;background:#1f8e00;margin-left:-1px;flex:none}
+.sch-vtools .sch-filters .sch-chip{align-self:center}

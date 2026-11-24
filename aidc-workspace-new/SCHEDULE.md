@@ -761,3 +761,14 @@ Four requests of one afternoon. Preview only, except the fix of the address.
 - The page is still darkened by one filter in dark mode: no colour rules of its own were needed.
 - tests/mobile-1.cjs (19 checks: a phone, a narrow window, a wide screen, `?v=1` on a phone). tests/h.cjs takes
   `viewport`, `isMobile` and `hasTouch` for a member.
+
+## Column menus of the two new tables; cards and table start at one place (owner, 2026-11-24, the twenty-third round)
+
+- The column titles of the meeting table and of the project table are menus (`data-vcol="meet:date"` …, schVColMenu in
+  84-tables.js), like the other tables. Meetings: 날짜 (order, period), 미팅명 (order), 참석자, 외부 참석 (있음 / 없음), 회의록
+  (있음 / 없음); they change the same conditions as the pickers beside the title (`S.mtf`), and what only the head can choose
+  (`file`, `guest`) shows as a tag beside the pickers (`data-mtchip`). Projects: 프로젝트 and 운영개시 예상 (order), 분류, 담당자 —
+  the section's own menus (schProjMenu), so the tags of the section show them.
+- The table stands exactly where the row of cards stands: 57.4 below the top of 미팅 and 1.1 in (as wide as the row of cards),
+  120 below the top of 프로젝트. It stood 16.6 / 4 lower.
+- tests/schedule-15.cjs (25 checks).

@@ -1,7 +1,8 @@
 // WorkSpace, fifteenth part (owner, 2026-11-24, the "twenty-first round"): lists that can be seen as a table too —
 //  - the projects of the main page: cards or a table (the design of the 외부설비 조달 table), a search box, an Excel file of what is listed;
 //  - the meetings of a project: cards or a table, a search box, pickers (period, participant, order);
-//  - which view a member looks at is this browser's own; the page as it was (?v=1) has none of it.
+//  - which view a member looks at is this browser's own; the page as it was (?v=1) has none of it;
+//  - (twenty-third round) the column titles of the two tables are menus; cards and table start at the same place.
 // Needs wrangler dev on 127.0.0.1:8787.
 const { chromium, sleep, check, newUser, done } = require('./h.cjs');
 const sfx = Date.now().toString(36).slice(-5);
@@ -11,11 +12,14 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const A = await newUser(browser, 'RVA' + sfx, '열다섯 일', { url: V2 }), a = A.page;
   const ev = (f, x) => a.evaluate(f, x);
   const pops = () => ev(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
+  // where something stands inside its section (px of the page, from the section's upper left corner)
+  const place = (box, sel) => ev(([b, s]) => { const bx = document.querySelector('.page.on ' + b), r = bx.querySelector(s).getBoundingClientRect(), br = bx.getBoundingClientRect(), z = LAYOUT.zoom || 1; return [Math.round((r.top - br.top) / z * 10) / 10, Math.round((r.left - br.left) / z * 10) / 10]; }, [box, sel]);
 
   console.log('— the projects of the main page');
   await ev(() => { localStorage.removeItem('aidc-view'); for (const k of Object.keys(SCH_VIEW)) delete SCH_VIEW[k]; S.q.proj = ''; S.pf = {}; go('main'); }); await sleep(800);
   const pj0 = await ev(() => { const box = document.querySelector('.page.on .projects'), tools = box.querySelector('.sch-vtools'); return { cards: box.querySelectorAll('#proj-inner .pcard').length, all: orderedProjects().length, toggle: [...tools.querySelectorAll('[data-vt]')].map(b => b.dataset.vt + (b.classList.contains('on') ? '*' : '')).join(), search: !!tools.querySelector('input[data-q="proj"]'), xl: (box.querySelector('[data-pjxl]') || {}).textContent, table: !!box.querySelector('.tbl') }; });
   check('cards as before, with the two views, a search box and 엑셀로 내보내기 beside the title', pj0.cards === pj0.all && pj0.cards > 1 && pj0.toggle === 'proj:cards*,proj:table' && pj0.search && /엑셀로 내보내기/.test(pj0.xl) && !pj0.table, pj0);
+  const pjCards = await place('.projects', '.pcard');
   await a.fill('.page.on .projects input[data-q="proj"]', '판교'); await sleep(400);
   const pj1 = await ev(() => ({ n: document.querySelectorAll('#proj-inner .pcard').length, name: (document.querySelector('#proj-inner .pcard h3') || {}).textContent, focus: document.activeElement && document.activeElement.dataset.q }));
   check('the search narrows the cards while the box keeps the caret', pj1.n === 1 && /판교/.test(pj1.name) && pj1.focus === 'proj', pj1);
@@ -23,6 +27,8 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await a.click('.page.on .projects [data-vt="proj:table"]'); await sleep(600);
   const pj2 = await ev(() => { const box = document.querySelector('.page.on .projects'), t = box.querySelector('.tbl.sch-proc.vt-proj'), rows = [...t.querySelectorAll('.rw')], pg = PROJECTS.pangyo; return { hd: [...t.querySelectorAll('.hd span')].map(x => x.textContent).join(), rows: rows.length, first: rows[0] && [...rows[0].children].map(c => c.textContent.trim()), go: rows[0] && rows[0].dataset.go, ls: localStorage.getItem('aidc-view'), cards: !!document.querySelector('#proj-inner'), on: (box.querySelector('[data-vt].on') || { dataset: {} }).dataset.vt, hdBg: getComputedStyle(t.querySelector('.hd')).backgroundColor, rowH: Math.round(rows[0].getBoundingClientRect().height / (LAYOUT.zoom || 1)), name: pg.full, ops: schModel('pangyo') ? schD(schModel('pangyo').res.operationDate) : '' }; });
   check('as a table: the head and the rows of the 외부설비 조달 table, one row per project with its figures', pj2.hd === 'No.,프로젝트,분류,운영개시 예상,담당자,부지,총사업비,공사 면적,총 수전용량,IT 용량,서버' && pj2.rows === pj0.all && !pj2.cards && pj2.on === 'proj:table' && pj2.hdBg === 'rgb(247, 247, 246)' && pj2.rowH === 62 && pj2.first[0] === '1' && pj2.first.includes(pj2.name), pj2);
+  const pjTable = await place('.projects', '.tbl.vt-proj');
+  check('the table starts where the cards start (as far down, as far to the left)', pjCards[0] === pjTable[0] && pjCards[1] === pjTable[1] && pjTable[0] > 100, { pjCards, pjTable });
   check('the choice is this browser\'s own and stays over a redraw', JSON.parse(pj2.ls).proj === 'table' && await ev(() => { render(true); return !!document.querySelector('.page.on .projects .tbl.vt-proj'); }));
   await a.fill('.page.on .projects input[data-q="proj"]', '판교'); await sleep(400);
   const pj3 = await ev(() => ({ n: document.querySelectorAll('.page.on .tbl.vt-proj .rw').length, focus: document.activeElement && document.activeElement.dataset.q }));
@@ -35,6 +41,14 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const bk = await ev(() => window._book && { active: window._book.active, names: window._book.sheets.map(s => s.name).join(), head: window._book.sheets[0].rows[0].join(), rows: window._book.sheets[0].rows.length - 1, first: window._book.sheets[0].rows[1], cond: (window._book.sheets[1].rows.find(r => r[0] === '조건') || [])[1] });
   check('엑셀로 내보내기: one sheet with what the list holds now (the search applies), named with the day', /^프로젝트 목록_\d{4}-\d{2}-\d{2}\.xlsx$/.test(dl.suggestedFilename()) && bk && bk.names === '프로젝트,내보낸 조건' && bk.head.startsWith('No.,프로젝트,분류,운영개시 예상') && bk.rows === 1 && /판교/.test(bk.first[1]) && /^\d{4}-\d{2}-\d{2}$/.test(bk.first[3]) && /검색: 판교/.test(bk.cond), { name: dl.suggestedFilename(), bk });
   await a.fill('.page.on .projects input[data-q="proj"]', ''); await sleep(300);
+  // the column titles of the table are menus: the same conditions as the pickers of the section
+  await a.click('.page.on .tbl.vt-proj [data-vcol="proj:st"]'); await sleep(300); const hdItems = await pops(); await a.click('.pop .it >> nth=1'); await sleep(500);
+  const pjh = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-proj .rw').length, st: [...new Set([...document.querySelectorAll('.page.on .tbl.vt-proj .rw .st')].map(x => x.textContent.trim()))], flt: [...document.querySelectorAll('.page.on .tbl.vt-proj .hd .flt')].map(x => x.textContent), chip: !!document.querySelector('.page.on .projects [data-pchip="st"]'), cols: [...document.querySelectorAll('.page.on .tbl.vt-proj .hd [data-vcol]')].map(x => x.dataset.vcol).join() }));
+  check('the column title 분류 of the table filters it (marked, with the tag of the section)', hdItems.length > 1 && hdItems[0] === '전체 분류' && pjh.rows > 0 && pjh.st.length === 1 && pjh.flt.join() === '분류' && pjh.chip && pjh.cols === 'proj:name,proj:st,proj:ops,proj:owner', { hdItems, pjh });
+  await a.click('.page.on .projects [data-pchip="st"]'); await sleep(400);
+  await a.click('.page.on .tbl.vt-proj [data-vcol="proj:ops"]'); await sleep(300); await a.click('.pop .it:has-text("운영개시 빠른 순")'); await sleep(500);
+  check('운영개시 예상 orders it', await ev(() => schPf().sort === 'ops' && [...document.querySelectorAll('.page.on .tbl.vt-proj .hd .sorted')].map(x => x.textContent).join() === '운영개시 예상' && (document.querySelector('.page.on .tbl.vt-proj .rw') || { dataset: {} }).dataset.go === 'project:pangyo'));
+  await a.click('.page.on .projects [data-pchip="sort"]'); await sleep(400);
   await a.click('.page.on .projects [data-ppick="st"]'); await sleep(300); const stItems = await pops(); await a.click('.pop .it >> nth=1'); await sleep(500);
   const pj5 = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-proj .rw').length, st: [...new Set([...document.querySelectorAll('.page.on .tbl.vt-proj .rw .st')].map(x => x.textContent.trim()))], chip: !!document.querySelector('.page.on .projects [data-pchip="st"]') }));
   check('the pickers of the section (분류 …) hold for the table', stItems.length > 1 && pj5.rows > 0 && pj5.st.length === 1 && pj5.chip, { stItems, pj5 });
@@ -48,6 +62,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const mid = await ev(([s, d]) => { const it = newItem('meeting'); Object.assign(it, { title: '표 시험 미팅 ' + s, proj: 'pangyo', status: 'published', authorId: sharedUser, createdAt: new Date().toISOString(), date: d, people: [sharedUser] }); delete it.sessionNew; meetWrite(it, { time: '15:30', place: '시험 회의실 ' + s, agenda: '표 보기 확인', guests: '외부 손님' }); S.mtf = {}; S.q.meeting = ''; render(true); return it.id; }, [sfx, soon]); await sleep(600);
   const mt0 = await ev(() => { const box = document.querySelector('.page.on .meet'), tools = box.querySelector('.sch-vtools'); return { cards: box.querySelectorAll('#meet-inner .mcard').length, all: liveItems('meeting', 'pangyo').length, picks: [...tools.querySelectorAll('[data-mtpick]')].map(x => x.textContent.trim()).join(), toggle: [...tools.querySelectorAll('[data-vt]')].map(b => b.dataset.vt + (b.classList.contains('on') ? '*' : '')).join(), search: !!tools.querySelector('input[data-q="meeting"]') }; });
   check('cards as before, with three pickers, the two views and a search box beside the title', mt0.cards === mt0.all && mt0.cards >= 2 && mt0.picks === '전체 기간,전체 참석자,최신 순' && mt0.toggle === 'meet:cards*,meet:table' && mt0.search, mt0);
+  const mtCards = await place('.meet', '.mcard');
   await a.click('.page.on .meet [data-mtpick="when"]'); await sleep(300); const whenItems = await pops(); await a.click('.pop .it:has-text("예정된 미팅")'); await sleep(400);
   const mt1 = await ev(s => ({ titles: [...document.querySelectorAll('#meet-inner .mcard .tt b')].map(x => x.textContent), set: document.querySelector('.page.on .meet [data-mtpick="when"]').classList.contains('set'), label: document.querySelector('.page.on .meet [data-mtpick="when"]').textContent.trim() }), sfx);
   check('기간 › 예정된 미팅: only what lies ahead, the picker shows the choice', whenItems.join() === '전체 기간,예정된 미팅,지난 미팅,이번 달' && mt1.titles.length >= 1 && mt1.titles.includes('표 시험 미팅 ' + sfx) && mt1.set && mt1.label === '예정된 미팅' && await ev(() => schMeetRows('pangyo').every(m => m.date >= TODAY)), mt1);
@@ -57,6 +72,15 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await a.click('.page.on .meet [data-vt="meet:table"]'); await sleep(600);
   const mt2 = await ev(([s, id]) => { const box = document.querySelector('.page.on .meet'), t = box.querySelector('.tbl.sch-proc.vt-meet'), rows = [...t.querySelectorAll('.rw')], mine = rows.find(r => r.dataset.open === id); return { hd: [...t.querySelectorAll('.hd span')].map(x => x.textContent).join(), rows: rows.length, all: liveItems('meeting', 'pangyo').length, firstIsNewest: rows[0] === mine, mine: mine && [...mine.children].map(c => c.textContent.trim()), tv: box.classList.contains('tv'), cards: !!document.querySelector('#meet-inner'), pager: !!box.querySelector('.pager') }; }, [sfx, mid]);
   check('as a table: 날짜 · 시간 · 미팅명 · 장소 · 안건 · 참석자 · 외부 참석 · 회의록, newest first', mt2.hd === '날짜,시간,미팅명,장소,안건,참석자,외부 참석,회의록' && mt2.rows === Math.min(10, mt2.all) && mt2.firstIsNewest && mt2.tv && !mt2.cards && mt2.mine[0] === soon.replace(/-/g, '. ') && mt2.mine[1] === '15시 30분' && mt2.mine[2] === '표 시험 미팅 ' + sfx && mt2.mine[3] === '시험 회의실 ' + sfx && mt2.mine[4] === '표 보기 확인' && /열다섯 일/.test(mt2.mine[5]) && mt2.mine[6] === '외부 손님' && mt2.mine[7] === '-' && mt2.pager === mt2.all > 10, mt2);
+  const mtTable = await place('.meet', '.tbl.vt-meet');
+  check('the table of the meetings starts where their cards start', mtCards[0] === mtTable[0] && mtCards[1] === mtTable[1] && mtTable[0] > 40, { mtCards, mtTable });
+  await a.click('.page.on .tbl.vt-meet [data-vcol="meet:file"]'); await sleep(300); const fItems = await pops(); await a.click('.pop .it:has-text("회의록 없음")'); await sleep(400);
+  const mf = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-meet .rw').length, every: schMeetRows('pangyo').every(m => !hasFiles(m)), flt: [...document.querySelectorAll('.page.on .tbl.vt-meet .hd .flt')].map(x => x.textContent).join(), chip: (document.querySelector('.page.on .meet [data-mtchip="file"]') || {}).textContent || '', cols: [...document.querySelectorAll('.page.on .tbl.vt-meet .hd [data-vcol]')].map(x => x.dataset.vcol).join() }));
+  check('the column title 회의록 filters the table (marked, a tag beside the pickers)', fItems.join() === '전체,회의록 있음,회의록 없음' && mf.rows > 0 && mf.every && mf.flt === '회의록' && /회의록: 없음/.test(mf.chip) && mf.cols === 'meet:date,meet:name,meet:who,meet:guest,meet:file', { fItems, mf });
+  await a.click('.page.on .meet [data-mtchip="file"]'); await sleep(400);
+  await a.click('.page.on .tbl.vt-meet [data-vcol="meet:who"]'); await sleep(300); await a.click('.pop .it:has-text("(나)")'); await sleep(400);
+  check('참석자 there is the picker\'s own condition (the picker shows it)', await ev(() => schMtf().who === sharedUser && document.querySelector('.page.on .meet [data-mtpick="who"]').classList.contains('set') && [...document.querySelectorAll('.page.on .tbl.vt-meet .hd .flt')].map(x => x.textContent).join() === '참석자'));
+  await ev(() => { S.mtf = {}; schMeetRedraw(); }); await sleep(300);
   await a.click('.page.on .meet [data-mtpick="sort"]'); await sleep(300); await a.click('.pop .it:has-text("오래된 순")'); await sleep(400);
   check('정렬 › 오래된 순 turns the table round', await ev(() => { const d = [...document.querySelectorAll('.page.on .tbl.vt-meet .rw .w')].map(x => x.textContent); return d.length > 1 && d.every((x, i) => !i || d[i - 1] <= x); }));
   await a.fill('.page.on .meet input[data-q="meeting"]', '시험 회의실 ' + sfx); await sleep(400);

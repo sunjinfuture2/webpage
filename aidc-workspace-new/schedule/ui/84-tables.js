@@ -19,14 +19,16 @@ const SCH_MT_WHEN={next:'예정된 미팅',past:'지난 미팅',month:'이번 �
 function schMeetRows(pid){ const q=(S.q.meeting||'').trim(), c=schMtf();
   const ms=liveItems('meeting',pid).filter(m=>{ const p=meetParts(m), d=String(m.date||'');
     if(q&&!matchQ(q,m.title,p.place,p.agenda,p.guests,dateDot(d),...(m.people||[]).map(userName)))return false;
-    if(c.who&&!(m.people||[]).includes(c.who))return false;
+    if(c.who&&!(m.people||[]).includes(c.who))return false; if(c.file&&(c.file==='y')!==!!hasFiles(m))return false; if(c.guest&&(c.guest==='y')!==!!String(p.guests||'').trim())return false;
     if(c.when==='next'&&!(d>=TODAY))return false; if(c.when==='past'&&!(d&&d<TODAY))return false; if(c.when==='month'&&d.slice(0,7)!==TODAY.slice(0,7))return false; return true; });
   if(c.sort==='old')ms.sort((a,b)=>String(a.date).localeCompare(String(b.date))||newestFirst(b,a));
   else if(c.sort==='name')ms.sort((a,b)=>norm(a.title).localeCompare(norm(b.title),'ko'));
   else ms.sort((a,b)=>String(b.date).localeCompare(String(a.date))||newestFirst(a,b));
   return ms; }
-const schMeetFiltered=()=>{ const c=schMtf(); return !!((S.q.meeting||'').trim()||c.who||c.when); };
-function schMeetPicks(){ const c=schMtf(); return schSf2('mtpick','when',c.when?SCH_MT_WHEN[c.when]:'전체 기간',!!c.when)+schSf2('mtpick','who',c.who?userName(c.who):'전체 참석자',!!c.who)+schSf2('mtpick','sort',c.sort?SCH_MT_SORT[c.sort]:'최신 순',!!c.sort); }
+const schMeetFiltered=()=>{ const c=schMtf(); return !!((S.q.meeting||'').trim()||c.who||c.when||c.file||c.guest); };
+const SCH_MT_YN={file:['회의록',{y:'있음',n:'없음'}],guest:['외부 참석',{y:'있음',n:'없음'}]};
+function schMeetPicks(){ const c=schMtf(), tags=['file','guest'].filter(k=>c[k]).map(k=>`<button class="sch-chip" data-mtchip="${k}" title="이 조건 지우기">${SCH_MT_YN[k][0]}: ${SCH_MT_YN[k][1][c[k]]}<i>✕</i></button>`).join('');   // what only the table's head can choose shows as a tag
+  return tags+schSf2('mtpick','when',c.when?SCH_MT_WHEN[c.when]:'전체 기간',!!c.when)+schSf2('mtpick','who',c.who?userName(c.who):'전체 참석자',!!c.who)+schSf2('mtpick','sort',c.sort?SCH_MT_SORT[c.sort]:'최신 순',!!c.sort); }
 // what stands at the right of the title 미팅: the pickers, the two views, the search box
 const schMeetTools=()=>`<div class="sch-vtools"><div class="sch-filters" data-vpick="meet">${schMeetPicks()}</div>${schViewToggle('meet')}${searchBox('meeting','미팅 검색')}</div>`;
 function schMeetMenu(el,k){ const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
@@ -34,8 +36,10 @@ function schMeetMenu(el,k){ const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw()
   else if(k==='who'){ const ppl=[...new Set(liveItems('meeting',S.proj).flatMap(m=>m.people||[]))].sort((x,y)=>userName(x).localeCompare(userName(y),'ko')); items=[fl('',{t:'전체 참석자'}),...ppl.map(u=>fl(u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))]; }
   else items=[fl('',{t:'최신 순'}),...Object.entries(SCH_MT_SORT).map(([v,t])=>fl(v,{t}))];
   menuPop(el,items.map((x,i)=>({...x,k:String(i)})),{cls:'sch-colmenu'}); }
-function schMeetTable(pid){ const rows=schMeetRows(pid), total=Math.max(1,Math.ceil(rows.length/SCH_V_PER)); S.mtPage=Math.min(Math.max(1,S.mtPage||1),total); const page=rows.slice((S.mtPage-1)*SCH_V_PER,S.mtPage*SCH_V_PER), th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-meet"><div class="hd">${th('날짜')}${th('시간')}${th('미팅명')}${th('장소')}${th('안건')}${th('참석자')}${th('외부 참석')}${th('회의록')}</div>`;
+function schMeetTable(pid){ const rows=schMeetRows(pid), total=Math.max(1,Math.ceil(rows.length/SCH_V_PER)); S.mtPage=Math.min(Math.max(1,S.mtPage||1),total); const page=rows.slice((S.mtPage-1)*SCH_V_PER,S.mtPage*SCH_V_PER), c=schMtf(), th=t=>`<span><em>${t}</em></span>`;
+  // column titles that order and filter, like the other tables (owner, 2026-11-24): they change the same conditions as the pickers beside the title
+  const tm=(k,t,on,srt)=>`<span data-vcol="meet:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
+  let h=`<div class="tbl sch-proc sch-vtbl vt-meet"><div class="hd">${tm('date','날짜',!!c.when,c.sort==='old')}${th('시간')}${tm('name','미팅명',false,c.sort==='name')}${th('장소')}${th('안건')}${tm('who','참석자',!!c.who,false)}${tm('guest','외부 참석',!!c.guest,false)}${tm('file','회의록',!!c.file,false)}</div>`;
   for(const m of page){ const p=meetParts(m), ppl=m.people||[], cell=v=>{const t=oneLine(v);return `<div class="tx" title="${esc(t)}"><span class="e">${esc(t||'-')}</span></div>`;};
     h+=`<div class="rw ${S.panel===m.id?'sel':''}" data-open="${esc(m.id)}"><div class="w">${esc(schD(m.date)||'-')}</div><div class="tm">${esc(meetTimeTxt(p.time)||'-')}</div><div class="nm" title="${esc(oneLine(m.title))}"><span class="e">${esc(oneLine(m.title)||'(제목 없음)')}</span></div>${cell(p.place)}${cell(p.agenda)}
       <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.length?ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:''):'<span class="sch-role none">미지정</span>'}</div>${cell(p.guests)}
@@ -51,8 +55,9 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 /* ---------- projects of the main page ---------- */
 const schProjTools=()=>`<div class="sch-vtools">${schViewToggle('proj')}${searchBox('proj','프로젝트 검색')}</div>`;
 const schProjXlBtn=()=>`<button class="sh-btn lib sch-xl" data-pjxl title="지금 목록에 있는 프로젝트를 (검색·조건이 걸려 있으면 그 결과만) 엑셀 파일(.xlsx)로 내려받습니다">${svg('i-sch-xls',12,12)}엑셀로 내보내기</button>`;
-function schProjTable(){ const ids=schProjFilter(orderedProjects()), total=Math.max(1,Math.ceil(ids.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total); const from=(S.pjPage-1)*SCH_V_PER, page=ids.slice(from,from+SCH_V_PER), th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-proj"><div class="hd">${th('No.')}${th('프로젝트')}${th('분류')}${th('운영개시 예상')}${th('담당자')}${th('부지')}${th('총사업비')}${th('공사 면적')}${th('총 수전용량')}${th('IT 용량')}${th('서버')}</div>`;
+function schProjTable(){ const ids=schProjFilter(orderedProjects()), total=Math.max(1,Math.ceil(ids.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total); const from=(S.pjPage-1)*SCH_V_PER, page=ids.slice(from,from+SCH_V_PER), c=schPf(), th=t=>`<span><em>${t}</em></span>`;
+  const tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
+  let h=`<div class="tbl sch-proc sch-vtbl vt-proj"><div class="hd">${th('No.')}${tm('name','프로젝트',false,c.sort==='name'||c.sort==='new')}${tm('st','분류',!!c.st,false)}${tm('ops','운영개시 예상',false,c.sort==='ops')}${tm('owner','담당자',!!c.owner,false)}${th('부지')}${th('총사업비')}${th('공사 면적')}${th('총 수전용량')}${th('IT 용량')}${th('서버')}</div>`;
   page.forEach((k,i)=>{ const p=PROJECTS[k], hd=PHEAD[k]||{}, cell=v=>`<div class="tx" title="${esc(v||'')}"><span class="e">${esc(v||'-')}</span></div>`;
     h+=`<div class="rw" data-go="project:${esc(k)}"><div class="w">${from+i+1}</div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}"><span class="e">${esc(p.full||pname(p))}</span></div><div class="st"><span style="color:${esc(p.stColor||'#4f4f4f')}"><i></i>${esc(p.status||'-')}</span></div><div class="ops">${schCardOps(k)}</div>
       <div class="who"><span>${av()}${esc(hd.owner||p.owner||'-')}</span></div>${cell(siteOf(p,hd))}${cell(hd.cost||p.cost)}${cell(scaleOf(hd,0,p.area))}${cell(scaleOf(hd,2,p.power))}${cell(scaleOf(hd,1,p.it))}${cell(scaleOf(hd,3,p.server))}</div>`; });
@@ -70,10 +75,22 @@ async function schProjXlsx(){ toast('엑셀 파일을 만드는 중입니다…'
     schExpSave(`프로젝트 목록_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
   catch(e){ console.error(e); toast('엑셀 파일을 만들지 못했습니다. 잠시 뒤 다시 시도해 주세요.',4200); } }
 
+// The menu of a column title of the two tables. Meetings: the conditions of schMtf (the pickers show them too); projects: the
+// section's own menus (schProjMenu: 분류, 담당자, 정렬).
+function schVColMenu(el,k,col){ if(k==='proj'){ schProjMenu(el,col==='st'?'st':col==='owner'?'owner':'sort'); return; }
+  const c=schMtf(), go=()=>{S.mtPage=1;schMeetRedraw();}, fl=(key,val,item)=>({...item,sel:(c[key]||'')===val,fn:()=>{if(val)c[key]=val;else delete c[key];go();}}); let items=[];
+  if(col==='date')items=[{hd:'정렬'},fl('sort','',{t:'최신 순'}),fl('sort','old',{t:'오래된 순'}),'-',{hd:'기간'},fl('when','',{t:'전체 기간'}),...Object.entries(SCH_MT_WHEN).map(([v,t])=>fl('when',v,{t}))];
+  else if(col==='name')items=[{hd:'정렬'},fl('sort','name',{t:'제목 순'}),fl('sort','',{t:'최신 순'})];
+  else if(col==='who'){ const ppl=[...new Set(liveItems('meeting',S.proj).flatMap(m=>m.people||[]))].sort((x,y)=>userName(x).localeCompare(userName(y),'ko')); items=[{hd:'참석자'},fl('who','',{t:'전체 참석자'}),...ppl.map(u=>fl('who',u,{t:userName(u)+(u===sharedUser?' (나)':''),ico:av('av15')}))]; }
+  else if(col==='file'||col==='guest')items=[{hd:SCH_MT_YN[col][0]},fl(col,'',{t:'전체'}),fl(col,'y',{t:SCH_MT_YN[col][0]+' 있음'}),fl(col,'n',{t:SCH_MT_YN[col][0]+' 없음'})];
+  menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
+
 /* ---------- handlers ---------- */
 document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return; let el;
   if(el=e.target.closest('[data-vt]')){ e.stopPropagation(); const [k,v]=el.dataset.vt.split(':'); if(schViewOf(k)===v)return; schViewSet(k,v); if(k==='meet'){S.mtPage=1;S.car.meet=0;} else {S.pjPage=1;S.car.proj=0;} render(true); return; }
   if(el=e.target.closest('[data-mtpick]')){ e.stopPropagation(); schMeetMenu(el,el.dataset.mtpick); return; }
+  if(el=e.target.closest('[data-vcol]')){ e.stopPropagation(); const [k,col]=el.dataset.vcol.split(':'); schVColMenu(el,k,col); return; }
+  if(el=e.target.closest('[data-mtchip]')){ e.stopPropagation(); delete schMtf()[el.dataset.mtchip]; S.mtPage=1; schMeetRedraw(); return; }
   if(el=e.target.closest('[data-pjxl]')){ e.stopPropagation(); schProjXlsx(); return; }
   if(el=e.target.closest('[data-vpg]')){ e.stopPropagation(); const k=el.closest('.pager').dataset.vk, key=k==='meet'?'mtPage':'pjPage', v=el.dataset.vpg; let cur=S[key]||1;
     if(v==='prev')cur--; else if(v==='next')cur++; else if(v==='first')cur=1; else if(v==='last')cur=1e9; else cur=+v||1; S[key]=cur; if(k==='meet')schMeetRedraw(); else schProjRedraw(); return; }
