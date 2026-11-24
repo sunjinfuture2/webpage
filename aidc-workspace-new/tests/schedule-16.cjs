@@ -67,7 +67,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await setText('[data-k="fin:0:0"]', '확인 필요 (100억 / 120억)'); await setText('[data-k="fin:0:1"]', '총사업비 (추정)');
   await setText('[data-k="rows:0:1"]', '경기 시험시 시험동 12-3');
   await a.click('.page.on .phead .rtb .r:has([data-k="rows:5:0"]) [data-repdel]'); await sleep(300);
-  check('the x of a row takes the row away', await ev(() => [...document.querySelectorAll('.page.on .phead .rtb:not(.plan) .r:not(.ops) > b')].map(x => x.textContent).join()) === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,사업주체,운영사 / 임차인,수전 계획');
+  check('the x of a row takes the row away (비고 is the table\'s own last row and has no x)', await ev(() => [...document.querySelectorAll('.page.on .phead .rtb:not(.plan) .r:not(.ops) > b')].map(x => x.textContent).join()) === '위치,용도지역,대지면적,연면적,건폐율 / 용적률,사업주체,운영사 / 임차인,수전 계획,비고' && await ev(() => !document.querySelector('.page.on .phead .rtb .r.memo [data-repdel]')));
   await a.click('.page.on .phead [data-repadd="plan"]'); await sleep(300);
   await setText('[data-k="plan:0:0"]', '2027.03'); await setText('[data-k="plan:0:1"]', '착공');
   await a.click('.page.on .phead [data-repstate]'); await sleep(300);
