@@ -66,21 +66,19 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
      <span class="m dt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}</span><span class="m dt"><b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</span></div>`;
   const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
   // the two rows of figures
-  const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''))}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>${d.finNote||E?`<div class="rnote${EC}" ${edk('finNote','지표의 기준 · 출처 (예: 2026.04 IM 기준 추정치)')}>${E?esc(d.finNote):schRepTxt(d.finNote)}</div>`:''}`)}</div>`;
+  const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''))}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>`)}</div>`;   // (twenty-ninth round) the note under the figures (finNote) and the line 출처 (src) are not shown or edited any more; both stay in the record
   // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)
   const mapOf=r=>norm(r[0])===norm('위치')&&mapQuery(d.loc)&&!/자료 없음|확인 필요|보완 필요/.test(d.loc)?`<div class="rmapbox">${mapBox(d.loc,'')}</div>`:'';
   const ops=SC?schOpsRow(pid).replace('<div class="fr">','<div class="r ops">'):'';
   const c1=blk('사업 개요',text('main','사업의 내용을 적습니다',false))+blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true))+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false))+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'))
     +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true))
-    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt')
+    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib radd" data-addpartnerrow>+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt')
     +schRepDocs(pid,d,E);
   const c2=blk('사업 개요 표',`<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo?nil:''}${add('rows','+ 행')}</div>`)
     +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
-  const src=lines(d.src);
   return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
-    <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div>
-     ${src.length||E?`<div class="rsrc"><b>출처</b>${E?`<div class="rtx editable" ${edk('src','한 줄에 한 자료씩 적습니다')}>${esc(d.src)}</div>`:`<span>${src.map(schRepTxt).join('<i>/</i>')}</span>`}</div>`:''}</div>
+    <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${c1}</div><div class="rc rc2">${c2}</div></div></div>
     <div class="hr bt"></div></div>`; }
 // What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
 function schRepMirror(h,p){ const arr=a=>Array.isArray(a)?a.filter(Array.isArray):[], row=l=>{ const r=arr(h.rows).find(r=>norm(r[0])===norm(l)); return r?r[1]:null; }, set=(k,v)=>{ if(v!=null)h[k]=v; };

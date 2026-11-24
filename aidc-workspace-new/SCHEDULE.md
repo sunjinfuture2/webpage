@@ -912,9 +912,19 @@ asked for the project overview and the project list of the main page to follow i
 - **No sub line under a project's name.** `sub` stays in the record (tooltip of the name in the table, search, Excel, data file)
   but is neither shown nor edited on the project page.
 - **Figures** of 핵심 지표 / 사업성 지표: 19.8 px (a tenth smaller), weight 600 (one step lighter).
-- **Lines of a block of the overview** (the owner's picture): one line above the block's title (#a9a9a9), one paler line closing the
-  block (#e9e9e9); no line under the title, no lines between the rows of a table.
+- **Lines of a block of the overview** (the owner's picture): one line above the block's title; no line under the title, no lines
+  between the rows of a table. (Its colour and the line closing a block were changed in the twenty-ninth round, below.)
 - **확인 필요 / 보완 필요** are written in the colour of the project they stand in ("프로젝트 포인트컬러로"): the overview, a row of the table
   and a card hand it down as `--pc` (schRepPc); without one the marks stay orange. 자료 없음 stays grey.
 - tests/schedule-15.cjs, schedule-16.cjs (54 checks) and schedule-17.cjs (15 checks) were changed to follow; **they were not run**
   (owner, the same day: "회귀검사 내가 하라고할때만 해" — the change itself was looked at in a browser).
+
+## The overview without notes and sources, one pale line a block (owner, 2026-11-24, twenty-ninth round)
+
+- **No note under 사업성 지표 and no 출처 line** ("* 사업계획서 v11 … 가정", "출처 …" — "이런거 삭제"): `finNote` and `src` are neither shown
+  nor edited on the project page. Both stay in the record, in `devreport.mjs` and in the data file (taken in and written out).
+- **A block of the overview has one line only**: above its title, 1 px `#e3e3e3` — the thin pale grey the overview's lines had
+  before ("원래 있던 그레이 라인"). The line that closed a block is gone; the next block's line separates them (36 px below a block).
+- **The buttons that add a row while the overview is edited** (+ 지표, + 행, + 일정, + 협력업체, + PDF 첨부) are all `.radd`: 28 px high,
+  13 px of room left and right, weight 500 (was 400), 12.5 px.
+- tests/schedule-16.cjs and schedule-17.cjs follow; **not run** (regression runs only when the owner asks).

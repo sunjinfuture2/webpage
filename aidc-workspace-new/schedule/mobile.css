@@ -211,8 +211,6 @@ html.mob .phead.rep .rtb .r{grid-template-columns:96px minmax(0,1fr)}
 html.mob .phead.rep .rtb.plan .r{grid-template-columns:86px minmax(0,1fr) 60px}
 html.mob .phead.rep.ed .rtb .r,html.mob .phead.rep.ed .rkp .k{padding-right:24px}
 html.mob .phead.rep .rx{right:0}
-html.mob .phead.rep .rsrc{flex-direction:column;gap:4px}
-html.mob .phead.rep .rsrc span{overflow-wrap:anywhere}
 html.mob .sec-title .rep-cnt{margin-left:10px;font-size:12px}
 html.mob .projects .pfil .sch-filters .right{margin-left:0}
 html.mob .tbl.sch-proc.vt-rep .grp{position:sticky;left:0}
