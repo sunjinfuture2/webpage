@@ -2713,7 +2713,11 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* the table view: the section is as tall as its table */
 .meet.tv,.projects.tv{height:auto}
 .projects.tv{padding-bottom:118px}
-.meet.tv [data-vbody]{padding-top:57.4px;padding-left:1.1px}
+.meet.tv [data-vbody]{padding-top:76.7px;padding-left:1.1px}
+/* the room between the title 미팅 and what stands below it is twice what it was (owner, 2026-11-24: 19.3 -> 38.6): the row of
+   cards (its place is in renderProject), its soft edges and its arrows moved down with it, and the table stands at the same place */
+.sch-on .meet .fade{top:76.7px}
+.sch-on .meet .circ{top:196.1px}
 .projects.tv [data-vbody]{padding-top:120px}
 .meet.tv .tbl.sch-vtbl{width:calc(1337px + var(--d))}
 .tbl.sch-proc.sch-vtbl{margin-top:0}
@@ -4190,8 +4194,8 @@ function renderProject(pid){
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
-   ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
-     <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
+   ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:${PV?371.4:352.1}px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
+     <div class="track" style="top:${PV?76.7:57.4}px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
      <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>`}
    ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">${ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}

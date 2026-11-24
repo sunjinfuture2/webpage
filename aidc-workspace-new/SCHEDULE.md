@@ -769,6 +769,9 @@ Four requests of one afternoon. Preview only, except the fix of the address.
   (있음 / 없음); they change the same conditions as the pickers beside the title (`S.mtf`), and what only the head can choose
   (`file`, `guest`) shows as a tag beside the pickers (`data-mtchip`). Projects: 프로젝트 and 운영개시 예상 (order), 분류, 담당자 —
   the section's own menus (schProjMenu), so the tags of the section show them.
-- The table stands exactly where the row of cards stands: 57.4 below the top of 미팅 and 1.1 in (as wide as the row of cards),
+- The table stands exactly where the row of cards stands: 1.1 in from the left of 미팅 (as wide as the row of cards) and
   120 below the top of 프로젝트. It stood 16.6 / 4 lower.
+- The room between the title 미팅 and what stands below it was doubled the same day (19.3 -> 38.6): the cards and the table
+  both start 76.7 below the top of the section (renderProject sets the row's `top` and the section's height 371.4 for the
+  combined page; the `?v=1` page keeps 57.4 / 352.1), the soft edges and the arrows moved down with them.
 - tests/schedule-15.cjs (25 checks).

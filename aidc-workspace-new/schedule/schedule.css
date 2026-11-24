@@ -1520,7 +1520,11 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* the table view: the section is as tall as its table */
 .meet.tv,.projects.tv{height:auto}
 .projects.tv{padding-bottom:118px}
-.meet.tv [data-vbody]{padding-top:57.4px;padding-left:1.1px}
+.meet.tv [data-vbody]{padding-top:76.7px;padding-left:1.1px}
+/* the room between the title 미팅 and what stands below it is twice what it was (owner, 2026-11-24: 19.3 -> 38.6): the row of
+   cards (its place is in renderProject), its soft edges and its arrows moved down with it, and the table stands at the same place */
+.sch-on .meet .fade{top:76.7px}
+.sch-on .meet .circ{top:196.1px}
 .projects.tv [data-vbody]{padding-top:120px}
 .meet.tv .tbl.sch-vtbl{width:calc(1337px + var(--d))}
 .tbl.sch-proc.sch-vtbl{margin-top:0}
