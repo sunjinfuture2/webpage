@@ -1818,8 +1818,8 @@ function meetParts(m){ const raw=meetSlot(m,0); return {time:meetTimeOf(m),place
 function meetWrite(m,ch){ const p=Object.assign(meetParts(m),ch); m.time=p.time||''; m.place=p.place||''; m.agenda=p.agenda||''; m.extAtt=p.guests||''; m.checks=[{t:[meetTimeTxt(p.time),p.place].filter(Boolean).join(', ')},{t:p.agenda||''},{t:p.guests||''}]; }
 const meetLines3=m=>{const p=meetParts(m);return [{t:[meetTimeTxt(p.time),p.place].filter(Boolean).join(', '),ic:'clock'},{t:p.agenda,ic:'agenda'},{t:p.guests,ic:'participants'}];};
 const meetLines=m=>PREVIEW_ON?meetLines3(m):(m.checks||[]).length?m.checks:(m.body||'').replace(/<\/(p|div|li|h[1-6])>|<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,3).map(t=>({t:t.length>26?t.slice(0,26)+'…':t}));
-function meetingCards(pid){const ms=liveItems('meeting',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date))||newestFirst(a,b));
-  if(!ms.length)return `<div class="none" style="height:120px;color:#939393;font-size:14px;display:flex;align-items:center">등록된 미팅이 없습니다. + 버튼으로 새 미팅을 만드세요.</div>`;
+function meetingCards(pid,list){const ms=list||liveItems('meeting',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date))||newestFirst(a,b));   // list: what the search and the pickers of the section left (schMeetRows)
+  if(!ms.length)return `<div class="none" style="height:120px;color:#939393;font-size:14px;display:flex;align-items:center">${list&&typeof schMeetFiltered==='function'&&schMeetFiltered()?'조건에 맞는 미팅이 없습니다.':'등록된 미팅이 없습니다. + 버튼으로 새 미팅을 만드세요.'}</div>`;
   return ms.map((m,mi)=>`<div class="mcard g ${mi>=2?'sm':''}" data-open="${m.id}" style="${mi===0?'width:322.2px':''}"><div class="grad"></div>${dotsHtml(m)}<div class="dt">${esc(fmtDateCard(m))}</div>
    <div class="tt"><b>${esc(m.title||'(제목 없음)')}</b>${avstack(m.people)}</div>${chkHtml(m)}
    ${hasFiles(m)?`<button class="ln-btn" data-act="dl" data-id="${m.id}">회의록 다운로드 ${svg('i-dl',10,11,'color:#3d3d3d')}</button>`:''}</div>`).join('');}
@@ -1850,9 +1850,9 @@ function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.pa
 function renderMain(){ if(schPreview())schPids().forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
-   <div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?750:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjBar():''}
+   ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?750:675.8}px"><div class="sec-title" style="top:0">프로젝트${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
      <div class="track"><div class="inner" id="proj-inner">${projectCards()}</div></div><div class="fade"></div>
-     <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>
+     <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>`}
    <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${schPreview()?'':perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(null)}</div></div>
    <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
@@ -1894,9 +1894,9 @@ function renderProject(pid){
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
-   <div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>
-     <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
-     <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>
+   ${PV&&schViewOf('meet')==='table'?schMeetTableSection(pid):`<div class="meet" style="margin-top:117.2px;height:352.1px"><div class="sec-title ${PV?'sch-title':''}" style="top:0">${PV?schTitleIcon('meeting'):''}미팅${plusBtn('new-meeting','새 미팅')}<button class="sh-btn lib" data-lib="meeting">라이브러리</button><span class="car-cnt" id="meet-cnt"></span></div>${PV?schMeetTools():''}
+     <div class="track" style="top:57.4px"><div class="inner" id="meet-inner">${meetingCards(pid,PV?schMeetRows(pid):null)}</div></div>${PV?'<div class="fade l"></div><div class="fade r"></div>':''}
+     <button class="circ l" data-car="meet:-1" title="이전">${svg('i-arr-l',6.6,13.2,'color:#8e8e8e;margin-left:-1px')}</button><button class="circ r" data-car="meet:1" title="다음">${svg('i-arr-r',6.6,13.2,'color:#8e8e8e;margin-left:2px')}</button></div>`}
    ${SC?schActionSection(pid)+schLowerSection(pid):`<div class="sec" style="margin-top:112px"><div class="sec-title" style="margin-left:-2.8px">${ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
    ${PV?'':`<div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>

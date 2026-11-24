@@ -94,7 +94,8 @@ const schPartnerChips=()=>S.partnerCat?`<button class="sch-chip" data-catclear t
 const schPf=()=>S.pf||(S.pf={});
 const SCH_PSORT={name:'이름순',ops:'운영개시 빠른 순',new:'최근 만든 순'};
 const schProjOwner=k=>String((PHEAD[k]||{}).owner||PROJECTS[k].owner||'').trim();
-function schProjFilter(ids){ const c=schPf(); ids=ids.filter(k=>(!c.st||normStatus(PROJECTS[k].status)===c.st)&&(!c.owner||schProjOwner(k)===c.owner));
+function schProjFilter(ids){ const c=schPf(), q=((S.q||{}).proj||'').trim(); ids=ids.filter(k=>(!c.st||normStatus(PROJECTS[k].status)===c.st)&&(!c.owner||schProjOwner(k)===c.owner));
+  if(q)ids=ids.filter(k=>{ const p=PROJECTS[k], h=PHEAD[k]||{}; return matchQ(q,p.full,pname(p),p.status,schProjOwner(k),siteOf(p,h),h.cost||p.cost,p.tag); });   // the search box of the section (twenty-first round)
   const ops=k=>{const m=schHas(k)?schModel(k):null;return (m&&m.res.operationDate)||'9999';};
   if(c.sort==='name')ids=ids.slice().sort((a,b)=>String(PROJECTS[a].full||'').localeCompare(String(PROJECTS[b].full||''),'ko'));
   else if(c.sort==='ops')ids=ids.slice().sort((a,b)=>ops(a).localeCompare(ops(b)));
@@ -102,7 +103,7 @@ function schProjFilter(ids){ const c=schPf(); ids=ids.filter(k=>(!c.st||normStat
   return ids; }
 function schProjBar(){ const c=schPf(), chip=(k,label)=>`<button class="sch-chip" data-pchip="${k}" title="이 조건 지우기">${esc(label)}<i>✕</i></button>`;
   const chips=(c.st?chip('st','분류: '+c.st):'')+(c.owner?chip('owner','담당자: '+c.owner):'')+(c.sort?chip('sort','정렬: '+SCH_PSORT[c.sort]):'');
-  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','st',c.st||'전체 분류',!!c.st)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}</div></div>`; }
+  return `<div class="pfil"><div class="sch-chiprow" data-chips="proj">${chips}</div><div class="sch-filters">${schSf2('ppick','st',c.st||'전체 분류',!!c.st)}${schSf2('ppick','owner',c.owner||'전체 담당자',!!c.owner)}${schSf2('ppick','sort',c.sort?SCH_PSORT[c.sort]:'기본 순서',!!c.sort)}<div class="right">${schProjXlBtn()}</div></div></div>`; }
 function schProjMenu(el,k){ const c=schPf(), go=()=>{S.car.proj=0;render(true);}, fl=(val,item)=>({...item,sel:(c[k]||'')===val,fn:()=>{if(val)c[k]=val;else delete c[k];go();}}); let items;
   if(k==='st')items=[fl('',{t:'전체 분류'}),...[...new Set(orderedProjects().map(p=>normStatus(PROJECTS[p].status)))].map(s=>fl(s,{t:s,html:`<span style="display:inline-flex;align-items:center;gap:7px"><i style="width:6px;height:6px;border-radius:50%;background:${PSTATUS[s]||'#8e8e8e'}"></i>${esc(s)}</span>`}))];
   else if(k==='owner')items=[fl('',{t:'전체 담당자'}),...[...new Set(orderedProjects().map(schProjOwner).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')).map(o=>fl(o,{t:o,ico:av('av15')}))];

@@ -1,0 +1,93 @@
+// WorkSpace, fifteenth part (owner, 2026-11-24, the "twenty-first round"): lists that can be seen as a table too —
+//  - the projects of the main page: cards or a table (the design of the 외부설비 조달 table), a search box, an Excel file of what is listed;
+//  - the meetings of a project: cards or a table, a search box, pickers (period, participant, order);
+//  - which view a member looks at is this browser's own; the page as it was (?v=1) has none of it.
+// Needs wrangler dev on 127.0.0.1:8787.
+const { chromium, sleep, check, newUser, done } = require('./h.cjs');
+const sfx = Date.now().toString(36).slice(-5);
+const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
+(async () => {
+  const browser = await chromium.launch();
+  const A = await newUser(browser, 'RVA' + sfx, '열다섯 일', { url: V2 }), a = A.page;
+  const ev = (f, x) => a.evaluate(f, x);
+  const pops = () => ev(() => [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()));
+
+  console.log('— the projects of the main page');
+  await ev(() => { localStorage.removeItem('aidc-view'); for (const k of Object.keys(SCH_VIEW)) delete SCH_VIEW[k]; S.q.proj = ''; S.pf = {}; go('main'); }); await sleep(800);
+  const pj0 = await ev(() => { const box = document.querySelector('.page.on .projects'), tools = box.querySelector('.sch-vtools'); return { cards: box.querySelectorAll('#proj-inner .pcard').length, all: orderedProjects().length, toggle: [...tools.querySelectorAll('[data-vt]')].map(b => b.dataset.vt + (b.classList.contains('on') ? '*' : '')).join(), search: !!tools.querySelector('input[data-q="proj"]'), xl: (box.querySelector('[data-pjxl]') || {}).textContent, table: !!box.querySelector('.tbl') }; });
+  check('cards as before, with the two views, a search box and 엑셀로 내보내기 beside the title', pj0.cards === pj0.all && pj0.cards > 1 && pj0.toggle === 'proj:cards*,proj:table' && pj0.search && /엑셀로 내보내기/.test(pj0.xl) && !pj0.table, pj0);
+  await a.fill('.page.on .projects input[data-q="proj"]', '판교'); await sleep(400);
+  const pj1 = await ev(() => ({ n: document.querySelectorAll('#proj-inner .pcard').length, name: (document.querySelector('#proj-inner .pcard h3') || {}).textContent, focus: document.activeElement && document.activeElement.dataset.q }));
+  check('the search narrows the cards while the box keeps the caret', pj1.n === 1 && /판교/.test(pj1.name) && pj1.focus === 'proj', pj1);
+  await a.fill('.page.on .projects input[data-q="proj"]', ''); await sleep(300);
+  await a.click('.page.on .projects [data-vt="proj:table"]'); await sleep(600);
+  const pj2 = await ev(() => { const box = document.querySelector('.page.on .projects'), t = box.querySelector('.tbl.sch-proc.vt-proj'), rows = [...t.querySelectorAll('.rw')], pg = PROJECTS.pangyo; return { hd: [...t.querySelectorAll('.hd span')].map(x => x.textContent).join(), rows: rows.length, first: rows[0] && [...rows[0].children].map(c => c.textContent.trim()), go: rows[0] && rows[0].dataset.go, ls: localStorage.getItem('aidc-view'), cards: !!document.querySelector('#proj-inner'), on: (box.querySelector('[data-vt].on') || { dataset: {} }).dataset.vt, hdBg: getComputedStyle(t.querySelector('.hd')).backgroundColor, rowH: Math.round(rows[0].getBoundingClientRect().height / (LAYOUT.zoom || 1)), name: pg.full, ops: schModel('pangyo') ? schD(schModel('pangyo').res.operationDate) : '' }; });
+  check('as a table: the head and the rows of the 외부설비 조달 table, one row per project with its figures', pj2.hd === 'No.,프로젝트,분류,운영개시 예상,담당자,부지,총사업비,공사 면적,총 수전용량,IT 용량,서버' && pj2.rows === pj0.all && !pj2.cards && pj2.on === 'proj:table' && pj2.hdBg === 'rgb(247, 247, 246)' && pj2.rowH === 62 && pj2.first[0] === '1' && pj2.first.includes(pj2.name), pj2);
+  check('the choice is this browser\'s own and stays over a redraw', JSON.parse(pj2.ls).proj === 'table' && await ev(() => { render(true); return !!document.querySelector('.page.on .projects .tbl.vt-proj'); }));
+  await a.fill('.page.on .projects input[data-q="proj"]', '판교'); await sleep(400);
+  const pj3 = await ev(() => ({ n: document.querySelectorAll('.page.on .tbl.vt-proj .rw').length, focus: document.activeElement && document.activeElement.dataset.q }));
+  await a.fill('.page.on .projects input[data-q="proj"]', '없는이름' + sfx); await sleep(400);
+  const pj4 = await ev(() => (document.querySelector('.page.on .tbl.vt-proj .none') || {}).textContent || '');
+  check('the search works on the table too; nothing found says so', pj3.n === 1 && pj3.focus === 'proj' && /조건에 맞는 프로젝트가 없습니다/.test(pj4), { pj3, pj4 });
+  await a.fill('.page.on .projects input[data-q="proj"]', '판교'); await sleep(400);
+  await ev(async () => { const X = await schXlsx(), orig = X.makeBook; window._book = null; X.makeBook = async (sheets, active) => { window._book = { sheets, active }; X.makeBook = orig; return orig(sheets, active); }; });
+  const [dl] = await Promise.all([a.waitForEvent('download', { timeout: 30000 }), a.click('.page.on .projects [data-pjxl]')]); await sleep(300);
+  const bk = await ev(() => window._book && { active: window._book.active, names: window._book.sheets.map(s => s.name).join(), head: window._book.sheets[0].rows[0].join(), rows: window._book.sheets[0].rows.length - 1, first: window._book.sheets[0].rows[1], cond: (window._book.sheets[1].rows.find(r => r[0] === '조건') || [])[1] });
+  check('엑셀로 내보내기: one sheet with what the list holds now (the search applies), named with the day', /^프로젝트 목록_\d{4}-\d{2}-\d{2}\.xlsx$/.test(dl.suggestedFilename()) && bk && bk.names === '프로젝트,내보낸 조건' && bk.head.startsWith('No.,프로젝트,분류,운영개시 예상') && bk.rows === 1 && /판교/.test(bk.first[1]) && /^\d{4}-\d{2}-\d{2}$/.test(bk.first[3]) && /검색: 판교/.test(bk.cond), { name: dl.suggestedFilename(), bk });
+  await a.fill('.page.on .projects input[data-q="proj"]', ''); await sleep(300);
+  await a.click('.page.on .projects [data-ppick="st"]'); await sleep(300); const stItems = await pops(); await a.click('.pop .it >> nth=1'); await sleep(500);
+  const pj5 = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-proj .rw').length, st: [...new Set([...document.querySelectorAll('.page.on .tbl.vt-proj .rw .st')].map(x => x.textContent.trim()))], chip: !!document.querySelector('.page.on .projects [data-pchip="st"]') }));
+  check('the pickers of the section (분류 …) hold for the table', stItems.length > 1 && pj5.rows > 0 && pj5.st.length === 1 && pj5.chip, { stItems, pj5 });
+  await a.click('.page.on .projects [data-pchip="st"]'); await sleep(400);
+  await a.click('.page.on .tbl.vt-proj .rw[data-go="project:pangyo"]'); await a.waitForFunction(() => S.page === 'project' && schReady('pangyo'), null, { timeout: 20000 }); await sleep(700);
+  check('a row opens its project', await ev(() => S.page === 'project' && S.proj === 'pangyo'));
+
+  console.log('— the meetings of a project');
+  const day = n => ev(n => { const d = new Date(TODAY + 'T00:00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }, n);
+  const soon = await day(9);
+  const mid = await ev(([s, d]) => { const it = newItem('meeting'); Object.assign(it, { title: '표 시험 미팅 ' + s, proj: 'pangyo', status: 'published', authorId: sharedUser, createdAt: new Date().toISOString(), date: d, people: [sharedUser] }); delete it.sessionNew; meetWrite(it, { time: '15:30', place: '시험 회의실 ' + s, agenda: '표 보기 확인', guests: '외부 손님' }); S.mtf = {}; S.q.meeting = ''; render(true); return it.id; }, [sfx, soon]); await sleep(600);
+  const mt0 = await ev(() => { const box = document.querySelector('.page.on .meet'), tools = box.querySelector('.sch-vtools'); return { cards: box.querySelectorAll('#meet-inner .mcard').length, all: liveItems('meeting', 'pangyo').length, picks: [...tools.querySelectorAll('[data-mtpick]')].map(x => x.textContent.trim()).join(), toggle: [...tools.querySelectorAll('[data-vt]')].map(b => b.dataset.vt + (b.classList.contains('on') ? '*' : '')).join(), search: !!tools.querySelector('input[data-q="meeting"]') }; });
+  check('cards as before, with three pickers, the two views and a search box beside the title', mt0.cards === mt0.all && mt0.cards >= 2 && mt0.picks === '전체 기간,전체 참석자,최신 순' && mt0.toggle === 'meet:cards*,meet:table' && mt0.search, mt0);
+  await a.click('.page.on .meet [data-mtpick="when"]'); await sleep(300); const whenItems = await pops(); await a.click('.pop .it:has-text("예정된 미팅")'); await sleep(400);
+  const mt1 = await ev(s => ({ titles: [...document.querySelectorAll('#meet-inner .mcard .tt b')].map(x => x.textContent), set: document.querySelector('.page.on .meet [data-mtpick="when"]').classList.contains('set'), label: document.querySelector('.page.on .meet [data-mtpick="when"]').textContent.trim() }), sfx);
+  check('기간 › 예정된 미팅: only what lies ahead, the picker shows the choice', whenItems.join() === '전체 기간,예정된 미팅,지난 미팅,이번 달' && mt1.titles.length >= 1 && mt1.titles.includes('표 시험 미팅 ' + sfx) && mt1.set && mt1.label === '예정된 미팅' && await ev(() => schMeetRows('pangyo').every(m => m.date >= TODAY)), mt1);
+  await a.click('.page.on .meet [data-mtpick="who"]'); await sleep(300); await a.click('.pop .it:has-text("(나)")'); await sleep(400);
+  check('참석자 › 나: my meetings only', await ev(() => { const r = schMeetRows('pangyo'); return r.length >= 1 && r.every(m => (m.people || []).includes(sharedUser)) && document.querySelectorAll('#meet-inner .mcard').length === r.length; }));
+  await ev(() => { S.mtf = {}; schMeetRedraw(); }); await sleep(300);
+  await a.click('.page.on .meet [data-vt="meet:table"]'); await sleep(600);
+  const mt2 = await ev(([s, id]) => { const box = document.querySelector('.page.on .meet'), t = box.querySelector('.tbl.sch-proc.vt-meet'), rows = [...t.querySelectorAll('.rw')], mine = rows.find(r => r.dataset.open === id); return { hd: [...t.querySelectorAll('.hd span')].map(x => x.textContent).join(), rows: rows.length, all: liveItems('meeting', 'pangyo').length, firstIsNewest: rows[0] === mine, mine: mine && [...mine.children].map(c => c.textContent.trim()), tv: box.classList.contains('tv'), cards: !!document.querySelector('#meet-inner'), pager: !!box.querySelector('.pager') }; }, [sfx, mid]);
+  check('as a table: 날짜 · 시간 · 미팅명 · 장소 · 안건 · 참석자 · 외부 참석 · 회의록, newest first', mt2.hd === '날짜,시간,미팅명,장소,안건,참석자,외부 참석,회의록' && mt2.rows === Math.min(10, mt2.all) && mt2.firstIsNewest && mt2.tv && !mt2.cards && mt2.mine[0] === soon.replace(/-/g, '. ') && mt2.mine[1] === '15시 30분' && mt2.mine[2] === '표 시험 미팅 ' + sfx && mt2.mine[3] === '시험 회의실 ' + sfx && mt2.mine[4] === '표 보기 확인' && /열다섯 일/.test(mt2.mine[5]) && mt2.mine[6] === '외부 손님' && mt2.mine[7] === '-' && mt2.pager === mt2.all > 10, mt2);
+  await a.click('.page.on .meet [data-mtpick="sort"]'); await sleep(300); await a.click('.pop .it:has-text("오래된 순")'); await sleep(400);
+  check('정렬 › 오래된 순 turns the table round', await ev(() => { const d = [...document.querySelectorAll('.page.on .tbl.vt-meet .rw .w')].map(x => x.textContent); return d.length > 1 && d.every((x, i) => !i || d[i - 1] <= x); }));
+  await a.fill('.page.on .meet input[data-q="meeting"]', '시험 회의실 ' + sfx); await sleep(400);
+  const mt3 = await ev(() => ({ n: document.querySelectorAll('.page.on .tbl.vt-meet .rw').length, focus: document.activeElement && document.activeElement.dataset.q }));
+  await a.fill('.page.on .meet input[data-q="meeting"]', '없는말' + sfx); await sleep(400);
+  const mt4 = await ev(() => (document.querySelector('.page.on .tbl.vt-meet .none') || {}).textContent || '');
+  check('the search looks at the place too; nothing found says so', mt3.n === 1 && mt3.focus === 'meeting' && /조건에 맞는 미팅이 없습니다/.test(mt4), { mt3, mt4 });
+  await a.fill('.page.on .meet input[data-q="meeting"]', ''); await sleep(300);
+  await a.click(`.page.on .tbl.vt-meet .rw[data-open="${mid}"]`); await sleep(700);
+  check('a row opens the meeting', await ev(id => S.panel === id && item(id).type === 'meeting', mid));
+  await ev(() => closePanel(true)); await sleep(300);
+  // more than ten: pages of the table
+  const extra = await ev(([s, d]) => { const ids = []; for (let i = 0; i < 9; i++) { const it = newItem('meeting'); Object.assign(it, { title: `쪽 시험 미팅 ${s} ${i}`, proj: 'pangyo', status: 'published', authorId: sharedUser, createdAt: new Date().toISOString(), date: d }); delete it.sessionNew; ids.push(it.id); } S.mtf = {}; render(true); return ids; }, [sfx, soon]); await sleep(600);
+  const pg0 = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-meet .rw').length, pager: !!document.querySelector('.page.on .meet .pager [data-vpg="2"]'), all: liveItems('meeting', 'pangyo').length }));
+  await a.click('.page.on .meet .pager [data-vpg="2"]'); await sleep(400);
+  const pg1 = await ev(() => ({ rows: document.querySelectorAll('.page.on .tbl.vt-meet .rw').length, page: S.mtPage, pane: !!document.querySelector('#modal.on') }));
+  check('over ten meetings the table has pages of ten', pg0.all > 10 && pg0.rows === 10 && pg0.pager && pg1.page === 2 && pg1.rows === pg0.all - 10 && !pg1.pane, { pg0, pg1 });
+  await a.click('.page.on .meet [data-vt="meet:cards"]'); await sleep(600);
+  check('back to the cards: every meeting again', await ev(() => document.querySelectorAll('#meet-inner .mcard').length === liveItems('meeting', 'pangyo').length && !document.querySelector('.page.on .meet.tv')));
+
+  console.log('— the page as it was');
+  const C = await newUser(browser, 'RVC' + sfx, '열다섯 삼', { url: V1 }), c = C.page;
+  await c.evaluate(() => go('main')); await sleep(600);
+  const old1 = await c.evaluate(() => ({ tools: !!document.querySelector('.sch-vtools'), cards: document.querySelectorAll('#proj-inner .pcard').length, tbl: !!document.querySelector('.tbl.sch-vtbl') }));
+  await c.evaluate(() => go('project:pangyo')); await sleep(800);
+  const old2 = await c.evaluate(() => ({ tools: !!document.querySelector('.sch-vtools'), cards: document.querySelectorAll('#meet-inner .mcard').length }));
+  check('?v=1 has neither the views nor the search boxes: cards only', !old1.tools && old1.cards > 1 && !old1.tbl && !old2.tools && old2.cards >= 1, { old1, old2 });
+
+  // clean up: the meetings of this run to the trash, the views back to cards
+  await ev(ids => { for (const id of ids) { const it = item(id); if (it) { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } } localStorage.removeItem('aidc-view'); for (const k of Object.keys(SCH_VIEW)) delete SCH_VIEW[k]; S.mtf = {}; S.pf = {}; render(true); sharedFlush(true); }, [mid, ...extra]); await sleep(1500);
+  const errs = [...A.errs, ...C.errs];
+  check('no script errors', errs.length === 0, errs);
+  await browser.close(); done();
+})().catch(e => { console.error(e); process.exit(1); });

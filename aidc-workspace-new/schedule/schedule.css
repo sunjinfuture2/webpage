@@ -1502,3 +1502,44 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .arch .ar-chips .n{font-size:12.5px;color:#8e8e8e;white-space:nowrap}
 /* a site card: what it says runs on, no line of its own for a break of the description */
 .arch .agrid.g5 .acard p{white-space:normal}
+
+/* Twenty-first round (owner, 2026-11-24): meetings and projects as a table too; a search box and the two views at the right of the title */
+.sch-vtools{position:absolute;left:0;top:-2px;width:calc(1337.9px + var(--d));display:flex;justify-content:flex-end;align-items:center;gap:14px;pointer-events:none;z-index:3}
+.sch-vtools > *{pointer-events:auto}
+.sch-vtools .srch.box{height:38px;padding:0 12px 0 14px;border:0;border-radius:6px;background:#f6f6f6;gap:10px;display:flex;align-items:center;color:#8e8e8e;margin:0}
+.sch-vtools .srch.box input{width:170px;font-size:14px;border:0;outline:none;background:transparent;color:var(--ink)}
+.sch-vtools .srch.box:focus-within{background:#f0f0f0}
+.sch-vtools .sch-filters{margin:0 6px 0 0;height:20px;gap:20px}
+.sch-vt{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:8px;background:#f3f3f2}
+.sch-vt button{width:30px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#a0a0a0;cursor:pointer;padding:0;border:0}
+.sch-vt button svg{fill:currentColor}
+.sch-vt button:hover{color:#4f4f4f}
+.sch-vt button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.projects .pfil{right:auto;width:calc(1337.9px + var(--d))}
+.projects .pfil .sch-filters .right{margin-bottom:-2px}
+/* the table view: the section is as tall as its table */
+.meet.tv,.projects.tv{height:auto}
+.projects.tv{padding-bottom:118px}
+.meet.tv [data-vbody]{padding-top:74px}
+.projects.tv [data-vbody]{padding-top:124px}
+.tbl.sch-proc.sch-vtbl{margin-top:0}
+.tbl.sch-proc.sch-vtbl .rw > div{overflow:hidden;padding-right:10px}
+.tbl.sch-proc.sch-vtbl .rw .e{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl.sch-proc.sch-vtbl .rw .who .more-n{font-style:normal;font-size:12.5px;color:#8e8e8e;flex:none}
+.tbl.sch-proc.sch-vtbl .rw .nm{font-weight:600}
+.tbl.sch-proc.sch-vtbl .rw .tx{color:#3d3d3d}
+.tbl.sch-proc.sch-vtbl .rw .who{display:flex;align-items:center;gap:10px}
+.tbl.sch-proc.sch-vtbl .rw .who > span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.tbl.sch-proc.sch-vtbl .rw .nil{color:#c4c4c4}
+.tbl.sch-proc.sch-vtbl .none{height:120px;display:flex;align-items:center;padding-left:10px;color:#939393;font-size:14px}
+.tbl.sch-proc.vt-meet .hd,.tbl.sch-proc.vt-meet .rw{grid-template-columns:124px 78px minmax(0,1fr) 180px 250px 226px 160px 104px}
+.tbl.sch-proc.vt-meet .rw .tm{color:#3d3d3d;font-variant-numeric:tabular-nums}
+.tbl.sch-proc.vt-meet .rw .fl .sh-btn{height:24px;padding:0 9px;font-size:12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px}
+.tbl.sch-proc.vt-proj .hd,.tbl.sch-proc.vt-proj .rw{grid-template-columns:50px minmax(0,1fr) 112px 142px 122px 178px 152px 108px 112px 86px 110px}
+.tbl.sch-proc.vt-proj .rw .st span{display:inline-flex;align-items:center;gap:7px;font-weight:500}
+.tbl.sch-proc.vt-proj .rw .st i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.tbl.sch-proc.vt-proj .rw .ops{font-variant-numeric:tabular-nums;color:#3d3d3d}
+.tbl.sch-proc.vt-proj .rw .ops em{font-style:normal;font-size:12px;font-weight:600;margin-left:6px}
+.tbl.sch-proc.vt-proj .rw .ops em.late{color:#d30000}
+.tbl.sch-proc.vt-proj .rw .ops em.early{color:#1f8e00}
+.tbl.sch-proc.vt-proj .rw .ops .nil{color:#c4c4c4}

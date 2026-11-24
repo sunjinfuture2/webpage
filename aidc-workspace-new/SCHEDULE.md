@@ -715,3 +715,23 @@ Four requests of one afternoon. Preview only, except the fix of the address.
 - The page is darkened by one filter (html.dark): never write a `html.dark` colour rule for a new part.
 - tests: schedule-13 (70: the menu's own row, a pull with the mouse, a press, 취소), schedule-14 (39: the archive's menus,
   tags and room, a card on one run, the pair of dates).
+
+## Meetings and projects as a table too (owner, 2026-11-24, the twenty-first round)
+
+- schedule/ui/84-tables.js. The meetings of a project and the projects of the main page keep their cards and can be seen as a
+  table in the design of the 외부설비 조달 table (`.tbl.sch-proc.sch-vtbl` + `vt-meet` / `vt-proj`: the grey head, rows 62
+  high, ten to a page). At the right of the title stand the two views (`.sch-vt`, `data-vt="meet:table"` …) and a search box
+  (`S.q.meeting` / `S.q.proj`); which view a member looks at is this browser's own (localStorage `aidc-view`).
+- **Meetings**: pickers 기간 (예정된 미팅 / 지난 미팅 / 이번 달), 참석자, 정렬 (`S.mtf`, `data-mtpick`); `schMeetRows(pid)`
+  is the one list both views draw (meetingCards takes it as its second argument). Columns: 날짜 · 시간 · 미팅명 · 장소 · 안건 ·
+  참석자 · 외부 참석 · 회의록.
+- **Projects**: the search is part of `schProjFilter` (name, status, owner, site, cost); the pickers of the section hold
+  for both views. Columns: No. · 프로젝트 · 분류 · 운영개시 예상 · 담당자 · 부지 · 총사업비 · 공사 면적 · 총 수전용량 · IT 용량 ·
+  서버. "엑셀로 내보내기" (`data-pjxl`, schProjXlsx) writes what the list holds now to one sheet, with a second sheet that
+  says which search and conditions were on.
+- While somebody types only the cards or the table are drawn again (`schMeetRedraw` / `schProjRedraw`), never the search
+  box. The pages of these tables are their own (`data-vpg`, S.mtPage / S.pjPage): the page's handler of `data-pg` would take
+  them for the member list.
+- renderMain / renderProject choose between their own markup of the cards and `schProjTableSection()` /
+  `schMeetTableSection(pid)`. The `?v=1` page has none of it.
+- tests/schedule-15.cjs (19 checks).
