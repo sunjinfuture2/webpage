@@ -928,3 +928,15 @@ asked for the project overview and the project list of the main page to follow i
 - **The buttons that add a row while the overview is edited** (+ 지표, + 행, + 일정, + 협력업체, + PDF 첨부) are all `.radd`: 28 px high,
   13 px of room left and right, weight 500 (was 400), 12.5 px.
 - tests/schedule-16.cjs and schedule-17.cjs follow; **not run** (regression runs only when the owner asks).
+
+## AIDC / Small AIDC as a badge (owner, 2026-11-24, thirtieth round)
+
+- schRepGrpTag(grp) draws the group of a project as a small badge (`.gtag`: `ga` AIDC, dark; `gs` Small AIDC, white with a line);
+  a project without a group has none. It stands **before the number** where a number is written — a row of the table (inside the
+  NO. cell, one width so the numbers stand in a line) and the first line of the overview (the badge, then "No. 13") — and **before
+  the name** on a card.
+- The table's columns: `122px minmax(170px,1.5fr) minmax(108px,.8fr) minmax(140px,1.3fr) minmax(96px,.7fr) minmax(96px,.7fr)
+  minmax(150px,1.4fr) minmax(96px,.62fr) minmax(98px,.62fr)`. Their smallest widths add up to 1076, so the table also fits the
+  narrowest page (1138 wide, `--d` -200). The columns of the twenty-eighth round needed 1320 and stuck out on a window narrower
+  than 1900; do not give this table fixed widths that add up to more than 1138 again.
+- tests/schedule-15, 16, 17 follow; **not run**.
