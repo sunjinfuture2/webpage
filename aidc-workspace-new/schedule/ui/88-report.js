@@ -213,7 +213,11 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.
 /* ---------- the main calendar's project tags: one line, the rest folded ---------- */
 // (twenty-seventh round, owner 2026-11-24: "프로젝트 태그들 1줄만 나오고 접히게") The button stands at the end of the line and says how many tags
 // are folded away; it is not shown when all of them fit. Called after every draw (schAfterNav).
+const SCH_CALPILL_GAP=10;   // between the last tag that shows and the button that opens the rest
 function schCalPillsFit(){ const box=$('.page.on .cal > .filters'), btn=box&&box.querySelector('[data-calpills]'); if(!btn)return; const pills=[...box.querySelectorAll('.pill')]; if(!pills.length){btn.hidden=true;return;}
   const top0=pills[0].offsetTop, more=pills.filter(p=>p.offsetTop>top0+2).length, open=box.classList.contains('open');
-  btn.hidden=!more; btn.innerHTML=open?`접기${svg('i-chev-d',8,4,'transform:rotate(180deg)')}`:`+${more}${svg('i-chev-d',8,4)}`; btn.title=open?'프로젝트 태그를 한 줄로 접기':`프로젝트 태그 ${more}개 더 보기`; btn.setAttribute('aria-expanded',String(open)); }
+  btn.hidden=!more; btn.innerHTML=open?`접기${svg('i-chev-d',8,4,'transform:rotate(180deg)')}`:`+${more}${svg('i-chev-d',8,4)}`; btn.title=open?'프로젝트 태그를 한 줄로 접기':`프로젝트 태그 ${more}개 더 보기`; btn.setAttribute('aria-expanded',String(open));
+  // (thirty-second round, owner: "배경 없애고 프로젝트 뱃지랑 거리 확 붙여놔. 너무 붙지는 않게") the button stands right after the last tag that
+  // shows — the last one of the first line while folded, the very last one while open — and no longer at the far end of the row.
+  if(more){ const line=open?pills:pills.filter(p=>p.offsetTop<=top0+2), last=line[line.length-1]; btn.style.right='auto'; btn.style.left=(last.offsetLeft+last.offsetWidth+SCH_CALPILL_GAP)+'px'; btn.style.top=last.offsetTop+'px'; } }
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-calpills]'); if(!el)return; e.stopPropagation(); S.calPillsOpen=!S.calPillsOpen; refreshSec('cal'); });

@@ -953,3 +953,11 @@ asked for the project overview and the project list of the main page to follow i
   line. An old rule that drew the line of a star that is not on in grey was still there after the twenty-seventh round and is
   removed. Two soft shadows keep the white star readable on a pale picture.
 - tests/schedule-16.cjs follows; **not run**.
+
+## The fold button of the calendar's project tags (owner, 2026-11-24, thirty-second round)
+
+- The button "+14" / "접기" (`[data-calpills]`, `.fmore`) has **no background** and stands **right after the last tag that shows**
+  (10 px, SCH_CALPILL_GAP): the last tag of the first line while the row is folded, the very last tag while it is open.
+  schCalPillsFit places it (`left` / `top` from that tag) after every draw; the row keeps 64 px free at its right end so the
+  button always has room.
+- tests/schedule-17.cjs follows; **not run**.

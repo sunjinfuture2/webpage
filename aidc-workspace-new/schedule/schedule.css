@@ -1739,9 +1739,9 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 /* the main calendar's project tags: one line; the rest behind a button at the end of the line */
 .sch-on .cal > .filters{position:relative;top:auto;left:auto;max-height:19.6px;overflow:hidden;padding-right:64px}
 .sch-on .cal > .filters.open{max-height:none;overflow:visible}
-.sch-on .cal > .filters .fmore{position:absolute;right:0;top:0;height:19.6px;padding:0 8px 0 9px;border-radius:9.8px;border:0;background:#f1f1f0;color:#4f4f4f;font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.sch-on .cal > .filters .fmore{position:absolute;right:0;top:0;height:19.6px;padding:0;border-radius:0;border:0;background:transparent;color:#6f6f6f;font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap}
 .sch-on .cal > .filters .fmore[hidden]{display:none}
-.sch-on .cal > .filters .fmore:hover{background:#e7e7e6;color:#000}
+.sch-on .cal > .filters .fmore:hover{background:transparent;color:#000}
 
 /* Twenty-eighth round (owner, 2026-11-24) */
 /* the figures: a tenth smaller and one step lighter */
