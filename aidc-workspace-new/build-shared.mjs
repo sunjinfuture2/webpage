@@ -62,6 +62,14 @@ for(const f of (await fs.readdir(new URL('schedule/ui/',root))).filter(n=>n.ends
 if(/<\/script/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing script tag');
 if(/<\/body>/i.test(schedUi))throw new Error('build-shared: schedule/ui must not contain a closing body tag (write <\\/body>): the scripts that follow are put in front of the first one');
 schedUi=schedUi.replace('__SCH_XLSX_V__',xlsxV);
+// Slides (PptxGenJS, MIT; schedule/pptx.ts): a third bundle, fetched when a PPT is asked for. The library's two Node-only
+// imports stay as they are: the browser never reaches them.
+{const pptx=await build({entryPoints:[path.join(here,'schedule/pptx.ts')],absWorkingDir:here,bundle:true,format:'iife',minify:true,target:['es2020'],legalComments:'none',write:false,platform:'browser',
+   external:['node:fs','node:https','node:fs/promises','sizeof'],banner:{js:'/*! AIDC WorkSpace: the report as slides. PptxGenJS (MIT): /schedule.licenses.txt */'}});
+ await fs.writeFile(new URL('public/schedule-pptx.js',root),pptx.outputFiles[0].text);
+ schedUi=schedUi.replace('__SCH_PPTX_V__',createHash('sha256').update(pptx.outputFiles[0].text).digest('hex').slice(0,12));
+ const dir=path.join(here,'node_modules/pptxgenjs'), meta=JSON.parse(await fs.readFile(path.join(dir,'package.json'),'utf8'));
+ await fs.appendFile(new URL('public/schedule.licenses.txt',root),`\n\nThird-party software bundled in schedule-pptx.js\n\n${'='.repeat(78)}\n${meta.name} ${meta.version} (${meta.license})\n${'='.repeat(78)}\n${(await fs.readFile(path.join(dir,'LICENSE'),'utf8')).trim()}\n\nThe bundle contains JSZip (used under its MIT licence), under the licence stated in its source header.\n`);}
 // PDF reader (pdf.js, Apache-2.0): served from /pdf/ and fetched when a member lets a PDF go on an upload field
 // (schedule/ui/89-docread.js). Only the Korean character maps are copied.
 {const dir=path.join(here,'node_modules/pdfjs-dist'), meta=JSON.parse(await fs.readFile(path.join(dir,'package.json'),'utf8'));

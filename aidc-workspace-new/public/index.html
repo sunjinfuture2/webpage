@@ -3079,7 +3079,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xq-body{display:grid;grid-template-columns:minmax(0,1fr) 272px;column-gap:24px;align-items:start;margin-top:22px}
 .sch-xw h5{margin:0 0 9px;min-height:22px;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#1c1c1c}
 .sch-xw h5 > i{flex:none;font-style:normal;width:17px;height:17px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
-.sch-xw h5 > small{font-size:11.5px;font-weight:400;color:#8e8e8e;margin-left:2px}
 .sch-xw .xq-sec + .xq-sec{margin-top:20px}
 .sch-xw .xq-pre{margin-left:auto;display:flex;gap:2px}
 .sch-xw .xq-pre button{height:22px;padding:0 8px;border-radius:5px;font-size:11.5px;color:#6f6f6f;background:transparent;white-space:nowrap}
@@ -3120,8 +3119,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xq-files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .sch-xw .xq-files .xq-card{padding:8px 4px;align-items:center;text-align:center}
 .sch-xw .xq-files .xq-card em{font-size:10.5px;line-height:14px}
-.sch-xw .xw-nt{margin:10px 0 0;min-height:0;font-size:11.5px;line-height:16px;color:#8e8e8e}
-.sch-xw .xw-nt:empty{display:none}
 .sch-xw .xq-side .np-bt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:16px}
 .sch-xw .xq-side .np-bt button{justify-content:center}
 
@@ -3139,6 +3136,41 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .phead.rep .rfdrop{align-self:flex-start;height:30px;padding:0 13px 0 11px}
 /* the map inside the row 위치: half as wide */
 .rtb .r .rmapbox{width:50%}
+
+/* Thirty-seventh round (owner, 2026-11-25): the window that hands out files */
+/* the right side is as tall as the options and keeps room for every line it can list (--xqn lines), so 구성, 파일 and the two
+   buttons stand where they stand whatever is ticked: the list takes what is left between the fixed parts, the sum stands at
+   its foot */
+.sch-xw .xq-body{align-items:stretch}
+.sch-xw .xq-side{position:static;display:flex;flex-direction:column;padding:16px}
+.sch-xw .xq-list{flex:1 1 auto;min-height:calc(var(--xqn,8) * 27px);overflow:hidden}
+.sch-xw .xq-list li{padding:4px 0}
+.sch-xw .xq-tot{flex:none;margin:10px 0 18px;min-height:18px}
+.sch-xw .xq-side h5,.sch-xw .xq-files,.sch-xw .xq-side .np-bt{flex:none}
+.sch-xw .xq-files .xq-card{padding:8px 4px 7px}
+.sch-xw .xq-pdf{flex:none;display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12.5px;line-height:18px;color:#1c1c1c;cursor:pointer;align-self:flex-start}
+.sch-xw .xq-side .np-bt{margin-top:14px}
+/* the boxes of 넣을 내용 and their ticks in a lighter grey ("체크박스 테두리는 좀 더 연한 그레이 컬러로") */
+.sch-xw .xq-row{border-color:#ececec}
+.sch-xw .xq-row.on{border-color:#cdcdcd}
+.sch-xw .xq-ck input,.sch-xw .xq-pdf input{appearance:none;-webkit-appearance:none;flex:none;margin:0;width:15px;height:15px;border:1px solid #cdcdcd;border-radius:3.5px;background:#fff;cursor:pointer;display:inline-grid;place-content:center}
+.sch-xw .xq-ck input:checked,.sch-xw .xq-pdf input:checked{background:#1c1c1c;border-color:#1c1c1c}
+.sch-xw .xq-ck input:checked::after,.sch-xw .xq-pdf input:checked::after{content:"";width:8px;height:4.5px;border-left:1.6px solid #fff;border-bottom:1.6px solid #fff;transform:translateY(-1px) rotate(-45deg)}
+.sch-xw .xq-ck input:disabled{background:#f5f5f5;border-color:#e6e6e6;cursor:default}
+.sch-xw .xq-ck input:focus-visible,.sch-xw .xq-pdf input:focus-visible{outline:2px solid #8e8e8e;outline-offset:1px}
+/* 요약 / FULL: the white piece slides from one to the other, the line that says what the form gives comes in */
+.sch-xw .xq-seg{position:relative;display:inline-grid;grid-template-columns:1fr 1fr}
+.sch-xw .xq-seg::before{content:"";position:absolute;top:2px;bottom:2px;left:2px;width:calc(50% - 2px);border-radius:5px;background:#fff;box-shadow:0 0 0 .8px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.12);transition:translate .22s cubic-bezier(.3,.7,.3,1)}
+.sch-xw .xq-seg.full::before{translate:100% 0}
+.sch-xw .xq-seg button{position:relative;min-width:52px;padding:0 10px;transition:color .18s}
+.sch-xw .xq-seg button.on{background:transparent;box-shadow:none}
+@keyframes xqSay{from{opacity:0;translate:0 3px}to{opacity:1;translate:0 0}}
+@keyframes xqTag{from{opacity:.25;scale:.86}to{opacity:1;scale:1}}
+.sch-xw .xq-say.j{animation:xqSay .22s ease-out}
+.sch-xw .xq-list li em.j{animation:xqTag .22s ease-out}
+html.mp-calm .sch-xw .xq-seg::before,html.mp-calm .sch-xw .xq-seg button{transition:none}
+html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:none}
+@media (prefers-reduced-motion:reduce){ .sch-xw .xq-seg::before,.sch-xw .xq-seg button{transition:none} .sch-xw .xq-say.j,.sch-xw .xq-list li em.j{animation:none} }
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3930,7 +3962,6 @@ html.mob .sch-xw .xq-body{grid-template-columns:minmax(0,1fr);row-gap:18px}
 html.mob .sch-xw .xq-side{position:static}
 html.mob .sch-xw .xq-cards{grid-template-columns:minmax(0,1fr)}
 html.mob .sch-xw h5{flex-wrap:wrap}
-html.mob .sch-xw h5 > small{display:none}
 html.mob .sch-xw .xq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:3px}
 html.mob .sch-xw .xq-say{grid-column:1/-1;grid-row:2;padding-left:23px}
 
@@ -3938,6 +3969,9 @@ html.mob .sch-xw .xq-say{grid-column:1/-1;grid-row:2;padding-left:23px}
 html.mob .phead .ttl .pexp{width:34px;height:34px;margin:-2px 0 0 4px}
 html.mob .phead .ttl .pexp svg{width:24px;height:24px}
 html.mob .rtb .r .rmapbox{width:100%}
+
+/* (thirty-seventh round) the window in one column: the list needs no room kept for it here */
+html.mob .sch-xw .xq-list{min-height:0}
 </style>
 </head>
 <body>
@@ -9687,7 +9721,7 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
 function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, forms=opt.forms||{}, fullOf=k=>(forms[k]||opt.form)==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday();
   const tasks=m?m.phases.flatMap(g=>g.tasks):[], res=t=>m.res.tasks[t.id], who=t=>schPeople(t).map(userName).join(', ')||'미지정', late=tasks.filter(t=>schLate(m,t)).sort((a,b)=>res(a).finish.localeCompare(res(b).finish));
   const done=tasks.filter(t=>AIDCSchedule.progress.isDone(t)), soonEnd=D.addDays(today,opt.days||60), soon=tasks.filter(t=>schOpen(m,t)&&!schLate(m,t)&&res(t).start<=soonEnd).sort((a,b)=>res(a).start.localeCompare(res(b).start)||res(a).finish.localeCompare(res(b).finish));
-  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[schXP(`외 ${a.length-n}건 (풀버전에 전체 수록)`)]:[];
+  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[schXP(`외 ${a.length-n}건 (FULL에 전체 수록)`)]:[];
   if(has('state')){ const F=fullOf('state'), rows=[['추진 단계',r.stage||'미정']], say=[];
     if(F){ rows.push(['구분',r.grp||'구분 없음'],['담당자',r.owner||'미지정']); if(r.focus)rows.push(['집중 추진','예']); }
     if(m){ const pr=tasks.length?schProgress(m,tasks):null, ms=tasks.filter(t=>t.kind==='milestone'&&schOpen(m,t)).sort((a,b)=>res(a).start.localeCompare(res(b).start))[0], gs=schGates(pid,m), okG=gs.filter(g=>g.st==='승인').length;
@@ -9727,53 +9761,72 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
   const fs=sections.map(s=>fullOf(s.k)), kind=fs.length&&fs.every(Boolean)?'full':fs.some(Boolean)?'mix':'sum';
   sections.forEach((s,i)=>{ s.h=`${i+1}. ${s.h}`; });
   const no=schRepNos()[pid];
-  return {file:`${schXSafe(pname(P))}_보고서(${({sum:'요약',full:'풀버전',mix:'맞춤'})[kind]})_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:[P.full||pname(P),`프로젝트 보고서 · ${({sum:'요약형',full:'풀버전',mix:'맞춤 구성'})[kind]}`],label:[no?'No. '+no:'',r.grp,r.stage].filter(Boolean).join('  |  '),sections}; }
+  return {file:`${schXSafe(pname(P))}_보고서(${({sum:'요약',full:'FULL',mix:'맞춤'})[kind]})_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:[P.full||pname(P),`프로젝트 보고서 · ${({sum:'요약형',full:'FULL',mix:'맞춤 구성'})[kind]}`],label:[no?'No. '+no:'',r.grp,r.stage].filter(Boolean).join('  |  '),sections}; }
 // how much a document holds, section by section (the window's right side says it before the file is made)
 const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b of s.blocks){ if(b.k==='tbl'){ tables++; lines+=b.rows.length; } else if(b.k==='p')lines++; } return {k:s.k||'',tables,lines}; });
 
 /* ---------- the window ---------- */
 // (thirty-fifth round, owner: "옵션 많은 제품 견적 고르는 ui들을 참고해서") The window is put together like the page on which a product
 // with many options is configured: at the left the options — a part is ticked first, and a ticked part shows its own choice of
-// 요약 / 풀버전 with a line that says what that form gives; at the right, like the sheet of an estimate, what was put together (a
-// line per part with its form and how many lines it comes to, the sum below), then the file and the button.
-async function schXOut(doc,file){ if(file==='docx'){ toast('Word 문서를 만드는 중입니다…',8000); const blob=await schExpDocx(doc); schExpSave(doc.file+'.docx',blob); toast('Word 문서를 내려받았습니다.',2600); } else schExpPrint(doc); }
+// 요약 / FULL with a line that says what that form gives; at the right, like the sheet of an estimate, what was put together (a
+// line per part with its form and how many lines it comes to, the sum below), then the files and the button.
+// (thirty-seventh round, owner 2026-11-25) Fewer words — no line under the title, none beside 넣을 내용, no notes about PDF and
+// Excel. The right side is as tall as the options and keeps room for every line it can hold, so 구성, 파일 and the two buttons
+// never move whatever is ticked. The full form is called FULL and the choice slides. The file is no longer one of three: Word,
+// PPT and 엑셀 can be ticked together ("파일형식을 복수로 고를수도 있게"), and "PDF로도 저장" opens the print window for the same
+// report besides. A project's 엑셀 is still its schedule data, whole (its card says so); the main page's 엑셀 is the list and the
+// sheets that can be read back.
+let schPptxLoading=null;
+function schPptx(){ return schPptxLoading||(schPptxLoading=new Promise((ok,no)=>{ if(window.AIDCSchedulePptx){ok(window.AIDCSchedulePptx);return;} const s=document.createElement('script'); s.src='/schedule-pptx.js?v=64050fa1809f';
+  s.onload=()=>window.AIDCSchedulePptx?ok(window.AIDCSchedulePptx):no(Error('PPT 모듈을 불러오지 못했습니다.')); s.onerror=()=>{ schPptxLoading=null; no(Error('PPT 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); })); }
+// the company's mark for the first slide (the Word sheet's own picture), as a data address
+async function schXLogo(){ const im=await schExpImage('/export/sunjin-logo.png'); if(!im)return null; let s=''; for(let i=0;i<im.data.length;i+=8192)s+=String.fromCharCode(...im.data.subarray(i,i+8192)); return {logo:`data:image/${im.ext};base64,${btoa(s)}`,logoRatio:im.h/im.w}; }
+async function schExpPptx(doc){ const P=await schPptx(), logo=await schXLogo(); return new Blob([await P.make(doc,logo||{})],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
 function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[pid])return; closePop();
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-xw'; const main=kind==='main', nShown=main?schXMainIds('shown').length:0, nAll=main?orderedProjects().length:0, nFocus=main?schXMainIds('focus').length:0;
   const parts=main?[{k:'list',t:'프로젝트 목록 표',n:1,one:'번호 · 구분 · 위치 · 사업주체 · IT LOAD · 추진 단계'},{k:'sheets',t:'프로젝트별 요약',n:1,sum:'프로젝트마다 1장 — 지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'}]:schXProjParts(pid);
   const forms={}; for(const p of parts)forms[p.k]='sum';
   const card=(name,val,label,note,on)=>`<label class="xq-card"><input type="radio" name="${name}" value="${val}" ${on?'checked':''}><b>${esc(label)}</b>${note?`<em>${esc(note)}</em>`:''}</label>`;
-  const row=p=>`<div class="xq-row" data-xwrow="${p.k}"><label class="xq-ck"><input type="checkbox" data-xwp="${p.k}" ${p.n&&p.k!=='evid'&&p.k!=='part'?'checked':''} ${p.n?'':'disabled'}><span class="xq-nm">${esc(p.t)}</span></label><span class="xq-say" data-xwsay></span>${p.one?'':`<span class="xq-seg" role="group" aria-label="${esc(p.t)} 형식"><button type="button" data-xwf="sum">요약</button><button type="button" data-xwf="full">풀버전</button></span>`}</div>`;
+  const fcard=(val,label,note,on,tip)=>`<label class="xq-card" ${tip?`title="${esc(tip)}"`:''}><input type="checkbox" name="xw-file" value="${val}" ${on?'checked':''}><b>${esc(label)}</b><em>${esc(note)}</em></label>`;
+  const row=p=>`<div class="xq-row" data-xwrow="${p.k}"><label class="xq-ck"><input type="checkbox" data-xwp="${p.k}" ${p.n&&p.k!=='evid'&&p.k!=='part'?'checked':''} ${p.n?'':'disabled'}><span class="xq-nm">${esc(p.t)}</span></label><span class="xq-say" data-xwsay></span>${p.one?'':`<span class="xq-seg" role="group" aria-label="${esc(p.t)} 형식"><button type="button" data-xwf="sum">요약</button><button type="button" data-xwf="full">FULL</button></span>`}</div>`;
   let step=0; const st=()=>`<i>${++step}</i>`;
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="내보내기"><div class="np-hd"><b>내보내기</b><span>${main?'프로젝트 개요 — 목록과 프로젝트별 요약':esc(`${PROJECTS[pid].full||pname(PROJECTS[pid])} — 지금 진행 상황으로 만드는 보고서`)}</span></div>
-    <div class="xq-body"><div class="xq-opts">${main?`<div class="xq-sec"><h5>${st()}범위</h5><div class="xq-cards">${nShown!==nAll?card('xw-scope','shown','지금 목록',`${nShown}건 · 검색 · 조건 적용`,true):''}${card('xw-scope','all','전체 프로젝트',`${nAll}건`,nShown===nAll)}${nFocus&&nFocus!==nAll?card('xw-scope','focus','집중 추진만',`${nFocus}건`,false):''}</div></div>`:''}
-      <div class="xq-sec" data-xwparts><h5>${st()}넣을 내용<small>고른 항목마다 요약 / 풀버전을 정합니다</small><span class="xq-pre"><button type="button" data-xwall="pick">전체 선택</button><button type="button" data-xwall="sum">모두 요약</button><button type="button" data-xwall="full">모두 풀버전</button></span></h5><div class="xq-rows">${parts.map(row).join('')}</div></div></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="내보내기"><div class="np-hd"><b>내보내기</b></div>
+    <div class="xq-body" style="--xqn:${parts.length}"><div class="xq-opts">${main?`<div class="xq-sec"><h5>${st()}범위</h5><div class="xq-cards">${nShown!==nAll?card('xw-scope','shown','지금 목록',`${nShown}건 · 검색 · 조건 적용`,true):''}${card('xw-scope','all','전체 프로젝트',`${nAll}건`,nShown===nAll)}${nFocus&&nFocus!==nAll?card('xw-scope','focus','집중 추진만',`${nFocus}건`,false):''}</div></div>`:''}
+      <div class="xq-sec" data-xwparts><h5>${st()}넣을 내용<span class="xq-pre"><button type="button" data-xwall="pick">전체 선택</button><button type="button" data-xwall="sum">모두 요약</button><button type="button" data-xwall="full">모두 FULL</button></span></h5><div class="xq-rows">${parts.map(row).join('')}</div></div></div>
       <div class="xq-side"><h5>구성</h5><ul class="xq-list" data-xwlist></ul><p class="xq-tot" data-xwtot></p>
-        <h5>${st()}파일</h5><div class="xq-files">${card('xw-file','pdf','PDF','인쇄 창',true)}${card('xw-file','docx','Word','.docx',false)}${card('xw-file','xlsx','엑셀','.xlsx',false)}</div>
-        <p class="xw-nt" data-xwnt></p><div class="np-bt"><button data-xw="x">취소</button><button class="pri" data-xw="ok">${svg('i-sch-fdn',13,13)}내보내기</button></div></div></div></div>`;
+        <h5>${st()}파일</h5><div class="xq-files">${fcard('docx','Word','.docx',true)}${fcard('pptx','PPT','.pptx',false)}${fcard('xlsx','엑셀',main?'.xlsx':'일정 전체',false,main?'목록과 프로젝트별 시트 — 그대로 다시 올릴 수 있는 형식':'일정 · 리스트 · 관계 · 외부설비 · 승인게이트 · 근거 및 확약을 시트별로 모두')}</div>
+        <label class="xq-pdf"><input type="checkbox" data-xwpdf><span>PDF로도 저장</span></label>
+        <div class="np-bt"><button data-xw="x">취소</button><button class="pri" data-xw="ok">${svg('i-sch-fdn',13,13)}내보내기</button></div></div></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s), val=n=>(d.querySelector(`input[name="${n}"]:checked`)||{}).value||'', picked=()=>[...d.querySelectorAll('[data-xwp]:checked')].map(x=>x.dataset.xwp), close=()=>d.remove();
-  const want=ps=>({list:ps.includes('list'),sheets:ps.includes('sheets')?(forms.sheets==='full'?'full':true):false}), tag=k=>`<em class="${forms[k]}">${forms[k]==='full'?'풀버전':'요약'}</em>`;
-  const sync=()=>{ const file=val('xw-file'), xl=file==='xlsx', ok=$n('[data-xw="ok"]'), ps=picked(); let say='', list='', tot='';
-    for(const p of parts){ const r=$n(`[data-xwrow="${p.k}"]`), on=ps.includes(p.k), fix=main&&xl&&p.k==='sheets'; r.classList.toggle('on',on); r.classList.toggle('none',!p.n); r.classList.toggle('fix',fix);
+  const files=()=>[...d.querySelectorAll('input[name="xw-file"]:checked')].map(x=>x.value), pdf=()=>$n('[data-xwpdf]').checked;
+  const want=ps=>({list:ps.includes('list'),sheets:ps.includes('sheets')?(forms.sheets==='full'?'full':true):false}), tag=k=>`<em class="${forms[k]}">${forms[k]==='full'?'FULL':'요약'}</em>`;
+  const sync=()=>{ const fs=files(), xl=fs.includes('xlsx'), docs=fs.includes('docx')||fs.includes('pptx')||pdf(), ok=$n('[data-xw="ok"]'), ps=picked(); let list='', tot='';
+    for(const p of parts){ const r=$n(`[data-xwrow="${p.k}"]`), on=ps.includes(p.k), fix=main&&xl&&!docs&&p.k==='sheets', seg=r.querySelector('.xq-seg'); r.classList.toggle('on',on); r.classList.toggle('none',!p.n); r.classList.toggle('fix',fix); if(seg)seg.classList.toggle('full',forms[p.k]==='full');
       for(const b of r.querySelectorAll('[data-xwf]')){ const cur=b.dataset.xwf===forms[p.k]; b.classList.toggle('on',cur); b.setAttribute('aria-pressed',String(cur)); b.disabled=!on||fix; }
       r.querySelector('[data-xwsay]').textContent=!p.n?'내용 없음':fix?'개요 전체 (다시 올릴 수 있는 형식)':p.one||p[forms[p.k]]; }
-    $n('[data-xwparts]').classList.toggle('dim',xl&&!main); const able=parts.filter(p=>p.n).map(p=>p.k); $n('[data-xwall="pick"]').textContent=able.every(k=>ps.includes(k))?'전체 해제':'전체 선택';
-    if(xl&&!main){ list='<li class="all">일정 · 리스트 · 관계 · 외부설비 · 승인게이트 · 근거 및 확약</li>'; tot='시트별 전체'; say='엑셀은 고른 항목과 상관없이 일정 자료 전체를 시트별로 내보냅니다.'; }
-    else if(!ps.length){ list='<li class="nil">고른 항목이 없습니다</li>'; say='넣을 내용을 하나 이상 골라 주세요.'; }
-    else if(main){ const ids=schXMainIds(val('xw-scope')||'all'), w=want(ps); list=(w.list?`<li><span>프로젝트 목록 표</span><em>표</em><i>${ids.length}행</i></li>`:'')+(w.sheets?`<li><span>프로젝트별 요약</span>${xl?'<em class="full">전체</em>':tag('sheets')}<i>${ids.length}${xl?'시트':'장'}</i></li>`:'');
-      if(xl)tot=`프로젝트 ${ids.length}건 · 시트 ${(w.list?1:0)+(w.sheets?ids.length:0)}개`; else { const ms=schXMeasure(schXMainDoc(ids,w)); tot=`프로젝트 ${ids.length}건 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; } }
-    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
-    if(!say)say=file==='pdf'?'PDF는 인쇄 창이 열리면 ‘PDF로 저장’을 고르면 됩니다.':xl&&main?'엑셀은 목록과 프로젝트별 시트로 내보내며, 그대로 다시 올릴 수 있습니다.':'';   // (after the chain above: it must not stand between its branches)
-    $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; $n('[data-xwnt]').textContent=say; ok.disabled=!ps.length&&!(xl&&!main); };
+    const only=xl&&!docs&&!main;   // a project's 엑셀 alone: the schedule data whole, whatever is ticked
+    $n('[data-xwparts]').classList.toggle('dim',only); const able=parts.filter(p=>p.n).map(p=>p.k); $n('[data-xwall="pick"]').textContent=able.every(k=>ps.includes(k))?'전체 해제':'전체 선택';
+    if(only){ list='<li class="all">일정 자료 전체 (시트별)</li>'; }
+    else if(!ps.length){ list='<li class="nil">고른 항목이 없습니다</li>'; }
+    else if(main){ const ids=schXMainIds(val('xw-scope')||'all'), w=want(ps); list=(w.list?`<li><span>프로젝트 목록 표</span><em>표</em><i>${ids.length}행</i></li>`:'')+(w.sheets?`<li data-xk="sheets"><span>프로젝트별 요약</span>${docs?tag('sheets'):'<em class="full">전체</em>'}<i>${ids.length}${docs?'장':'시트'}</i></li>`:'');
+      if(docs){ const ms=schXMeasure(schXMainDoc(ids,w)); tot=`프로젝트 ${ids.length}건 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; } else tot=`프로젝트 ${ids.length}건 · 시트 ${(w.list?1:0)+(w.sheets?ids.length:0)}개`; }
+    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
+    $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; ok.disabled=!(fs.length||pdf())||(!ps.length&&!only); };
   d.addEventListener('change',sync); sync();
   d.addEventListener('click',async e=>{ const T=e.target; if(!T.closest)return; const f=T.closest('[data-xwf]'), all=T.closest('[data-xwall]'), a=T.closest('[data-xw]');
-    if(f){ e.stopPropagation(); if(!f.disabled){ forms[f.closest('[data-xwrow]').dataset.xwrow]=f.dataset.xwf; sync(); } return; }
+    if(f){ e.stopPropagation(); if(!f.disabled){ const k=f.closest('[data-xwrow]').dataset.xwrow, was=forms[k]; forms[k]=f.dataset.xwf; sync();
+        if(was!==forms[k])for(const el of [f.closest('[data-xwrow]').querySelector('[data-xwsay]'),$n(`[data-xwlist] li[data-xk="${k}"] em`)])if(el){ el.classList.remove('j'); void el.offsetWidth; el.classList.add('j'); } } return; }
     if(all){ e.stopPropagation(); const v=all.dataset.xwall, boxes=[...d.querySelectorAll('[data-xwp]:not(:disabled)')]; if(v==='pick'){ const every=boxes.every(b=>b.checked); boxes.forEach(b=>{ b.checked=!every; }); } else for(const p of parts)if(!p.one)forms[p.k]=v; sync(); return; }
     if(T===d||(a&&a.dataset.xw==='x')){ e.stopPropagation(); close(); return; } if(!a||a.dataset.xw!=='ok'||a.disabled)return; e.stopPropagation();
-    const file=val('xw-file'), ps=picked();
-    try{ if(main){ const ids=schXMainIds(val('xw-scope')||'all'), w=want(ps); if(!ids.length){ toast('내보낼 프로젝트가 없습니다.',3200); return; } close();
-        if(file==='xlsx'){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,w),w.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); toast(`엑셀 파일을 내려받았습니다 · 프로젝트 ${ids.length}건`,3600); }
-        else await schXOut(schXMainDoc(ids,w),file); }
-      else { close(); if(file==='xlsx'){ await schXlsxSection(pid,'gantt',''); return; } await schXOut(schXProjDoc(pid,{parts:ps,forms:Object.assign({},forms)}),file); } }
+    const fs=files(), wantPdf=pdf(), ps=picked(), scope=val('xw-scope')||'all', fm=Object.assign({},forms), pause=()=>new Promise(r=>setTimeout(r,450)), made=[];
+    try{ const ids=main?schXMainIds(scope):null, w=main?want(ps):null; if(main&&!ids.length){ toast('내보낼 프로젝트가 없습니다.',3200); return; } close();
+      let doc=null; const mk=()=>doc||(doc=main?schXMainDoc(ids,w):schXProjDoc(pid,{parts:ps,forms:fm}));
+      // one file after the other, a moment apart (a browser lets several downloads through when they do not come at once)
+      if(fs.includes('docx')){ toast('Word 문서를 만드는 중입니다…',12000); schExpSave(mk().file+'.docx',await schExpDocx(mk())); made.push('Word'); await pause(); }
+      if(fs.includes('pptx')){ toast('PPT 파일을 만드는 중입니다…',20000); schExpSave(mk().file+'.pptx',await schExpPptx(mk())); made.push('PPT'); await pause(); }
+      if(fs.includes('xlsx')){ if(main){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,w),w.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); } else await schXlsxSection(pid,'gantt',''); made.push('엑셀'); await pause(); }
+      if(made.length)toast(`${made.join(' · ')} 파일을 내려받았습니다.`,3600);
+      if(wantPdf)schExpPrint(mk()); }
     catch(err){ console.error(err); toast('내보내지 못했습니다: '+String(err&&err.message||err),4200); } });
   d.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } }); }
 document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return; let el;

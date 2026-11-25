@@ -1884,7 +1884,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xq-body{display:grid;grid-template-columns:minmax(0,1fr) 272px;column-gap:24px;align-items:start;margin-top:22px}
 .sch-xw h5{margin:0 0 9px;min-height:22px;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#1c1c1c}
 .sch-xw h5 > i{flex:none;font-style:normal;width:17px;height:17px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
-.sch-xw h5 > small{font-size:11.5px;font-weight:400;color:#8e8e8e;margin-left:2px}
 .sch-xw .xq-sec + .xq-sec{margin-top:20px}
 .sch-xw .xq-pre{margin-left:auto;display:flex;gap:2px}
 .sch-xw .xq-pre button{height:22px;padding:0 8px;border-radius:5px;font-size:11.5px;color:#6f6f6f;background:transparent;white-space:nowrap}
@@ -1925,8 +1924,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xq-files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .sch-xw .xq-files .xq-card{padding:8px 4px;align-items:center;text-align:center}
 .sch-xw .xq-files .xq-card em{font-size:10.5px;line-height:14px}
-.sch-xw .xw-nt{margin:10px 0 0;min-height:0;font-size:11.5px;line-height:16px;color:#8e8e8e}
-.sch-xw .xw-nt:empty{display:none}
 .sch-xw .xq-side .np-bt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:16px}
 .sch-xw .xq-side .np-bt button{justify-content:center}
 
@@ -1944,3 +1941,38 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .phead.rep .rfdrop{align-self:flex-start;height:30px;padding:0 13px 0 11px}
 /* the map inside the row 위치: half as wide */
 .rtb .r .rmapbox{width:50%}
+
+/* Thirty-seventh round (owner, 2026-11-25): the window that hands out files */
+/* the right side is as tall as the options and keeps room for every line it can list (--xqn lines), so 구성, 파일 and the two
+   buttons stand where they stand whatever is ticked: the list takes what is left between the fixed parts, the sum stands at
+   its foot */
+.sch-xw .xq-body{align-items:stretch}
+.sch-xw .xq-side{position:static;display:flex;flex-direction:column;padding:16px}
+.sch-xw .xq-list{flex:1 1 auto;min-height:calc(var(--xqn,8) * 27px);overflow:hidden}
+.sch-xw .xq-list li{padding:4px 0}
+.sch-xw .xq-tot{flex:none;margin:10px 0 18px;min-height:18px}
+.sch-xw .xq-side h5,.sch-xw .xq-files,.sch-xw .xq-side .np-bt{flex:none}
+.sch-xw .xq-files .xq-card{padding:8px 4px 7px}
+.sch-xw .xq-pdf{flex:none;display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12.5px;line-height:18px;color:#1c1c1c;cursor:pointer;align-self:flex-start}
+.sch-xw .xq-side .np-bt{margin-top:14px}
+/* the boxes of 넣을 내용 and their ticks in a lighter grey ("체크박스 테두리는 좀 더 연한 그레이 컬러로") */
+.sch-xw .xq-row{border-color:#ececec}
+.sch-xw .xq-row.on{border-color:#cdcdcd}
+.sch-xw .xq-ck input,.sch-xw .xq-pdf input{appearance:none;-webkit-appearance:none;flex:none;margin:0;width:15px;height:15px;border:1px solid #cdcdcd;border-radius:3.5px;background:#fff;cursor:pointer;display:inline-grid;place-content:center}
+.sch-xw .xq-ck input:checked,.sch-xw .xq-pdf input:checked{background:#1c1c1c;border-color:#1c1c1c}
+.sch-xw .xq-ck input:checked::after,.sch-xw .xq-pdf input:checked::after{content:"";width:8px;height:4.5px;border-left:1.6px solid #fff;border-bottom:1.6px solid #fff;transform:translateY(-1px) rotate(-45deg)}
+.sch-xw .xq-ck input:disabled{background:#f5f5f5;border-color:#e6e6e6;cursor:default}
+.sch-xw .xq-ck input:focus-visible,.sch-xw .xq-pdf input:focus-visible{outline:2px solid #8e8e8e;outline-offset:1px}
+/* 요약 / FULL: the white piece slides from one to the other, the line that says what the form gives comes in */
+.sch-xw .xq-seg{position:relative;display:inline-grid;grid-template-columns:1fr 1fr}
+.sch-xw .xq-seg::before{content:"";position:absolute;top:2px;bottom:2px;left:2px;width:calc(50% - 2px);border-radius:5px;background:#fff;box-shadow:0 0 0 .8px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.12);transition:translate .22s cubic-bezier(.3,.7,.3,1)}
+.sch-xw .xq-seg.full::before{translate:100% 0}
+.sch-xw .xq-seg button{position:relative;min-width:52px;padding:0 10px;transition:color .18s}
+.sch-xw .xq-seg button.on{background:transparent;box-shadow:none}
+@keyframes xqSay{from{opacity:0;translate:0 3px}to{opacity:1;translate:0 0}}
+@keyframes xqTag{from{opacity:.25;scale:.86}to{opacity:1;scale:1}}
+.sch-xw .xq-say.j{animation:xqSay .22s ease-out}
+.sch-xw .xq-list li em.j{animation:xqTag .22s ease-out}
+html.mp-calm .sch-xw .xq-seg::before,html.mp-calm .sch-xw .xq-seg button{transition:none}
+html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:none}
+@media (prefers-reduced-motion:reduce){ .sch-xw .xq-seg::before,.sch-xw .xq-seg button{transition:none} .sch-xw .xq-say.j,.sch-xw .xq-list li em.j{animation:none} }

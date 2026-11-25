@@ -1114,3 +1114,30 @@ one is wanted); looked at in a browser at 1920, 1536 and a phone.
 
 tests: schedule-16 was brought in step (the "+", the titles, the file rows, the fold's name) and not run; looked at in a
 browser at 1920, 1536 and a phone.
+
+## The export window: fewer words, a fixed right side, several files, slides (owner, 2026-11-25, thirty-seventh round)
+
+- **Fewer words**: no line under the title, none beside 넣을 내용, no notes about PDF and Excel.
+- **The right side does not move**: it is as tall as the options (the grid stretches it) and its list keeps room for every line
+  it can hold (`--xqn` lines of 27 px), the sum stands at the list's foot, 파일, "PDF로도 저장" and the two buttons below — so
+  구성, 파일, 취소 and 내보내기 stand where they stand whatever is ticked.
+- **Lighter boxes**: a ticked row has a #cdcdcd line (it was black), an unticked one #ececec; the ticks are drawn by the page
+  (15 px, the same light line; dark when ticked).
+- **FULL** is the name of the full form everywhere it is written (the choice, 모두 FULL, the tag at the right, the report's
+  title and file name). The choice slides: the white piece is the control's `::before` and moves by `translate` (class `full`
+  on `.xq-seg`), the line that says what the form gives and the tag at the right come in (class `j`, taken off and put on
+  again). Off under html.mp-calm and the system's setting.
+- **Several files at once**: Word, PPT and 엑셀 are ticks, not one choice of three (Word is ticked when the window opens), and
+  "PDF로도 저장" opens the print window for the same report besides. The files come down one after the other, a moment apart;
+  PDF alone is possible; nothing ticked turns the button off. A project's 엑셀 is still its schedule data, whole (its card says
+  "일정 전체"; ticked alone it dims the options); the main page's 엑셀 is the list and the sheets that can be read back.
+- **PPT** (schedule/pptx.ts, bundled to public/schedule-pptx.js, about 380 KB, fetched on demand; PptxGenJS 4.0.1, MIT): the one
+  document model of 70-export.js laid out on 16:9 slides — a first slide with the title, the label and the company's mark, then
+  every section under its heading, paragraphs as text and tables as tables, "… (계속)" on a new slide wherever the next block
+  would not fit (a table that fits on one slide is not cut in two). What fits is estimated from the text. The file is written
+  through the library's `exportPresentation({compression:true})`: `write()` of this version stores without compressing whenever
+  an output type is named (3.8 MB for a report that is 160 KB compressed). Looked at by opening the file with python-pptx and
+  converting it with LibreOffice; not opened in PowerPoint itself (there is none here).
+
+tests: schedule-8 / 9 / 15 / 16 take Word off before they ask for 엑셀 alone; schedule-16 checks the window's words, the fixed
+places, FULL and that a .pptx is made. Brought in step and not run.
