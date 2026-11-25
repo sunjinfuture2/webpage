@@ -1162,3 +1162,14 @@ places, FULL and that a .pptx is made. Brought in step and not run.
 
 tests: schedule-8 types the agenda in place and checks a card that grows; schedule-15 expects an empty cell. Brought in step
 and not run.
+
+## Small corrections of meetings and of the export window (owner, 2026-11-25, thirty-ninth round)
+
+- **A meeting's panel**: the names of the fields in its left column stand closer to what they say (the column is 108 wide in
+  the panel, 132 on the full page; it was 138 / 164). Only a meeting's panel (`.props:has(.mt-ln)`), only the left column.
+- **A meeting card**: the pictograms of its three lines start where its title starts (30 from the card's edge; they stood 3.2
+  further in). Faces that go to a line of their own stand 4 left of that (26): the stack has a margin of -4 and the room after
+  the title is the title's own padding (8.6), so beside the title the distance is the 4.6 it was.
+- **The export window**: a ticked row of 넣을 내용 has a pale grey ground (#f6f6f5; its choice 요약 / FULL a tone darker so it
+  still shows).
+
