@@ -1289,3 +1289,10 @@ second shorter. View box 0.25 0.3 13.4 13.4. It is drawn the way it is shown: th
 mirrored the draft and gave it an outline are gone (they would turn the roll to the other side and fill the cuts).
 
 Seen on a project page beside 미팅 — light, dark, a phone. tests: none speaks of the drawing. Not run.
+
+## The partner list: a description is cut with dots (owner, 2026-11-25, forty-fourth round)
+
+A partner's description had grown (project names, the meetings it took part in) and ran on in the list — over the column of
+meetings and out of the table. In the list it is one line now, cut with "…" at the end of its own column (`.ds > .e`; line
+breaks are written as spaces there); the cell's title carries the whole text, and the panel shows it whole as before. The
+column of meetings keeps to its own width too. For both pages (the cell's rule is not under `.sch-on`).

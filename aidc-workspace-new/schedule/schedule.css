@@ -2036,3 +2036,10 @@ html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:n
 .tbl.sch-proc.vt-res{width:calc(1337px + var(--d))}
 .sch-on .sec-title .sch-vt{margin-left:auto;margin-top:3px;font-size:13px;letter-spacing:0}
 .sch-on .sec-title .sch-vt + .srch.box{margin-left:14px}
+
+/* Forty-fourth round (owner, 2026-11-25: "설명 텍스트 양 많아지면 ...으로 줄여 계속해서 늘리지 말고") */
+/* a partner's description keeps to its own column in the list: one line, cut with dots (it ran on over the meetings and out
+   of the table). The whole text is in the partner's panel, and in the cell's title when the pointer rests on it. */
+.tbl.partners .rw .ds{min-width:0;overflow:hidden}
+.tbl.partners .rw .ds .e{display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl.partners .rw .mt{min-width:0;overflow:hidden}
