@@ -2127,7 +2127,6 @@ html{overflow:hidden}
 
 /* --- meeting cards: smaller pictograms in front of the three lines --- */
 .sch-on .mcard .chk li .bx,.sch-on .rlist .chk li .bx{width:16px;height:16px;margin:2px 8.5px 0 2px}
-.sch-on .mcard .chk li.nil .tx::before,.sch-on .rlist .chk li.nil .tx::before{content:"—";color:#d0d0d0}
 .tbl .rw .url a.sch-ua{border-bottom:0;line-height:1}
 /* the outline of the gantt ends with a row that adds a phase */
 .sg-row.add{display:flex;align-items:center;gap:8px;padding-left:4px;color:#a6a6a6;font-size:12.5px;cursor:pointer;left:0;right:0}
@@ -3171,6 +3170,32 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 html.mp-calm .sch-xw .xq-seg::before,html.mp-calm .sch-xw .xq-seg button{transition:none}
 html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:none}
 @media (prefers-reduced-motion:reduce){ .sch-xw .xq-seg::before,.sch-xw .xq-seg button{transition:none} .sch-xw .xq-say.j,.sch-xw .xq-list li em.j{animation:none} }
+
+/* Thirty-eighth round (owner, 2026-11-25): meetings */
+/* a card's three lines run on as far as they must ("한줄을 넘으면 줄바꿈이랑 여백 확보 … 썸네일길이가 알아서 길어지게"): a line
+   wraps, the next one keeps its distance, the card is as tall as what it says. The row of cards stands in the section's flow
+   for that (it was laid over a section of a fixed height), so what follows moves down with the tallest card. */
+.sch-on .meet:not(.tv){height:auto!important;padding:147px 0 84.7px}   /* padding, not a margin on the row: a margin would run out through the section's top */
+.sch-on .meet:not(.tv) .track{position:relative;top:auto!important;left:auto;margin:0 0 0 1.1px;min-height:210px}
+.sch-on .meet:not(.tv) .fade{height:auto;bottom:84.7px}
+.sch-on .mcard .chk{padding-right:24px}
+.sch-on .mcard .chk li{height:auto;min-height:20px;margin-bottom:7.7px;line-height:20px}
+.sch-on .mcard .chk li:last-child{margin-bottom:0}
+.sch-on .mcard .chk li .tx{margin-top:0;min-width:0;overflow-wrap:anywhere;word-break:keep-all}
+.sch-on .mcard .chk li .pre{flex:none;line-height:16px}
+.sch-on .mcard .tt{padding-right:20px}
+/* a meeting's panel: its lines are written whole, and three of them are typed in place while it is edited */
+.props .mt-ln{align-items:flex-start}
+.props .mt-ln .bx{margin-top:2px}
+.props .mt-ln .mt-v{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:keep-all;line-height:20px}
+/* a line that is one text (주요안건, 상대 참여자) keeps its pictogram beside its first line, the text wraps beside it; the line of
+   date, time and place holds several pieces and wraps as a whole */
+.props .mt-ln:has(> .bx + .mt-v:last-child){flex-wrap:nowrap;width:100%}
+.props .mt-ln:has(> .bx + .mt-v:last-child) > .mt-v{flex:1 1 auto;min-width:0}
+.props .mt-ln .mt-v.mt-in{min-width:64px;min-height:20px;outline:none;cursor:text;opacity:.6;text-decoration:underline;text-decoration-color:#9a9a9a;text-underline-offset:4px;text-decoration-thickness:1px;transition:opacity .12s}
+.props .mt-ln .mt-v.mt-in:hover,.props .mt-ln .mt-v.mt-in:focus{opacity:1}
+.props .mt-ln .mt-v.mt-in:empty{text-decoration:none}
+.props .mt-ln .mt-v.mt-in:empty::before{content:attr(data-ph);color:#b5b5b5;text-decoration:underline;text-decoration-color:#cfcfcf;text-underline-offset:4px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -3972,6 +3997,10 @@ html.mob .rtb .r .rmapbox{width:100%}
 
 /* (thirty-seventh round) the window in one column: the list needs no room kept for it here */
 html.mob .sch-xw .xq-list{min-height:0}
+
+/* (thirty-eighth round) the row of meeting cards is in the flow on the wide page too now; here it keeps the phone's own margins */
+html.mob.sch-on .meet:not(.tv){padding:0}
+html.mob.sch-on .meet:not(.tv) .track{margin:22px -16px 0;min-height:0}
 </style>
 </head>
 <body>
@@ -4772,7 +4801,8 @@ const lastBy=it=>{const n=editorName(it);return n?`<span class="by">${av()}${esc
 const urlHref=u=>{u=(u||'').trim();if(!u||/^(javascript|data|vbscript):/i.test(u))return '';if(/^dropbox\.com\.{3,}$/.test(u))return 'https://www.dropbox.com/';return /^https?:\/\//i.test(u)?u:'https://'+u;};
 const urlField=(it,E,style='')=>E?`<span class="url" contenteditable="true" data-f="url" data-ph="주소 입력" data-stop style="${style}">${esc(it.url||'')}</span>`:(urlHref(it.url)?`<a class="url" href="${esc(urlHref(it.url))}" target="_blank" rel="noopener" data-stop style="${style}">${esc(it.url)}</a><button class="copy-url" data-copy="${esc(urlHref(it.url))}" title="주소 복사">${svg('i-copy',13,13)}</button>`:'<span class="plain" style="color:#c4c4c4">없음</span>');
 function readUrl(it){const u=$('[data-f="url"]',pinOf(it));if(u&&u.isContentEditable){const v=u.textContent.trim();if(v!==(it.url||'')){it.url=v;it.dirty=true;}}
-  const d=$('[data-f="dbx"]',pinOf(it));if(d&&d.isContentEditable){const v=d.textContent.trim();if(v!==(it.dbx||'')){if(v)it.dbx=v;else delete it.dbx;it.dirty=true;}}}
+  const d=$('[data-f="dbx"]',pinOf(it));if(d&&d.isContentEditable){const v=d.textContent.trim();if(v!==(it.dbx||'')){if(v)it.dbx=v;else delete it.dbx;it.dirty=true;}}
+  if(typeof schMeetInRead==='function')schMeetInRead(it,pinOf(it));}   // a meeting's place, agenda and guests, typed in place
 const dbxField=(it,E)=>E?`<span class="url" contenteditable="true" data-f="dbx" data-ph="드롭박스 주소 입력" data-stop>${esc(it.dbx||'')}</span>`:(urlHref(it.dbx)?`<a class="url" href="${esc(urlHref(it.dbx))}" target="_blank" rel="noopener" data-stop>${esc(it.dbx)}</a><button class="copy-url" data-copy="${esc(urlHref(it.dbx))}" title="주소 복사">${svg('i-copy',13,13)}</button>`:'<span class="plain" style="color:#c4c4c4">없음</span>');
 /* ===================== BODY EDITOR v2 (editor/ bundle) ===================== */
 // One editor per item being edited. It survives redraws of the page around it (the pin is rebuilt, the editor is put back),
@@ -4926,8 +4956,8 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
     const partner=E?`<span class="lk" data-pick="partner"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i><a>${esc(it.partner||'선택')}</a></span>`:(it.partner?`<span class="lk"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i><a data-partnername="${esc(it.partner)}" title="협력업체 정보 보기">${esc(it.partner)}</a></span>`:none('없음'));
     // preview: the three lines a meeting's card shows (when and where, the agenda, who comes from the other side) are fields here, each with its pictogram
     const mdate=!PREVIEW_ON?'':E?`<span class="plain" data-pick="date" title="날짜 변경">${schD(it.date)}</span>${hasEnd?`<span class="plain" style="color:#c4c4c4;margin:0 1px">~</span><span class="plain" data-pick="end" title="종료일 변경">${schD(it.end)}</span>`:`<span class="plain mt-v nil" data-pick="end" title="여러 날 이어지는 미팅이면 종료일을 넣습니다">~ 종료일</span>`}`:`<span class="plain">${hasEnd?schD(it.date)+' ~ '+schD(itemEnd(it)):fmtDateK(it.date)}</span>`;
-    const mp=meetParts(it), mln=(ic,inner)=>`<span class="mt-ln"><i class="bx">${pict(ic)}</i>${inner}</span>`, mtv=(k,v,ph)=>`<span class="plain mt-v ${v?'':'nil'}" ${pk(k)}>${esc(v||(E?ph:''))}</span>`;
-    const L=PREVIEW_ON?`${V('사업명',projV)}${V('일자 · 장소',mln('clock',mdate+mtv('mtime',meetTimeTxt(mp.time),'시간')+mtv('place',mp.place,'장소')),'txt mt')}${V('주요안건',mln('agenda',mtv('agenda',mp.agenda,'입력')),'txt mt')}${V('협력업체',partner)}${V('참석자 (선진)',`<span class="people" ${pk('people')}>${who(it.people)}</span>`)}${V('상대 참여자',mln('participants',mtv('extAtt',mp.guests,'입력')),'txt mt')}`
+    const mp=meetParts(it), mln=(ic,inner)=>`<span class="mt-ln"><i class="bx">${pict(ic)}</i>${inner}</span>`, mtin={place:'mplace',agenda:'magenda',extAtt:'mguests'}, mtv=(k,v,ph)=>E&&mtin[k]?`<span class="plain mt-v mt-in" contenteditable="true" data-f="${mtin[k]}" data-ph="${esc(ph)}" data-stop>${esc(v||'')}</span>`:`<span class="plain mt-v ${v?'':'nil'}" ${pk(k)}>${esc(v||(E?ph:''))}</span>`;   // (thirty-eighth round) place, agenda and guests are typed in place while the panel is edited (schedule/ui/32-fields.js: schMeetInRead); the time is still picked
+    const L=PREVIEW_ON?`${V('사업명',projV)}${V('일자 · 장소',mln('clock',mdate+mtv('mtime',meetTimeTxt(mp.time),'시간')+mtv('place',mp.place,'장소')),'txt mt')}${V('주요안건',mln('agenda',mtv('agenda',mp.agenda,'주요안건 입력')),'txt mt')}${V('협력업체',partner)}${V('참석자 (선진)',`<span class="people" ${pk('people')}>${who(it.people)}</span>`)}${V('상대 참여자',mln('participants',mtv('extAtt',mp.guests,'상대 참여자 입력')),'txt mt')}`
       :`${V('사업명',projV)}${V('날짜',dateV,'txt')}${V('협력업체',partner)}${V('참석자 (선진)',`<span class="people" ${pk('people')}>${who(it.people)}</span>`)}${V('참석자 (협력업체)',`<span class="plain" ${pk('extAtt')} style="${it.extAtt?'':'color:#c4c4c4'}">${esc(it.extAtt||(E?'입력':'없음'))}</span>`,'txt')}`;
     const R=`<div class="pr"></div>${V(ACT,`<span class="chips" ${pk('actions')}>${linkChips(it,'actions',E)}</span>`)}${V('리서치',`<span class="chips" ${pk('research')}>${linkChips(it,'research',E)}</span>`)}${V('드롭박스 URL',urlField(it,E,'margin-left:0'))}${V('최종수정일자',`<span class="plain">${esc(modTxt(it))}</span>`)}`;
     props=`<div class="props"><div>${L}</div><div class="rcol">${R}</div></div>`;
@@ -7101,6 +7131,18 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     more=`<div class="sp-more"><div>${V('운영개시 여유',none(g&&!t?'WBS 번호를 받으면 계산됩니다':'개발 단계를 고르면 계산됩니다'))}${V('역할',none('-'))}</div><div class="rc">${txt('criteria','완료 기준')}${txt('conditions','조건·확약')}${txt('evidence','증빙')}</div></div>`; }
   return `<div class="props sch-props act-props ${E?'ed':''}">${tabs}<div class="sp-grid"><div>${L.join('')}</div><div class="rcol">${R.join('')}</div></div><button class="sp-toggle" data-schp="more">${SCHP.more?'일정 상세 접기':'일정 상세'} ${svg('i-chev-d',8,4,SCHP.more?'transform:rotate(180deg)':'')}</button>${more}</div>`; }
 
+// (thirty-eighth round, owner 2026-11-25: "세부사항들 수정을 누르면 팝업이 한번 더 뜨는데 이런식 말고 다른거처럼 바로 수정할수 있는 식으로")
+// A meeting's place, agenda and guests are typed in place while its panel is edited: the fields `.mt-in` (data-f mplace /
+// magenda / mguests, drawn by itemHtml). What is typed goes into the item when the field is left — before whatever is pressed
+// next can redraw the panel — and once more through readUrl before a save. One line: Enter leaves the field, a paste comes in
+// as plain text. The time is still picked from its list.
+const SCH_MT_IN={mplace:'place',magenda:'agenda',mguests:'guests'};
+function schMeetInRead(it,root){ if(!it||it.type!=='meeting'||!root)return; for(const el of root.querySelectorAll('.mt-in[data-f]')){ const key=SCH_MT_IN[el.dataset.f]; if(!key||!el.isContentEditable)continue;
+    const v=(el.textContent||'').replace(/\s+/g,' ').trim(); if(v!==(meetParts(it)[key]||'')){ meetWrite(it,{[key]:v}); it.dirty=true; } } }
+document.addEventListener('focusout',e=>{ const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; const pin=el.closest('#panel-pin,#item-pin'), it=pin&&item(pin.dataset.id); if(it)schMeetInRead(it,pin); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; e.preventDefault(); el.blur(); },true);
+document.addEventListener('paste',e=>{ const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; e.preventDefault(); document.execCommand('insertText',false,((e.clipboardData&&e.clipboardData.getData('text/plain'))||'').replace(/\s+/g,' ')); });
+
 // A value pressed while the panel is being edited (called first by the page's own handler of data-pick). true: taken care of here.
 function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
   const ask=(title,val,phd,done)=>{ const p=openPop(el,`<div class="hd">${esc(title)}</div><div class="msg" style="padding-top:0"><input id="pk-txt" value="${esc(val||'')}" placeholder="${esc(phd)}"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button class="it" data-pk="cancel">취소</button><button class="it" data-pk="ok" style="background:#0f0f0f;color:#fff">확인</button></div></div>`), inp=p.querySelector('#pk-txt'); inp.focus(); inp.select();
@@ -7108,9 +7150,6 @@ function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
   if(it.type==='meeting'){
     if(k==='mtime'){ const cur=meetParts(it).time, opts=[]; for(let h=7;h<=21;h++)for(const mi of [0,30])opts.push(String(h).padStart(2,'0')+':'+(mi?'30':'00'));
       const p=menuPop(el,[{t:'시간 없음',k:'none',sel:!cur,fn:()=>{meetWrite(it,{time:''});again();}},'-'].concat(opts.map(v=>({t:meetTimeTxt(v),k:v,sel:cur===v,fn:()=>{meetWrite(it,{time:v});again();}}))),{cls:'sch-colmenu mt-time'}); const s=p.querySelector('.it.sel'); if(s)s.scrollIntoView({block:'center'}); return true; }
-    if(k==='place'){ ask('장소',meetParts(it).place,'예: 대회의실',v=>{meetWrite(it,{place:v});again();}); return true; }
-    if(k==='agenda'){ ask('주요안건',meetParts(it).agenda,'예: GPU 수급 관련 확답 논의',v=>{meetWrite(it,{agenda:v});again();}); return true; }
-    if(k==='extAtt'){ ask('상대 참여자',meetParts(it).guests,'예: 홍길동 부장, 김철수 차장',v=>{meetWrite(it,{guests:v});again();}); return true; }
     return false; }
   if(it.type==='research'&&k==='cats'){ schCatsPick(el,it); return true; }
   if(it.type==='research'&&k==='uncat'){ const l=schResCats(it).filter(x=>x!==el.dataset.k); if(l.length)it.cats=l; else delete it.cats; it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); return true; }
@@ -8940,10 +8979,10 @@ function schMeetTable(pid){ const rows=schMeetRows(pid), total=Math.max(1,Math.c
   // column titles that order and filter, like the other tables (owner, 2026-11-24): they change the same conditions as the pickers beside the title
   const tm=(k,t,on,srt)=>`<span data-vcol="meet:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
   let h=`<div class="tbl sch-proc sch-vtbl vt-meet"><div class="hd">${tm('date','날짜',!!c.when,c.sort==='old')}${th('시간')}${tm('name','미팅명',false,c.sort==='name')}${th('장소')}${th('안건')}${tm('who','참석자',!!c.who,false)}${tm('guest','외부 참석',!!c.guest,false)}${tm('file','회의록',!!c.file,false)}</div>`;
-  for(const m of page){ const p=meetParts(m), ppl=m.people||[], cell=v=>{const t=oneLine(v);return `<div class="tx" title="${esc(t)}"><span class="e">${esc(t||'-')}</span></div>`;};
-    h+=`<div class="rw ${S.panel===m.id?'sel':''}" data-open="${esc(m.id)}"><div class="w">${esc(schD(m.date)||'-')}</div><div class="tm">${esc(meetTimeTxt(p.time)||'-')}</div><div class="nm" title="${esc(oneLine(m.title))}"><span class="e">${esc(oneLine(m.title)||'(제목 없음)')}</span></div>${cell(p.place)}${cell(p.agenda)}
+  for(const m of page){ const p=meetParts(m), ppl=m.people||[], cell=v=>{const t=oneLine(v);return `<div class="tx" title="${esc(t)}"><span class="e">${esc(t)}</span></div>`;};   // (thirty-eighth round, owner: "써진 항목없으면 -로 표기하지 말고 그냥 비워놔") nothing is written for what is not there
+    h+=`<div class="rw ${S.panel===m.id?'sel':''}" data-open="${esc(m.id)}"><div class="w">${esc(schD(m.date)||'-')}</div><div class="tm">${esc(meetTimeTxt(p.time))}</div><div class="nm" title="${esc(oneLine(m.title))}"><span class="e">${esc(oneLine(m.title)||'(제목 없음)')}</span></div>${cell(p.place)}${cell(p.agenda)}
       <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.length?ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:''):'<span class="sch-role none">미지정</span>'}</div>${cell(p.guests)}
-      <div class="fl">${hasFiles(m)?`<button class="sh-btn" data-act="dl" data-id="${esc(m.id)}" title="회의록 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:'<span class="nil">-</span>'}</div></div>`; }
+      <div class="fl">${hasFiles(m)?`<button class="sh-btn" data-act="dl" data-id="${esc(m.id)}" title="회의록 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
   if(!rows.length)h+=`<div class="none">${schMeetFiltered()?'조건에 맞는 미팅이 없습니다.':'등록된 미팅이 없습니다. + 버튼으로 새 미팅을 만드세요.'}</div>`;
   return h+`<div class="ft"></div></div>${rows.length>SCH_V_PER?schVPager('meet',S.mtPage,total):''}`; }
 // the whole section as a table (renderProject uses its own markup for the cards)

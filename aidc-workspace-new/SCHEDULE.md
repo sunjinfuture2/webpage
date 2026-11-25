@@ -1141,3 +1141,24 @@ browser at 1920, 1536 and a phone.
 
 tests: schedule-8 / 9 / 15 / 16 take Word off before they ask for 엑셀 alone; schedule-16 checks the window's words, the fixed
 places, FULL and that a .pptx is made. Brought in step and not run.
+
+## Meetings: cards that grow, fields typed in place, nothing for an empty field (owner, 2026-11-25, thirty-eighth round)
+
+- **A card's three lines** (when and where, the agenda, who comes) run on as far as they must: a line wraps, the next keeps its
+  distance (7.7 below the last line of the one before), the card is as tall as what it says. The row of cards (`.track`)
+  stands in the section's flow for that — it lay over a section of a fixed height (441.7) and a long card was cut off by what
+  followed; the section now has the title's room as padding (147) and 84.7 below the tallest card, so what follows moves down
+  with it. Cards of one row still start on one line and have their own heights.
+- **Nothing is written for an empty field**: no "—" on a card or in the list beside the calendar (the pictogram stands alone),
+  no "-" in the meeting table (time, place, agenda, guests, 회의록).
+- **Place, agenda and guests are typed in place** while a meeting's panel is edited (`.mt-in`, data-f mplace / magenda /
+  mguests; schMeetInRead in 32-fields.js) — no small window with 취소 / 확인. What is typed goes into the item when the field
+  is left, before whatever is pressed next can redraw the panel, and once more through readUrl before a save; Enter leaves the
+  field, a paste comes in as plain text. The time is still picked from its list, the dates from the calendar.
+- A meeting's lines are written whole in its panel too (they were cut with dots); a line that is one text keeps its pictogram
+  beside its first line.
+- Not done on purpose: the names of the guests are written as they were typed ("신성이엔지: 이지선 대표, 신성이엔지: 김연모
+  사장 …"). The owner took that part back ("이 수정사항은 하지마 내가 직접 할거야").
+
+tests: schedule-8 types the agenda in place and checks a card that grows; schedule-15 expects an empty cell. Brought in step
+and not run.

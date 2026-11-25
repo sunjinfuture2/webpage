@@ -150,11 +150,16 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   check('a new action made on a project page belongs to that project', await ev(() => curItem().proj === 'pangyo' && !!document.querySelector('#panel-pin .act-props [data-schp="link-phase"]'))); await ev(() => closePanel(true)); await sleep(300);
   await ev(([m]) => openPanel(m, true), ids); await sleep(400); await a.click('#panel-pin [data-ed="edit"]'); await sleep(500);
   const mrows = await ev(() => [...document.querySelectorAll('#panel-pin .props .pr .k')].map(x => x.textContent).filter(Boolean));
-  await a.click('#panel-pin [data-pick="agenda"]'); await sleep(200); await a.fill('#pk-txt', '새 안건 ' + sfx); await a.keyboard.press('Enter'); await sleep(300);
+  // thirty-eighth round: the agenda is typed in place (no small window opens); what was typed stays when the time is picked next
+  await a.click('#panel-pin [data-f="magenda"]'); await sleep(200); const noWin = await ev(() => !document.querySelector('.pop') && document.activeElement === document.querySelector('#panel-pin [data-f="magenda"]') && ['mplace', 'magenda', 'mguests'].every(f => { const e = document.querySelector(`#panel-pin .mt-in[data-f="${f}"]`); return e && e.isContentEditable; }));
+  await a.keyboard.press('Control+A'); await a.keyboard.type('새 안건 ' + sfx); await a.keyboard.press('Enter'); await sleep(300);
   await a.click('#panel-pin [data-pick="mtime"]'); await sleep(200); await ev(() => [...document.querySelectorAll('.pop .it')].find(x => x.textContent.trim() === '9시 30분').click()); await sleep(300);
   await a.click('#panel-pin [data-ed="save"]'); await sleep(700); await flush();
   const mw = await ev(([m]) => { const it = item(m); return { time: it.time, agenda: it.agenda, checks: it.checks.map(c => c.t), picts: document.querySelectorAll('#panel-pin .mt-ln .bx .pict').length, card: [...document.querySelectorAll(`.mcard[data-open="${m}"] .chk .tx`)].map(x => x.textContent) }; }, ids);
   check('a meeting\'s panel has 일자 · 장소, 주요안건 and 상대 참여자, each with its pictogram', mrows.includes('일자 · 장소') && mrows.includes('주요안건') && mrows.includes('상대 참여자') && !mrows.includes('날짜') && mw.picts === 3, { mrows, picts: mw.picts });
+  check('place, agenda and guests of a meeting are typed in place while its panel is edited: pressing one opens no window', noWin);
+  const grow = await ev(([m]) => { const it = item(m), was = it.agenda; meetWrite(it, { agenda: '전력 확보, GPU 임대 사업성·자금조달, 시설계획 및 추진일정 검토, 위탁 운영 조건 협의 ' + '긴 안건 '.repeat(6) }); render(true); const c = document.querySelector(`.mcard[data-open="${m}"]`), ls = [...c.querySelectorAll('.chk li')].map(l => l.getBoundingClientRect()), r = { h: Math.round(c.getBoundingClientRect().height), two: ls[1].height > 30, apart: ls[2].top >= ls[1].bottom - 1, inside: ls[2].bottom <= c.getBoundingClientRect().bottom, below: (n => !n || n.getBoundingClientRect().top >= c.getBoundingClientRect().bottom)(document.querySelector('.page.on .meet').nextElementSibling) }; meetWrite(it, { agenda: was }); render(true); return r; }, ids);
+  check('a card\'s line that runs over wraps, the next line keeps its distance and the card grows with it (what follows the section moves down)', grow.two && grow.apart && grow.inside && grow.below && grow.h > 215, grow);
   check('what is set there is what the card shows', mw.time === '09:30' && mw.agenda === '새 안건 ' + sfx && mw.checks[0] === '9시 30분, 대회의실' && mw.card[0] === '9시 30분, 대회의실' && mw.card[1] === '새 안건 ' + sfx, mw);
 
   console.log('— export');

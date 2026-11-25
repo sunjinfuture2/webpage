@@ -932,7 +932,6 @@
 
 /* --- meeting cards: smaller pictograms in front of the three lines --- */
 .sch-on .mcard .chk li .bx,.sch-on .rlist .chk li .bx{width:16px;height:16px;margin:2px 8.5px 0 2px}
-.sch-on .mcard .chk li.nil .tx::before,.sch-on .rlist .chk li.nil .tx::before{content:"—";color:#d0d0d0}
 .tbl .rw .url a.sch-ua{border-bottom:0;line-height:1}
 /* the outline of the gantt ends with a row that adds a phase */
 .sg-row.add{display:flex;align-items:center;gap:8px;padding-left:4px;color:#a6a6a6;font-size:12.5px;cursor:pointer;left:0;right:0}
@@ -1976,3 +1975,29 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 html.mp-calm .sch-xw .xq-seg::before,html.mp-calm .sch-xw .xq-seg button{transition:none}
 html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:none}
 @media (prefers-reduced-motion:reduce){ .sch-xw .xq-seg::before,.sch-xw .xq-seg button{transition:none} .sch-xw .xq-say.j,.sch-xw .xq-list li em.j{animation:none} }
+
+/* Thirty-eighth round (owner, 2026-11-25): meetings */
+/* a card's three lines run on as far as they must ("한줄을 넘으면 줄바꿈이랑 여백 확보 … 썸네일길이가 알아서 길어지게"): a line
+   wraps, the next one keeps its distance, the card is as tall as what it says. The row of cards stands in the section's flow
+   for that (it was laid over a section of a fixed height), so what follows moves down with the tallest card. */
+.sch-on .meet:not(.tv){height:auto!important;padding:147px 0 84.7px}   /* padding, not a margin on the row: a margin would run out through the section's top */
+.sch-on .meet:not(.tv) .track{position:relative;top:auto!important;left:auto;margin:0 0 0 1.1px;min-height:210px}
+.sch-on .meet:not(.tv) .fade{height:auto;bottom:84.7px}
+.sch-on .mcard .chk{padding-right:24px}
+.sch-on .mcard .chk li{height:auto;min-height:20px;margin-bottom:7.7px;line-height:20px}
+.sch-on .mcard .chk li:last-child{margin-bottom:0}
+.sch-on .mcard .chk li .tx{margin-top:0;min-width:0;overflow-wrap:anywhere;word-break:keep-all}
+.sch-on .mcard .chk li .pre{flex:none;line-height:16px}
+.sch-on .mcard .tt{padding-right:20px}
+/* a meeting's panel: its lines are written whole, and three of them are typed in place while it is edited */
+.props .mt-ln{align-items:flex-start}
+.props .mt-ln .bx{margin-top:2px}
+.props .mt-ln .mt-v{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:keep-all;line-height:20px}
+/* a line that is one text (주요안건, 상대 참여자) keeps its pictogram beside its first line, the text wraps beside it; the line of
+   date, time and place holds several pieces and wraps as a whole */
+.props .mt-ln:has(> .bx + .mt-v:last-child){flex-wrap:nowrap;width:100%}
+.props .mt-ln:has(> .bx + .mt-v:last-child) > .mt-v{flex:1 1 auto;min-width:0}
+.props .mt-ln .mt-v.mt-in{min-width:64px;min-height:20px;outline:none;cursor:text;opacity:.6;text-decoration:underline;text-decoration-color:#9a9a9a;text-underline-offset:4px;text-decoration-thickness:1px;transition:opacity .12s}
+.props .mt-ln .mt-v.mt-in:hover,.props .mt-ln .mt-v.mt-in:focus{opacity:1}
+.props .mt-ln .mt-v.mt-in:empty{text-decoration:none}
+.props .mt-ln .mt-v.mt-in:empty::before{content:attr(data-ph);color:#b5b5b5;text-decoration:underline;text-decoration-color:#cfcfcf;text-underline-offset:4px}

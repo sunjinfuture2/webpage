@@ -25,6 +25,18 @@ function schActionProps(it,E,full,h){ const pid=PROJECTS[it.proj]?it.proj:'', m=
     more=`<div class="sp-more"><div>${V('운영개시 여유',none(g&&!t?'WBS 번호를 받으면 계산됩니다':'개발 단계를 고르면 계산됩니다'))}${V('역할',none('-'))}</div><div class="rc">${txt('criteria','완료 기준')}${txt('conditions','조건·확약')}${txt('evidence','증빙')}</div></div>`; }
   return `<div class="props sch-props act-props ${E?'ed':''}">${tabs}<div class="sp-grid"><div>${L.join('')}</div><div class="rcol">${R.join('')}</div></div><button class="sp-toggle" data-schp="more">${SCHP.more?'일정 상세 접기':'일정 상세'} ${svg('i-chev-d',8,4,SCHP.more?'transform:rotate(180deg)':'')}</button>${more}</div>`; }
 
+// (thirty-eighth round, owner 2026-11-25: "세부사항들 수정을 누르면 팝업이 한번 더 뜨는데 이런식 말고 다른거처럼 바로 수정할수 있는 식으로")
+// A meeting's place, agenda and guests are typed in place while its panel is edited: the fields `.mt-in` (data-f mplace /
+// magenda / mguests, drawn by itemHtml). What is typed goes into the item when the field is left — before whatever is pressed
+// next can redraw the panel — and once more through readUrl before a save. One line: Enter leaves the field, a paste comes in
+// as plain text. The time is still picked from its list.
+const SCH_MT_IN={mplace:'place',magenda:'agenda',mguests:'guests'};
+function schMeetInRead(it,root){ if(!it||it.type!=='meeting'||!root)return; for(const el of root.querySelectorAll('.mt-in[data-f]')){ const key=SCH_MT_IN[el.dataset.f]; if(!key||!el.isContentEditable)continue;
+    const v=(el.textContent||'').replace(/\s+/g,' ').trim(); if(v!==(meetParts(it)[key]||'')){ meetWrite(it,{[key]:v}); it.dirty=true; } } }
+document.addEventListener('focusout',e=>{ const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; const pin=el.closest('#panel-pin,#item-pin'), it=pin&&item(pin.dataset.id); if(it)schMeetInRead(it,pin); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; e.preventDefault(); el.blur(); },true);
+document.addEventListener('paste',e=>{ const el=e.target&&e.target.closest&&e.target.closest('.mt-in[data-f]'); if(!el)return; e.preventDefault(); document.execCommand('insertText',false,((e.clipboardData&&e.clipboardData.getData('text/plain'))||'').replace(/\s+/g,' ')); });
+
 // A value pressed while the panel is being edited (called first by the page's own handler of data-pick). true: taken care of here.
 function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
   const ask=(title,val,phd,done)=>{ const p=openPop(el,`<div class="hd">${esc(title)}</div><div class="msg" style="padding-top:0"><input id="pk-txt" value="${esc(val||'')}" placeholder="${esc(phd)}"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button class="it" data-pk="cancel">취소</button><button class="it" data-pk="ok" style="background:#0f0f0f;color:#fff">확인</button></div></div>`), inp=p.querySelector('#pk-txt'); inp.focus(); inp.select();
@@ -32,9 +44,6 @@ function schPick(el,it,k){ const again=()=>{it.dirty=true;rerenderItem(it.id);};
   if(it.type==='meeting'){
     if(k==='mtime'){ const cur=meetParts(it).time, opts=[]; for(let h=7;h<=21;h++)for(const mi of [0,30])opts.push(String(h).padStart(2,'0')+':'+(mi?'30':'00'));
       const p=menuPop(el,[{t:'시간 없음',k:'none',sel:!cur,fn:()=>{meetWrite(it,{time:''});again();}},'-'].concat(opts.map(v=>({t:meetTimeTxt(v),k:v,sel:cur===v,fn:()=>{meetWrite(it,{time:v});again();}}))),{cls:'sch-colmenu mt-time'}); const s=p.querySelector('.it.sel'); if(s)s.scrollIntoView({block:'center'}); return true; }
-    if(k==='place'){ ask('장소',meetParts(it).place,'예: 대회의실',v=>{meetWrite(it,{place:v});again();}); return true; }
-    if(k==='agenda'){ ask('주요안건',meetParts(it).agenda,'예: GPU 수급 관련 확답 논의',v=>{meetWrite(it,{agenda:v});again();}); return true; }
-    if(k==='extAtt'){ ask('상대 참여자',meetParts(it).guests,'예: 홍길동 부장, 김철수 차장',v=>{meetWrite(it,{guests:v});again();}); return true; }
     return false; }
   if(it.type==='research'&&k==='cats'){ schCatsPick(el,it); return true; }
   if(it.type==='research'&&k==='uncat'){ const l=schResCats(it).filter(x=>x!==el.dataset.k); if(l.length)it.cats=l; else delete it.cats; it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); return true; }
