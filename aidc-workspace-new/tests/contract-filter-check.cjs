@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');const {chromium,newUser}=require('./h.cjs');
+(async()=>{const b=await chromium.launch();try{const{page:p}=await newUser(b,'CF_CHECK','필터 확인',{url:'http://127.0.0.1:8787/'});
+await p.evaluate(()=>go('project:pangyo'));await p.waitForFunction(()=>schReady('pangyo'));
+await p.evaluate(()=>{const m=liveItems('meeting','pangyo')[0],a=schMainTasks('pangyo')[0];
+ITEMS.push({id:'cf-a',type:'contract',title:'전력 계약 A',proj:'pangyo',date:'2026-11-10',status:'published',st:'done',pri:'high',people:[sharedUser],meetings:[m.id],actions:[a.id],createdAt:'2026-11-10T00:00:00Z'},{id:'cf-b',type:'contract',title:'설비 계약 B',proj:'pangyo',date:'2026-12-20',status:'published',st:'prog',pri:'low',people:[],meetings:[],actions:[],createdAt:'2026-12-20T00:00:00Z'});render(true);});
+const count=async n=>assert.equal(await p.locator('.contract-table .rw').count(),n);
+const menu=async(k,label)=>{await p.locator('[data-contract-col="'+k+'"]').click();await p.locator('.pop .it').filter({hasText:new RegExp('^'+label+'$')}).click();};
+const reset=async()=>{const el=p.locator('[data-contract-clear="all"]');if(await el.count())await el.click();};
+await count(2);await p.locator('[data-contract-search]').fill('전력');await count(1);assert.equal(await p.locator('[data-contract-search]').inputValue(),'전력');await reset();
+await menu('st','완료');await count(1);await menu('pri','낮음');await count(0);await p.locator('[data-contract-clear="pri"]').click();await count(1);await reset();
+await menu('who','미지정');await count(1);assert.match(await p.locator('.contract-table').innerText(),/설비 계약 B/);await reset();
+await menu('meetings','연결 없음');await count(1);await reset();await menu('actions','연결 있음');await count(1);assert.equal(await p.locator('.contract-actions .chip').count(),1);await reset();
+await menu('date','기간 직접 지정…');await p.locator('[data-cfrom]').fill('2026-11-01');await p.locator('[data-cto]').fill('2026-11-30');await p.locator('[data-capply]').click();await count(1);
+await p.evaluate(async()=>await sharedFlush(true));await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);await p.evaluate(()=>go('project:pangyo'));await p.waitForFunction(()=>schReady('pangyo'));await count(1);assert.match(await p.locator('.contract-filter-chips').innerText(),/2026-11-01/);await reset();
+await menu('name','오름차순');assert.match(await p.locator('.contract-table .rw').first().innerText(),/설비 계약 B/);await reset();
+await p.locator('[data-contract-search]').fill('없는 검색어');await count(0);assert.match(await p.locator('.contract-table').innerText(),/조건에 맞는/);await reset();await count(2);
+console.log('PASS contract search, combined column filters, date range, relation filters, sorting, clear and reload persistence');
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});

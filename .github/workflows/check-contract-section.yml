@@ -1,7 +1,7 @@
 name: Check project contract section
 on:
   push:
-    branches: ['codex/contract-relations']
+    branches: ['codex/contract-filters']
 permissions:
   contents: read
 jobs:
@@ -24,4 +24,4 @@ jobs:
           trap 'tail -n 20 "$RUNNER_TEMP/contracts.log"' EXIT
           npx wrangler dev --local --compatibility-date 2026-10-13 --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/contracts.log" 2>&1 &
           for i in $(seq 1 60); do if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi; sleep 1; done
-          node tests/contract-check.cjs
+          node tests/contract-filter-check.cjs
