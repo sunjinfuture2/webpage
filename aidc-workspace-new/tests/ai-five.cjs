@@ -6,7 +6,7 @@ const sections=[['사업 개요',D.overview],['입지 및 전력 인프라',D.in
 async function word(name,table){const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel}=docx;
  const para=t=>new Paragraph({children:[new TextRun({text:t,font:'맑은 고딕',size:22})],spacing:{after:160}});
  const children=[new Paragraph({text:'판교 AIDC — 업로드 테스트',heading:HeadingLevel.TITLE})];
- if(table){children.push(para('검토 과제 및 현황'),new Table({rows:[...D.metrics,...D.schedule.map(r=>[r[0],r[1]+' ('+r[2]+')'])].map(r=>new TableRow({children:r.map(t=>new TableCell({children:[para(t)]}))})));}
+ if(table){const rows=[...D.metrics,...D.schedule.map(r=>[r[0],r[1]+' ('+r[2]+')'])]; const tr=rows.map(r=>new TableRow({children:r.map(t=>new TableCell({children:[para(t)]}))}));children.push(para('검토 과제 및 현황'),new Table({rows:tr}));}
  for(const [title,body]of table?[...sections].reverse():sections){children.push(new Paragraph({text:table?title.replace('추진 현황 및 주요 특성','현황 및 특성'):title,heading:HeadingLevel.HEADING_1}),para(body));}
  if(!table)children.push(...D.metrics.map(r=>para(r.join(': '))),...D.schedule.map(r=>para(r.join(' | '))));
  await fs.promises.writeFile(out+'/'+name,await Packer.toBuffer(new Document({sections:[{children}]})));}
