@@ -1318,3 +1318,17 @@ edge — cut off and out of line with the title. The wrapper now takes the title
 right in a panel; the full page's measures in `.ipage`; nothing on a phone, where the panel's padding is the room), and the
 body's field while it is edited has no margin of its own. Seen in the panel at 1920 and 1536, read and edited, and on a
 phone. A partner opens only as a panel (it is not an item: no full page).
+
+## Linking with a search box; the export window's rows (owner, 2026-11-25, forty-seventh round)
+
+- "관련미팅, 액션에 연결 · 눌러서 추가 / 해제 이런거 삭제하고 검색바 넣어줘": the small window that links an item to meetings,
+  actions or research (a contract's 관련 미팅 / 관련 액션 and every other item's links) has no line of instructions any more;
+  a search box in the page's own design (grey ground, the search pictogram, an x once something is typed) stands at its top
+  and the list scrolls under it (schLinkPick, schedule/ui/93-linkpick.js; `.pop.lp`). What is linked stands first with its
+  x; a press adds or takes away a link and the window comes back at its field with what was typed and where the list was,
+  so several are linked in one go; Escape or a press outside closes it. A contract's actions are still the contract
+  section's own candidates (schContractActionCandidates). The `?v=1` page keeps its old menu.
+- The export window: the tick in a box is a little heavier (2.1 for 1.6); a part's whole row ticks and unticks it — its
+  name, what it holds, the room around them — only 요약 / FULL keep to themselves (a part without content stays off).
+
+Seen in a contract's panel (search, add, take away, the window coming back) and in the export window. Not run: the suites.

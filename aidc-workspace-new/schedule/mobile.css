@@ -484,3 +484,7 @@ html.mob .sb .top .inbox .ic,html.mob .sb .top .inbox .lb{position:static}
 html.mob .sb .top .inbox .badge-red{left:8px;top:7px}
 html.mob .sch-net .sn-tools{gap:4px}
 html.mob .sch-net .sn-tools .sh-btn{width:40px;height:40px;margin:0;font-size:20px}
+
+/* (forty-seventh round) the link window is as wide as the screen allows */
+html.mob .pop.lp{width:calc(100vw - 32px)}
+html.mob .pop.lp .lp-srch input{font-size:16px}

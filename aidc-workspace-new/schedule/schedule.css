@@ -2053,3 +2053,22 @@ html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:n
 .ipage .partner-content{margin:0 60px 0 -1.6px}
 .partner-content .props.simple{left:auto;top:auto}
 .partner-body .editable[contenteditable="true"]{margin:0;padding:0;box-shadow:none;background:transparent}
+
+/* Forty-seventh round (owner, 2026-11-25) */
+/* the window that links an item: a search box in the page's own design at its top, the list scrolling under it */
+.pop.lp{padding:8px;width:340px;max-width:calc(100vw - 16px);max-height:none;overflow:visible;display:flex;flex-direction:column}
+.pop.lp .lp-srch{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px 0 12px;margin-bottom:6px;border-radius:6px;background:#f6f6f6;color:#8e8e8e;flex:none;cursor:text}
+.pop.lp .lp-srch .pict{width:15px;height:15px;flex:none}
+.pop.lp .lp-srch input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink)}
+.pop.lp .lp-srch input::placeholder{color:#b5b5b5}
+.pop.lp .lp-x{flex:none;display:flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;border:0;border-radius:50%;background:#d9d9d9;color:#fff;cursor:pointer}
+.pop.lp .lp-x[hidden]{display:none}
+.pop.lp .lp-list{max-height:min(380px,calc(100vh - 120px));overflow-y:auto;scrollbar-width:thin}
+.pop.lp .it{max-width:none;min-width:0}
+.pop.lp .it .e{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop.lp .lp-none{padding:14px 10px;color:#8e8e8e;font-size:13px}
+html.dark .pop.lp .lp-srch{background:#2a2a2a}
+/* the export window: the tick a little heavier; a part's whole row (but 요약 / FULL) ticks it */
+.sch-xw .xq-ck input:checked::after,.sch-xw .xq-pdf input:checked::after{border-left-width:2.1px;border-bottom-width:2.1px;width:8.2px;height:4.6px}
+.sch-xw .xq-row:not(.none){cursor:pointer}
+.sch-xw .xq-row .xq-seg{cursor:default}
