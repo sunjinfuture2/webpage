@@ -65,7 +65,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
   // The cells of the main page's list are not a block of the overview (twenty-sixth round): read, they follow the sheet (schRepOf); while
   // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
   const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,R[rk]&&!d[k]?R[rk]:(ph||'입력'),d[k],'v')}</label>`;
-  const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
+  const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a>${E&&k.startsWith('partner:')?`<button type="button" class="partner-unlink" data-partner-unlink="${k.slice(8)}" title="협력업체 연결 제거" aria-label="협력업체 연결 제거">×</button>`:''}</span>`;
   // a block: `t` is one of the sheet's blocks (a key of REP_TTL) or, for a block of the page's own, its title as it is. A block of
   // the sheet writes the title the project gave it (schRepTtl), which can be changed while the overview is edited (thirty-sixth
   // round, owner: "수정 눌렀을때 핵심 지표, 사업성 지표같은 소제목들 텍스트도 수정가능하게"); `fk` says that files can be put to it.

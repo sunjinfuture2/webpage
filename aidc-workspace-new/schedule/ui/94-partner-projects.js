@@ -36,12 +36,13 @@ function schPartnerScope(scope){
 }
 function schPartnerProjectTags(pt,editable){
  const ids=schPartnerProjects(pt);
- return ids.map(id=>'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(PROJECTS[id].tag||PROJECTS[id].full)+'</button>').join('')+
- (editable?'<button type="button" class="pt-project-add" data-pt-project-pick="'+esc(pt.id)+'" aria-label="관련 프로젝트 선택">+</button>':'');
+ const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag;
+ return editable?'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button>':'<span class="pt-project-tag">'+esc(name)+'</span>';}).join('');
+ return tags||(editable?'<button type="button" class="pt-project-empty" data-pt-project-pick="'+esc(pt.id)+'">선택</button>':'');
 }
 function schPartnerFilterChip(){
  const id=S.partnerProject;
- return id&&PROJECTS[id]?'<button class="sch-chip" data-pt-project-clear>프로젝트: '+esc(PROJECTS[id].tag||PROJECTS[id].full)+'<i>✕</i></button>':'';
+ return id&&PROJECTS[id]?'<button class="sch-chip" data-pt-project-clear>프로젝트: '+esc(PROJECTS[id].full||PROJECTS[id].tag)+'<i>✕</i></button>':'';
 }
 function schEnsureProjectPartners(pid){
  const names=PHEAD[pid]?.partners||[];
@@ -81,4 +82,11 @@ document.addEventListener('click',e=>{
  if(el.hasAttribute('data-pt-project-clear')){S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));return;}
  menuPop(el,[{t:'전체 프로젝트',k:'all',sel:!S.partnerProject,fn:()=>{S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));}},
  ...orderedProjects().filter(id=>!PROJECTS[id].trash).map(id=>({t:PROJECTS[id].full||PROJECTS[id].tag,k:id,sel:S.partnerProject===id,fn:()=>{S.partnerProject=id;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});
+},true);
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest&&e.target.closest('[data-partner-unlink]');if(!b||!S.editProj)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const field=document.querySelector('#proj-pw .phead [data-k="partner:'+b.dataset.partnerUnlink+'"]');
+ if(field){field.textContent='';saveProjectHead();render(true);}
 },true);

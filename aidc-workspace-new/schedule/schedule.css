@@ -2096,3 +2096,13 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .pt-project-picker{width:330px;max-height:min(480px,80vh);overflow:auto}
 .pt-project-picker .it{width:100%;text-align:left;display:flex;gap:9px}
 .pt-project-picker .ck{width:12px;flex:none}
+
+/* Partner preview: body excerpt and read-only project pills; editing is inside the open partner. */
+.tbl.partners .hd,.tbl.partners .rw{grid-template-columns:minmax(160px,.9fr) minmax(135px,.75fr) minmax(150px,.85fr) minmax(220px,1.4fr) minmax(240px,1.4fr)}
+.pt-project-tag{display:inline-flex;align-items:center;border-radius:999px;background:#e8f3e5;color:#318d1c;font-weight:600;padding:2px 10px;line-height:18px;white-space:normal;max-width:100%;overflow-wrap:anywhere}
+span.pt-project-tag{cursor:default}
+.pt-project-empty{border:0;background:transparent;color:#b5b5b5;font:inherit;padding:2px 0;cursor:pointer}
+.partner-unlink{display:inline-flex;align-items:center;justify-content:center;flex:none;width:18px;height:18px;margin-left:7px;border:0;border-radius:50%;background:transparent;color:#999;font-size:16px;cursor:pointer}
+.partner-unlink:hover{background:#eee;color:#333}
+.tbl.partners .rw .ds{min-width:0;overflow:hidden;font-weight:400}
+.tbl.partners .rw .ds .e{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
