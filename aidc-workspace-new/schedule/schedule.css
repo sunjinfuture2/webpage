@@ -2072,3 +2072,9 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .sch-xw .xq-ck input:checked::after,.sch-xw .xq-pdf input:checked::after{border-left-width:2.1px;border-bottom-width:2.1px;width:8.2px;height:4.6px}
 .sch-xw .xq-row:not(.none){cursor:pointer}
 .sch-xw .xq-row .xq-seg{cursor:default}
+
+/* Research categories: individual tags; uncategorized Other stays hidden. */
+.tbl.vt-res .res-categories{min-width:0;padding:8px 0;align-items:center}
+.tbl.vt-res .res-categories .rc-tags{max-width:100%;gap:5px}
+.tbl.vt-res .res-categories .rc-tag{height:auto;min-height:22px;max-width:100%;white-space:normal;overflow-wrap:anywhere;box-sizing:border-box}
+.tbl.vt-res .rw:has(.res-categories){height:auto;min-height:42px}
