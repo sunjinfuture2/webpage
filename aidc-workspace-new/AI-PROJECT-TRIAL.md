@@ -3,8 +3,10 @@
 ## API 키 등록
 Cloudflare → Workers & Pages → sunjin-aidc-workspace-demo → Settings → Variables and Secrets → Add → Secret.
 이름 ANTHROPIC_API_KEY, 값은 Claude Console에서 발급한 키. 저장 후 Deploy.
-선택 변수 AI_PROJECT_MODEL: 기본 claude-sonnet-5-5. 구조화 JSON과 PDF 입력을 지원하는 모델 필요.
+AI적용테스트 모델: claude-fable-5-2 (high). 이 시험 프로젝트는 해당 모델로 고정함.
 키는 브라우저나 GitHub에 저장하지 않는다. Claude API 사용료는 별도.
+## 직접 입력
+파일과 API 키 없이 수정 버튼으로 개요를 직접 작성·저장할 수 있다. AI 업로드는 선택 기능이다.
 ## 사용
 프로젝트 AI적용테스트 → 문서로 개요 구성 → PDF/PPTX 선택 → 대상 사업(필요시) → AI로 개요 구성.
 원문 근거·확인할 내용·미리보기를 검토하고 필요시 내용 수정 후 적용.
