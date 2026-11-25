@@ -1,27 +1,26 @@
-name: Five live document layout trials
+name: Review five trial results
 on:
   push:
     branches: ['codex/ai-five-format-tests']
 permissions:
   contents: read
+  actions: read
 jobs:
-  test:
+  review:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: aidc-workspace-new
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - run: npm ci --no-audit --no-fund
-      - run: npm install --no-save --package-lock=false playwright@1.56.1 pptxgenjs docx
-      - run: npx playwright install --with-deps chromium
-      - run: node tests/ai-five.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
+      - uses: actions/download-artifact@v4
         with:
           name: ai-five-layout-tests
-          path: aidc-workspace-new/test-results/ai-five
+          run-id: 45527225832
+          github-token: ${{ github.token }}
+          path: results
+      - name: Review saved analysis without new API calls
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          for p in sorted(pathlib.Path('results').glob('*.report.json')):
+            r=json.loads(p.read_text())['report']
+            for s in r['sections']: s.pop('refs',None)
+            print('REPORT',p.name,json.dumps(r,ensure_ascii=False))
+          PY
