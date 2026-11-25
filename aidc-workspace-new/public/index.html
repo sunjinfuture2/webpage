@@ -7317,7 +7317,16 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   const z=SCHU.netZoom||1, vw=host.clientWidth/z, vh=host.clientHeight/z; let W=Math.max(LW,vw), H=Math.max(LH,vh), ox=Math.round((W-LW)/2), oy=Math.round((H-LH)/2); let sv='', hot='', hidden=0;
   // Stepping through the map (a card was pressed): the pressed card stays where it was on the screen and the map is drawn around it.
   // The sheet gets as much room on each side as that needs.
-  const anc=SCH.netAnchor&&SCH.netAnchor.id===focus?SCH.netAnchor:null; SCH.netAnchor=null; let ancScroll=null;
+  const key=[pid,focus,SCHU.netMode,SCHU.netDepth,SCHU.netDir,SCHU.phase,z].join('|');
+  const saved=SCH.ns?.key===key?SCH.ns:null;
+  const pan=host._key===key?[host.scrollLeft,host.scrollTop]:saved?[saved.x,saved.y]:null;
+  const clicked=SCH.netAnchor?.id===focus?SCH.netAnchor:null;
+  SCH.netAnchor=null;
+  // A sync redraw can replace the whole map. Recreate the same room around the card
+  // even after the click, while keeping the user's actual pan independent of that room.
+  const anc=clicked?{x:clicked.x,y:clicked.y,width:host.clientWidth,height:host.clientHeight}:
+    saved?.anchor?.width===host.clientWidth && saved.anchor.height===host.clientHeight?saved.anchor:null;
+  let ancScroll=null;
   if(anc){ let sx=(ox+px(focus))*z-anc.x, sy=(oy+py(focus))*z-anc.y; if(sx<0){ox+=Math.ceil(-sx/z);W+=Math.ceil(-sx/z);sx=0;} if(sy<0){oy+=Math.ceil(-sy/z);H+=Math.ceil(-sy/z);sy=0;}
     W=Math.max(W,Math.ceil((sx+host.clientWidth)/z)); H=Math.max(H,Math.ceil((sy+host.clientHeight)/z)); ancScroll=[sx,sy]; }
   const starts=new Map(); // one trunk per earlier card; cards of one column that all branch get trunks a little apart
@@ -7338,10 +7347,14 @@ function schNetBuild(pid){ const host=$('#sch-net .sn-scroll'); if(!host)return;
   host.innerHTML=`<div class="sn-canvas" style="width:${W*z}px;height:${H*z}px;background-image:radial-gradient(circle,#eaeaea ${1.5*z}px,transparent ${1.9*z}px);background-size:${30*z}px ${28.5*z}px;background-position:${9*z}px ${9*z}px"><div class="sn-zoom" style="width:${W}px;height:${H}px;transform:scale(${z});--snz:${z}"><div style="position:absolute;left:${ox}px;top:${oy}px;width:${LW}px;height:${LH}px"><svg class="sn-links" width="${LW}" height="${LH}">${sv}${hot}</svg>${h}</div></div></div>`;
   host._lay={w:LW,h:LH};
   const info=$('#sch-net .sn-info'); if(info)info.textContent=`업무 ${row.size}${lay.total&&lay.total>row.size?' / '+lay.total:''}건 · 관계 ${lay.edges.length-hidden}건`+(hidden?` · 이웃 열이 아닌 관계 ${hidden}건은 숨김`:'');
-  // keep the selected task in view
-  const key=pid+'|'+focus+'|'+SCHU.netMode+'|'+SCHU.netDepth+'|'+SCHU.netDir+'|'+SCHU.phase+'|'+z; if(ancScroll){ host._key=key; host.scrollLeft=ancScroll[0]; host.scrollTop=ancScroll[1]; }
-  else if(host._key!==key){ host._key=key; if(SCH.ns&&SCH.ns.key===key){host.scrollLeft=SCH.ns.x;host.scrollTop=SCH.ns.y;} else{host.scrollLeft=Math.max(0,(ox+px(focus)+SN.w/2)*z-host.clientWidth/2);host.scrollTop=Math.max(0,(oy+py(focus)+SN.h/2)*z-host.clientHeight/2);} }
-  if(!host._keep){host._keep=true;host.addEventListener('scroll',()=>{if(host._key)SCH.ns={key:host._key,x:host.scrollLeft,y:host.scrollTop};},{passive:true});} }
+  const view=clicked?ancScroll:pan;
+  host._key=key;
+  host.scrollLeft=view?view[0]:(ox+px(focus)+SN.w/2)*z-host.clientWidth/2;
+  host.scrollTop=view?view[1]:(oy+py(focus)+SN.h/2)*z-host.clientHeight/2;
+  SCH.ns={key,x:host.scrollLeft,y:host.scrollTop,anchor:anc};
+  if(!host._keep){host._keep=true;host.addEventListener('scroll',()=>{
+    if(host.isConnected && SCH.ns?.key===host._key){SCH.ns.x=host.scrollLeft;SCH.ns.y=host.scrollTop;}
+  },{passive:true});} }
 function schNetZoom(dir){ const host=$('#sch-net .sn-scroll'); if(!host||!host._lay)return; if(dir===0){SCHU.netZoom=Math.max(.25,Math.min(1,Math.min((host.clientWidth-8)/host._lay.w,(host.clientHeight-8)/host._lay.h)));}
   else SCHU.netZoom=Math.max(.25,Math.min(1.5,Math.round(((SCHU.netZoom||1)+dir*.15)*100)/100)); schNetBuild(S.proj); schUiSave(); }
 

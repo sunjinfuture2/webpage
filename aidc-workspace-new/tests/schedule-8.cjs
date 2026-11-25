@@ -214,6 +214,16 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   await a.mouse.click(n0.x + 60, n0.y + 40); await sleep(800);
   const n1 = await ev(o => { const c = document.querySelector(`#sch-net .sn-node[data-k="${o.id}"]`), r = c.getBoundingClientRect(), prev = document.querySelector('#sch-net .sn-node.prev'); return { sel: c.classList.contains('sel'), dx: Math.round(r.left - o.x), dy: Math.round(r.top - o.y), prev: prev && prev.dataset.k, mark: !!(prev && prev.querySelector('.sn-prev')) }; }, n0);
   check('stepping through the map: the pressed card stays where it was and the one pressed before is marked', n1.sel && Math.abs(n1.dx) <= 3 && Math.abs(n1.dy) <= 3 && n1.prev === n0.was && n1.mark, n1);
+  const mapPan = await ev(() => {
+    const host=()=>document.querySelector('#sch-net .sn-scroll');
+    const pos=()=>{const box=host().getBoundingClientRect(), card=host().querySelector('.sn-node.sel').getBoundingClientRect();return [card.left-box.left,card.top-box.top];};
+    const before=pos(); schNetBuild(S.proj); const after=pos();
+    host().scrollLeft=host().scrollLeft>40?host().scrollLeft-40:host().scrollLeft+40;
+    host().scrollTop=host().scrollTop>30?host().scrollTop-30:host().scrollTop+30;
+    const moved=pos(); schRefresh(); return {before,after,moved,restored:pos()};
+  });
+  const near=(a,b)=>a.every((coord,i)=>Math.abs(coord-b[i])<=3);
+  check('the selected card and a subsequent manual pan keep their viewport positions through a map rebuild', near(mapPan.before,mapPan.after) && near(mapPan.moved,mapPan.restored),mapPan);
   await ev(() => { SCHU.tab = 'gantt'; SCHU.scale = 'fit'; SCHU.sel = ''; schRefresh(); });
 
   console.log('— calendar list, lists, library');
