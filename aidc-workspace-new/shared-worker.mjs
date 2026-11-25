@@ -71,7 +71,11 @@ const INLINE_OK = /^(image\/(png|jpe?g|gif|webp|bmp|avif)|application\/pdf|video
 
 export default {
   async fetch(req, env) {
-    if (new URL(req.url).pathname.startsWith('/api/')) return env.WORKSPACE.get(env.WORKSPACE.idFromName('team')).fetch(req);
+    if (new URL(req.url).pathname.startsWith('/api/')) {
+      // an error that escapes the workspace object comes back as JSON the page can show, never as Cloudflare's HTML page
+      try { return await env.WORKSPACE.get(env.WORKSPACE.idFromName('team')).fetch(req); }
+      catch (e) { console.error('workspace request failed:', e && e.stack || e); return json({ error: '서버를 시작하지 못했습니다. 잠시 뒤 다시 시도해 주세요.' }, 503); }
+    }
     return env.ASSETS.fetch(req);
   }
 };
@@ -96,8 +100,12 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS ydocs (item TEXT PRIMARY KEY, state BLOB, at INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS holidays (year INTEGER PRIMARY KEY, days TEXT NOT NULL, at INTEGER)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
-    ensureAIProject(this);
-    movePartnerDescriptions(this);
+    // One-time steps of other changes. Neither may keep the workspace from starting (2026-11-26: the live site answered every
+    // request with Cloudflare's "Error 1101 Worker threw exception" — an uncaught error while this object starts); a step
+    // that fails is logged (Workers Logs) and tried again the next time the object starts.
+    for (const [name, step] of [['ensureAIProject', ensureAIProject], ['movePartnerDescriptions', movePartnerDescriptions]]) {
+      try { step(this); } catch (e) { console.error('startup step failed:', name, e && e.stack || e); }
+    }
   }
 
   put(id, v) { this.sql.exec('INSERT OR REPLACE INTO records VALUES (?,?)', id, JSON.stringify(v)); }
