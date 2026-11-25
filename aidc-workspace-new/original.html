@@ -1191,6 +1191,14 @@ html{overflow:hidden}
 .tbl.partners .rw .cat a.pc-value{display:inline-block;margin:3px 6px 3px 0;border-bottom:2px solid #555;white-space:normal;overflow-wrap:anywhere}
 .pc-value[aria-pressed="true"]{border-bottom-color:#111;font-weight:700}
 
+.partner-content{padding-top:calc(225px + var(--tshift,0px));padding-bottom:48px}
+.partner-content .props.simple{position:static;width:100%;max-width:100%;grid-template-columns:minmax(0,1fr)!important}
+.partner-content .props .pr .v{flex:1}
+.partner-body{margin-top:32px;border-top:1px solid #e5e5e5;padding-top:24px;font-size:15px;line-height:1.7}
+.partner-body h3{font-size:15px;margin:0 0 16px;font-weight:600}
+.partner-body .editable,.partner-body-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;min-height:120px}
+.partner-body .editable{outline:none}
+.partner-body .editable:empty:before{content:attr(data-ph);color:#b5b5b5}
 </style>
 </head>
 <body>
@@ -1803,7 +1811,7 @@ document.addEventListener('click',e=>{
 window.addEventListener('resize',partnerCategoryClose);
 document.addEventListener('scroll',e=>{if(!e.target.closest?.('.pc-menu'))partnerCategoryClose();},true);
 
-function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>설명</em></span><span><em>미팅</em></span></div>`;
+function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>설명</em></span><span><em>관련 미팅</em></span></div>`;
   rows.forEach(r=>{const m=partnerMeeting(r); const u=r.site&&r.site!=='-'?urlHref(r.site):'';
     h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="ds">${esc(r.desc)}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
   if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
@@ -2189,11 +2197,11 @@ const sfield=(k,ph,v,multi)=>`<span class="plain editable${multi?' multi':''}" c
 const shead=(E,kind)=>E?`<button class="sh-btn pub edit" data-ed="savesimple">저장</button><button class="cancel" data-ed="cancelsimple">취소</button>${PREVIEW_ON?`<button class="trash" data-ed="trash${kind}" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}`:`<button class="sh-btn pub edit" data-ed="edit${kind}">수정</button><button class="trash" data-ed="trash${kind}" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
 const stitle=(E,name)=>`<div class="ititle ${E?'ed':''}" ${E?'contenteditable="true" data-sk="name" data-ph="이름"':''}>${esc(name)}</div>`;
 function partnerHtml(pt,E){const ms=liveItems('meeting').filter(x=>x.partner&&norm(x.partner)===norm(pt.name)).sort((a,b)=>String(b.date).localeCompare(String(a.date))); if(pt.meet&&item(pt.meet)&&isLive(item(pt.meet))&&!ms.includes(item(pt.meet)))ms.unshift(item(pt.meet)); const site=pt.site&&pt.site!=='-'?pt.site:''; const u=urlHref(site); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
-  return `<div class="itype"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>협력업체</div><div class="ihead">${shead(E,'partner')}</div>${stitle(E,pt.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
+  return `<div class="itype"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>협력업체</div><div class="ihead">${shead(E,'partner')}</div>${stitle(E,pt.name)}<div class="partner-content"><div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">홈페이지</span><span class="v">${E?sfield('site','예: vessl.ai/ko',site):(u?`<a class="url" style="margin-left:0" href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(site)}</a>`:none)}</span></div>
   <div class="pr" style="height:auto;min-height:42px"><span class="k">구분</span><span class="v">${PREVIEW_ON?(E?partnerCategoryEditor(pt.cat,false):partnerCategoryLinks(pt.cat,false)):(E?sfield('cat','구분',pt.cat):`<span class="plain">${esc(pt.cat)}</span>`)}</span></div>
   <div class="pr" style="height:auto"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',pt.desc,true):(pt.desc?`<span class="plain" style="white-space:pre-line">${esc(pt.desc)}</span>`:none)}</span></div>
-  <div class="pr" style="height:auto"><span class="k">관련 미팅</span><span class="v"><span class="chips">${ms.length?ms.slice(0,12).map(m=>chipFull(m)).join(''):none}</span></span></div></div></div>`;}
+  <div class="pr" style="height:auto"><span class="k">관련 미팅</span><span class="v"><span class="chips">${ms.length?ms.slice(0,12).map(m=>chipFull(m)).join(''):none}</span></span></div></div></div><section class="partner-body"><h3>본문</h3>${E?sfield('body','내용을 입력하세요',pt.body,true):`<div class="partner-body-text">${esc(pt.body||'')}</div>`}</section></div>`;}
 function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlHref(url); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
   return `<div class="itype">${logoImg(url)||'<i><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg></i>'}자료실 · ${esc(ARCH_SECTIONS[si].name)}</div><div class="ihead">${shead(E,'card')}</div>${stitle(E,c.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">구분</span><span class="v"><span class="plain">${esc(ARCH_SECTIONS[si].name)}</span></span></div>
@@ -2201,14 +2209,14 @@ function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlH
   <div class="pr" style="height:auto;min-height:42px"><span class="k">설명</span><span class="v">${E?sfield('desc','설명',c.desc,true):(c.desc?`<span class="plain" style="white-space:pre-line">${esc(c.desc)}</span>`:none)}</span></div>
   ${E||c.note?`<div class="pr" style="height:auto;min-height:42px"><span class="k">활용 시 주의</span><span class="v">${E?sfield('note','확인하거나 활용할 때 주의할 점',c.note,true):`<span class="plain" style="white-space:pre-line">${esc(c.note)}</span>`}</span></div>`:''}</div></div>`;}
 function simpleTarget(){const e=S.editSimple; if(!e)return null; if(e.kind==='partner')return PARTNERS.find(x=>x.id===e.id&&!x.trash)||null; const [si,cid]=e.id.split(':'); return (ARCH_SECTIONS[si]||{cards:[]}).cards.find(x=>x.id===cid&&!x.trash)||null;}
-function simpleValues(){const out={}; const pc=document.querySelector('#panel-pin .pc-editor');if(pc)out.cat=partnerCategoryRead(pc,false); $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=(k==='desc'||k==='note')?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
+function simpleValues(){const out={}; const pc=document.querySelector('#panel-pin .pc-editor');if(pc)out.cat=partnerCategoryRead(pc,false); $$('#panel-pin [data-sk]').forEach(el=>{const k=el.dataset.sk; let v=el.classList.contains('empty')?'':(el.innerText||'').replace(/ /g,' '); out[k]=(k==='desc'||k==='note'||k==='body')?v.replace(/\n{3,}/g,'\n\n').trim():v.replace(/\s*\n\s*/g,' ').trim();}); return out;}
 const simpleStored=(o,k)=>{const v=String(o[k]==null?'':o[k]).trim(); return (k==='url'&&v==='#')||(k==='site'&&v==='-')?'':v;};
 function simpleDirty(){const o=simpleTarget(); if(!o||S.panel!==S.editSimple.id)return false; const v=simpleValues(); return Object.keys(v).some(k=>v[k]!==simpleStored(o,k));}
 function saveSimple(){const e=S.editSimple, o=simpleTarget(); if(!e||!o){S.editSimple=null;return true;} const v=simpleValues(); if(!v.name){toast('이름을 입력해 주세요.');const t=$('#panel-pin [data-sk="name"]');t&&t.focus();return false;}
   if(e.kind==='partner'&&PREVIEW_ON)partnerCategories(v.cat).forEach(partnerCategoryRemember);
   const old=o.name; Object.keys(v).forEach(k=>{if(v[k]!==simpleStored(o,k))o[k]=v[k];}); if(e.kind==='partner'&&old!==o.name)ITEMS.forEach(x=>{if(x.type==='meeting'&&x.partner===old)x.partner=o.name;}); // meetings keep pointing at the renamed partner
   S.editSimple=null; return true;}
-document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&!/^(desc|note)$/.test(t.dataset.sk)&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
+document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&!/^(desc|note|body)$/.test(t.dataset.sk)&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
 document.addEventListener('paste',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-sk]'); if(!t)return; e.preventDefault(); document.execCommand('insertText',false,(e.clipboardData&&e.clipboardData.getData('text/plain'))||'');});
 
 /* ===================== NAV / ROUTING ===================== */
