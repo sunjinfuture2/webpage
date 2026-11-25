@@ -1024,3 +1024,30 @@ above 핵심 지표 and 사업성 지표; the figures stand a little closer (col
 
 tests: schedule-12 (the two upload windows, sheets found by their heads), schedule-8 / 9 / 13 / 15 (the buttons), schedule-16
 (a document makes a project, 개요 업로드, the report, the workbook out and back).
+
+## The overview's two columns, the buttons at the dates, the lists (owner, 2026-11-25, thirty-fourth round)
+
+- **A project's title** carries the name and one thing more: the pictogram alone that hands out the report (`.pexp`, the content
+  panel's own `i-sch-exp`, "프로젝트 상세에 있는 것처럼 픽토그램만"). 수정 and 개요 업로드 left the title.
+- **The overview's first line** (`.rmeta`): at the left what the project is (`.rml`: number, group, 집중 추진, stage, owner); at the
+  right (`.rmr`) 수정 and 개요 업로드 — 저장 and 취소 while it is edited — and below them 최초자료일 and 기준일, a line each (`.rdt`).
+  The right part is placed absolutely and hangs beside the title 핵심 지표 (the figures begin below it), so the figures stand
+  where they stood; while the overview is edited the line is as tall as that part. With the overview folded the two buttons are
+  folded with it (the pictogram stays): unfold to edit.
+- **Two columns, the other way round**: left 사업 개요 and 추진 일정, right 입지 및 전력 인프라 · 사업 구조 및 수익 모델 · 추진 현황 및
+  주요 특성 · 주요 리스크 및 검토사항 · 협력업체 · 첨부 자료. 사업 개요 is one block: its text (`.rmain`, left out when there is
+  none) above its table; the block is no longer called "사업 개요 표". The workbook the main page writes still has the two
+  titles 사업 개요 / 사업 개요 표 (it is a file that is read back, the reader tells the text from the table by them).
+- The figures of 핵심 지표 / 사업성 지표 are weight 500 (19.8 px as before).
+- **The list of actions** has no line that names a phase above its rows ("1) 사업정의·RFP 16"): the WBS number says it and the
+  menu of the column WBS narrows the list to one phase.
+- **기한 and URL** in the two action tables: 기한 is 112 wide (was 82), the last column gives the room. Seen on the way in a 1536
+  wide window: the whole missing width (`--d` down to -200) came out of 업무명 — 48 px were left on the main page. A narrow window
+  now takes 55 % of it from 업무명 and 45 % from 담당자; from `--d` 0 upwards nothing changed.
+- **A number beside a title** is written one way: the title's weight, light grey (#c9c9c9), 1 px larger than the words beside it —
+  the number of projects (`.rep-n`) and now the two of the library's views (문서 목록 · 참고사이트).
+- The buttons that turn a project's meeting cards stand 20 higher (they were below the middle of the cards).
+
+tests: schedule-13 (no phase lines), schedule-16 (the first line, the title, the block 사업 개요, the weight), schedule-12 (where 개요
+업로드 stands) were brought in step and not run — the owner asked for no regression run this round; the changes were looked at
+in a browser (1920, 1536, a phone).

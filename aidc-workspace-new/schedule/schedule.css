@@ -1403,9 +1403,6 @@ html.th-anim,html.th-anim :is(img,video,iframe,canvas,.avatar.pic,.lb-tile){tran
 .sg-row.ph .pm:hover{background:#ececec}
 
 /* WBS and 개발 단계 are one thing (sixteenth round): the list names the phase above its rows; an action being written shows the number it will get */
-.tbl.sch-list .gr{display:flex;align-items:center;gap:8px;height:30px;padding:0 0 0 2px;border-bottom:1px solid #ececec;font-size:12.5px;color:#000;position:sticky;top:0;background:#fff;z-index:1}
-.tbl.sch-list .gr b{font-weight:700;letter-spacing:-0.012em}
-.tbl.sch-list .gr em{font-style:normal;font-size:11px;color:#999}
 .sch-stage .wbno.auto{color:#1f8e00;font-weight:600}
 .sch-stage .sf.sub{color:#8e8e8e}
 
@@ -1581,9 +1578,6 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .rmeta .sep{width:1px;height:14px;background:#e0e0e0;margin:0 8px}
 .rmeta .m.pk,.rmeta .m.stpick{cursor:pointer}
 .rmeta .m.who .avatar{width:15.4px;height:15.4px}
-.rmeta .m.who + .m.dt{margin-left:auto}
-.rmeta .m.dt{margin-left:14px;font-variant-numeric:tabular-nums}
-.rmeta .m.dt .editable{min-width:74px}
 .rcols{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);column-gap:64px;align-items:start}
 .rc{min-width:0}
 .rb{margin-bottom:36px}
@@ -1825,3 +1819,41 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xw-nt{margin:0;min-height:18px;font-size:12px;line-height:18px;color:#8e8e8e}
 .sch-xw .xw-nt:empty{display:none}
 .sch-xw .np-bt button.pri{display:inline-flex;align-items:center;gap:7px}
+
+/* Thirty-fourth round (owner, 2026-11-25) */
+/* the buttons that turn a project's meeting cards stood below the middle of the cards: 20 up */
+.sch-on .meet .circ{top:246.4px}
+/* 기한 stood against URL in the two action tables: its column is 30 wider (URL, the last one, gives the room).
+   Seen while looking at it in a 1536 wide window: all of the missing width (--d down to -200) came out of 업무명, which was left
+   with 48 px on the main page. A narrow window now takes 55 % of it from 업무명 and 45 % from 담당자; at --d 0 and wider
+   nothing changes. */
+.tbl.sch-list .hd,.tbl.sch-list .rw{grid-template-columns:104px calc(360px + max(var(--d),var(--d)*.55)) 126px 126px 82px 126px calc(232px + min(0px,var(--d))*.45) 112px 1fr}
+.tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:var(--pjw,106px) 78px calc(298px + max(var(--d),var(--d)*.55) - (var(--pjw,106px) - 106px)) 124px 124px 82px 126px calc(204px + min(0px,var(--d))*.45) 112px 1fr}
+/* a number beside a title — how many projects, how many documents, how many sites — is written one way: in the title's own
+   weight, light grey, and 1 larger than the words beside it */
+.sec-title .rep-n{font-size:calc(1em + 1px);margin-top:-1px}
+.arch .ar-views button{gap:10px}
+.arch .ar-views button small,.arch .ar-views button.on small{font-size:calc(1em + 1px);font-weight:inherit;letter-spacing:inherit;color:#c9c9c9;font-variant-numeric:tabular-nums}
+/* the figures of 핵심 지표 and 사업성 지표: one more step lighter */
+.rkp .k > b,.rkp .k > b em.rq{font-weight:500}
+/* a project's title: the name and, as in a content panel, the pictogram alone that hands out the report */
+.phead .ttl .pexp{flex:none;width:36px;height:36px;margin:2px 0 0 10px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#6f6f6f;background:transparent;transition:background .12s,color .12s}
+.phead .ttl .pexp:hover{background:#eee;color:#0f0f0f}
+.phead .ttl .pexp svg{width:24px;height:24px}
+/* the overview's first line: what the project is at the left; at the right 수정 and 개요 업로드 and, below them, 최초자료일 and
+   기준일, a line each. The right part hangs beside the title 핵심 지표 (the figures begin below it), so nothing moves down. */
+.rmeta{position:relative;display:block;min-height:22px;padding-right:250px}
+.rmeta .rml{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.rmeta .rmr{position:absolute;right:0;top:-2px;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.rmeta .rbt{display:flex;align-items:center;gap:8px}
+.rmeta .rbt .edit,.rmeta .rbt .upx{height:26px;padding:0 12px;font-size:13.5px;font-weight:500;color:#8e8e8e;border-radius:4px;gap:6px}
+.rmeta .rbt .upx{padding-left:10px}
+.rmeta .rbt .edit.on,.rmeta .rbt .edit:hover,.rmeta .rbt .upx:hover{color:var(--ink)}
+.rmeta .rbt .upx svg{flex:none}
+.rmeta .rbt .cancel{height:26px;padding:0 10px;font-size:13.5px;color:#8e8e8e;border-radius:4px}
+.rmeta .rdt{display:grid;grid-template-columns:auto auto;column-gap:10px;row-gap:1px;justify-content:end;font-size:13px;line-height:19px;font-variant-numeric:tabular-nums;color:#3d3d3d}
+.rmeta .rdt > b{font-weight:600;color:#8e8e8e;font-size:12px}
+.rmeta .rdt .editable{min-width:74px}
+.phead.rep.ed .rmeta{min-height:78px}
+/* 사업 개요: its text stands above its table, in one block */
+.phead.rep .rmain{margin-bottom:18px}

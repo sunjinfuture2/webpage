@@ -87,7 +87,7 @@ html.mob .projects.tv{padding-bottom:0}
 
 /* ---- tables: the narrowest desktop measure inside, moved sideways ---- */
 html.mob .tbl{--d:-110px;width:auto!important;margin-left:-16px;margin-right:-16px;padding:0 16px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
-html.mob .tbl > .hd,html.mob .tbl > .rw,html.mob .tbl > .gr{width:max-content;min-width:100%}
+html.mob .tbl > .hd,html.mob .tbl > .rw{width:max-content;min-width:100%}
 html.mob .tbl > .none,html.mob .tbl > .ft{position:sticky;left:0}
 html.mob .tbl .rw .acts{display:none}
 
@@ -204,7 +204,6 @@ html.mob .phead.rep,html.mob .phead.rep.collapsed{padding-bottom:0}
 html.mob .phead.rep .rep-in{width:auto;margin:22px 0 26px}
 html.mob .phead.rep .rmeta{gap:8px;margin-bottom:26px}
 html.mob .phead.rep .rmeta .sep{display:none}
-html.mob .phead.rep .rmeta .m.who + .m.dt,html.mob .phead.rep .rmeta .m.dt{margin-left:0}
 html.mob .phead.rep .rcols{grid-template-columns:minmax(0,1fr);row-gap:34px}
 html.mob .phead.rep .rb.sum .fr > b{width:98px!important}
 html.mob .phead.rep .rtb .r{grid-template-columns:96px minmax(0,1fr)}
@@ -240,3 +239,12 @@ html.mob .projects .pager .arr{display:flex!important}
 html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
 html.mob .dlg.sch-np.sch-npdoc .box,html.mob .dlg.sch-np.sch-xw .box{width:calc(100vw - 28px)}
 html.mob .sch-xw [data-xwparts]{grid-template-columns:1fr}
+
+/* (thirty-fourth round) the overview's first line: the buttons and the two dates stand below what the project is, at the left;
+   the report's pictogram stays beside the name */
+html.mob .phead.rep .rmeta{padding-right:0;min-height:0}
+html.mob .phead.rep .rmeta .rmr{position:static;align-items:flex-start;margin-top:14px}
+html.mob .phead.rep .rmeta .rdt{justify-content:start}
+html.mob .phead .ttl{flex-wrap:nowrap;align-items:flex-start;padding-right:42px}
+html.mob .phead .ttl h1{flex:0 1 auto}
+html.mob .phead .ttl .pexp{margin:-2px 0 0 4px}

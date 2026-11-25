@@ -48,8 +48,8 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
 
   console.log('— the button and the window');
   await ev(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 20000 }); await sleep(700);
-  const bt = await ev(() => { const b = document.querySelector('.phead .ttl [data-schup]'), e = document.querySelector('.phead .ttl [data-editproj]'); if (!b || !e) return null; const r = b.getBoundingClientRect(), q = e.getBoundingClientRect(); return { text: b.textContent.trim(), gap: Math.round(r.left - q.right), dy: Math.abs(Math.round(r.top - q.top)), h: Math.round(r.height * 10) / 10, eh: Math.round(q.height * 10) / 10 }; });
-  check('"개요 업로드" stands right of 수정 on the project title, at the same height (the schedule\'s files are let go in their sections)', bt && bt.text === '개요 업로드' && bt.gap >= 4 && bt.gap <= 14 && bt.dy <= 1 && bt.h === bt.eh, bt);
+  const bt = await ev(() => { const b = document.querySelector('.phead .rmeta [data-schup]'), e = document.querySelector('.phead .rmeta [data-editproj]'); if (!b || !e) return null; const r = b.getBoundingClientRect(), q = e.getBoundingClientRect(); return { text: b.textContent.trim(), gap: Math.round(r.left - q.right), dy: Math.abs(Math.round(r.top - q.top)), h: Math.round(r.height * 10) / 10, eh: Math.round(q.height * 10) / 10 }; });
+  check('"개요 업로드" stands right of 수정 in the overview\'s first line, at the same height (the schedule\'s files are let go in their sections)', bt && bt.text === '개요 업로드' && bt.gap >= 4 && bt.gap <= 14 && bt.dy <= 1 && bt.h === bt.eh, bt);
   await a.click('[data-editproj]'); await sleep(500);
   const whileEdit = await ev(() => !!document.querySelector('[data-schup]')); await a.click('[data-canceledit]'); await sleep(500);
   check('it is not there while the overview is being edited', whileEdit === false && await ev(() => !!document.querySelector('[data-schup]')));

@@ -118,8 +118,9 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   const head=`<div class="hd">${th('wbs','WBS')}${th('name','업무명')}${th('plan','시작일')}${th('fin','완료일')}${th('pri','중요도')}${th('st','상태')}${th('who','담당자')}${th('due','기한')}${th('url','URL')}</div>`;
   const urlCell=schUrlCell;
   let h=`<div class="tbl sch-list">${head}`;
-  const grouped=SCHU.sort==='wbs', gOf=row=>row.t?row.t.phase:(row.i._ord<1e9?row.i.phase:'none'), gN=new Map(); if(grouped)for(const row of rows){const k=gOf(row);gN.set(k,(gN.get(k)||0)+1);} let gLast=null;
-  for(const row of page){ if(grouped){ const k=gOf(row); if(k!==gLast){ gLast=k; const g=m.phases.find(x=>x.code===k); h+=`<div class="gr" data-g="${esc(k)}"><b>${k==='none'?'일정 미연결':esc(g?schPhaseLabel(g):k)}</b><em>${gN.get(k)}</em></div>`; } }
+  // (thirty-fourth round, owner: "1) 사업정의·RFP 16 이런 식으로 쓰여 있는 거 다 빼") no line names a phase above its rows any more: the WBS
+  // number says which phase a row is of, and the menu of the column WBS narrows the list to one.
+  for(const row of page){
     if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
     h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schNo(t)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${schD(t.plannedStart)}</div><div class="rg">${t.kind==='milestone'||!t.plannedFinish?'<span class="nil">-</span>':schD(t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false,schLateWhy(m,t))}</div><div class="url">${urlCell(t.url)}</div></div>`;
