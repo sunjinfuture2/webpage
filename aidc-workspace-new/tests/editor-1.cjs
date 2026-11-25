@@ -119,11 +119,16 @@ const out = n => require('node:path').join(require('node:os').tmpdir(), 'aidc-ed
   console.log('— T14 / T15 lists');
   await clear(); await kb.type('1. 하나'); await kb.press('Enter'); await kb.type('둘'); await kb.press('Enter'); await kb.type('셋'); await sleep(60);
   check('T14 numbers are not stored in the text', (await doc()).startsWith('doc(orderedList(listItem(paragraph("하나")), listItem(paragraph("둘")), listItem(paragraph("셋")))'), await doc());
-  await kb.press('Tab'); await sleep(60); check('T15 Tab nests the item under the one before', (await doc()).includes('listItem(paragraph("둘"), orderedList(listItem(paragraph("셋"))))'), await doc());
-  await kb.press('Enter'); await kb.type('넷'); await kb.press('Tab'); await sleep(60);
-  check('T15 three levels deep', (await doc()).includes('orderedList(listItem(paragraph("셋"), orderedList(listItem(paragraph("넷")))))'), await doc());
+  const listLevels = () => ev(() => NB[S.panel].inst.editor.getJSON().content[0].content.map(row => row.attrs.indent));
+  await kb.press('Tab'); await sleep(60);
+  check('T15 Tab indents only the third list item', (await listLevels()).join() === '0,0,1', await listLevels());
+  await kb.press('Enter'); await kb.type('넷');
+  const initialLevel = (await listLevels())[3];
+  await kb.press('Tab'); await kb.press('Tab'); await sleep(60);
+  check('T15 two Tabs move the fourth item two levels', (await listLevels()).join() === [0,0,1,initialLevel+2].join(), await listLevels());
   await kb.press('Shift+Tab'); await kb.press('Shift+Tab'); await sleep(60);
-  check('T15 Shift+Tab brings it back out, order kept', (await doc()).includes('listItem(paragraph("둘"), orderedList(listItem(paragraph("셋")))), listItem(paragraph("넷"))'), await doc());
+  const listText = await ev(() => NB[S.panel].inst.editor.state.doc.firstChild.content.content.map(row => row.textContent));
+  check('T15 Shift+Tab restores the starting level and keeps the order', (await listLevels()).join() === [0,0,1,initialLevel].join() && listText.join() === '하나,둘,셋,넷', await listLevels());
   await kb.press('Enter'); await kb.press('Enter'); await sleep(60);
   check('EDIT-05 Enter on an empty item leaves the list', /listItem\(paragraph\("넷"\)\)\), paragraph(, paragraph)?\)$/.test(await doc()), await doc());
 

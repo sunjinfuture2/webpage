@@ -9,7 +9,7 @@ const sfx = Date.now().toString(36).slice(-5);
   const menuPick = async (label, pg) => { await (pg || p).click(`.nb-pop .nb-it:has(b:text-is("${label}"))`); await sleep(220); };
   const make = async (title, html, type) => { const id = await ev(([t, ty]) => { const it = newItem(ty || 'research'); it.title = t; openPanel(it.id); return it.id; }, [title, type]); await sleep(350);
     await ev(x => { const e = NB[S.panel].inst.editor; e.commands.setContent(x); e.commands.focus('end'); }, html); await sleep(150); await p.click('#panel-pin [data-ed="publish"]'); await sleep(900); return id; };
-  const editSave = async (pg, id, text) => { await pg.evaluate(i => openPanel(i), id); await sleep(350); await pg.click('#panel-pin [data-ed="edit"]'); await sleep(450); await pg.evaluate(() => NB[S.panel].inst.focus('end')); await pg.keyboard.type(text); await sleep(120); await pg.click('#panel-pin [data-ed="save"]'); await sleep(900); };
+  const editSave = async (pg, id, text) => { await pg.evaluate(i => openPanel(i), id); await sleep(350); await pg.click('#panel-pin [data-ed="edit"]'); await sleep(450); await pg.locator('#panel-pin .ProseMirror').click(); await pg.keyboard.press('Control+End'); await pg.keyboard.type(text); await sleep(120); await pg.click('#panel-pin [data-ed="save"]'); await sleep(900); };
   const api = (pg, path) => pg.evaluate(async u => { const r = await apiFetch(u); return { status: r.status, body: await r.json().catch(() => null) }; }, path);
 
   console.log('— version history');

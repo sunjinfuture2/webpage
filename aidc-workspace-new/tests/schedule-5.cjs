@@ -20,8 +20,12 @@ const sfx = Date.now().toString(36).slice(-5);
   await a.click('#panel-pin [data-ed="cancel"]'); await sleep(500); await ev(() => closePanel(true));
   // a project made for this test, deleted and brought back
   const pid = await ev(s => { const id = 'p5' + s; PROJECTS[id] = { ...copy(PROJECTS.sunlight || PROJECTS[Object.keys(PROJECTS)[0]]), id, tag: '검사 ' + s, full: '5차 검사 사업 ' + s, name: '5차 검사 사업 ' + s }; PHEAD[id] = {}; applyProjectStatus(id, PROJECTS[id].status); render(true); go('project:' + id); return id; }, sfx); await sleep(1500);
-  const pd = await ev(() => { const b = document.querySelector('#page-project .phead .pdel'), e = document.querySelector('#page-project [data-editproj]'), r = b.getBoundingClientRect(), q = e.getBoundingClientRect(), h = document.querySelector('#page-project .phead').getBoundingClientRect(); return { sameRow: Math.abs((r.top + r.height / 2) - (q.top + q.height / 2)) < 8, right: Math.round(h.right - r.right), farRight: r.left > q.right + 400 }; });
-  check('the button that deletes a project stands in the row of 수정, at its right end', pd.sameRow && pd.right <= 2 && pd.farRight, pd);
+  const pd = await ev(() => {
+    const head = document.querySelector('#page-project .phead'), trash = head.querySelector('.pdel').getBoundingClientRect();
+    const title = head.querySelector('.ttl .pexp').getBoundingClientRect(), edit = head.querySelector('.rmeta [data-editproj]').getBoundingClientRect();
+    return { right: head.getBoundingClientRect().right - trash.right, clearOfExport: trash.left >= title.right, aboveEdit: trash.bottom <= edit.top, size: trash.width };
+  });
+  check('delete has its own target at the right edge, clear of export and the overview editing tools', Math.abs(pd.right) <= 2 && pd.clearOfExport && pd.aboveEdit && pd.size >= 44, pd);
   await a.click('#page-project .phead .pdel'); await sleep(300);
   const msg = await ev(() => document.querySelector('#dlg .m').textContent);
   check('it asks first and says that the project can be brought back for a while', /정말 삭제/.test(msg) && /30일/.test(msg) && /복구/.test(msg), msg);
