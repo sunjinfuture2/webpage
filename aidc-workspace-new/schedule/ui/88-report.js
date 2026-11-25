@@ -62,7 +62,7 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
   // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
   const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,R[rk]&&!d[k]?R[rk]:(ph||'입력'),d[k],'v')}</label>`;
   const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
-  const blk=(t,body,cls)=>`<div class="rb ${cls||''}"><div class="rt">${t}</div>${body}</div>`;
+  const blk=(t,body,cls,fk)=>`<div class="rb ${cls||''}"${fk&&E?` data-fzone="${fk}"`:''}><div class="rt">${t}</div>${body}${fk?schRepFileRows(d,fk,E):''}</div>`;   // fk: the block's key for the files put to it (thirty-fifth round)
   // (thirty-fourth round, owner: "수정이랑 개요업로드를 최초자료일, 기준일 있는 곳으로 … 최초자료일이랑 기준일은 버튼 아래에 오게 하고 두 줄짜리로")
   // the first line: what the project is at the left (.rml); at the right (.rmr) the two buttons and, below them, the two dates, a line each.
   const meta=`<div class="rmeta"><div class="rml">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
@@ -72,19 +72,19 @@ function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, 
        <div class="rdt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}<b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</div></div></div>`;
   const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
   // the two rows of figures
-  const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''))}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>`)}</div>`;   // (twenty-ninth round) the note under the figures (finNote) and the line 출처 (src) are not shown or edited any more; both stay in the record
+  const stats=`<div class="rstats">${blk('핵심 지표',kp('kpi',''),'','kpi')}${blk('사업성 지표',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>`,'','fin')}</div>`;   // (twenty-ninth round) the note under the figures (finNote) and the line 출처 (src) are not shown or edited any more; both stay in the record
   // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)
   const mapOf=r=>norm(r[0])===norm('위치')&&mapQuery(d.loc)&&!/자료 없음|확인 필요|보완 필요/.test(d.loc)?`<div class="rmapbox">${mapBox(d.loc,'')}</div>`:'';
   const ops=SC?schOpsRow(pid).replace('<div class="fr">','<div class="r ops">'):'';
   // (thirty-fourth round, owner: "사업개요를 사업개요 표 안 맨 위로 삽입하고 … 표라는 말은 떼 … 사업개요 + 표, 추진일정을 왼쪽으로 … 그 외 … 협력업체까지 오른쪽으로")
   // left: 사업 개요 (its text, then its table) and 추진 일정; right: the other texts, 협력업체, the PDFs.
   const mainTx=E||lines(d.main).length?`<div class="rmain">${text('main','사업의 내용을 적습니다',false)}</div>`:'';
-  const cR=blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true))+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false))+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'))
-    +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true))
-    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib radd" data-addpartnerrow>+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt')
+  const cR=blk('입지 및 전력 인프라',text('infra','한 줄에 한 항목씩 적습니다',true),'','infra')+blk('사업 구조 및 수익 모델',text('struct','사업 구조와 수익 모델을 적습니다',false),'','struct')+blk('추진 현황 및 주요 특성',text('stat','여러 줄로 적으면 항목으로 나뉩니다'),'','stat')
+    +blk('주요 리스크 및 검토사항',text('risk','한 줄에 한 항목씩 적습니다',true),'','risk')
+    +blk('협력업체',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib radd" data-addpartnerrow>+ 협력업체</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt','partners')
     +schRepDocs(pid,d,E);
-  const cL=blk('사업 개요',`${mainTx}<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo&&!mainTx?nil:''}${add('rows','+ 행')}</div>`)
-    +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`);
+  const cL=blk('사업 개요',`${mainTx}<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo&&!mainTx?nil:''}${add('rows','+ 행')}</div>`,'','main')
+    +blk('추진 일정',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','+ 일정')}</div>`,'','plan');
   return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1>${!E?`<button type="button" class="pexp" data-projexp title="내보내기 — 이 프로젝트의 지금 진행 상황을 보고서로 (범위 · 요약형/풀버전 · PDF/Word/엑셀)" aria-label="내보내기">${svg('i-sch-exp',24,24)}</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${cL}</div><div class="rc rc2">${cR}</div></div></div>
@@ -108,6 +108,33 @@ function schRepDocPick(){ const inp=document.createElement('input'); inp.type='f
     toast('PDF를 올리는 중입니다…',20000);
     try{ const doc=await schRepDocUpload(f,pid); if(S.proj!==pid||!S.editProj||!PHEAD[pid]){toast('올린 파일을 붙이지 못했습니다. 다시 시도해 주세요.',4200);return;} saveProjectHead(); PHEAD[pid].docs=schRepDocList(PHEAD[pid]).concat(doc); render(true); toast('PDF를 붙였습니다. 저장하면 반영됩니다.',3200); }
     catch(e){ toast(String(e&&e.message||'PDF를 올리지 못했습니다.'),4600); } }); inp.click(); }
+
+/* ---------- files put to a block of the overview ---------- */
+// (thirty-fifth round, owner 2026-11-25: "사업개요 수정 누르면 각 단락에 파일 업로드 가능하게도 만들어주고 파일업로드 가능하다는 표시도 해줘")
+// Every titled block of the overview can carry files of its own. The record keeps them as `att` = {<block>: [{id, name, size}]}
+// (blocks: SCH_REP_FBLOCKS); they are ordinary stored files like the PDFs above (item "proj-doc-<project>", 1.8 MB each, any
+// kind). While the overview is edited every block ends in a dashed row that says so: pressed, it asks for files; files let go
+// anywhere on the block are taken too. Read, a block lists its files below what it says (a PDF or a picture opens in a new tab,
+// anything else comes down). Like every change of the edited overview they are part of the record only after 저장.
+const SCH_REP_FBLOCKS=['kpi','fin','main','plan','infra','struct','stat','risk','partners'];
+const schRepFiles=(h,k)=>{ const f=h&&h.att; return (f&&typeof f==='object'&&Array.isArray(f[k])?f[k]:[]).filter(x=>x&&typeof x.id==='string'&&/^[0-9a-f-]{36}$/.test(x.id)); };
+function schRepFileSet(h,k,list){ h.att=h.att&&typeof h.att==='object'&&!Array.isArray(h.att)?Object.assign({},h.att):{}; if(list.length)h.att[k]=list; else delete h.att[k]; }
+function schRepFileRows(d,k,E){ const fs=schRepFiles(d,k); if(!fs.length&&!E)return ''; const inl=x=>/\.(pdf|png|jpe?g|gif|webp)$/i.test(x.name||'');
+  return `<div class="rfl">${fs.map((x,i)=>`<div class="rf"><a class="nm" href="/api/file/${esc(x.id)}${inl(x)?'?inline=1':''}" ${inl(x)?'target="_blank" rel="noopener" title="새 탭에서 열기"':`download="${esc(x.name||'')}" title="내려받기"`}>${svg('i-clip',12,12)}<span>${esc(x.name||'파일')}</span></a><em>${x.size?fmtSize(x.size):''}</em>${E?`<button class="rx" data-fdel="${k}:${i}" title="이 파일 빼기" aria-label="이 파일 빼기">✕</button>`:`<a class="dl" href="/api/file/${esc(x.id)}" download="${esc(x.name||'')}" title="내려받기" aria-label="내려받기">${svg('i-dl',10,11)}</a>`}</div>`).join('')}${E?`<button type="button" class="rfdrop" data-fadd="${k}" title="이 단락에 파일 첨부">${svg('i-sch-fup',13,13)}<b>파일 첨부</b><span>눌러서 고르거나 이 단락에 끌어다 놓기 · 한 파일 1.8MB까지</span></button>`:''}</div>`; }
+async function schRepFileTake(k,files){ files=[...(files||[])]; if(!files.length||!S.editProj||!SCH_REP_FBLOCKS.includes(k))return; const pid=S.proj, big=files.filter(f=>f.size>SCH_DOC_MAX), ok=files.filter(f=>f.size<=SCH_DOC_MAX).slice(0,10);
+  if(big.length)toast(`한 파일 1.8MB까지 첨부할 수 있습니다. (${big[0].name}${big.length>1?` 외 ${big.length-1}개`:''})`,4600); if(!ok.length)return;
+  if(!big.length)toast(`파일 ${ok.length}개를 올리는 중입니다…`,20000); const done=[]; let bad='';
+  for(const f of ok){ try{ const x=await sharedUploadFile(f,'proj-doc-'+pid); done.push({id:x.id,name:x.name||f.name,size:x.size||f.size}); }catch(e){ bad=String(e&&e.message||'파일을 올리지 못했습니다.'); break; } }
+  if(!done.length){ toast(bad||'파일을 올리지 못했습니다.',4600); return; }
+  if(S.proj!==pid||!S.editProj||!PHEAD[pid]){ toast('올린 파일을 붙이지 못했습니다. 다시 시도해 주세요.',4200); return; }
+  saveProjectHead(); schRepFileSet(PHEAD[pid],k,schRepFiles(PHEAD[pid],k).concat(done)); render(true); toast(bad?`파일 ${done.length}개를 붙였습니다 · 나머지는 올리지 못했습니다: ${bad}`:`파일 ${done.length}개를 붙였습니다. 저장하면 반영됩니다.`,bad?5200:3200); }
+function schRepFilePick(k){ const inp=document.createElement('input'); inp.type='file'; inp.multiple=true; inp.style.display='none'; inp.dataset.repfile=k; document.body.appendChild(inp);
+  inp.addEventListener('change',()=>{ const fs=[...(inp.files||[])]; inp.remove(); schRepFileTake(k,fs); }); inp.click(); }
+// files let go on a block of the edited overview (anywhere else on it they are refused, so the browser does not open them in place of the page)
+(()=>{ const has=e=>!!(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')), inEd=e=>S.editProj&&e.target&&e.target.closest?e.target.closest('.phead.rep.ed'):null, clear=()=>$$('.phead.rep .rb.fover').forEach(x=>x.classList.remove('fover'));
+  document.addEventListener('dragover',e=>{ if(!has(e))return; const ed=inEd(e); clear(); if(!ed)return; e.preventDefault(); const z=e.target.closest('[data-fzone]'); if(z)z.classList.add('fover'); e.dataTransfer.dropEffect=z?'copy':'none'; });
+  document.addEventListener('dragleave',e=>{ if(!e.relatedTarget)clear(); });
+  document.addEventListener('drop',e=>{ if(!has(e))return; const ed=inEd(e); clear(); if(!ed)return; e.preventDefault(); e.stopPropagation(); const z=e.target.closest('[data-fzone]'); if(!z){ toast('파일은 붙일 단락 위에 놓아 주세요.',3000); return; } schRepFileTake(z.dataset.fzone,e.dataTransfer.files); }); })();
 
 // a cell of the main page's list: 자료 없음 is a dash there (owner, 2026-11-24: "카드형 표형 둘다 자료없음은 -로"); the marks as elsewhere
 const schRepListTxt=v=>{ const s=String(v||'').replace(/자료 없음/g,'-').trim(); return !s||s==='-'?'<span class="nil">-</span>':schRepTxt(s); };
@@ -152,6 +179,8 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const T=e.target; 
     menuPop(el,Object.keys(REP_PLAN_ST).map(s=>({t:s,html:schRepState(s),k:s,sel:cur===s,fn:()=>{ if(el.isConnected)el.innerHTML=schRepState(s)+svg('i-chev-d',7.2,3.6,'color:#8e8e8e'); }})),{cls:'sch-colmenu'}); return; }
   if(el=T.closest('[data-reppick="grp"]')){ if(!S.editProj)return; e.stopPropagation(); menuPop(el,REP_GRPS.map(g=>({t:g,k:g,sel:h().grp===g,fn:()=>{ saveProjectHead(); h().grp=g; render(true); }})),{cls:'sch-colmenu'}); return; }
   if(el=T.closest('[data-repfocus]')){ if(!S.editProj)return; saveProjectHead(); h().focus=!h().focus; render(true); return; }
+  if(el=T.closest('[data-fadd]')){ if(!S.editProj)return; e.preventDefault(); schRepFilePick(el.dataset.fadd); return; }
+  if(el=T.closest('[data-fdel]')){ if(!S.editProj)return; saveProjectHead(); const [fk,fi]=el.dataset.fdel.split(':'), a=schRepFiles(h(),fk).slice(); a.splice(+fi,1); schRepFileSet(h(),fk,a); render(true); return; }
   if(el=T.closest('[data-docadd]')){ if(!S.editProj)return; schRepDocPick(); return; }
   if(el=T.closest('[data-docdel]')){ if(!S.editProj)return; saveProjectHead(); const a=schRepDocList(h()); a.splice(+el.dataset.docdel,1); h().docs=a; render(true); return; }
 });

@@ -1805,19 +1805,7 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-up .up-drop.bad{border-color:#e7b5b0}
 .sch-up .up-row select{max-width:100%;height:26px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;font-size:13px;color:#1c1c1c;padding:0 6px}
 .sch-up .up-parts.ext{margin-top:22px}
-/* the window that hands out files */
-.dlg.sch-np.sch-xw .box{width:540px;max-height:calc(100vh - 40px);overflow:auto}
-.sch-xw .xw{margin-top:22px;display:flex;flex-direction:column;gap:17px}
-.sch-xw .xw-g h5{margin:0 0 6px;font-size:12px;font-weight:600;color:#8e8e8e}
-.sch-xw .xw-o{display:flex;align-items:flex-start;gap:9px;padding:3px 0;font-size:13.5px;line-height:20px;color:#1c1c1c;cursor:pointer}
-.sch-xw .xw-o input{margin:3.5px 0 0;flex:none;accent-color:#0f0f0f}
-.sch-xw .xw-o em{font-style:normal;margin-left:8px;font-size:12px;color:#a0a0a0}
-.sch-xw .xw-o.off{color:#b9b9b9;cursor:default}
-.sch-xw .xw-g.dim{opacity:.34;pointer-events:none}
-.sch-xw [data-xwparts]{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
-.sch-xw [data-xwparts] h5{grid-column:1/-1}
-.sch-xw .xw-nt{margin:0;min-height:18px;font-size:12px;line-height:18px;color:#8e8e8e}
-.sch-xw .xw-nt:empty{display:none}
+/* the window that hands out files: see the thirty-fifth round below */
 .sch-xw .np-bt button.pri{display:inline-flex;align-items:center;gap:7px}
 
 /* Thirty-fourth round (owner, 2026-11-25) */
@@ -1857,3 +1845,87 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .phead.rep.ed .rmeta{min-height:78px}
 /* 사업 개요: its text stands above its table, in one block */
 .phead.rep .rmain{margin-bottom:18px}
+
+/* Thirty-fifth round (owner, 2026-11-25) */
+/* the pictogram beside a project's name: half as large again (24 -> 36) */
+.phead .ttl .pexp{width:48px;height:48px;margin:-4px 0 0 8px;border-radius:6px}
+.phead .ttl .pexp svg{width:36px;height:36px}
+/* 구분 in a partner's panel as in the list: a thin line right under the word (it was 2 px, well below it) */
+.sch-on .props .pc-value{display:inline-block;margin:0 12px 0 0;padding:2px 0 0;line-height:17px;border-bottom:1px solid #555}
+.sch-on .props .pc-token{padding:2px 0 0;line-height:17px;margin:0 12px 6px 0}   /* its line is written into the element (original.html: partnerCategoryEditor), 1 px there too */
+/* seen beside it: the homepage of a partner read "ves…" — the link is cut to "its box less 34" (room for a copy button in an
+   item's panel), and here its box is only as wide as the link itself. In a partner's or a link card's panel the value takes the
+   row's width and the link may be as wide as that. */
+.sch-on .props.simple .pr .v{flex:1 1 auto}
+.sch-on .props.simple .pr .v a.url{max-width:100%}
+/* files of a block of the overview: listed below what the block says; while it is edited the block ends in a dashed row that
+   takes files (pressed, or files let go on the block) */
+.phead.rep .rfl{margin-top:14px;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.phead.rep .rf{position:relative;display:flex;align-items:center;gap:8px;max-width:100%;font-size:12.5px;line-height:18px}
+.phead.rep .rf .nm{display:inline-flex;align-items:center;gap:6px;min-width:0;color:#3d3d3d;text-decoration:none}
+.phead.rep .rf .nm svg{flex:none;color:#8e8e8e}
+.phead.rep .rf .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px solid #d6d6d6}
+.phead.rep .rf .nm:hover span{color:#000;border-bottom-color:#8e8e8e}
+.phead.rep .rf em{flex:none;font-style:normal;font-size:11px;color:#a6a6a6;font-variant-numeric:tabular-nums}
+.phead.rep .rf .dl{flex:none;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;color:#8e8e8e}
+.phead.rep .rf .dl:hover{background:#f1f1f1;color:#1c1c1c}
+.phead.rep .rf .rx{position:static;flex:none}
+.phead.rep .rfdrop{align-self:stretch;display:flex;align-items:center;gap:8px;height:34px;margin-top:3px;padding:0 12px;border:1px dashed #c9c9c9;border-radius:7px;background:#fbfbfa;color:#6f6f6f;font-size:12px;cursor:pointer;text-align:left;min-width:0}
+.phead.rep .rfdrop svg{flex:none}
+.phead.rep .rfdrop b{flex:none;font-weight:600;color:#3d3d3d}
+.phead.rep .rfdrop span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a0a0a0;font-size:11.5px}
+.phead.rep .rfdrop:hover{border-color:#8e8e8e;background:#f5f5f4}
+.phead.rep .rb.fover .rfdrop{border-color:#1f8e00;border-style:solid;background:#f1f8ee;color:#1f8e00}
+.phead.rep .rb.fover .rfdrop b,.phead.rep .rb.fover .rfdrop span{color:#1f8e00}
+.phead.rep .rstats .rfl{margin-top:12px;max-width:520px}
+/* the window that hands out files, put together like the page on which a product with many options is configured: the options
+   at the left (a part is ticked, a ticked part shows its own 요약 / 풀버전), what was put together at the right */
+.dlg.sch-np.sch-xw .box{width:920px;max-height:calc(100vh - 40px);overflow:auto}
+.sch-xw .xq-body{display:grid;grid-template-columns:minmax(0,1fr) 272px;column-gap:24px;align-items:start;margin-top:22px}
+.sch-xw h5{margin:0 0 9px;min-height:22px;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#1c1c1c}
+.sch-xw h5 > i{flex:none;font-style:normal;width:17px;height:17px;border-radius:50%;background:#1c1c1c;color:#fff;font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.sch-xw h5 > small{font-size:11.5px;font-weight:400;color:#8e8e8e;margin-left:2px}
+.sch-xw .xq-sec + .xq-sec{margin-top:20px}
+.sch-xw .xq-pre{margin-left:auto;display:flex;gap:2px}
+.sch-xw .xq-pre button{height:22px;padding:0 8px;border-radius:5px;font-size:11.5px;color:#6f6f6f;background:transparent;white-space:nowrap}
+.sch-xw .xq-pre button:hover{background:#f1f1f0;color:#1c1c1c}
+.sch-xw .xq-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sch-xw .xq-card{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;padding:9px 12px;border:1px solid #e3e3e3;border-radius:8px;background:#fff;cursor:pointer}
+.sch-xw .xq-card input{position:absolute;opacity:0;pointer-events:none}
+.sch-xw .xq-card b{font-size:13.5px;font-weight:600;color:#1c1c1c}
+.sch-xw .xq-card em{font-style:normal;font-size:11.5px;line-height:15px;color:#8e8e8e}
+.sch-xw .xq-card:hover{border-color:#bdbdbd}
+.sch-xw .xq-card:has(input:checked){border-color:#1c1c1c;box-shadow:inset 0 0 0 1px #1c1c1c}
+.sch-xw .xq-card:has(input:focus-visible){outline:2px solid #8e8e8e;outline-offset:1px}
+.sch-xw .xq-rows{display:flex;flex-direction:column;gap:6px}
+.sch-xw .xq-row{display:grid;grid-template-columns:142px minmax(0,1fr) auto;align-items:center;column-gap:12px;min-height:46px;padding:6px 8px 6px 13px;border:1px solid #e9e9e9;border-radius:8px;background:#fff}
+.sch-xw .xq-row.on{border-color:#1c1c1c}
+.sch-xw .xq-row.none{background:#fafafa;border-style:dashed}
+.sch-xw .xq-ck{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer}
+.sch-xw .xq-row.none .xq-ck{cursor:default}
+.sch-xw .xq-ck input{flex:none;margin:0;width:14px;height:14px;accent-color:#0f0f0f}
+.sch-xw .xq-nm{font-size:13.5px;font-weight:600;color:#9a9a9a;white-space:nowrap}
+.sch-xw .xq-row.on .xq-nm{color:#1c1c1c}
+.sch-xw .xq-say{min-width:0;font-size:12px;line-height:16px;color:#b9b9b9}
+.sch-xw .xq-row.on .xq-say{color:#6f6f6f}
+.sch-xw .xq-seg{display:inline-flex;padding:2px;border-radius:7px;background:#f1f1f0;visibility:hidden}
+.sch-xw .xq-row.on .xq-seg{visibility:visible}
+.sch-xw .xq-row.fix .xq-seg{opacity:.34;pointer-events:none}
+.sch-xw .xq-seg button{height:26px;padding:0 11px;border-radius:5px;font-size:12px;font-weight:500;color:#8e8e8e;background:transparent;white-space:nowrap}
+.sch-xw .xq-seg button.on{background:#fff;color:#0f0f0f;font-weight:600;box-shadow:0 0 0 .8px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.12)}
+.sch-xw [data-xwparts].dim .xq-rows,.sch-xw [data-xwparts].dim .xq-pre{opacity:.34;pointer-events:none}
+.sch-xw .xq-side{position:sticky;top:0;padding:16px 16px 16px;border-radius:10px;background:#f7f7f6}
+.sch-xw .xq-list{list-style:none;margin:0;padding:0;font-size:12.5px;line-height:18px;color:#1c1c1c}
+.sch-xw .xq-list li{display:grid;grid-template-columns:minmax(0,1fr) auto 42px;column-gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e9e9e7}
+.sch-xw .xq-list li em{font-style:normal;display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:9px;background:#e7e7e5;color:#4f4f4f;font-size:11px;font-weight:600;white-space:nowrap}
+.sch-xw .xq-list li em.full{background:#1c1c1c;color:#fff}
+.sch-xw .xq-list li > i{font-style:normal;text-align:right;font-size:11.5px;color:#8e8e8e;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch-xw .xq-list li.nil,.sch-xw .xq-list li.all{display:block;border-bottom:0;color:#8e8e8e}
+.sch-xw .xq-tot{margin:10px 0 20px;font-size:12.5px;font-weight:600;color:#1c1c1c}
+.sch-xw .xq-files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sch-xw .xq-files .xq-card{padding:8px 4px;align-items:center;text-align:center}
+.sch-xw .xq-files .xq-card em{font-size:10.5px;line-height:14px}
+.sch-xw .xw-nt{margin:10px 0 0;min-height:0;font-size:11.5px;line-height:16px;color:#8e8e8e}
+.sch-xw .xw-nt:empty{display:none}
+.sch-xw .xq-side .np-bt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:16px}
+.sch-xw .xq-side .np-bt button{justify-content:center}

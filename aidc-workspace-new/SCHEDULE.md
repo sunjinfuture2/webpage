@@ -1051,3 +1051,41 @@ tests: schedule-12 (the two upload windows, sheets found by their heads), schedu
 tests: schedule-13 (no phase lines), schedule-16 (the first line, the title, the block 사업 개요, the weight), schedule-12 (where 개요
 업로드 stands) were brought in step and not run — the owner asked for no regression run this round; the changes were looked at
 in a browser (1920, 1536, a phone).
+
+## The export window as a configurator, files on blocks (owner, 2026-11-25, thirty-fifth round)
+
+- **The pictogram beside a project's name** is half as large again (36 px in a 48 px button; 29 / 38 on a phone).
+- **The window that hands out files** (schExpWin, 92-export.js) — "넣을 내용을 먼저 고르게 하고 그걸 각각 요약으로 할 건지 풀버전으로 할 건지
+  … 옵션 많은 제품 견적 고르는 ui들을 참고해서". It is put together like the page on which a product with many options is
+  configured:
+  - left, the options: every part is a row with a tick; a ticked row shows its own choice 요약 / 풀버전 (`[data-xwf]`) and a line
+    that says what that form gives ("지연 7건 · 60일 안 24건 · 전체 업무 233건 목록"); a part without content is dashed and cannot
+    be ticked; 전체 선택 / 모두 요약 / 모두 풀버전 above the rows;
+  - right, like the sheet of an estimate: a line per part with its form and how many lines it comes to, the sum below
+    ("항목 7개 · 표 13개 · 336줄" — counted from the document that would be made: schXMeasure), then the file (PDF / Word / 엑셀 as
+    cards) and the button.
+  The single choice of a form and the separate "액션 범위" are gone. The main page's window has the same build: 범위 as cards,
+  the two parts (프로젝트별 요약 can be the full sheet: `parts.sheets === 'full'`), the file.
+- **A form per part** (schXProjDoc: `opt.forms = {part: 'sum' | 'full'}`; `opt.form` is the form of a part that names none, so the
+  old calls still work). What the two forms hold: 진행 현황 — the sentences and the main rows / every row (구분, 담당자, 승인게이트,
+  외부설비, 일정 기준일); 사업 개요 — figures, text, table, 추진 일정 / the four texts too; 액션 일정 — phases, the first 8 late and
+  10 near ones / all of them and the list of every task; 외부설비 조달 — the first 8 with 설치완료 and 확약 / all with PO and
+  supplier; 승인게이트 — the count and up to 8 that are not approved / all with their task; 근거 및 확약 — counts / the lists;
+  미팅 — the latest 5 / all; 협력업체 — the names / a table with 구분, 홈페이지, 설명. A report of mixed forms is titled "맞춤 구성"
+  and its file "(맞춤)".
+- **Files on the blocks of the overview** — "사업개요 수정 누르면 각 단락에 파일 업로드 가능하게 … 파일업로드 가능하다는 표시도". Every
+  titled block (SCH_REP_FBLOCKS: 핵심 지표, 사업성 지표, 사업 개요, 추진 일정, the four texts, 협력업체) can carry files: the record
+  keeps `att = {<block>: [{id, name, size}]}`; they are stored like the project's PDFs (item `proj-doc-<project>`, 1.8 MB each,
+  any kind; no change of the Worker). While the overview is edited each block ends in a dashed row "파일 첨부 — 눌러서 고르거나
+  이 단락에 끌어다 놓기" (`.rfdrop`): pressed it asks for files (several at once), and files let go anywhere on the block are
+  taken (the block turns green while they are over it; let go elsewhere on the edited overview they are refused with a word, so
+  the browser does not open them in place of the page). Read, a block lists its files below what it says — a PDF or a picture
+  opens in a new tab, anything else comes down. As with everything in the edited overview, 취소 takes an upload back and 저장
+  keeps it. 첨부 자료 (PDF), the project's own list, is unchanged.
+- **구분 in a partner's panel** has the list's line: 1 px, right under the word (read and while edited — the edit's line is
+  written into the element by partnerCategoryEditor). Seen beside it and put right: the homepage read "ves…" there, because
+  the link was cut to its own box less 34 px.
+
+tests: schedule-8 / 9 / 15 / 16 choose the file through its card; schedule-16 checks the window's rows, a part's own form and
+the report of mixed forms, and a file put to a block. Brought in step and not run (the owner asks for a regression run when
+one is wanted); looked at in a browser at 1920, 1536 and a phone.

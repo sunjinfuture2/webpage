@@ -238,7 +238,6 @@ html.mob .projects .pager .arr{display:flex!important}
 /* (thirty-third round) the figures in two columns keep their own gap; the two new windows fit the screen */
 html.mob .rstats .rkp{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
 html.mob .dlg.sch-np.sch-npdoc .box,html.mob .dlg.sch-np.sch-xw .box{width:calc(100vw - 28px)}
-html.mob .sch-xw [data-xwparts]{grid-template-columns:1fr}
 
 /* (thirty-fourth round) the overview's first line: the buttons and the two dates stand below what the project is, at the left;
    the report's pictogram stays beside the name */
@@ -248,3 +247,16 @@ html.mob .phead.rep .rmeta .rdt{justify-content:start}
 html.mob .phead .ttl{flex-wrap:nowrap;align-items:flex-start;padding-right:42px}
 html.mob .phead .ttl h1{flex:0 1 auto}
 html.mob .phead .ttl .pexp{margin:-2px 0 0 4px}
+
+/* (thirty-fifth round) the pictogram a little smaller than on the wide page; the window that hands out files in one column —
+   the options, then what was put together; a row of it in two lines */
+html.mob .phead .ttl .pexp{width:38px;height:38px;margin:-3px 0 0 4px}
+html.mob .phead .ttl .pexp svg{width:29px;height:29px}
+html.mob .sch-xw .xq-body{grid-template-columns:minmax(0,1fr);row-gap:18px}
+html.mob .sch-xw .xq-side{position:static}
+html.mob .sch-xw .xq-cards{grid-template-columns:minmax(0,1fr)}
+html.mob .sch-xw h5{flex-wrap:wrap}
+html.mob .sch-xw h5 > small{display:none}
+html.mob .sch-xw .xq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:3px}
+html.mob .sch-xw .xq-say{grid-column:1/-1;grid-row:2;padding-left:23px}
+html.mob .phead.rep .rfdrop span{display:none}

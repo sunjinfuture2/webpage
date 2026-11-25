@@ -1716,7 +1716,7 @@ function partnerCategoryChips(){
 function partnerCategoryEditor(value,create){
   const vals=partnerCategories(value);
   return '<span class="pc-editor" data-pc-values="'+esc(JSON.stringify(vals))+'">'+
-    '<span class="pc-tokens">'+vals.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:2px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('')+'</span>'+
+    '<span class="pc-tokens">'+vals.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:1px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('')+'</span>'+
     '<input class="pc-input" type="text" autocomplete="off" placeholder="구분 입력 후 Enter" aria-label="협력업체 구분 입력" aria-expanded="false">'+
     (create?'<input type="hidden" id="npt-cat" value="'+esc(vals.join('\n'))+'">':'')+'</span>';
 }
@@ -1753,7 +1753,7 @@ function partnerCategoryShow(root){
 }
 function partnerCategoryUpdate(root,values){
   root.dataset.pcValues=JSON.stringify(values);
-  root.querySelector('.pc-tokens').innerHTML=values.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:2px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('');
+  root.querySelector('.pc-tokens').innerHTML=values.map(c=>'<span class="pc-token" style="background:transparent!important;border:0!important;border-bottom:1px solid #555!important;border-radius:0!important;box-shadow:none!important">'+esc(c)+'<button type="button" data-pc-remove="'+esc(c)+'" aria-label="'+esc(c)+' 구분 제거">×</button></span>').join('');
   const hidden=root.querySelector('#npt-cat');if(hidden)hidden.value=values.join('\n');
 }
 function partnerCategoryAdd(root,text){

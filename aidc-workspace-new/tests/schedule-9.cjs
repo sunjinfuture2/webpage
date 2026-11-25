@@ -60,7 +60,7 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
 
   console.log('— Excel, help, the member card, the reason of a delay');
   await ev(() => { SCHU.per = 20; SCHU.q = 'RFP'; schRefresh(); }); await sleep(500); const want = await ev(() => schFiltered(schModel('pangyo'), true).length);
-  const xa = await save(async () => { await a.click('.page.on .phead [data-projexp]'); await sleep(350); await a.check('#dlg.sch-xw input[name="xw-file"][value="xlsx"]'); await a.click('#dlg.sch-xw [data-xw="ok"]'); }, 'all.xlsx'); await ev(() => { SCHU.q = ''; schRefresh(); document.querySelector('#toast').classList.remove('on'); });
+  const xa = await save(async () => { await a.click('.page.on .phead [data-projexp]'); await sleep(350); await a.click('#dlg.sch-xw .xq-files .xq-card:has(input[value="xlsx"])'); await a.click('#dlg.sch-xw [data-xw="ok"]'); }, 'all.xlsx'); await ev(() => { SCHU.q = ''; schRefresh(); document.querySelector('#toast').classList.remove('on'); });
   const za = unzip(xa.buf), wb = (za['xl/workbook.xml'] || Buffer.alloc(0)).toString('utf8');
   check('the project\'s 내보내기, 엑셀: the whole workbook of the schedule (the sections have no export of their own)', want > 0 && /마스터스케줄/.test(xa.name) && /마스터스케줄/.test(wb) && /업무연결/.test(wb) && /외부설비 조달대장/.test(wb) && xa.buf.length > 20000 && await ev(() => !document.querySelector('.page.on [data-sch="xlsx"]')), { all: xa.name, want, size: xa.buf.length });
   await a.click('#sch-actions .sch-filters [data-info]'); await sleep(300); const hp = await ev(() => { const p = document.querySelector('.pop.sch-help'); return p ? p.innerText : ''; }); await a.mouse.click(5, 5); await sleep(200);
