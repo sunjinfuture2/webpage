@@ -1855,8 +1855,8 @@ function moveCarousel(k,dir){const c=carouselInfo(k);if(!c)return;let off=(S.car
 const actRows=pid=>sortActs(liveItems('action',pid).filter(i=>matchQ(S.q.action,i.title,...(i.people||[]).map(userName),proj(i.proj).tag)));
 function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const acts=actRows(pid); const total=Math.max(1,Math.ceil(acts.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const rows=acts.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
-function researchSecHtml(pid){const found=liveItems('research',PREVIEW_ON?null:pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), per=PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
-  return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${PREVIEW_ON?34:pid?37:37.1}px">${researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
+function researchSecHtml(pid){const found=liveItems('research',PREVIEW_ON?null:pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), tbl=PREVIEW_ON&&typeof schViewOf==='function'&&schViewOf('res')==='table', per=tbl?SCH_V_PER:PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
+  return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${PREVIEW_ON?34:pid?37:37.1}px">${tbl?schResTable(rows):researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
 const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||(PREVIEW_ON?partnerCategories(p.cat).includes(S.partnerCat):p.cat===S.partnerCat))&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.site));
 function partnerSecHtml(){const pts=partnerRows(); const total=Math.max(1,Math.ceil(pts.length/10)); S.ptPage=Math.min(Math.max(1,S.ptPage),total);
   return `<div style="margin-top:28.5px">${partnerTable(pts.slice((S.ptPage-1)*10,S.ptPage*10))}</div>${pager(S.ptPage,total,'pg-pt').replace('class="pager','style="margin-top:50.3px" class="pager')}`;}
@@ -1872,7 +1872,7 @@ function renderMain(){ if(schPreview())schPids().forEach(schLoad);
      <button class="arr l" data-car="proj:-1" title="이전">${svg('i-car-l',9.4,18.1)}</button><button class="arr r" data-car="proj:1" title="다음">${svg('i-car-r',9.4,18.1)}</button></div>`}
    <div class="sec" id="sec-actions"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?`<span class="sch-ic">${svg('i-sch-tag',32.5,31)}</span>액션`:ACT}${plusBtn('new-action','새 '+ACT)}<button class="sh-btn lib" data-lib="action">라이브러리</button>${schPreview()?'':perBox()}${searchBox('action',ACT+' 검색')}</div>
      <div data-sec="action">${actionSecHtml(null)}</div></div>
-   <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
+   <div class="sec" id="sec-research" style="margin-top:115.1px"><div class="sec-title ${schPreview()?'sch-title':''}" style="margin-left:-2.8px">${schPreview()?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${PREVIEW_ON&&typeof schViewToggle==='function'?schViewToggle('res'):''}${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(null)}</div></div>
    ${partnerSection('margin-top:137.6px;padding-bottom:206.7px')}`;
 }
@@ -1925,7 +1925,7 @@ function renderProject(pid){
      <div data-sec="action">${actionSecHtml(pid)}</div></div>`}
    ${PV?'':`<div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>
      <div class="box scroll" id="road-box"><div class="inner">${roadmapHtml(pid)}</div></div><div class="ruler" id="road-ruler">${rulerHtml()}</div><div class="hr bt"></div></div>`}
-   <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title ${PV?'sch-title':''}" style="margin-left:-2.8px">${PV?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${searchBox('research','리서치 검색')}</div>
+   <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title ${PV?'sch-title':''}" style="margin-left:-2.8px">${PV?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${PREVIEW_ON&&typeof schViewToggle==='function'?schViewToggle('res'):''}${searchBox('research','리서치 검색')}</div>
      <div data-sec="research">${researchSecHtml(pid)}</div></div>`;
 }
 // Each project has its own roadmap. An entry made before projects were separated goes with the project of the items it links, else 판교.

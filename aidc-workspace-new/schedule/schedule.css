@@ -640,8 +640,6 @@
 #sec-partners .sch-chiprow{left:2px;top:6px}
 .tbl.sch-list.sch-all .hd,.tbl.sch-list.sch-all .rw{grid-template-columns:106px 78px calc(330px + var(--d)) 216px 82px 126px 204px 82px 1fr}
 .tbl.sch-list.sch-all .rw .pj{padding-left:6px;overflow:hidden}
-.tbl.sch-list.sch-all .rw .nm .tx{position:relative}
-.tbl.sch-list.sch-all .rw .nm .tx .sdot{left:-7px;top:-1px}.tbl.sch-list.sch-all .rw .nm .tx .sdot.g.two{left:-13px}
 .sch-filters.sch-all .right .tbl-tools{position:static;margin:0}
 .sch-filters.res{margin-left:2px}
 .sch-filters .sf[data-rpick],.sch-filters .sf[data-mpick]{min-width:104px}
@@ -2015,3 +2013,26 @@ html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:n
 .sch-xw .xq-row.on{background:#f6f6f5}
 .sch-xw .xq-row.on .xq-seg{background:#e9e9e7}
 
+/* Fortieth round (owner, 2026-11-25) */
+/* a panel's left column keeps to its own room: what is typed or shown there ends 26 before the right column begins (it ran up
+   to the names of the right column, and over them while a row was rested on). The page's own two columns and the schedule
+   block's two columns alike; a panel of one column is not touched. */
+.sch-on .props:has(> .rcol) > div:first-child,.sch-on .sch-props .sp-grid > div:first-child{box-sizing:border-box;min-width:0;padding-right:26px}
+.sch-on .props:has(> .rcol) > div:first-child .pr .v,.sch-on .sch-props .sp-grid > div:first-child .pr .v{max-width:100%}
+/* the marks (red: something that concerns me changed / I was called; green: new or starting today) stand at the upper left of
+   the name in a table too: the two lists of actions, the meeting table, the research table, the library's documents */
+.tbl.sch-list .rw .nm{position:relative}
+.tbl.sch-list .rw .nm > .sdot{left:3px;top:9px}
+.tbl.sch-list .rw .nm > .sdot.g.two{left:-3px}
+.tbl.sch-vtbl .rw .nm{position:relative}
+.tbl.sch-vtbl .rw .nm .tdots{position:absolute;left:1px;top:18px;display:flex;gap:1.5px}
+.tbl.sch-vtbl .rw .nm .tdots i{display:block;width:5px;height:5px;border-radius:50%}
+.tbl.sch-vtbl .rw .nm .tdots i.g{background:#2bdb00}
+.tbl.sch-vtbl .rw .nm .tdots i.r{background:#ff0000}
+.sch-on .tbl.archive .rw .ttl .gd.rd{background:#ff0000;top:calc(50% - 9px)}
+/* research as a table; the switch beside the section's search box */
+.tbl.sch-proc.vt-res .hd,.tbl.sch-proc.vt-res .rw{grid-template-columns:124px minmax(240px,1fr) 250px 226px 190px 104px}
+.tbl.sch-proc.vt-res .rw .fl .sh-btn{height:24px;padding:0 9px;font-size:12px;border-radius:7px;display:inline-flex;align-items:center;gap:5px}
+.tbl.sch-proc.vt-res{width:calc(1337px + var(--d))}
+.sch-on .sec-title .sch-vt{margin-left:auto;margin-top:3px;font-size:13px;letter-spacing:0}
+.sch-on .sec-title .sch-vt + .srch.box{margin-left:14px}

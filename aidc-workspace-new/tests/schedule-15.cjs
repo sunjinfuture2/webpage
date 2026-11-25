@@ -94,6 +94,17 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   const mt4 = await ev(() => (document.querySelector('.page.on .tbl.vt-meet .none') || {}).textContent || '');
   check('the search looks at the place too; nothing found says so', mt3.n === 1 && mt3.focus === 'meeting' && /조건에 맞는 미팅이 없습니다/.test(mt4), { mt3, mt4 });
   await a.fill('.page.on .meet input[data-q="meeting"]', ''); await sleep(300);
+  // fortieth round: the marks stand in the table too; research can be a table; a meeting's panel keeps its left column out of the right one
+  const tm = await ev(id => { const rw = document.querySelector(`.page.on .tbl.vt-meet .rw[data-open="${id}"]`), d = rw && rw.querySelector('.nm .tdots'); return { want: dotsOf(item(id)).join(''), has: d ? [...d.children].map(i => i.className).join('') : '', left: d ? Math.round(d.getBoundingClientRect().left - rw.querySelector('.nm').getBoundingClientRect().left) : null }; }, mid);
+  check('a row of the meeting table carries the marks its card carries, at the upper left of the name', tm.has === tm.want && (tm.want === '' || (tm.left >= 0 && tm.left < 8)), tm);
+  const rsec = await ev(() => { const s = [...document.querySelectorAll('.page.on .sec')].find(x => x.querySelector('[data-sec="research"]')); s.querySelector('[data-vt="res:table"]').click(); return true; }); await sleep(600);
+  const rt = await ev(() => { const s = [...document.querySelectorAll('.page.on .sec')].find(x => x.querySelector('[data-sec="research"]')), t = s.querySelector('.tbl.vt-res'); return t ? { hd: [...t.querySelectorAll('.hd span')].map(x => x.textContent).join(), rows: t.querySelectorAll('.rw').length, all: liveItems('research').length, cards: s.querySelectorAll('.rcard').length, bar: !!s.querySelector('.sch-filters.res'), view: schViewOf('res') } : null; });
+  check('research can be seen as a table too: 날짜 · 제목 · 구분 · 담당자 · 최종수정 · 첨부, ten a page, under the same pickers', rsec && rt && rt.hd === '날짜,제목,구분,담당자,최종수정,첨부' && rt.rows === Math.min(10, rt.all) && rt.cards === 0 && rt.bar && rt.view === 'table', rt);
+  await ev(() => { const s = [...document.querySelectorAll('.page.on .sec')].find(x => x.querySelector('[data-sec="research"]')); s.querySelector('[data-vt="res:cards"]').click(); }); await sleep(500);
+  await ev(id => { const it = item(id); meetWrite(it, { agenda: '긴 안건 '.repeat(30) }); openPanel(id, true); }, mid); await sleep(700);
+  const pg = await ev(() => { const P = document.querySelector('#panel-pin .props'), L = P.children[0], rk = [...P.querySelectorAll('.rcol .pr .k')].find(k => k.textContent.trim()); let mr = 0; for (const e of L.querySelectorAll('.pr .v, .pr .v *')) { const b = e.getBoundingClientRect(); if (b.width && b.height) mr = Math.max(mr, b.right); } return Math.round((rk.getBoundingClientRect().left - mr) / (LAYOUT.zoom || 1)); });
+  check('a long line of a meeting\'s panel ends before the right column begins', pg >= 12, pg);
+  await ev(id => { meetWrite(item(id), { agenda: '표 보기 확인' }); closePanel(true); render(true); }, mid); await sleep(400);
   await a.click(`.page.on .tbl.vt-meet .rw[data-open="${mid}"]`); await sleep(700);
   check('a row opens the meeting', await ev(id => S.panel === id && item(id).type === 'meeting', mid));
   await ev(() => closePanel(true)); await sleep(300);

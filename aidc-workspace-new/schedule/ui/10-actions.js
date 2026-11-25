@@ -122,7 +122,7 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   // number says which phase a row is of, and the menu of the column WBS narrows the list to one.
   for(const row of page){
     if(row.i){h+=schItemRow(row.i,'',row.i._ord<1e9?schPhaseNo(row.i.phase):'-');continue;} const t=row.t, r=m.res.tasks[t.id], done=P.isDone(t), linked=schLinked(pid,t.id), id=schItemId(t.id), it=ITEMS.find(x=>x.id===id), nc=it?(it.comments||[]).length:0;
-    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schNo(t)}</div><div class="nm"><span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
+    h+=`<div class="rw ${S.panel===id?'sel':''}" data-open="${id}"><div class="w">${schNo(t)}</div><div class="nm">${schDotsHtml(schNotices(pid),id)}<span class="gut">${t.kind==='milestone'?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(t.name)}</span>${nc?`<span class="cnt">댓글 ${nc}</span>`:''}</div>
       <div class="rg">${schD(t.plannedStart)}</div><div class="rg">${t.kind==='milestone'||!t.plannedFinish?'<span class="nil">-</span>':schD(t.plannedFinish)}</div><div>${schPriHtml(m,t)}</div><div>${schStIcon(schStatus(t))}</div><div class="who">${schWhoHtml(t)}</div><div class="dd">${done?'':schDdayHtml(r.finish,false,schLateWhy(m,t))}</div><div class="url">${urlCell(t.url)}</div></div>`;
     for(const x of linked)h+=schItemRow(x,'sub',`↳ ${schNo(t)}`); }
   if(!page.length)h+=`<div class="none">${schFiltering()||SCHU.phase?'조건에 맞는 액션이 없습니다.':'등록된 업무가 없습니다.'}</div>`;
@@ -146,7 +146,7 @@ function schColMenu(el,pid,m,v){ const c=schCf(), go=()=>{SCHU.page=1;schRefresh
   menuPop(el,items.map((x,i)=>x==='-'||x.hd?x:{...x,k:String(i)}),{cls:'sch-colmenu'}); }
 // A row for an ordinary action item (linked to a task or not).
 function schItemRow(x,cls,wbs){ const done=x.st==='done', end=itemEnd(x), u=urlHref(x.url);
-  return `<div class="rw ${cls} ${S.panel===x.id?'sel':''}" data-open="${x.id}"><div class="w">${esc(wbs)}</div><div class="nm"><span class="gut">${x.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc((x.title||'(제목 없음)').split('\n').join(' '))}</span></div>
+  return `<div class="rw ${cls} ${S.panel===x.id?'sel':''}" data-open="${x.id}"><div class="w">${esc(wbs)}</div><div class="nm">${PROJECTS[x.proj]?schDotsHtml(schNotices(x.proj),x.id):''}<span class="gut">${x.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc((x.title||'(제목 없음)').split('\n').join(' '))}</span></div>
     <div class="rg">${schD(x.date)||'<span class="nil">-</span>'}</div><div class="rg">${end>x.date&&!x.ms?schD(end):'<span class="nil">-</span>'}</div><div><span class="pri pri-${x.pri||'mid'}">${priTxt[x.pri||'mid']}</span></div><div>${schStIcon(schItemSt(x))}</div>
     <div class="who">${(x.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')||'<span class="sch-role none">미지정</span>'}</div><div class="dd">${schDdayHtml(end,done,schLateWhyItem(x))}</div><div class="url">${schUrlCell(x.url)}</div></div>`; }
 

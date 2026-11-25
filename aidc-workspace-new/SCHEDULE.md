@@ -1173,3 +1173,22 @@ and not run.
 - **The export window**: a ticked row of 넣을 내용 has a pale grey ground (#f6f6f5; its choice 요약 / FULL a tone darker so it
   still shows).
 
+## A panel's columns, marks in tables, research as a table (owner, 2026-11-25, fortieth round)
+
+- **A panel's left column keeps to its own room**: what is shown or typed there ends 26 before the right column begins. It ran
+  up to the names of the right column (액션, 리서치 …), and over them while a row was rested on or edited — most visibly in a
+  meeting's panel since its lines are written whole. The rule is one for every panel of two columns: the page's own
+  (`.props:has(> .rcol)`, panel and full page) and the schedule block's (`.sp-grid`). Panels of one column (research, the
+  library, partners) had nothing to run into. On a phone the columns stand below each other and no room is kept.
+- **The marks stand in tables too** ("표 형태로 바꿨을때도 … 빨간파란뱃지 다 뜨게"), at the upper left of the name: the meeting table
+  and the research table through `dotsHtml(it,'tdots')` (what a card shows: green = new, red = I was called), the two lists of
+  actions through schDotsHtml (the schedule's notices: red = something that concerns me changed, green = starts today) —
+  the main table had them inside the name's text box, where its `overflow:hidden` cut them off; they are a child of `.nm`
+  now, in both lists. The library's document table shows the red mark beside its green one.
+- **Research as a table** ("리서치도 표형태로"): the switch (cards / table) stands beside the section's search box on the main
+  page and on a project page; `aidc-view`.res, this browser's own. schResTable (84-tables.js) lists the same rows the cards
+  show — the search, the pickers and the order are the section's own — ten a page: 날짜 · 제목 · 구분 · 담당자 · 최종수정 · 첨부.
+  Nothing is written where there is nothing to say.
+
+tests: schedule-15 checks the marks of a meeting row, the research table and the panel's gap. Brought in step and not run.
+
