@@ -1,3 +1,4 @@
+import { ensureAIProject, aiProjectRoute } from './ai-project.mjs';
 import seedText from './seed.json';
 import { fetchHolidays } from './holiday-service.mjs';
 import devReport from './devreport.mjs'; // the development review list (owner, 2026-11-24: "코드에 넣어"); never part of the page's own code
@@ -94,6 +95,7 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS ydocs (item TEXT PRIMARY KEY, state BLOB, at INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS holidays (year INTEGER PRIMARY KEY, days TEXT NOT NULL, at INTEGER)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
+    ensureAIProject(this);
   }
 
   put(id, v) { this.sql.exec('INSERT OR REPLACE INTO records VALUES (?,?)', id, JSON.stringify(v)); }
@@ -280,6 +282,7 @@ export class Workspace {
       const me = session.employee;
       if (path === '/api/state') { try { this.sql.exec("UPDATE live_sessions SET ua=? WHERE token=? AND (ua IS NULL OR ua='')", String(req.headers.get('User-Agent') || '').slice(0, 300), token); } catch { } }
 
+      if (path.startsWith('/api/ai-project/')) return aiProjectRoute(this,req,me,token);
       if (path === '/api/logout') {
         this.sql.exec('DELETE FROM live_sessions WHERE token=?', token); this.sql.exec('DELETE FROM edit_locks WHERE token=?', token); this.sql.exec('DELETE FROM co_locks WHERE token=?', token); this.promote();
         this.broadcast({ locks: this.locks() });
