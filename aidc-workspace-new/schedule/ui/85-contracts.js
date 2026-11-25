@@ -11,7 +11,9 @@ function schContractSection(pid){
  }).join('')+(rows.length?'':'<div class="none">등록된 계약서가 없습니다.</div>')+'<div class="ft"></div></div></div></div>';
 }
 const schContractStyle=document.createElement('style');schContractStyle.textContent=`
-.contract-section .contract-scroll{margin-top:127px;overflow-x:auto}
+.contract-section .contract-scroll{margin-top:34px;overflow-x:auto}
+svg.pict:has(> use[href="#pic-contract"]){transform:scaleX(-1)}
+svg.pict > use[href="#pic-contract"]{stroke:currentColor!important;stroke-width:.85;stroke-linejoin:round}
 .contract-table .hd,.contract-table .rw{grid-template-columns:minmax(200px,1fr) 130px 90px 85px 180px minmax(190px,1fr)!important}
 .contract-table{min-width:950px}.contract-table .rw{min-height:48px;height:auto}.contract-table .who,.contract-meetings{display:flex;flex-wrap:wrap;gap:6px}
 .contract-meetings a{cursor:pointer;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
