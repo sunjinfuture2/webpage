@@ -1268,3 +1268,24 @@ figures of the FULL form (the owner's earlier correction) and 13pt here: `chips(
 Seen in LibreOffice with a stand-in typeface, beside the owner's page: the same places and sizes for 판교; the other
 seventeen projects of the list each on one page (the dense ones at 7 to 7.5pt). tests: nothing new to count (schedule-16
 still counts five slides for a 요약 of two parts). Not run.
+
+## The contract pictogram, and what a title pictogram is (owner, 2026-11-25, forty-third round)
+
+The owner asked for 계약서's pictogram to be redrawn in the manner of 액션 · 리서치 · 미팅, keeping the draft's idea: a rolled
+sheet, two lines of writing. What the three have in common, read from their drawings, is the rule a title pictogram follows:
+
+- **one solid shape in one colour** — a silhouette, never an outline; it carries no colour of its own, the title gives it one
+  (`.sch-title .sch-ic .pict *{fill:#000}`), so a `fill` attribute on the path would keep it grey;
+- **details are cut out**, not drawn on: the hole of the tag, the lines of the sheet, the gap between the two heads — each
+  about 6% of the picture thick, with round ends;
+- **soft corners** (a radius of about a tenth of the picture) and at most one telling cut (the tag's point, the folded
+  corner);
+- **no more than three things inside**;
+- the shape fills about nine tenths of its square and sits in its middle.
+
+`pic-contract` (original.html) is drawn so: a sheet with round upper corners whose lower end curls into a roll that stands
+out at the left; the gap between sheet and roll and the turn of the paper's end are one cut; two lines of writing, the
+second shorter. View box 0.25 0.3 13.4 13.4. It is drawn the way it is shown: the two rules of 85-contracts.js that
+mirrored the draft and gave it an outline are gone (they would turn the roll to the other side and fill the cuts).
+
+Seen on a project page beside 미팅 — light, dark, a phone. tests: none speaks of the drawing. Not run.

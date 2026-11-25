@@ -78,8 +78,6 @@ const schContractStyle=document.createElement('style');schContractStyle.textCont
 .contract-filter-chips{display:flex;gap:8px;flex-wrap:wrap}.contract-filter-chips:not(:empty){margin-top:18px;margin-bottom:-16px}
 .contract-table .hd [data-contract-col]{cursor:pointer;gap:5px}.contract-table .hd [data-contract-col] svg{flex:none;color:#6f6f6f}.contract-qclear{border:0;background:transparent;color:#8e8e8e;cursor:pointer;font-size:18px}.contract-qclear[hidden]{display:none}
 .contract-section .srch input{min-width:0}html.mob .contract-section .srch.box input{width:110px}
-svg.pict:has(> use[href="#pic-contract"]){transform:scaleX(-1)}
-svg.pict > use[href="#pic-contract"]{stroke:currentColor!important;stroke-width:.85;stroke-linejoin:round}
 .contract-table .hd,.contract-table .rw{grid-template-columns:minmax(180px,1.1fr) 125px 80px 75px 140px minmax(170px,1fr) minmax(170px,1fr)!important}
 .contract-table{min-width:1000px}.contract-table .rw{min-height:48px;height:auto}.contract-table .who,.contract-links{display:flex;flex-wrap:wrap;gap:6px}
 .contract-links{min-width:0;align-items:center;padding:8px 0}.contract-links .chip{max-width:100%;min-width:0;box-sizing:border-box;cursor:pointer}.contract-links .chip .t{min-width:0}
