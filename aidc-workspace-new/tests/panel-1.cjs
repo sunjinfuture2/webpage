@@ -13,13 +13,24 @@ const sfx = Date.now().toString(36).slice(-5);
   const w0 = await panelW(); const mainW = await ev(() => document.querySelector('#main').clientWidth);
 
   console.log('— growing into the full page');
+  await ev(()=>{
+    const app=document.querySelector('#app'), panel=document.querySelector('#panel');
+    window._expandWidths=[];
+    function sample(){
+      if(!app.classList.contains('panel-anim'))return;
+      window._expandWidths.push(Math.round(panel.getBoundingClientRect().width));
+      requestAnimationFrame(sample);
+    }
+    document.querySelector('#panel-expand').addEventListener('click',()=>requestAnimationFrame(sample),{once:true});
+  });
   await p.click('#panel-expand'); await sleep(110);
   const mid = await state();
   check('EXPAND pressing “전체 페이지로 열기” grows the panel (still the panel, wider, mid-way)', mid.panel === id && !mid.full && mid.anim && mid.w > w0 + 20 && mid.w < mainW, { mid, w0, mainW });
   const ic = await ev(() => { const b = document.querySelector('#panel-expand').getBoundingClientRect(), pl = document.querySelector('#panel').getBoundingClientRect().left, g = document.querySelector('#panel-ic'); return { dx: Math.round(b.left - pl), top: Math.round(b.top), op: getComputedStyle(g).opacity, shown: getComputedStyle(g).display !== 'none' }; });
   check('EXPAND the panel\'s icons travel with its edge and come down from the top bar row (not hidden, not left behind)', ic.shown && ic.op === '1' && ic.dx >= 50 && ic.dx <= 95 && ic.top > 22 && ic.top <= 61, ic);
-  const widths = []; for (let i = 0; i < 4; i++) { widths.push(await panelW()); await sleep(35); }
-  check('EXPAND the width keeps increasing while it runs', widths.every((w, i) => !i || w >= widths[i - 1]), widths);
+  await p.waitForFunction(()=>!document.querySelector('#app').classList.contains('panel-anim'));
+  const widths=await ev(()=>window._expandWidths);
+  check('EXPAND the width keeps increasing while it runs', widths.length>=2 && widths.at(-1)>widths[0] && widths.every((w, i) => !i || w >= widths[i - 1]), widths);
   await sleep(450); const end = await state();
   check('EXPAND it ends as the full page; the panel is put away at its usual width', end.full === id && !end.panel && !end.anim && !end.on && await ev(() => document.querySelector('#page-item').classList.contains('on') && getComputedStyle(document.querySelector('#app')).getPropertyValue('--panelw').trim() === '1031.9px' && !document.querySelector('#panel-pin').style.marginLeft));
   const sh = await ev(() => { const b = document.querySelector('#full-shrink'), r = b.getBoundingClientRect(), m = document.querySelector('#main').getBoundingClientRect(); const vis = e => getComputedStyle(e).display !== 'none'; return { vis: vis(b), text: b.textContent.trim(), svg: !!b.querySelector('svg'), title: b.title, x: Math.round(r.left - m.left), y: Math.round(r.top - m.top), w: Math.round(r.width), close: vis(document.querySelector('#panel-close')), expand: vis(document.querySelector('#panel-expand')), top: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === b || b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) }; });

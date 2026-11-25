@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');const{chromium,newUser,waitApp}=require('./h.cjs');
 (async()=>{const b=await chromium.launch();try{const{page:p}=await newUser(b,'REF_CHECK','위치검증',{url:'http://127.0.0.1:8787/'});
-const x=await p.evaluate(()=>({pt:PARTNERS.find(x=>!x.trash).id,pid:orderedProjects()[0],rid:liveItems('research').find(x=>!archTabOf(x)&&/^\[REF\]/.test(x.title)).id}));
+const x=await p.evaluate(()=>({pt:PARTNERS.find(x=>!x.trash).id,pid:orderedProjects()[0],rid:(liveItems('research').find(x=>!archTabOf(x)&&/Data Center Map in South Korea/i.test(x.title)&&/^\[REF\]/.test(x.title))||liveItems('research').find(x=>!archTabOf(x)&&/^\[REF\]/.test(x.title))).id}));
 await p.evaluate(async x=>{const pt=PARTNERS.find(i=>i.id===x.pt);if(!schPartnerProjects(pt).length)await schPartnerToggleProject(pt,x.pid);openPanel(pt.id)},x);
 const aligned=await p.locator('#panel-pin .pr:has(.pt-projects)').evaluate(n=>{const a=n.querySelector('.k').getBoundingClientRect(),b=n.querySelector('.pt-project-tag').getBoundingClientRect();return Math.abs((a.top+a.bottom-b.top-b.bottom)/2)});
 assert.ok(aligned<3,'Label/tag center: '+aligned);

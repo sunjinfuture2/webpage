@@ -422,38 +422,14 @@ html.mob .arch .ar-docs .tabs li{display:grid;place-items:center;width:auto;flex
 html.mob .arch .ar-docs .tabs .bar{height:1px}
 html.mob .arch .ar-docs .tabs .bar i{display:none}
 html.mob .arch .ar-docs .tabs li.on{box-shadow:inset 0 -2px currentColor}
-html.mob .arch .tbl.archive.pv,html.mob .contract-section .contract-table{
-  width:100%!important;min-width:0;margin:18px 0 0;padding:0;overflow:visible
-}
 html.mob .contract-section .contract-scroll{margin-top:4px;overflow:visible}
-html.mob :is(.tbl.archive.pv,.contract-table) > .hd{
-  display:flex;align-items:stretch;width:100%;height:auto;min-height:40px;overflow-x:auto;gap:6px;border-bottom:1px solid #dedede;scrollbar-width:thin
-}
-html.mob :is(.tbl.archive.pv,.contract-table) > .hd > *{
-  display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 8px;border:0;white-space:nowrap;flex:none;font-size:12px
-}
-html.mob :is(.tbl.archive.pv,.contract-table) .rw{
-  display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-start;width:100%;height:auto;min-height:60px;gap:4px 12px;
-  padding:10px 4px;border-bottom:1px solid #e8e8e8
-}
-html.mob :is(.tbl.archive.pv,.contract-table) .rw > div{margin:0;padding:0;max-width:100%;min-height:0;border:0;line-height:1.4;min-width:0;height:auto}
-html.mob :is(.tbl.archive.pv .rw .ttl,.contract-table .rw .nm){flex:1 0 100%;align-items:center;font-size:15px;font-weight:600}
-html.mob .tbl.archive.pv .rw .ttl .tx,html.mob .contract-table .rw .nm .e{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
 html.mob .tbl.archive.pv .rw .ttl .gd{position:static;flex:none;margin:0 5px 0 0}
-html.mob .tbl.archive.pv .rw .ttl .ttl-ic{margin:0 0 0 4px}
-html.mob .tbl.archive.pv .rw :is(.who span,.d,.mod,.pr,.src),html.mob .contract-table .rw > div:not(.nm){font-size:12px;color:#616561}
-html.mob .tbl.archive.pv .rw .who .avatar{width:16px;height:16px}
-html.mob .tbl.archive.pv .rw .who:has(.nil),html.mob .tbl.archive.pv .rw .src:not(:has(a)),html.mob .contract-table .rw .contract-links:empty{display:none}
-html.mob .tbl.archive.pv .rw .d::before{content:"기한 ";margin-right:4px}
-html.mob .tbl.archive.pv .rw .mod::before{content:"수정 ";margin-right:4px}
-html.mob .contract-table .none{position:static;text-align:left;white-space:normal}
+html.mob .tbl.archive.pv .rw .ttl .ttl-ic{position:static;flex:none;margin:0}
 html.mob .pop:not(.mob-day-menu){max-height:calc(100dvh - 24px);overflow-y:auto}
 @media(max-width:359px){
   html.mob .sch-title .sch-tabs button[data-sch]{padding:0 4px;font-size:13px}
   html.mob .rstats .rkp{column-gap:12px}
 }
-html.mob .tbl.archive.pv .hd [data-arcol] em{position:static}
-html.mob .tbl.archive.pv .hd [data-arcol]{border-radius:5px;background:#f6f6f5;margin:3px 0;padding:0 9px;min-height:34px}
 html.mob .mob-day-menu .it{padding:0}
 html.mob .mob-day-item{width:100%;min-height:44px;padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere}
 html.mob #login{display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;padding:24px 16px}
@@ -488,3 +464,178 @@ html.mob .sch-net .sn-tools .sh-btn{width:40px;height:40px;margin:0;font-size:20
 /* (forty-seventh round) the link window is as wide as the screen allows */
 html.mob .pop.lp{width:calc(100vw - 32px)}
 html.mob .pop.lp .lp-srch input{font-size:16px}
+
+/* Record lists share the same reading order at phone widths. Spatial views keep their own scroll areas. */
+html.mob .page .tbl.mob-records{
+  width:100%!important;min-width:0;max-width:100%;margin:16px 0 0;padding:0;
+  overflow:visible;border-top:1px solid #dadcd8
+}
+html.mob .page .tbl.mob-records .rw{
+  display:block;width:100%;max-width:100%;min-width:0;height:auto;min-height:52px;
+  padding:10px 3px 12px;margin:0;box-sizing:border-box;border:0;border-bottom:1px solid #e5e6e3;border-radius:0
+}
+html.mob .page .tbl.mob-records .rw > div{
+  position:static;display:block;min-width:0;max-width:100%;height:auto;min-height:0;
+  margin:0!important;padding:0;border:0;overflow:visible;white-space:normal
+}
+html.mob .page .tbl.mob-records .rw .mob-record-title{
+  position:relative;display:flex;align-items:baseline;gap:3px 6px;min-height:26px;
+  font-size:16px;font-weight:600;line-height:1.45;letter-spacing:-.02em;word-break:keep-all;overflow-wrap:anywhere;color:var(--ink)
+}
+html.mob .page .tbl.mob-records .rw.mob-has-details .mob-record-title{margin-right:48px!important}
+html.mob.sch-on .page .tbl.partners.mob-records .rw{padding:10px 3px 12px}
+html.mob .page .tbl.mob-records .rw .mob-record-title :is(.tx,.e),
+html.mob .page .tbl.mob-records .rw .mob-record-details :is(.e,.t,.tx,a){
+  display:inline;min-width:0;max-width:100%;white-space:normal;text-overflow:clip;overflow:visible;
+  overflow-wrap:anywhere;-webkit-line-clamp:unset
+}
+html.mob .page .tbl.mob-records .rw .mob-record-title .acts,
+html.mob .page .tbl.mob-records .rw .gut:empty{display:none}
+html.mob .page .tbl.mob-records .rw .gut:has(.sch-ms){width:9px;align-self:center}
+html.mob .page .tbl.mob-records .rw .gut .sch-ms{position:static}
+html.mob .page .tbl.mob-records .rw .mob-record-title .tdots:not(:empty),
+html.mob .page .tbl.mob-records .rw .mob-record-title > .sdot{position:relative;inset:auto;align-self:flex-start;margin-top:9px;flex:none}
+html.mob .page .tbl.mob-records .rw .mob-record-title .tdots:empty{display:none}
+html.mob .page .tbl.mob-records .rw .mob-record-meta{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin-top:3px!important
+}
+html.mob .mob-summary-field{display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:3px 5px}
+html.mob .mob-summary-field,html.mob .mob-detail-field > *{min-width:0;max-width:100%;overflow-wrap:anywhere}
+html.mob .mob-field-label,html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
+  font-size:12px;line-height:1.55;font-variant-numeric:tabular-nums;color:#565d58
+}
+html.mob .mob-field-label{color:#646b65;font-weight:500}
+html.mob .page .tbl.mob-records .rw .mob-record-details{
+  margin-top:9px!important;padding:6px 10px;background:#f6f7f5;border-radius:6px
+}
+html.mob .mob-detail-field{
+  display:grid;grid-template-columns:minmax(58px,26%) minmax(0,1fr);align-items:baseline;gap:10px;
+  padding:5px 0;font-size:13px;line-height:1.5
+}
+html.mob .mob-detail-field + .mob-detail-field{border-top:1px solid #e6e8e4}
+html.mob .page .tbl.mob-records .rw .mob-detail-field > div,
+html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
+  margin:0!important;padding:0;min-width:0;max-width:100%;height:auto;white-space:normal;overflow-wrap:anywhere;overflow:visible
+}
+html.mob .page .tbl.mob-records .rw :is(.who,.rc-tags,.contract-links,.rg){display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
+html.mob .page .mob-records .mob-detail-field .sch-rg{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px}
+html.mob .page .mob-records .mob-detail-field .sch-ua{min-width:40px;min-height:40px;justify-content:center}
+html.mob .partner-content [data-pt-project-pick],html.mob .phead .partner-unlink{min-width:44px;min-height:44px}
+html.mob .phead .partner-unlink{margin:0}
+html.mob .pt-project-picker{max-width:calc(100vw - 24px)}
+html.mob .pt-project-picker .it{min-height:44px}
+html.mob .page .tbl.mob-records .rw .who span{font-size:12px;white-space:normal}
+html.mob .page .tbl.mob-records .rw .sf-e,
+html.mob .page .tbl.mob-records .rw .mob-detail-field :is(button,a){display:inline-flex;align-items:center;min-height:32px;margin:0;max-width:100%}
+html.mob .mob-record-more,html.mob .mob-column-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;
+  color:#525b54;border:0;background:transparent;cursor:pointer
+}
+html.mob .mob-record-more{position:absolute;right:0;top:2px;width:44px;border-radius:6px}
+html.mob .mob-record-more svg,html.mob .mob-column-toggle svg{flex:none;transition:transform .15s}
+html.mob :is(.mob-record-more,.mob-column-toggle)[aria-expanded="true"] svg{transform:rotate(180deg)}
+html.mob .mob-column-toggle{font-size:13px;padding:0 6px;font-weight:550}
+html.mob .page .tbl.mob-records > .hd{
+  display:flex;flex-wrap:wrap;gap:4px 6px;align-items:stretch;width:100%;min-width:0;height:auto;
+  padding:0 0 8px;background:transparent;border:0;overflow:visible
+}
+html.mob .page .tbl.mob-records > .hd > span{
+  position:static;display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 9px;
+  margin:0;min-height:40px;border:0;border-radius:5px;background:#f3f4f2
+}
+html.mob .page .tbl.mob-records > .hd > span :is(em,svg){position:static;inset:auto;transform:none}
+html.mob .page .tbl.mob-records > .hd > span:is(.flt,.sorted){color:var(--ink);background:#e8ede6}
+html.mob .page .tbl.mob-records :is(.hd,.mob-record-details)[hidden]{display:none}
+html.mob .page .tbl.mob-records .none:not(.sch-role){width:100%;white-space:normal}
+html.mob .page .tbl.mob-records > .ft{position:static;height:0;border:0}
+html.mob .mob-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+html.mob .mob-records :is(button,[role="button"]):focus-visible{outline:2px solid #477a45;outline-offset:1px}
+
+html.mob.sch-on .sec-title .sch-vt + .srch.box,
+html.mob.sch-on .sec-title .srch.box{margin:0;flex:1 0 100%;width:100%;min-width:0;box-sizing:border-box}
+html.mob.sch-on .sec-title .sch-vt{margin:0 0 0 auto}
+html.mob .sch-vt{display:inline-flex;align-items:center;flex:none;max-width:100%;height:auto}
+html.mob .sch-vt button{display:grid;place-items:center;min-width:40px;min-height:40px}
+html.mob.sch-on :is(.meet,.projects).tv [data-vbody]{padding:0}
+html.mob.sch-on .sch-filters.res,html.mob.sch-on .meet .meetf{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;height:auto;gap:4px 12px;margin:10px 0 0
+}
+html.mob.sch-on :is(.sch-filters.res,.meet .meetf) .sf{
+  width:100%;min-width:0;max-width:100%;min-height:40px;box-sizing:border-box
+}
+html.mob.sch-on .meet .meetf .sch-chip{justify-self:start;max-width:100%}
+html.mob [data-sec="research"] > div:has(> .vt-res){margin-top:16px!important}
+@media(min-width:360px){
+  html.mob.sch-on .meet .meetf{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(hover:none){
+  html.mob .page .tbl.mob-records .rw:hover:not(.sel){background:transparent}
+}
+@media(prefers-reduced-motion:reduce){
+  html.mob :is(.mob-record-more,.mob-column-toggle) svg{transition:none}
+}
+
+/* My Page also hosts the original member, team, activity and administration lists. */
+html.mob .modal.mp .mbody :is(.mem,.gset,.upd){
+  position:static;width:100%;min-width:0;max-width:100%;padding:18px 16px 48px;box-sizing:border-box;overflow-wrap:anywhere
+}
+html.mob .mem .tools:empty{display:none}
+html.mob .mem .h{align-items:center;gap:8px}
+html.mob .mem .h :is(h2,.addbtn){margin:0!important}
+html.mob .mem .addbtn,html.mob .gset .btn{min-height:40px}
+html.mob .mem .tbl,html.mob .gset .list{
+  width:100%!important;min-width:0;max-width:100%;margin:18px 0 0;padding:0;border-top:1px solid #dedede;overflow:visible
+}
+html.mob .mem .tbl .hd,html.mob .gset .list .hd{display:none}
+html.mob .mem .tbl .rw,html.mob .gset .list .rw{
+  width:100%;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;
+  padding:10px 2px;height:auto;border-bottom:1px solid #e5e6e3
+}
+html.mob .mem .tbl .rw > div,html.mob .gset .list .rw > span{
+  min-width:0;max-width:100%;margin:0;border:0;padding:0;white-space:normal;overflow-wrap:anywhere
+}
+html.mob .mem .tbl .rw .us{flex:1 0 100%;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+html.mob .mem .tbl .rw .ws{flex-wrap:wrap;gap:6px}
+html.mob .mem .tbl .rw :is(.ro,.ws)::before{font-size:12px;color:#626862;font-weight:400}
+html.mob .mem .tbl .rw .ro::before{content:"역할"}
+html.mob .mem .tbl .rw .ws::before{content:"팀스페이스"}
+html.mob .mem .tbl .rw :is([data-role],[data-wsmore]){display:inline-flex;min-width:38px;min-height:38px;align-items:center;justify-content:center}
+html.mob .mem .pager{width:100%;margin:16px 0 0!important}
+html.mob .gset .list .rw > :first-child{flex:1 0 100%;font-weight:600}
+html.mob .gset .list .rw > span:empty{display:none}
+html.mob .gset .frm{max-width:100%;grid-template-columns:minmax(0,1fr);row-gap:6px!important;margin-top:22px}
+html.mob .gset .frm b:not(:first-child){margin-top:10px}
+html.mob .gset .frm :is(input,select){width:100%;min-width:0;min-height:40px;font-size:16px}
+html.mob .gset .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:18px}
+html.mob .gset .stats .st{width:auto;padding:12px}
+html.mob .gset .bars{width:100%;margin-top:16px}
+html.mob .gset .bars div{gap:6px}
+html.mob .gset .bars div span{width:28%;flex:none;text-align:left;overflow-wrap:anywhere}
+html.mob .gset .bars div i{max-width:var(--bar-share,65%)}
+html.mob .gset .an-tools,html.mob .upd .u .dt{flex-wrap:wrap}
+html.mob .gset .an-tools .mnav2{margin:0}
+html.mob .upd .u .dt span{white-space:normal}
+
+html.mob .dlg.sch-dlg .box:has(.pp-hd){box-sizing:border-box;width:calc(100vw - 28px);max-width:636px;max-height:calc(100dvh - 28px);padding:18px}
+html.mob .sch-dlg .pp-hd span{max-width:100%;flex-wrap:wrap}
+html.mob .sch-dlg .pp-hd em{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+html.mob .sch-dlg .pp-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+html.mob .sch-dlg .pp-types button{height:auto;min-height:40px;padding:4px 6px;gap:4px;white-space:normal}
+html.mob .sch-dlg .pp-cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+html.mob .sch-dlg .pp-cmp > i{display:none}
+html.mob .sch-dlg .pp-cmp .bx{padding:8px}
+html.mob .sch-dlg .pp-cmp .bx.op{grid-column:1/-1;margin:0}
+html.mob .sch-dlg .pp-cmp .bx strong{white-space:normal;overflow-wrap:anywhere;font-size:14px}
+html.mob .sch-dlg .pp-chart-wrap{overflow-x:auto;max-width:100%}
+html.mob .sch-dlg .pp-chart{max-width:none}
+html.mob .sch-dlg .pp-chart .lg{left:0;right:auto;top:2px;gap:4px;font-size:9px}
+html.mob .sch-dlg .pp-chart .lg .br{width:7px}
+html.mob .sch-dlg .pp-tbl{max-height:40dvh}
+html.mob .sch-dlg .pp-tbl .hd{display:none}
+html.mob .sch-dlg .pp-tbl .rw{grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;height:auto;padding:8px 0}
+html.mob .sch-dlg .pp-tbl .nm{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere}
+html.mob .sch-dlg .pp-tbl .rg{display:grid;gap:3px;white-space:normal;font-size:12px}
+html.mob .sch-dlg .pp-tbl .rg s::after{content:none}
+html.mob .sch-dlg .pp-tbl .rg s::before{content:"변경 전 ";color:#656a64}
+html.mob .sch-dlg .pp-tbl .rg strong::before{content:"변경 후 ";color:#656a64}
+html.mob .sch-dlg .bt button{min-height:44px}

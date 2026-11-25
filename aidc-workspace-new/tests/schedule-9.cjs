@@ -121,7 +121,7 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   await ev(id => openPanel(id), rids[0]); await sleep(600); const cf0 = await ev(() => [...document.querySelectorAll('#panel-pin .props .pr')].map(p => p.querySelector('.k').textContent.trim() + '=' + p.querySelector('.v').textContent.trim()));
   await a.click('#panel-pin [data-ed="edit"]'); await sleep(800); await a.click('#panel-pin [data-pick="cats"]'); await sleep(300); await a.click('.pop.sch-multi .it[data-t="냉각R9"]'); await sleep(250); await a.fill('#rc-new', '새구분' + sfx); await a.press('#rc-new', 'Enter'); await sleep(300); await a.mouse.click(1100, 980); await sleep(200); await a.click('#panel-pin [data-ed="save"]'); await sleep(1000); await flush();
   const cf1 = await ev(id => item(id).cats, rids[0]); await reloadB();
-  check('a research note has 구분 below URL; those in use can be ticked and a new one typed, and they are saved for everybody', cf0.some(x => x === '구분=전력R9') && cf0.findIndex(x => x.startsWith('구분=')) === cf0.findIndex(x => x.startsWith('URL=')) + 1 && cf1.join() === ['전력R9', '냉각R9', ('새구분' + sfx).toUpperCase()].join() && await b.evaluate(id => (item(id).cats || []).length === 3, rids[0]), { cf0, cf1 });
+  check('a research note has 구분 below URL; those in use can be ticked and a new one typed, and they are saved for everybody', cf0.some(x => x === '구분=전력R9') && cf0.findIndex(x => x.startsWith('구분=')) === cf0.findIndex(x => x.startsWith('URL=')) + 1 && cf1.join() === ['전력R9', '냉각R9', '새구분' + sfx].join() && await b.evaluate(id => (item(id).cats || []).length === 3, rids[0]), { cf0, cf1 });
   await ev(() => closePanel(true)); await ev(() => openLibrary('research')); await a.waitForSelector('#lb-wall .lb-card', { timeout: 15000 }); await sleep(600);
   const lb = await ev(f => ({ kinds: [...document.querySelectorAll('.lb-kinds button')].map(x => x.textContent).join(), mine: [...document.querySelectorAll('.lb-card')].filter(c => /^r9/.test(c.querySelector('.lb-t').textContent)).map(c => c.querySelector('.lb-t').textContent).sort().join(), gone: !!document.querySelector(`.lb-card[data-fid="${f.gone}"]`), pdf: !!document.querySelector('.lb-card.sh-pdf iframe[src*="inline=1"]'), tile: !!document.querySelector('.lb-card.sh-tile .lb-tile') }), fl); await sleep(900);
   check('library: only files a body links to (one taken out of its body is gone), kinds by file format', lb.kinds === '전체,이미지,PDF,PPT,WORD,한글,엑셀,기타' && lb.mine === 'r9.pdf,r9.pptx,r9.txt' && !lb.gone, lb);
@@ -146,10 +146,21 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   await a.click('#tb-user .av'); await sleep(300); const th1b = await ev(() => { const its = [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()); closePop(); return its; });
   check('the switch to the dark mode is a moon in the top bar, beside the member\'s profile (no 미리보기 badge any more; not an entry of the profile menu); it turns the whole page dark through one filter, the setting is the member\'s own and this browser remembers it; the button then shows a sun, the way back', th0.btn && th0.between && !th0.dark && /다크 모드로/.test(th0.title) && th1.dark && /invert\(0\.93\) hue-rotate\(180deg\)/.test(th1.root) && th1.pref === 'dark' && th1.ls === 'dark' && /라이트 모드로/.test(th1.title) && th1.sun && th1b.join() === '계정,수신함,설정,휴지통,로그아웃', { th0, th1, th1b });
   await ev(() => themeSet('light')); await flush(); await sleep(400);
-  await a.route('**/api/state', async route => { const resp = await route.fetch(); await sleep(1100); await route.fulfill({ response: resp }); });   // the answer is held back: it shows the state before the switch
-  await ev(() => { window._flips = []; window._fo = new MutationObserver(() => { const d = document.documentElement.classList.contains('dark'); if (window._flips[window._flips.length - 1] !== d) window._flips.push(d); }); window._fo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); sharedRefresh(); });
-  await sleep(150); await a.click('#th-btn'); await sleep(3200); await a.unroute('**/api/state'); const flips = await ev(() => { window._fo.disconnect(); return window._flips; });
+  const captured=Promise.withResolvers(), release=Promise.withResolvers();
+  await a.route('**/api/state',async route=>{
+    const snapshot=await route.fetch();
+    captured.resolve();
+    await release.promise;
+    await route.fulfill({response:snapshot});
+  },{times:1});
+  await ev(() => { window._flips = []; window._fo = new MutationObserver(() => { const d = document.documentElement.classList.contains('dark'); if (window._flips[window._flips.length - 1] !== d) window._flips.push(d); }); window._fo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); window._themeRefresh=sharedRefresh(); });
+  await captured.promise;
+  try{await a.click('#th-btn');}finally{release.resolve();}
+  await ev(()=>window._themeRefresh);
+  const flips = await ev(() => { window._fo.disconnect(); return window._flips; });
   check('switching does not flip back and forth: a state that was asked for before the switch and arrives after it is not applied', flips.join() === 'true' && await ev(() => document.documentElement.classList.contains('dark') && (INBOX_STATE.prefs || {}).theme === 'dark'), flips);
+  await flush();
+  await a.waitForFunction(()=>!sharedBusy && sharedBase['meta:inbox:'+sharedUser]?.prefs?.theme==='dark');
   const echo = await ev(async () => { const key = 'meta:inbox:' + sharedUser, old = copy(sharedBase[key]); old.prefs = { ...(old.prefs || {}), theme: 'light' }; const send = src => sharedSocket.onmessage({ data: JSON.stringify({ records: { [key]: old }, ...(src ? { src } : {}) }) });
     await send(sharedPage); const own = document.documentElement.classList.contains('dark');   // my own save of a moment ago, arriving late
     await send(''); const other = document.documentElement.classList.contains('dark');          // the same from another window of mine: that one counts

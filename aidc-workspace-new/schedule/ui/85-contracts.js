@@ -42,6 +42,7 @@ function schContractRefresh(){
  schContractFilterSave();const root=document.querySelector('.contract-section');if(!root)return;
  root.querySelector('.contract-scroll').innerHTML=schContractTable(S.proj);root.querySelector('.contract-filter-chips').innerHTML=schContractChips(S.proj);
  root.querySelector('.contract-qclear').hidden=!schContractFilter().q;
+ schMobTables(root);
 }
 function schContractColMenu(el,key){
  const c=schContractFilter(),set=v=>()=>{if(v)c[key]=v;else delete c[key];if(key==='date'){delete c.from;delete c.to;}schContractRefresh();};

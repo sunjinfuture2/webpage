@@ -1,7 +1,7 @@
 // WorkSpace on a phone (owner, 2026-11-24, the "twenty-second round"): schedule/ui/86-mobile.js + schedule/mobile.css.
 //  - a small screen gets html.mob and a viewport as wide as the device; nothing is scaled and nothing is wider than the screen;
 //  - the sidebar is a drawer, the calendar has seven days across the screen with the list of the day below it, rows of cards
-//    and tables are moved sideways, the overview of a project and the panel of an item stand one part below the other,
+//    are moved sideways, record lists reflow, the overview of a project and the panel of an item stand one part below the other,
 //    the my page takes the whole screen;
 //  - a wide screen and the ?v=1 page are as they were; a window pulled under 700 px changes to the phone's page and back.
 // Needs wrangler dev on 127.0.0.1:8787.
@@ -33,8 +33,13 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1', PHON
   const pj = await ev(() => { const box = document.querySelector('.page.on .projects'), t = box.querySelector('.track'), tools = box.querySelector('.sch-vtools').getBoundingClientRect(), ttl = box.querySelector('.sec-title').getBoundingClientRect(); return { scroll: t.scrollWidth > t.clientWidth + 40, ox: getComputedStyle(t).overflowX, arrows: [...box.querySelectorAll('.arr')].every(x => getComputedStyle(x).display === 'none'), tr: box.querySelector('#proj-inner').style.transform, toolsBelow: tools.top >= ttl.bottom - 1, toolsRight: Math.round(tools.right), card: Math.round(box.querySelector('.pcard').getBoundingClientRect().width) }; });
   await ev(() => { document.querySelector('.page.on .projects .track').scrollLeft = 260; }); await sleep(200);
   check('the project cards are moved with the finger (no arrows); the views and the search stand below the title', pj.scroll && pj.ox === 'auto' && pj.arrows && pj.toolsBelow && pj.toolsRight <= 375 && pj.card <= 320 && await ev(() => document.querySelector('.page.on .projects .track').scrollLeft > 200), pj);
-  const tb = await ev(() => { const t = document.querySelector('.page.on #sec-actions .tbl'), row = t.querySelector('.rw'), r = t.getBoundingClientRect(); return { ox: getComputedStyle(t).overflowX, wide: t.scrollWidth > t.clientWidth + 100, left: Math.round(r.left), right: Math.round(r.right), rowH: row ? Math.round(row.getBoundingClientRect().height) : 0, rowW: row ? Math.round(row.getBoundingClientRect().width) : 0 }; });
-  check('a table keeps its columns and is moved sideways inside the screen', tb.ox === 'auto' && tb.wide && tb.left === 0 && tb.right === 390 && tb.rowW > 600 && tb.rowH < 70, tb);
+  const records = a.locator('.page.on #sec-actions .tbl');
+  const tb = await records.evaluate(t => ({width:t.clientWidth, scroll:t.scrollWidth,
+    fit:[...t.querySelectorAll('.rw')].every(r => r.clientWidth === t.clientWidth && r.scrollWidth <= r.clientWidth + 1)}));
+  const more = records.locator('.mob-record-more').first();
+  await more.tap();
+  check('the action list fits the phone and its secondary fields open in the same row', tb.width === 358 && tb.scroll === tb.width && tb.fit && await more.getAttribute('aria-expanded') === 'true' && !await ev(() => S.panel), tb);
+  await more.tap();
   const rs = await ev(() => { const c = [...document.querySelectorAll('.page.on #sec-research .rcard')].map(x => x.getBoundingClientRect()); return { n: c.length, w: c[0] && Math.round(c[0].width), oneCol: c.length < 2 || Math.round(c[1].left) === Math.round(c[0].left) }; });
   check('research cards stand one below the other, as wide as the screen allows', rs.n > 0 && rs.w === 358 && rs.oneCol, rs);
 

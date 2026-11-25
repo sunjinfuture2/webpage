@@ -105,14 +105,16 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   check('적용 saves it: 되돌리기 in the toast, the bar flashes over the outline of where it stood', aft.s !== before.s && /기간 이동 \+4일/.test(aft.ttx) && aft.toast && !aft.card && aft.ghost >= 1 && aft.chg, aft);
   await ev(() => schUndo()); await sleep(600);
   check('되돌리기 takes the change back', await ev(([id, b]) => { const m = schModel('pangyo'), t = m.byId.get(id); return t.plannedStart === b.ps && t.plannedFinish === b.pf && !document.querySelector('#sch-card'); }, [tid, before]));
-  const b2 = await a.locator(`.sg-bar[data-bar="${tid}"]`).boundingBox();
+  const taskBar=a.locator(`.sg-bar[data-bar="${tid}"]`);
+  await taskBar.hover();
+  const b2 = await taskBar.boundingBox();
   await a.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2); await sleep(150); await a.mouse.move(b2.x + b2.width - 2, b2.y + b2.height / 2); await a.mouse.down(); await a.mouse.move(b2.x + b2.width - 2 + before.px * 3 + 1, b2.y + b2.height / 2, { steps: 5 }); await sleep(200);
   const mid2 = await ev(() => ({ tip: (document.querySelector('.sg-tip') || {}).textContent, on: [...document.querySelectorAll('#sch-gantt .sg-dlab.on')].map(l => l.className) })); await a.mouse.up(); await sleep(700); await a.click('#dlg [data-pp="ok"]'); await sleep(800);
   const aft2 = await ev(([id, b]) => { const m = schModel('pangyo'), t = m.byId.get(id), r = m.res.tasks[id]; return { ps: t.plannedStart, s: r.start, f: r.finish, longer: AIDCSchedule.dates.diffDays(r.finish, b.f) }; }, [tid, before]);
   check('a bar\'s right end is pulled to change the finish only', /^\+3일종료일 변경/.test(mid2.tip || '') && mid2.on.length === 1 && /\br\b/.test(mid2.on[0]) && aft2.ps === before.ps && aft2.s === before.s && aft2.longer === 3, { mid2, aft2 });
   await ev(() => { schCardHide(); schUndo(); }); await sleep(500);
   // pulling a relation: the line as it will be, the window with the outcome in one line and the kinds as pictures
-  const b3 = await a.locator(`.sg-bar[data-bar="${tid}"]`).boundingBox(); await a.mouse.move(b3.x + b3.width / 2, b3.y + b3.height / 2); await sleep(200);
+  await taskBar.hover();
   const port = await a.locator(`.sg-bar[data-bar="${tid}"] .pt.r`).boundingBox();
   const tg = await ev(id => { const m = schModel('pangyo'), bars = [...document.querySelectorAll('#sch-gantt .sg-bar')].filter(b => b.dataset.bar !== id && b.offsetWidth > 40 && !m.plan.dependencies.some(e => (e.from === id && e.to === b.dataset.bar) || (e.to === id && e.from === b.dataset.bar)) && parseFloat(b.style.left) > parseFloat(document.querySelector(`.sg-bar[data-bar="${id}"]`).style.left) + 80), r = bars[0].getBoundingClientRect(); return { x: r.left + 10, y: r.top + r.height / 2, id: bars[0].dataset.bar }; }, tid);
   await a.mouse.move(port.x + port.width / 2, port.y + port.height / 2); await a.mouse.down(); await a.mouse.move(tg.x - 30, tg.y - 20, { steps: 4 }); await a.mouse.move(tg.x, tg.y, { steps: 4 }); await sleep(250);
