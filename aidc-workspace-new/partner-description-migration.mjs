@@ -1,6 +1,6 @@
 // One-time, atomic migration; future short descriptions remain separate from the body.
 export function movePartnerDescriptions(db) {
-  const key='migration:partner-description-body-20261125';
+  const key='meta:migration:partner-description-body-20261125';
   if(db.get(key))return;
   db.ctx.storage.transactionSync(()=>{
     if(db.get(key))return;
