@@ -35,8 +35,8 @@ const {chromium,newUser,sleep}=require('./h.cjs');
  assert.equal(belowAfter,below,'calendar and content below overview must remain identical');
  await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);await sleep(1000);await ev(()=>go('project:ai-application-test'));await p.waitForSelector('.ai-overview');
  assert.ok((await p.locator('.ai-overview').textContent()).includes('사용자가 검토한 개요'));
- await p.click('[data-ai-open="edit"]');await p.waitForSelector('[data-ai-field="summary"]');assert.equal(await p.locator('[data-ai-field="summary"]').inputValue(),'사용자가 검토한 개요');
- await p.locator('[data-ai-close]').first().click();
+ await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inline="summary"]');assert.equal(await p.locator('[data-ai-inline="summary"]').innerText(),'사용자가 검토한 개요');
+ await p.locator('[data-ai-direct="cancel"]').click();
  await ev(()=>go('project:pangyo'));await p.waitForSelector('.phead.rep');assert.equal(await p.locator('.ai-overview').count(),0);assert.ok(await p.locator('[data-schup]').count());
  // A malicious string stays text; never executable markup.
  await ev(()=>{const d=document.createElement('div');d.innerHTML=schAIReport({title:'<img src=x onerror=alert(1)>',summary:'text',sections:[],warnings:[]});if(d.querySelector('img'))throw Error('HTML injection');});
