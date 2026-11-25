@@ -1192,3 +1192,43 @@ and not run.
 
 tests: schedule-15 checks the marks of a meeting row, the research table and the panel's gap. Brought in step and not run.
 
+## Slides on the company's template; 요약 is one page a part (owner, 2026-11-25, forty-first round)
+
+The owner handed over the company's presentation template ("내보내기에서 ppt 가이드는 이걸 사용해"), was shown a draft for 판교
+AIDC, corrected it in PowerPoint and sent it back ("보내준대로 봐봐"), and asked: "요약을 체크하면 항목당 한 페이지짜리로" — the
+overview of a project, all of it, on one page. schedule/pptx.ts was written anew for that; the Word / PDF report is as before.
+
+- **The template is not in the repository** (the repository is public; neither the template file nor the owner's corrected
+  file). Its rules are numbers in schedule/pptx.ts, measured from it: the slide (290 x 210 mm), the margins (text from 0.704
+  to 10.723 in), the INDEX AREA that is the same on every page ("자료 제목 I 현재 대목차" upper left, where a title starts,
+  the page number, the mark at the upper right of contents and dividers), one typeface in its weights (Freesentation: it has
+  to be installed where the file is opened), the one accent (245,130,32), lines 0.5pt and 1pt on cover / contents /
+  dividers, text boxes without inner margins, tables without upright lines. The two marks of the template are
+  public/export/sunjin-ppt-cover.png and sunjin-ppt-mark.png (the company's own signature; decided here, told to the owner).
+- **What the module is handed** (schXPptOf in 92-export.js, as `doc.ppt`): for a project `{kind:'proj', proj, parts, forms,
+  full, op, dept, author, today}` — `proj` is the overview as it is kept (schXPptHead: figures, texts as lines, table,
+  dates, titles), `full` every ticked part's blocks in FULL form (the one-page forms take as many rows as the page holds
+  and count the rest in the caption); for the main page `{kind:'main', projects, sheets, …}`. dept is the workspace's
+  organisation without "AI Data Center" (the owner's cover), author the member who exports.
+- **The deck**: cover (the name and "프로젝트 보고서" as two lines of one size — the owner's), INDEX, then the groups
+  프로젝트 상세 / 진행 현황 및 일정 / 조달 및 승인 / 미팅 및 협력업체 (a group of one part carries that part's name), the
+  last page. Dividers stand before every group as soon as one ticked part is FULL; a deck of 요약 alone has none.
+- **요약 = one page a part**: the overview (ovOne: the figures one under the other at the left, the texts / the table / the
+  dates / the risks in two columns shared out by height, set between 10 and 8pt as it takes, the sources as one line), the
+  state, the schedule (the phases as the template draws a schedule, the late and the coming work under it), procurement,
+  gates, evidence, meetings, partners. **FULL** runs on: the overview as three pages (the figures page is the owner's own
+  design — a black title, grey tabs for No. / group / stage / 집중 추진 in red / 기준일, no boxes, a unit set smaller when
+  a figure is long, a description in brackets on its own line; then text + table + the dates as steps; then the four texts
+  two by two), the lists as tables that continue ("(계속)").
+- From the owner's corrections, as rules: body text 11pt (not 13); no "[사업 개요]" caption over the table; headings of a
+  row of figures in black; a procurement package by its number alone ("01", not "설비01").
+- The library repeats a paragraph's properties before every run; the module takes the repeats out of the written file
+  (JSZip, which the library bundles anyway) so that the file is as the format says. `&` must not be put into the file's
+  properties (title, company): the pinned library writes them unescaped and the file then opens nowhere.
+- Not done: a 상세 타입 page with a block's attached pictures (the files would have to be fetched while the deck is made);
+  the note under 사업성 지표 is not shown on the one-page form (no room in the figures' column).
+- Seen in LibreOffice with a stand-in typeface only (no PowerPoint here): cover to last page for all 요약, all FULL, a
+  mix, and the main page's list with a page / three pages per project; the files are well-formed and open in python-pptx.
+
+tests: schedule-16 counts the slides of a 요약 and of a FULL deck and reads what the module is handed. Brought in step and
+not run.

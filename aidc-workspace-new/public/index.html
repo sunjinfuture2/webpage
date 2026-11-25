@@ -9951,11 +9951,25 @@ const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b 
 // report besides. A project's 엑셀 is still its schedule data, whole (its card says so); the main page's 엑셀 is the list and the
 // sheets that can be read back.
 let schPptxLoading=null;
-function schPptx(){ return schPptxLoading||(schPptxLoading=new Promise((ok,no)=>{ if(window.AIDCSchedulePptx){ok(window.AIDCSchedulePptx);return;} const s=document.createElement('script'); s.src='/schedule-pptx.js?v=64050fa1809f';
+function schPptx(){ return schPptxLoading||(schPptxLoading=new Promise((ok,no)=>{ if(window.AIDCSchedulePptx){ok(window.AIDCSchedulePptx);return;} const s=document.createElement('script'); s.src='/schedule-pptx.js?v=3f5fd7b70ff9';
   s.onload=()=>window.AIDCSchedulePptx?ok(window.AIDCSchedulePptx):no(Error('PPT 모듈을 불러오지 못했습니다.')); s.onerror=()=>{ schPptxLoading=null; no(Error('PPT 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); })); }
-// the company's mark for the first slide (the Word sheet's own picture), as a data address
-async function schXLogo(){ const im=await schExpImage('/export/sunjin-logo.png'); if(!im)return null; let s=''; for(let i=0;i<im.data.length;i+=8192)s+=String.fromCharCode(...im.data.subarray(i,i+8192)); return {logo:`data:image/${im.ext};base64,${btoa(s)}`,logoRatio:im.h/im.w}; }
-async function schExpPptx(doc){ const P=await schPptx(), logo=await schXLogo(); return new Blob([await P.make(doc,logo||{})],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
+// the company's two marks as the template places them (the signature with its English line on the cover, the word alone at
+// the upper right of contents and dividers), as data addresses
+async function schXLogos(){ const one=async src=>{ const im=await schExpImage(src); if(!im)return ''; let s=''; for(let i=0;i<im.data.length;i+=8192)s+=String.fromCharCode(...im.data.subarray(i,i+8192)); return `data:image/${im.ext};base64,${btoa(s)}`; };
+  return {logoBig:await one('/export/sunjin-ppt-cover.png'),logoSmall:await one('/export/sunjin-ppt-mark.png')}; }
+// What the slides are made of (forty-first round). The slide module (schedule/pptx.ts) does not lay the document's blocks out
+// one after the other as Word does: it draws the template's own kinds of page, so it is handed the overview as it is kept
+// (figures, texts, table, dates) and every ticked part's blocks in their FULL form, with the form chosen for each part.
+// A part in 요약 is ONE page (owner: "요약을 체크하면 항목당 한 페이지짜리로"); a part in FULL runs on as far as it must.
+function schXPptHead(pid){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), ttl={}; for(const k of Object.keys(REP_TTL))ttl[k]=schRepTtl(h,k);
+  return {id:pid,name:P.full||pname(P),no:schRepNos()[pid]||'',grp:r.grp||'',stage:r.stage||'',focus:!!r.focus,first:r.first||'',asof:r.asof||'',sub:h.sub||'',ttl,
+    kpi:h.kpi.filter(x=>x[0]||x[1]),fin:h.fin.filter(x=>x[0]||x[1]),finNote:h.finNote||'',src:schXLines(h.src),main:h.main||'',rows:h.rows.filter(x=>x[0]||x[1]).concat(h.memo?[['비고',h.memo]]:[]),plan:h.plan.filter(x=>x[0]||x[1]),
+    infra:schXLines(h.infra),struct:schXLines(h.struct),stat:schXLines(h.stat),risk:schXLines(h.risk),partners:(h.partners||[]).map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean)}; }
+function schXPptOf(ctx){ const base={dept:String(SETTINGS.org||'').replace(/\s*AI\s*Data\s*Center\s*$/i,'').trim()||SETTINGS.wsName||'',author:typeof userName==='function'?userName(sharedUser)||'':sharedName||'',today:TODAY};
+  if(ctx.main)return Object.assign(base,{kind:'main',asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',sheets:ctx.w.sheets?(ctx.w.sheets==='full'?'full':'sum'):'',projects:ctx.w.sheets?ctx.ids.map(schXPptHead):[],count:ctx.ids.length});
+  const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full'}).sections.forEach(s=>{ full[s.k]=s.blocks; });
+  return Object.assign(base,{kind:'proj',proj:schXPptHead(pid),parts:ctx.parts.slice(),forms:Object.assign({},ctx.forms),full,op:m&&m.res.operationDate||''}); }
+async function schExpPptx(doc,ctx){ const P=await schPptx(), logos=await schXLogos(); return new Blob([await P.make(Object.assign({},doc,{ppt:ctx?schXPptOf(ctx):null}),logos)],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
 function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[pid])return; closePop();
   const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-np sch-xw'; const main=kind==='main', nShown=main?schXMainIds('shown').length:0, nAll=main?orderedProjects().length:0, nFocus=main?schXMainIds('focus').length:0;
   const parts=main?[{k:'list',t:'프로젝트 목록 표',n:1,one:'번호 · 구분 · 위치 · 사업주체 · IT LOAD · 추진 단계'},{k:'sheets',t:'프로젝트별 요약',n:1,sum:'프로젝트마다 1장 — 지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'}]:schXProjParts(pid);
@@ -9997,7 +10011,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
       let doc=null; const mk=()=>doc||(doc=main?schXMainDoc(ids,w):schXProjDoc(pid,{parts:ps,forms:fm}));
       // one file after the other, a moment apart (a browser lets several downloads through when they do not come at once)
       if(fs.includes('docx')){ toast('Word 문서를 만드는 중입니다…',12000); schExpSave(mk().file+'.docx',await schExpDocx(mk())); made.push('Word'); await pause(); }
-      if(fs.includes('pptx')){ toast('PPT 파일을 만드는 중입니다…',20000); schExpSave(mk().file+'.pptx',await schExpPptx(mk())); made.push('PPT'); await pause(); }
+      if(fs.includes('pptx')){ toast('PPT 파일을 만드는 중입니다…',20000); schExpSave(mk().file+'.pptx',await schExpPptx(mk(),main?{main:true,ids,w}:{pid,parts:ps,forms:fm})); made.push('PPT'); await pause(); }
       if(fs.includes('xlsx')){ if(main){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,w),w.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); } else await schXlsxSection(pid,'gantt',''); made.push('엑셀'); await pause(); }
       if(made.length)toast(`${made.join(' · ')} 파일을 내려받았습니다.`,3600);
       if(wantPdf)schExpPrint(mk()); }
