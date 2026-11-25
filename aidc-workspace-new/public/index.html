@@ -3894,6 +3894,14 @@ html.mob .rlist.sch .rdate{position:static;margin:0 0 8px}
 html.mob .rlist.sch .rscroll{overflow:visible;margin:0;padding:0}
 html.mob .rlist.sch .rcap{position:static;margin:0;padding:14px 0 8px}
 html.mob .rlist.sch .rsep{margin-top:14px}
+html.mob .rlist.sch .ev{margin:0;padding:10px 0 12px;min-width:0}
+html.mob .rlist.sch .ev .pill,html.mob.sch-on .cal > .filters .pill{display:block;width:fit-content;max-width:100%;margin-left:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.mob .rlist.sch .ev .tt{min-width:0;margin:4px 0;gap:6px}
+html.mob .rlist.sch .ev .tt b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-width:0;font-size:15px;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
+html.mob .rlist.sch .ev .tt .avstack{flex:none;margin-left:auto}
+html.mob .rlist.sch .ev .chk{margin:8px 0 0}
+html.mob .rlist.sch .ev .chk li .tx{min-width:0;white-space:normal;overflow-wrap:anywhere}
+
 html.mob .rlist.sch .ra{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"title title person" "due date person";justify-content:start;align-content:center;align-items:center;column-gap:8px;row-gap:2px;min-height:56px;height:auto;margin:0;padding:7px 3px;border-bottom:1px solid #efefef;border-radius:0}
 html.mob .rlist.sch .ra .tt{grid-area:title;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;font-size:14px;line-height:19px;overflow:hidden}
 html.mob .rlist.sch .ra .avstack{grid-area:person;justify-self:end;align-self:center}
@@ -7763,7 +7771,7 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* t
   if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
   const meetingRow=e=>{const p=proj(e.proj);
     return `<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;};
-  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅'):evs.map(meetingRow).join('');
+  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅',2):evs.map(meetingRow).join('');
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
@@ -9487,8 +9495,8 @@ function schProjectDetailButton(pid, editing){
 
 // The short list and its continuation share the same rows, order and item links.
 const schMobAgendaOpen = new Set();
-function schMobAgenda(list, row, key, label){
-  const limit=4, first=list.slice(0,limit).map(row).join('');
+function schMobAgenda(list, row, key, label, limit=4){
+  const first=list.slice(0,limit).map(row).join('');
   if(list.length<=limit)return first;
   const rest=list.slice(limit);
   return first+`<details class="mob-agenda-more" data-agenda-key="${esc(key)}" ${schMobAgendaOpen.has(key)?'open':''}>

@@ -37,7 +37,7 @@ function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* t
   if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
   const meetingRow=e=>{const p=proj(e.proj);
     return `<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;};
-  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅'):evs.map(meetingRow).join('');
+  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅',2):evs.map(meetingRow).join('');
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;

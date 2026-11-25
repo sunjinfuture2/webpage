@@ -43,8 +43,8 @@ function schProjectDetailButton(pid, editing){
 
 // The short list and its continuation share the same rows, order and item links.
 const schMobAgendaOpen = new Set();
-function schMobAgenda(list, row, key, label){
-  const limit=4, first=list.slice(0,limit).map(row).join('');
+function schMobAgenda(list, row, key, label, limit=4){
+  const first=list.slice(0,limit).map(row).join('');
   if(list.length<=limit)return first;
   const rest=list.slice(limit);
   return first+`<details class="mob-agenda-more" data-agenda-key="${esc(key)}" ${schMobAgendaOpen.has(key)?'open':''}>
