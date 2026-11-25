@@ -2106,3 +2106,13 @@ span.pt-project-tag{cursor:default}
 .partner-unlink:hover{background:#eee;color:#333}
 .tbl.partners .rw .ds{min-width:0;overflow:hidden;font-weight:400}
 .tbl.partners .rw .ds .e{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+
+/* Related-project field shares the label baseline; project picker uses calendar pills. */
+.partner-content .props .pr:has(.pt-projects){align-items:center}
+.partner-content .props .pr .pt-projects{padding:0}
+.partner-content .props .pr .pt-project-tag{line-height:18px;padding:1px 10px}
+.pt-project-picker .it .pill{pointer-events:none;white-space:normal;height:auto;min-height:20px;line-height:18px;max-width:100%;box-sizing:border-box}
+.pt-project-picker .it{align-items:center}
+.pop.sch-at.sch-partner-select{max-height:min(420px,75vh);overflow:auto;width:350px}
+.pop.sch-partner-select .it{display:flex;align-items:center;gap:9px}
+.pop.sch-partner-select .plogo{flex:none}

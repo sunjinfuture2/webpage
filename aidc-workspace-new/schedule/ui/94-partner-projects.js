@@ -66,7 +66,7 @@ function schPartnerProjectPick(el,pt){
  const pop=openPop(el,'<div class="hd">관련 프로젝트 · 복수 선택</div><div class="msg" style="padding-top:0"><input class="pt-project-query" placeholder="검색" aria-label="프로젝트 검색"></div><div class="pt-project-options"></div>',{cls:'pt-project-picker'});
  let busy=false;const input=pop.querySelector('input'),box=pop.querySelector('.pt-project-options');
  const draw=()=>{const ids=orderedProjects().filter(id=>!PROJECTS[id].trash&&matchQ(input.value,PROJECTS[id].tag,PROJECTS[id].full)),sel=selected();
- box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'"><i class="ck">'+(sel.includes(id)?svg('i-check',9,8):'')+'</i><span>'+esc(PROJECTS[id].full||PROJECTS[id].tag)+'</span></button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
+ box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'"><i class="ck">'+(sel.includes(id)?svg('i-check',9,8):'')+'</i>'+pill(PROJECTS[id],'nosq')+'</button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
  input.addEventListener('input',draw);
  box.addEventListener('click',async e=>{const b=e.target.closest('[data-pt-project-id]');if(!b||busy)return;e.preventDefault();e.stopPropagation();busy=true;b.disabled=true;
  try{await schPartnerToggleProject(pt,b.dataset.ptProjectId);
@@ -90,3 +90,15 @@ document.addEventListener('click',e=>{
  const field=document.querySelector('#proj-pw .phead [data-k="partner:'+b.dataset.partnerUnlink+'"]');
  if(field){field.textContent='';saveProjectHead();render(true);}
 },true);
+
+function schPartnerNamePick(el,typing=false){
+ if(!S.editProj||!el?.matches('[data-k^="partner:"]'))return;
+ schAtEl=el;const q=typing?norm(el.textContent.replace(/^@/,'')):'';
+ const hits=PARTNERS.filter(p=>!p.trash&&(!q||matchQ(q,p.name,p.cat)));
+ const pop=openPop(el,'<div class="hd">협력업체 선택</div>'+hits.map((p,i)=>'<div class="it '+(i?'':'sel')+'" data-at="'+esc(p.id)+'">'+schPartnerMark(p.name)+'<span class="t">'+esc(p.name)+'</span></div>').join('')+(hits.length?'':'<div class="msg">등록된 업체가 없습니다. 새 이름을 직접 입력할 수 있습니다.</div>'),{cls:'sch-at sch-partner-select'});
+ pop.addEventListener('mousedown',e=>{const b=e.target.closest('[data-at]');if(!b)return;e.preventDefault();schAtPick(b.dataset.at);});
+}
+document.addEventListener('click',e=>{
+ const field=e.target.closest&&e.target.closest('.phead [contenteditable="true"][data-k^="partner:"]');
+ if(field&&S.editProj){e.stopPropagation();schPartnerNamePick(field);}
+});

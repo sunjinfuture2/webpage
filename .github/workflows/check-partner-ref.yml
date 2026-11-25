@@ -1,0 +1,27 @@
+name: Check partner picker and REF order
+on:
+  push:
+    branches: ['codex/partner-picker-ref-order']
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: aidc-workspace-new
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Check requested UI only
+        run: |
+          trap 'tail -n 20 "$RUNNER_TEMP/contracts.log"' EXIT
+          npx wrangler dev --local --compatibility-date 2026-10-13 --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/contracts.log" 2>&1 &
+          for i in $(seq 1 60); do if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi; sleep 1; done
+          node tests/partner-ref-check.cjs

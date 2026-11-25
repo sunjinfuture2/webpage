@@ -185,7 +185,7 @@ function schPartnerMark(name){ const p=schPartnerOf(name); if(!p)return `<i><svg
   const u=p.site&&p.site!=='-'?urlHref(p.site):''; return `<i class="plogo" title="협력업체 목록에 등록된 업체">${esc([...String(p.name||'').trim()][0]||'')}${u?logoImg(p.site):''}</i>`; }
 let schAtEl=null;
 function schAtClose(){ if(schAtEl){schAtEl=null; if(popEl&&popEl.classList.contains('sch-at'))closePop();} }
-function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
+function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0&&el.matches('[data-k^="partner:"]')){schPartnerNamePick(el,true);return;} if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
   const hits=PARTNERS.filter(p=>!p.trash&&(!q||norm(p.name).includes(q)||norm(p.cat||'').includes(q))).slice(0,8); schAtEl=el;
   const p=openPop(el,`<div class="hd">협력업체 ${q?`“${esc(txt.slice(at+1).trim())}”`:'목록'}</div>${hits.map((x,i)=>`<div class="it ${i?'':'sel'}" data-at="${esc(x.id)}">${schPartnerMark(x.name)}<span class="t">${esc(x.name)}</span><span class="m">${esc(x.cat||'')}</span></div>`).join('')||'<div class="msg" style="padding-top:0">맞는 협력업체가 없습니다. 이름을 그대로 적어도 됩니다.</div>'}`,{cls:'sch-at'});
   p.addEventListener('mousedown',e=>{ const b=e.target.closest('[data-at]'); if(!b)return; e.preventDefault(); schAtPick(b.dataset.at); }); }
