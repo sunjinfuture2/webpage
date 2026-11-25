@@ -26,10 +26,13 @@ const assert=require('node:assert/strict');const {chromium,newUser,waitApp}=requ
  await p.locator('#page-project [data-editproj]').first().click();await p.waitForFunction(()=>!S.editProj&&!sharedBusy);
  await p.reload();await waitApp(p);
  assert.ok(await p.evaluate(pid=>{const x=PARTNERS.find(p=>p.name==='양방향 신규업체');return x&&schPartnerProjects(x).includes(pid);},ids.pids[0]));
+ await p.locator('#page-project .new-partner').click();await p.locator('#npt-name').fill('프로젝트내 생성업체');await p.locator('[data-npt="ok"]').click();await p.waitForFunction(()=>!sharedBusy&&PARTNERS.some(p=>p.name==='프로젝트내 생성업체'));
+ assert.ok(await p.evaluate(()=>schPartnerProjects(PARTNERS.find(p=>p.name==='프로젝트내 생성업체')).includes(S.proj)));
  console.log('PASS multi-project links, overview removal/addition, scoped list and clear, reload persistence');
  await p.evaluate(id=>openPanel(id),ids.rid);await p.locator('#panel-pin [data-ed="edit"]').click();
- await p.locator('#panel-pin [data-f="title"]').fill('안녕하세요');
- await p.evaluate(id=>{const it=item(id);it.cats=['Company'];it.dirty=true;},ids.rid);
+ await p.locator('#panel-pin [data-f="title"][contenteditable="true"]').fill('안녕하세요');
+ await p.evaluate(id=>{const it=item(id);it.cats=[];it.dirty=true;},ids.rid);
+ await p.locator('#panel-pin [data-pick="cats"]').click();await p.locator('#rc-new').fill('Company');await p.locator('#rc-new').press('Enter');await p.evaluate(()=>closePop());
  await p.locator('#panel-pin [data-ed="save"]').click();await p.evaluate(()=>sharedFlush(true));
  await p.reload();await waitApp(p);await p.evaluate(id=>openPanel(id),ids.rid);
  assert.equal(await p.locator('#panel-pin .ititle').innerText(),'안녕하세요');
