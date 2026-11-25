@@ -1,0 +1,20 @@
+name: Verify new AI upload project
+on:
+  push:
+    branches: ['codex/new-ai-upload-project']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: aidc-workspace-new
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: node tests/ai-project.test.mjs
+      - run: npm run build

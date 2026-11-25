@@ -1,7 +1,8 @@
 // Only the report above the existing calendar of the explicit trial project.
 const AI_PROJECT_ID='ai-application-test';
+const schAIProject=pid=>['ai-application-test','ai-upload-test'].includes(pid);
 let schAILib;
-const schAIEndpoint=action=>'/api/ai-project/'+action+'?project='+AI_PROJECT_ID;
+const schAIEndpoint=(action,pid=S.proj)=>'/api/ai-project/'+action+'?project='+encodeURIComponent(pid);
 const schAIRefs=()=>'';
 
 let schAIDraft=null,schAIDirectBusy=false;
@@ -37,6 +38,7 @@ function schAIReport(r,editing=false){
  return '<div class="ai-report"><div class="rstats">'+group(['kpi','fin'])+'</div><div class="rcols"><div class="rc rc1">'+intro+mainRest+'</div><div class="rc rc2">'+group(['right'])+warns+'</div></div></div>';
 }
 function schAIHead(pid){
+ if(schAIDraft&&schAIDraft.project!==pid)schAIDraft=null;
  const p=PROJECTS[pid],d=headOf(pid),saved=d.aiOverview,E=!!schAIDraft;
  const report=E?schAIDraft.report:saved?.report;
  const no=schRepNos()[pid]||'';
@@ -49,11 +51,11 @@ function schAISetField(report,path,value){
 document.addEventListener('input',e=>{if(!schAIDraft||!e.target.matches('[data-ai-inline]'))return;schAISetField(schAIDraft.report,e.target.dataset.aiInline,e.target.innerText);});
 
 document.addEventListener('click',async e=>{
- const b=e.target.closest('[data-ai-direct],[data-ai-action]');if(!b||S.proj!==AI_PROJECT_ID)return;e.preventDefault();e.stopPropagation();
+ const b=e.target.closest('[data-ai-direct],[data-ai-action]');if(!b||!schAIProject(S.proj))return;e.preventDefault();e.stopPropagation();
  if(schAIDirectBusy)return;
  const mode=b.dataset.aiDirect;
  if(mode==='edit'){
-  try{schAIDirectBusy=true;const d=await schAICall('status');schAIDraft={report:copy(d.saved?.report||schAIBlank()),source:d.saved?.source||{name:'직접 입력',kind:'manual'},revision:d.saved?.revision||0};render(true);}catch(err){toast(err.message);}finally{schAIDirectBusy=false;}return;
+  try{schAIDirectBusy=true;const d=await schAICall('status');schAIDraft={project:S.proj,report:copy(d.saved?.report||schAIBlank()),source:d.saved?.source||{name:'직접 입력',kind:'manual'},revision:d.saved?.revision||0};render(true);}catch(err){toast(err.message);}finally{schAIDirectBusy=false;}return;
  }
  if(!schAIDraft)return;
  if(mode==='cancel'){schAIDraft=null;render(true);return;}
@@ -73,8 +75,8 @@ document.addEventListener('click',async e=>{
  render(true);
 });
 
-async function schAICall(action,body){
- const r=await apiFetch(schAIEndpoint(action),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+async function schAICall(action,body,pid=S.proj){
+ const r=await apiFetch(schAIEndpoint(action,pid),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
  let d;try{d=await r.json();}catch{throw Error('서버 응답을 읽지 못했습니다.');}if(!r.ok)throw Error(d.error||'요청에 실패했습니다.');return d;
 }
 function schAIEditForm(r){
@@ -88,7 +90,8 @@ function schAIEditForm(r){
  }).join('');
 }
 async function schAIOpen(mode){
- if(S.proj!==AI_PROJECT_ID||document.getElementById('dlg'))return;
+ if(!schAIProject(S.proj)||document.getElementById('dlg'))return;
+ const pid=S.proj;
  const dialog=document.createElement('div');dialog.id='dlg';dialog.className='dlg ai-dialog';
  dialog.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-label="AI 프로젝트 개요"><header><h3>AI 프로젝트 개요</h3><button type="button" data-ai-close aria-label="닫기">✕</button></header><div class="ai-scroll"><p data-ai-status role="status">설정을 확인하고 있습니다…</p><div data-ai-upload><label class="ai-drop">PDF / PPTX 선택 또는 끌어놓기 · 최대 10MB<input type="file" accept=".pdf,.pptx" data-ai-file></label><p data-ai-filename></p><p class="ai-note">PDF는 페이지 전체를, PPTX는 텍스트를 분석합니다. 그림·차트가 중요한 PPT는 PDF로 저장해 올려주세요. 분석할 때 Claude API로 전송되며 원본 파일은 이 기능에서 서버에 보관하지 않습니다.</p><label>대상 사업 또는 중점 사항 (선택)<input data-ai-hint placeholder="여러 사업이 있는 보고서라면 대상 사업명을 적어주세요"></label><details><summary>분석 프롬프트 확인 · 추가 지침</summary><pre data-ai-prompt></pre><textarea data-ai-instruction placeholder="예: 투자 의사결정에 중요한 조건을 우선 정리"></textarea></details><button type="button" data-ai-analyze disabled>AI로 개요 구성</button></div><div data-ai-result></div></div><footer><button type="button" data-ai-close>닫기</button><button type="button" data-ai-save disabled>이 개요 적용</button></footer></div>';
  document.body.append(dialog);
@@ -113,24 +116,24 @@ async function schAIOpen(mode){
     let input;
     if(/\.pdf$/i.test(file.name)){const data=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(',')[1]);fr.onerror=()=>reject(Error('파일을 읽지 못했습니다.'));fr.readAsDataURL(file);});input={kind:'pdf',name:file.name,data};}
     else {if(!window.AIDCAIDocuments){schAILib||=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='/ai-documents.js?v=1';s.onload=resolve;s.onerror=()=>{schAILib=null;reject(Error('PPTX 읽기 기능을 불러오지 못했습니다.'));};document.head.append(s);});await schAILib;}input=await window.AIDCAIDocuments.read(file);}
-    const d=await schAICall('analyze',{...input,hint:find('[data-ai-hint]').value,instruction:find('[data-ai-instruction]').value});
+    const d=await schAICall('analyze',{...input,hint:find('[data-ai-hint]').value,instruction:find('[data-ai-instruction]').value},pid);
     report=d.report;source=d.source;if(input.notice)report.warnings.push(input.notice);
     status('분석 완료 · 입력 '+d.usage.input_tokens+' / 출력 '+d.usage.output_tokens+' 토큰. 원문과 비교한 뒤 적용해주세요.');
    }catch(err){status(err.message);}finally{busy=false;btn.disabled=!ready;draw();}return;
   }
   if(btn.hasAttribute('data-ai-save')){
    if(!report||busy)return;busy=true;btn.disabled=true;status('개요를 저장하고 있습니다…');
-   try{const d=await schAICall('save',{report,source,revision});sharedApply(d.records);render(true);busy=false;close();toast('AI적용테스트 개요를 저장했습니다.');}
+   try{const d=await schAICall('save',{report,source,revision},pid);sharedApply(d.records);render(true);busy=false;close();toast('프로젝트 개요를 저장했습니다.');}
    catch(err){status(err.message);busy=false;btn.disabled=false;}return;
   }
  });
  dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
- try{const d=await schAICall('status');if(!alive)return;ready=d.ready;revision=d.saved?.revision||0;find('[data-ai-prompt]').textContent=d.prompt;
+ try{const d=await schAICall('status',undefined,pid);if(!alive)return;ready=d.ready;revision=d.saved?.revision||0;find('[data-ai-prompt]').textContent=d.prompt;
   status(ready?'Claude 연결 설정이 등록되어 있습니다.': 'API 키 미등록: Cloudflare → sunjin-aidc-workspace-demo → Settings → Variables and Secrets → Secret ANTHROPIC_API_KEY 추가 후 Deploy. 키는 이 화면에 입력하지 않습니다.');
   if(mode==='edit'&&d.saved){report=copy(d.saved.report);source=d.saved.source;find('[data-ai-upload]').hidden=true;draw();find('.ai-edit').open=true;}
  }catch(err){status(err.message);}
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-ai-open]');if(b&&S.proj===AI_PROJECT_ID){e.preventDefault();e.stopPropagation();schAIOpen(b.dataset.aiOpen);}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ai-open]');if(b&&schAIProject(S.proj)){e.preventDefault();e.stopPropagation();schAIOpen(b.dataset.aiOpen);}});
 const aiStyle=document.createElement('style');aiStyle.textContent=`
 .ai-overview .ai-block-controls{display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:12px}.ai-overview .ai-block-controls button,.ai-overview .ai-block-controls select,.ai-overview .ai-add-section select{font:inherit;border:1px solid #ddd;background:var(--bg,#fff);color:inherit;padding:4px 8px;border-radius:4px}.ai-overview .ai-add-section{display:flex;gap:12px;margin-top:28px}.ai-overview [data-ai-inline]{white-space:pre-wrap;min-height:20px}.ai-overview [data-ai-inline]:empty:before{content:attr(data-ph);color:#bbb}.ai-overview .rtx + .rtx{margin-top:10px}.ai-overview .ai-refs,.ai-dialog .ai-refs{font-size:11px;color:#8e8e8e;margin-top:12px}.ai-overview .ai-refs p{line-height:1.6}.ai-dialog .rcols{column-gap:32px}.ai-dialog .rstats .rkp{grid-template-columns:repeat(4,minmax(0,1fr))}.ai-dialog .ai-report{--pc:#375cdb}.ai-dialog .ai-report h2{font-size:20px}
 .ai-dialog{z-index:12000}.ai-dialog .box{width:min(1100px,94vw);max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden}.ai-dialog header,.ai-dialog footer{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e5e9}.ai-dialog footer{border-top:1px solid #e2e5e9;border-bottom:0;justify-content:flex-end;gap:10px}.ai-scroll{padding:20px 24px;overflow:auto;min-height:0}.ai-dialog label{display:block;margin:14px 0;font-size:14px}.ai-dialog input,.ai-dialog textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:1px solid #d6dce5;border-radius:5px;font:inherit}.ai-dialog textarea{min-height:90px;resize:vertical}.ai-dialog pre{white-space:pre-wrap;font:12px/1.7 sans-serif;max-height:220px;overflow:auto}.ai-drop{padding:24px;border:1px dashed #a8b8d4;background:#f6f8fc;border-radius:8px}.ai-dialog fieldset{border:1px solid #e1e5eb;border-radius:6px;margin:16px 0;padding:14px}.ai-metric-edit{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px}.ai-preview{padding:20px 0}.ai-edit{margin:12px 0}.ai-dialog [data-ai-status]{white-space:pre-wrap;line-height:1.7}@media(max-width:700px){.ai-sections{grid-template-columns:1fr}.ai-metric-edit{grid-template-columns:1fr}.ai-dialog .box{width:96vw}.ai-overview .ttl{flex-wrap:wrap}}

@@ -1,5 +1,7 @@
 // AI overview is isolated to this project; no schedule or legacy report mutation.
 export const AI_PROJECT_ID='ai-application-test';
+export const AI_UPLOAD_PROJECT_ID='ai-upload-test';
+export const AI_PROJECT_IDS=[AI_PROJECT_ID,AI_UPLOAD_PROJECT_ID];
 export const AI_MODEL='claude-fable-5-2';
 export const AI_PROMPT=`당신은 사업검토 보고서를 작성하는 분석가다. 제공된 문서를 근거로 프로젝트 상세페이지의 개요를 한국어로 구성한다.
 문서의 양식, 제목, 컬럼은 자유롭다. 정해진 사업 항목을 채우려 하지 말고 이 사업의 핵심, 의사결정에 중요한 정보, 추진 상황과 불확실성을 판단해 섹션 제목과 순서를 설계하라.
@@ -51,12 +53,21 @@ export function validateAIReport(r){
  if(JSON.stringify(out).length>160000)bad('분석 결과가 너무 깁니다. 문서를 나누어 분석해주세요.');
  return out;
 }
-export function ensureAIProject(ws){
+function ensureOriginalAIProject(ws){
  const flags=ws.get('meta:flags')||{};if(flags.aiOverviewTrialV1)return;
  ws.ctx.storage.transactionSync(()=>{
   if(!ws.get('project:'+AI_PROJECT_ID))ws.put('project:'+AI_PROJECT_ID,{id:AI_PROJECT_ID,tag:'AI적용테스트',full:'AI적용테스트',cls:'pblue',color:'#375cdb',grad:'#eaf0ff',imgH:207.8,status:'사업구상',stColor:'#8e8e8e',owner:'',site:'',cost:'',area:'',power:'',it:'',server:''});
   const order=ws.get('meta:order')||[];if(!order.includes(AI_PROJECT_ID))ws.put('meta:order',[...order,AI_PROJECT_ID]);
   ws.put('meta:flags',{...flags,aiOverviewTrialV1:true});
+ });
+}
+export function ensureAIProject(ws){
+ ensureOriginalAIProject(ws);
+ const flags=ws.get('meta:flags')||{};if(flags.aiUploadTrialV1)return;
+ ws.ctx.storage.transactionSync(()=>{
+  if(!ws.get('project:'+AI_UPLOAD_PROJECT_ID))ws.put('project:'+AI_UPLOAD_PROJECT_ID,{id:AI_UPLOAD_PROJECT_ID,tag:'AI업로드테스트',full:'AI업로드테스트',cls:'pblue',color:'#375cdb',grad:'#eaf0ff',imgH:207.8,status:'사업구상',stColor:'#8e8e8e',owner:'',site:'',cost:'',area:'',power:'',it:'',server:''});
+  const order=ws.get('meta:order')||[];if(!order.includes(AI_UPLOAD_PROJECT_ID))ws.put('meta:order',[...order,AI_UPLOAD_PROJECT_ID]);
+  ws.put('meta:flags',{...flags,aiUploadTrialV1:true});
  });
 }
 export async function analyzeAI(input,env,fetcher=fetch){
@@ -86,11 +97,11 @@ export async function analyzeAI(input,env,fetcher=fetch){
  }catch(e){if(e.name==='AbortError')bad('분석 시간이 초과되었습니다. 문서를 나누어 다시 시도해주세요.',504);throw e;}finally{clearTimeout(timer);}
 }
 export async function aiProjectRoute(ws,req,me,token){
- const url=new URL(req.url), answer=(v,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
+ const url=new URL(req.url),pid=url.searchParams.get('project'), answer=(v,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
  try{
-  if(url.searchParams.get('project')!==AI_PROJECT_ID)return answer({error:'AI적용테스트 프로젝트에서만 사용할 수 있습니다.'},403);
-  if(!ws.get('project:'+AI_PROJECT_ID))return answer({error:'프로젝트를 찾을 수 없습니다.'},404);
-  const current=()=>((ws.get('meta:head')||{})[AI_PROJECT_ID]||{}).aiOverview||null;
+  if(!AI_PROJECT_IDS.includes(pid))return answer({error:'AI 테스트 프로젝트에서만 사용할 수 있습니다.'},403);
+  if(!ws.get('project:'+pid))return answer({error:'프로젝트를 찾을 수 없습니다.'},404);
+  const current=()=>((ws.get('meta:head')||{})[pid]||{}).aiOverview||null;
   if(req.method==='GET')return answer({ready:!!ws.env.ANTHROPIC_API_KEY,model:AI_MODEL,prompt:AI_PROMPT,saved:current()});
   if(req.method!=='POST')return answer({error:'지원하지 않는 요청입니다.'},405);
   const size=+(req.headers.get('content-length')||0);if(size>15*1024*1024)bad('문서가 너무 큽니다.',413);
@@ -103,12 +114,12 @@ export async function aiProjectRoute(ws,req,me,token){
    try{return answer(await analyzeAI(b,ws.env));}finally{ws.aiActive.delete(me);}
   }
   if(url.pathname!=='/api/ai-project/save')return answer({error:'잘못된 요청입니다.'},404);
-  const lock=ws.sql.exec('SELECT * FROM edit_locks WHERE id=? AND expires>?','project:'+AI_PROJECT_ID,Date.now()).toArray()[0];
+  const lock=ws.sql.exec('SELECT * FROM edit_locks WHERE id=? AND expires>?','project:'+pid,Date.now()).toArray()[0];
   if(lock&&lock.token!==token)bad('다른 사용자가 프로젝트를 수정 중입니다.',423);
   if((current()?.revision||0)!==b.revision)bad('다른 창에서 개요가 변경되었습니다. 닫고 최신 내용을 다시 확인해주세요.',409);
   const report=validateAIReport(b.report), source={name:txt(b.source?.name||'',240),kind:txt(b.source?.kind||'',20)};
   const saved={report,source,revision:(current()?.revision||0)+1,at:new Date().toISOString(),by:me};
-  const heads=ws.get('meta:head')||{};heads[AI_PROJECT_ID]={...(heads[AI_PROJECT_ID]||{}),aiOverview:saved};
+  const heads=ws.get('meta:head')||{};heads[pid]={...(heads[pid]||{}),aiOverview:saved};
   ws.put('meta:head',heads);ws.broadcast({records:{'meta:head':heads}});
   return answer({saved,records:{'meta:head':heads}});
  }catch(e){return answer({error:e.status?e.message:'요청을 처리하지 못했습니다. 기존 개요는 유지됩니다.'},e.status||500);}
