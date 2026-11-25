@@ -1,4 +1,4 @@
-name: Verify Fable layout and manual editing
+name: Three live Fable trials
 on:
   push:
     branches: ['codex/ai-fable-layout']
@@ -7,6 +7,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: aidc-workspace-new
@@ -16,12 +17,11 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
-      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npm install --no-save --package-lock=false playwright@1.56.1 pptxgenjs docx
       - run: npx playwright install --with-deps chromium
-      - run: node tests/ai-project.test.mjs
-      - run: npm run build
-      - run: |
-          trap 'tail -n 30 "$RUNNER_TEMP/ai.log"' EXIT
-          npx wrangler dev --local --compatibility-date 2026-10-13 --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/ai.log" 2>&1 &
-          for i in $(seq 1 60); do if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi; sleep 1; done
-          node tests/ai-layout.cjs
+      - run: node tests/ai-fable-live.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-fable-three-trials
+          path: aidc-workspace-new/test-results/ai-five
