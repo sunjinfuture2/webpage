@@ -146,10 +146,21 @@ function unzip(buf) { const out = {}; let p = buf.lastIndexOf(Buffer.from([0x50,
   await a.click('#tb-user .av'); await sleep(300); const th1b = await ev(() => { const its = [...document.querySelectorAll('.pop .it')].map(x => x.textContent.trim()); closePop(); return its; });
   check('the switch to the dark mode is a moon in the top bar, beside the member\'s profile (no 미리보기 badge any more; not an entry of the profile menu); it turns the whole page dark through one filter, the setting is the member\'s own and this browser remembers it; the button then shows a sun, the way back', th0.btn && th0.between && !th0.dark && /다크 모드로/.test(th0.title) && th1.dark && /invert\(0\.93\) hue-rotate\(180deg\)/.test(th1.root) && th1.pref === 'dark' && th1.ls === 'dark' && /라이트 모드로/.test(th1.title) && th1.sun && th1b.join() === '계정,수신함,설정,휴지통,로그아웃', { th0, th1, th1b });
   await ev(() => themeSet('light')); await flush(); await sleep(400);
-  await a.route('**/api/state', async route => { const resp = await route.fetch(); await sleep(1100); await route.fulfill({ response: resp }); });   // the answer is held back: it shows the state before the switch
-  await ev(() => { window._flips = []; window._fo = new MutationObserver(() => { const d = document.documentElement.classList.contains('dark'); if (window._flips[window._flips.length - 1] !== d) window._flips.push(d); }); window._fo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); sharedRefresh(); });
-  await sleep(150); await a.click('#th-btn'); await sleep(3200); await a.unroute('**/api/state'); const flips = await ev(() => { window._fo.disconnect(); return window._flips; });
+  const captured=Promise.withResolvers(), release=Promise.withResolvers();
+  await a.route('**/api/state',async route=>{
+    const snapshot=await route.fetch();
+    captured.resolve();
+    await release.promise;
+    await route.fulfill({response:snapshot});
+  },{times:1});
+  await ev(() => { window._flips = []; window._fo = new MutationObserver(() => { const d = document.documentElement.classList.contains('dark'); if (window._flips[window._flips.length - 1] !== d) window._flips.push(d); }); window._fo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); window._themeRefresh=sharedRefresh(); });
+  await captured.promise;
+  try{await a.click('#th-btn');}finally{release.resolve();}
+  await ev(()=>window._themeRefresh);
+  const flips = await ev(() => { window._fo.disconnect(); return window._flips; });
   check('switching does not flip back and forth: a state that was asked for before the switch and arrives after it is not applied', flips.join() === 'true' && await ev(() => document.documentElement.classList.contains('dark') && (INBOX_STATE.prefs || {}).theme === 'dark'), flips);
+  await flush();
+  await a.waitForFunction(()=>!sharedBusy && sharedBase['meta:inbox:'+sharedUser]?.prefs?.theme==='dark');
   const echo = await ev(async () => { const key = 'meta:inbox:' + sharedUser, old = copy(sharedBase[key]); old.prefs = { ...(old.prefs || {}), theme: 'light' }; const send = src => sharedSocket.onmessage({ data: JSON.stringify({ records: { [key]: old }, ...(src ? { src } : {}) }) });
     await send(sharedPage); const own = document.documentElement.classList.contains('dark');   // my own save of a moment ago, arriving late
     await send(''); const other = document.documentElement.classList.contains('dark');          // the same from another window of mine: that one counts
