@@ -79,14 +79,20 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const pm = await ev(() => { const lg = document.querySelector('#page-main .tbl.partners .rw .nm .lg'); return { w: Math.round(lg.getBoundingClientRect().width * 10) / 10, boxes: [...document.querySelectorAll('#page-main .sec-title .srch')].map(x => x.classList.contains('box') && Math.round(x.getBoundingClientRect().height)) }; });
   check('partner logos 30% smaller (26.6 → 18.6)', Math.abs(pm.w - 18.6) < .3, pm);
   check('the three search boxes look like the project page\'s (grey box, 38 high)', pm.boxes.length === 3 && pm.boxes.every(h => h === 38), pm);
-  const projectPicker=a.locator('#page-main .tbl.partners .rw [data-pt-project-pick]').first();
-  const withinCell=await projectPicker.evaluate(button=>{
-    const b=button.getBoundingClientRect(), cell=button.closest('.pt-projects').getBoundingClientRect();
+  const partners=a.locator('#page-main .tbl.partners');
+  if(!await partners.locator('.pt-project-tag').count())await ev(async()=>{
+    const id=document.querySelector('#page-main .tbl.partners .rw').dataset.partner;
+    await schPartnerToggleProject(PARTNERS.find(p=>p.id===id),'pangyo');refreshSec('partner');
+  });
+  const taggedRow=partners.locator('.rw:has(.pt-project-tag)').first();
+  const withinCell=await taggedRow.locator('.pt-project-tag').first().evaluate(tag=>{
+    const b=tag.getBoundingClientRect(), cell=tag.closest('.pt-projects').getBoundingClientRect();
     return b.left>=cell.left-1 && b.right<=cell.right+1 && b.top>=cell.top-1 && b.bottom<=cell.bottom+1;
   });
-  await projectPicker.click();
-  check('the partner project control fits its column and opens the project selector',withinCell && await a.locator('.pt-project-query').isVisible());
-  await a.keyboard.press('Escape');
+  await taggedRow.locator('.nm').click();
+  await a.locator('#panel-pin [data-pt-project-pick]').first().click();
+  check('the read-only project name fits its column and the partner panel opens the selector',withinCell && !await taggedRow.locator('[data-pt-project-pick]').count() && await a.locator('.pt-project-query').isVisible());
+  await ev(()=>{closePop();closePanel(true);});
   const tb = await ev(() => { const t = document.querySelector('#page-main .tbl.sch-list.sch-all'), ttl = document.querySelector('#sec-actions .sec-title').getBoundingClientRect(); return t ? { hd: [...t.querySelectorAll('.hd span')].map(s => s.textContent.trim()), left: Math.round(t.getBoundingClientRect().left - ttl.left), per: !!document.querySelector('#sec-actions .sec-title [data-per]'), perRow: !!document.querySelector('#sec-actions .sch-filters [data-per]') } : null; });
   check('the action table is the project page\'s list with 프로젝트 in front', tb && JSON.stringify(tb.hd) === JSON.stringify(['프로젝트', 'WBS', '업무명', '시작일', '완료일', '중요도', '상태', '담당자', '기한', 'URL']) && Math.abs(tb.left) < 6 && !tb.per && tb.perRow, tb);
   await ev(t => { newItem('action', { title: t, proj: 'pangyo', status: 'published', pri: 'high' }); render(true); }, '6차 높음 ' + sfx); await sleep(300);   // the demo actions are gone: one of our own to filter for

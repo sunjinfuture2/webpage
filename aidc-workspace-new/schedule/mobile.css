@@ -519,8 +519,11 @@ html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
 }
 html.mob .page .tbl.mob-records .rw :is(.who,.rc-tags,.contract-links,.rg){display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
 html.mob .page .mob-records .mob-detail-field .sch-rg{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px}
-html.mob .page .mob-records .mob-detail-field :is(.sch-ua,.pt-project-add){min-width:40px;min-height:40px;justify-content:center}
-html.mob .pt-project-picker .it{min-height:40px}
+html.mob .page .mob-records .mob-detail-field .sch-ua{min-width:40px;min-height:40px;justify-content:center}
+html.mob .partner-content [data-pt-project-pick],html.mob .phead .partner-unlink{min-width:44px;min-height:44px}
+html.mob .phead .partner-unlink{margin:0}
+html.mob .pt-project-picker{max-width:calc(100vw - 24px)}
+html.mob .pt-project-picker .it{min-height:44px}
 html.mob .page .tbl.mob-records .rw .who span{font-size:12px;white-space:normal}
 html.mob .page .tbl.mob-records .rw .sf-e,
 html.mob .page .tbl.mob-records .rw .mob-detail-field :is(button,a){display:inline-flex;align-items:center;min-height:32px;margin:0;max-width:100%}

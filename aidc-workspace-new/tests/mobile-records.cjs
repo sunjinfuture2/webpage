@@ -124,9 +124,16 @@ async function flow(browser, width, height) {
   check(width+' related project filter opens from the partner list',await page.locator('.pop .it').first().isVisible());
   await page.evaluate(()=>closePop());
   await partnerRow.locator('.mob-record-more').tap();
-  await partnerRow.locator('[data-pt-project-pick]').last().tap();
-  check(width+' related project selector opens inside the expanded partner',await page.locator('.pt-project-query').isVisible() && !await page.evaluate(()=>S.panel));
+  const pid=await partnerRow.getAttribute('data-partner');
+  check(width+' partner project preview is read-only',!await partnerRow.locator('[data-pt-project-pick]').count());
+  await partnerRow.locator('.mob-record-title').tap();
+  await page.waitForFunction(id=>S.panel===id,pid);
+  const pick=page.locator('#panel-pin [data-pt-project-pick]').first();
+  const hit=await pick.boundingBox();
+  await pick.tap();
+  check(width+' the open partner has a touch-sized project selector',await page.locator('.pt-project-query').isVisible() && hit.width>=44 && hit.height>=44);
   await page.evaluate(()=>closePop());
+  await page.locator('#panel-close').tap();
   await inspect('.sch-all.tbl');
   const pj=on('.vt-rep .rw').first(), dest=(await pj.getAttribute('data-go')).split(':')[1];
   await pj.locator('.mob-record-title').press('Enter');

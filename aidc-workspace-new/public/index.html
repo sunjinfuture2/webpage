@@ -3299,6 +3299,16 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .pt-project-picker{width:330px;max-height:min(480px,80vh);overflow:auto}
 .pt-project-picker .it{width:100%;text-align:left;display:flex;gap:9px}
 .pt-project-picker .ck{width:12px;flex:none}
+
+/* Partner preview: body excerpt and read-only project pills; editing is inside the open partner. */
+.tbl.partners .hd,.tbl.partners .rw{grid-template-columns:minmax(160px,.9fr) minmax(135px,.75fr) minmax(150px,.85fr) minmax(220px,1.4fr) minmax(240px,1.4fr)}
+.pt-project-tag{display:inline-flex;align-items:center;border-radius:999px;background:#e8f3e5;color:#318d1c;font-weight:600;padding:2px 10px;line-height:18px;white-space:normal;max-width:100%;overflow-wrap:anywhere}
+span.pt-project-tag{cursor:default}
+.pt-project-empty{border:0;background:transparent;color:#b5b5b5;font:inherit;padding:2px 0;cursor:pointer}
+.partner-unlink{display:inline-flex;align-items:center;justify-content:center;flex:none;width:18px;height:18px;margin-left:7px;border:0;border-radius:50%;background:transparent;color:#999;font-size:16px;cursor:pointer}
+.partner-unlink:hover{background:#eee;color:#333}
+.tbl.partners .rw .ds{min-width:0;overflow:hidden;font-weight:400}
+.tbl.partners .rw .ds .e{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4353,8 +4363,11 @@ html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
 }
 html.mob .page .tbl.mob-records .rw :is(.who,.rc-tags,.contract-links,.rg){display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
 html.mob .page .mob-records .mob-detail-field .sch-rg{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px}
-html.mob .page .mob-records .mob-detail-field :is(.sch-ua,.pt-project-add){min-width:40px;min-height:40px;justify-content:center}
-html.mob .pt-project-picker .it{min-height:40px}
+html.mob .page .mob-records .mob-detail-field .sch-ua{min-width:40px;min-height:40px;justify-content:center}
+html.mob .partner-content [data-pt-project-pick],html.mob .phead .partner-unlink{min-width:44px;min-height:44px}
+html.mob .phead .partner-unlink{margin:0}
+html.mob .pt-project-picker{max-width:calc(100vw - 24px)}
+html.mob .pt-project-picker .it{min-height:44px}
 html.mob .page .tbl.mob-records .rw .who span{font-size:12px;white-space:normal}
 html.mob .page .tbl.mob-records .rw .sf-e,
 html.mob .page .tbl.mob-records .rw .mob-detail-field :is(button,a){display:inline-flex;align-items:center;min-height:32px;margin:0;max-width:100%}
@@ -5088,9 +5101,9 @@ document.addEventListener('scroll',e=>{if(!e.target.closest?.('.pc-menu'))partne
 // new body by a migration, and the list and the panel read "없음"): the short description when there is one, otherwise the
 // first paragraph of the body (the lines before its first empty line). Nothing is written back: `desc` stays what it is.
 const partnerDesc=p=>{const d=String(p&&p.desc||'').trim(); if(d)return d; const b=String(p&&p.body||'').replace(/\r/g,'').trim(); return b?b.split(/\n\s*\n/)[0].trim():'';};
-function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span data-pt-project-filter><em>관련 프로젝트</em>${svg('i-chev-d',8,4)}</span></div>`;
+function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>설명</em></span><span data-pt-project-filter><em>관련 프로젝트</em>${svg('i-chev-d',8,4)}</span></div>`;
   rows.forEach(r=>{const m=partnerMeeting(r); const u=r.site&&r.site!=='-'?urlHref(r.site):'';
-    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="pt-projects">${schPartnerProjectTags(r,true)}</div></div>`;});
+    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="ds" title="${esc(oneLine(r.body||''))}"><span class="e">${esc(oneLine(r.body||''))}</span></div><div class="pt-projects">${schPartnerProjectTags(r,false)}</div></div>`;});
   if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat||S.partnerProject?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
   h+=`<div class="ft"></div></div>`; return h;}
 // Project cards read the project overview (PHEAD), so editing the overview updates the card.
@@ -5190,7 +5203,7 @@ function renderProject(pid){
   schPartnerScope(pid);
   const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
-  const lk=(t,k)=>`<span class="lk">${PV?schPartnerMark(t):`<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
+  const lk=(t,k)=>`<span class="lk">${PV?schPartnerMark(t):`<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a>${E&&k.startsWith('partner:')?`<button type="button" class="partner-unlink" data-partner-unlink="${k.slice(8)}" title="협력업체 연결 제거" aria-label="협력업체 연결 제거">×</button>`:''}</span>`;
   $('#proj-pw').innerHTML=`
    ${PV?schRepHead(pid):`<div class="phead ${S.collapsed?'collapsed':''}"><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${SC&&!E?`<button class="sh-btn upx" data-schup title="가이드 엑셀(.xlsx)을 올려 일정 · 리스트 · 관계도 · 외부설비 · 승인게이트 · 근거 및 확약을 채웁니다">${svg('i-sch-xls',13,13)}엑셀 업로드</button>`:''}${E?`<button class="cancel" data-canceledit>취소</button>${PREVIEW_ON?'':`<span class="tagedit">약칭<span class="editable" ${edk('__tag','약칭')}>${esc(p.tag)}</span></span>`}`:''}</div>${PREVIEW_ON&&!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
     <div class="ov" data-collapse>사업개요 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
@@ -9906,7 +9919,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
   // The cells of the main page's list are not a block of the overview (twenty-sixth round): read, they follow the sheet (schRepOf); while
   // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
   const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,R[rk]&&!d[k]?R[rk]:(ph||'입력'),d[k],'v')}</label>`;
-  const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
+  const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a>${E&&k.startsWith('partner:')?`<button type="button" class="partner-unlink" data-partner-unlink="${k.slice(8)}" title="협력업체 연결 제거" aria-label="협력업체 연결 제거">×</button>`:''}</span>`;
   // a block: `t` is one of the sheet's blocks (a key of REP_TTL) or, for a block of the page's own, its title as it is. A block of
   // the sheet writes the title the project gave it (schRepTtl), which can be changed while the overview is edited (thirty-sixth
   // round, owner: "수정 눌렀을때 핵심 지표, 사업성 지표같은 소제목들 텍스트도 수정가능하게"); `fk` says that files can be put to it.
@@ -10817,12 +10830,13 @@ function schPartnerScope(scope){
 }
 function schPartnerProjectTags(pt,editable){
  const ids=schPartnerProjects(pt);
- return ids.map(id=>'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(PROJECTS[id].tag||PROJECTS[id].full)+'</button>').join('')+
- (editable?'<button type="button" class="pt-project-add" data-pt-project-pick="'+esc(pt.id)+'" aria-label="관련 프로젝트 선택">+</button>':'');
+ const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag;
+ return editable?'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button>':'<span class="pt-project-tag">'+esc(name)+'</span>';}).join('');
+ return tags||(editable?'<button type="button" class="pt-project-empty" data-pt-project-pick="'+esc(pt.id)+'">선택</button>':'');
 }
 function schPartnerFilterChip(){
  const id=S.partnerProject;
- return id&&PROJECTS[id]?'<button class="sch-chip" data-pt-project-clear>프로젝트: '+esc(PROJECTS[id].tag||PROJECTS[id].full)+'<i>✕</i></button>':'';
+ return id&&PROJECTS[id]?'<button class="sch-chip" data-pt-project-clear>프로젝트: '+esc(PROJECTS[id].full||PROJECTS[id].tag)+'<i>✕</i></button>':'';
 }
 function schEnsureProjectPartners(pid){
  const names=PHEAD[pid]?.partners||[];
@@ -10862,6 +10876,13 @@ document.addEventListener('click',e=>{
  if(el.hasAttribute('data-pt-project-clear')){S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));return;}
  menuPop(el,[{t:'전체 프로젝트',k:'all',sel:!S.partnerProject,fn:()=>{S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));}},
  ...orderedProjects().filter(id=>!PROJECTS[id].trash).map(id=>({t:PROJECTS[id].full||PROJECTS[id].tag,k:id,sel:S.partnerProject===id,fn:()=>{S.partnerProject=id;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});
+},true);
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest&&e.target.closest('[data-partner-unlink]');if(!b||!S.editProj)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const field=document.querySelector('#proj-pw .phead [data-k="partner:'+b.dataset.partnerUnlink+'"]');
+ if(field){field.textContent='';saveProjectHead();render(true);}
 },true);
 </script><script>
 /* ---- mypage/10-mypage.js ---- */
