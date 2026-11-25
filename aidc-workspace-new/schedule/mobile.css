@@ -276,3 +276,7 @@ html.mob.sch-on .props:has(> .rcol) > div:first-child,html.mob.sch-on .sch-props
 
 /* (forty-sixth round) on a phone the panel's own padding is the room: no margin of the wrapper */
 html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0}
+
+/* (forty-seventh round) the link window is as wide as the screen allows */
+html.mob .pop.lp{width:calc(100vw - 32px)}
+html.mob .pop.lp .lp-srch input{font-size:16px}

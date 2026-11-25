@@ -3256,6 +3256,25 @@ html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:n
 .ipage .partner-content{margin:0 60px 0 -1.6px}
 .partner-content .props.simple{left:auto;top:auto}
 .partner-body .editable[contenteditable="true"]{margin:0;padding:0;box-shadow:none;background:transparent}
+
+/* Forty-seventh round (owner, 2026-11-25) */
+/* the window that links an item: a search box in the page's own design at its top, the list scrolling under it */
+.pop.lp{padding:8px;width:340px;max-width:calc(100vw - 16px);max-height:none;overflow:visible;display:flex;flex-direction:column}
+.pop.lp .lp-srch{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px 0 12px;margin-bottom:6px;border-radius:6px;background:#f6f6f6;color:#8e8e8e;flex:none;cursor:text}
+.pop.lp .lp-srch .pict{width:15px;height:15px;flex:none}
+.pop.lp .lp-srch input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink)}
+.pop.lp .lp-srch input::placeholder{color:#b5b5b5}
+.pop.lp .lp-x{flex:none;display:flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;border:0;border-radius:50%;background:#d9d9d9;color:#fff;cursor:pointer}
+.pop.lp .lp-x[hidden]{display:none}
+.pop.lp .lp-list{max-height:min(380px,calc(100vh - 120px));overflow-y:auto;scrollbar-width:thin}
+.pop.lp .it{max-width:none;min-width:0}
+.pop.lp .it .e{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop.lp .lp-none{padding:14px 10px;color:#8e8e8e;font-size:13px}
+html.dark .pop.lp .lp-srch{background:#2a2a2a}
+/* the export window: the tick a little heavier; a part's whole row (but 요약 / FULL) ticks it */
+.sch-xw .xq-ck input:checked::after,.sch-xw .xq-pdf input:checked::after{border-left-width:2.1px;border-bottom-width:2.1px;width:8.2px;height:4.6px}
+.sch-xw .xq-row:not(.none){cursor:pointer}
+.sch-xw .xq-row .xq-seg{cursor:default}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4067,6 +4086,10 @@ html.mob.sch-on .props:has(> .rcol) > div:first-child,html.mob.sch-on .sch-props
 
 /* (forty-sixth round) on a phone the panel's own padding is the room: no margin of the wrapper */
 html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0}
+
+/* (forty-seventh round) the link window is as wide as the screen allows */
+html.mob .pop.lp{width:calc(100vw - 32px)}
+html.mob .pop.lp .lp-srch input{font-size:16px}
 </style>
 </head>
 <body>
@@ -5398,6 +5421,9 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-attach]')){attachFile(itemFromEvent()); return;}
   if(el=q('[data-pick]')){const k=el.dataset.pick;const it=itemFromEvent();if(!it||!canEditItem(it))return;e.stopPropagation();it.dirty=true;
     if(PREVIEW_ON&&typeof schPick==='function'&&schPick(el,it,k))return;
+    if(PREVIEW_ON&&typeof schLinkPick==='function'&&(k==='actions'||k==='research'||k==='meetings')){const type=k==='meetings'?'meeting':k==='actions'?'action':'research';   // forty-seventh round: a search box, no line of instructions
+      const cands=it.type==='contract'&&k==='actions'&&typeof schContractActionCandidates==='function'?()=>schContractActionCandidates(it).filter(i=>i.id!==it.id):()=>{const cur=it[k]||[];return ITEMS.filter(i=>i.type===type&&i.id!==it.id&&(isLive(i)||cur.includes(i.id)));};
+      schLinkPick(el,it,k,cands,k==='meetings'?'미팅':k==='actions'?ACT:'리서치');return;}
     if(it.type==='contract'&&k==='actions'){schContractActionPick(el,it);return;}
     if(k==='actions'||k==='research'||k==='meetings'){const type=k==='meetings'?'meeting':k==='actions'?'action':'research';const cur=(it[k]||[]).slice();const list=ITEMS.filter(i=>i.type===type&&i.id!==it.id&&(isLive(i)||cur.includes(i.id))).sort((a,b)=>(cur.includes(b.id)-cur.includes(a.id))||String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));const short=t=>{t=(t||'제목 없음').split('\n').map(x=>x.trim()).filter(Boolean).join(' ');return t.length>34?t.slice(0,34)+'…':t;};menuPop(el,[{hd:(k==='meetings'?'미팅':k==='actions'?ACT:'리서치')+' 연결 · 눌러서 추가 / 해제'}].concat(list.slice(0,60).map(i=>({t:short(i.title),k:i.id,sel:cur.includes(i.id),fn:()=>{it[k]=cur.includes(i.id)?cur.filter(x=>x!==i.id):cur.concat(i.id);it.dirty=true;rerenderItem();}}))),{multi:true,cls:'multi link'});return;}
     if(k==='proj'){menuPop(el,orderedProjects().map(id=>({t:pname(PROJECTS[id]),html:PREVIEW_ON?pill(PROJECTS[id],'nosq'):undefined,k:id,sel:it.proj===id,fn:()=>{it.proj=id;rerenderItem();}})),PREVIEW_ON?{cls:'proj-menu'}:undefined);return;}
@@ -10112,6 +10138,8 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
     $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; ok.disabled=!(fs.length||pdf())||(!ps.length&&!only); };
   d.addEventListener('change',sync); sync();
+  // forty-seventh round: a part's whole row ticks it (its name, what it holds, the room around them) — only 요약 / FULL keep to themselves
+  d.addEventListener('click',e=>{ const r=e.target.closest&&e.target.closest('[data-xwrow]'); if(!r||e.target.closest('.xq-seg,.xq-ck'))return; const b=r.querySelector('[data-xwp]'); if(!b||b.disabled)return; b.checked=!b.checked; b.dispatchEvent(new Event('change',{bubbles:true})); });
   d.addEventListener('click',async e=>{ const T=e.target; if(!T.closest)return; const f=T.closest('[data-xwf]'), all=T.closest('[data-xwall]'), a=T.closest('[data-xw]');
     if(f){ e.stopPropagation(); if(!f.disabled){ const k=f.closest('[data-xwrow]').dataset.xwrow, was=forms[k]; forms[k]=f.dataset.xwf; sync();
         if(was!==forms[k])for(const el of [f.closest('[data-xwrow]').querySelector('[data-xwsay]'),$n(`[data-xwlist] li[data-xk="${k}"] em`)])if(el){ el.classList.remove('j'); void el.offsetWidth; el.classList.add('j'); } } return; }
@@ -10132,6 +10160,37 @@ document.addEventListener('click',e=>{ if(!PREVIEW_ON||!e.target.closest)return;
   if(el=e.target.closest('[data-mainexp]')){ e.stopPropagation(); e.preventDefault(); schExpWin('main'); return; }
   if(el=e.target.closest('[data-projexp]')){ e.stopPropagation(); e.preventDefault(); if(S.editProj){ toast('사업개요를 수정하는 중에는 내보낼 수 없습니다. 먼저 저장하거나 취소해 주세요.',4200); return; } schExpWin('proj',S.proj); return; }
 },true);
+
+/* ---- schedule/ui/93-linkpick.js ---- */
+/* ---------- linking items: a search box instead of a line of instructions (forty-seventh round) ----------
+   Owner, 2026-11-25: "관련미팅, 액션에 연결 · 눌러서 추가 / 해제 이런거 삭제하고 검색바 넣어줘". The small window that links an
+   item to meetings / actions / research (관련 미팅, 관련 액션, 연결된 리서치 — a contract's and every other item's) opens with a
+   search box in the page's own design at its top and the list under it; nothing else is written there. A press adds or takes
+   away a link and the window stays open (it is drawn again at the same place, with what was typed and where the list was), so
+   several can be linked in one go; Escape or a press outside closes it. What is linked stands first. */
+function schLinkPick(el, it, k, candidates, word){
+  const key = el && el.dataset ? el.dataset.pick : k, st = schLinkPick.st && schLinkPick.st.id === it.id && schLinkPick.st.k === k ? schLinkPick.st : { id: it.id, k, q: '', top: 0 };
+  schLinkPick.st = st;
+  const p = openPop(el, `<label class="lp-srch">${svg('pic-search', 15, 15)}<input type="text" placeholder="${esc(word)} 검색" aria-label="${esc(word)} 검색" value="${esc(st.q)}"><button type="button" class="lp-x" title="지우기" aria-label="지우기"${st.q ? '' : ' hidden'}>${svg('i-x', 9, 9)}</button></label><div class="lp-list" role="listbox" aria-multiselectable="true"></div>`, { cls: 'multi link lp' });
+  const input = p.querySelector('input'), list = p.querySelector('.lp-list'), x = p.querySelector('.lp-x');
+  const short = t => oneLine(t || '') || '(제목 없음)';
+  const draw = () => { const q = input.value.trim(), cur = it[k] || [];
+    const rows = candidates().filter(i => !q || matchQ(q, i.title)).sort((a, b) => (cur.includes(b.id) - cur.includes(a.id)) || String(b.date || b.createdAt || '').localeCompare(String(a.date || a.createdAt || '')));
+    list.innerHTML = rows.slice(0, 80).map(i => `<div class="it ${cur.includes(i.id) ? 'sel' : ''}" role="option" aria-selected="${cur.includes(i.id)}" data-lp="${esc(i.id)}" title="${esc(short(i.title))}"><span class="e">${esc(short(i.title))}</span>${cur.includes(i.id) ? '<span class="x" title="선택 해제">' + svg('i-x', 8, 8) + '</span>' : ''}</div>`).join('')
+      || `<div class="lp-none">${q ? '검색 결과가 없습니다.' : `연결할 ${esc(word)}이 없습니다.`}</div>`;
+    x.hidden = !q; };
+  input.addEventListener('input', () => { st.q = input.value; list.scrollTop = 0; draw(); });
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closePop(); } });
+  x.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); input.value = ''; st.q = ''; draw(); input.focus(); });
+  list.addEventListener('click', e => { const row = e.target.closest('[data-lp]'); if (!row) return; e.stopPropagation();
+    const id = row.dataset.lp, cur = it[k] || []; it[k] = cur.includes(id) ? cur.filter(v => v !== id) : cur.concat(id); it.dirty = true; st.top = list.scrollTop;
+    closePop(); rerenderItem(it.id);
+    // the window comes back where its field is now, as it was
+    const again = [...document.querySelectorAll(`[data-pick="${key}"]`)].find(n => n.offsetParent && n.closest('#panel-pin, #item-pin'));
+    if (again) { const q2 = schLinkPick(again, it, k, candidates, word); const l2 = q2.querySelector('.lp-list'); l2.scrollTop = st.top; } });
+  draw(); list.scrollTop = st.top || 0; setTimeout(() => { try { input.focus({ preventScroll: true }); } catch (_) {} }, 0);
+  return p;
+}
 </script><script>
 /* ---- mypage/10-mypage.js ---- */
 /* My page (preview switch on): 계정 · 수신함 · 설정 · 휴지통, after the owner's specification "마이페이지 고도화 개발 명세서" (2026-11-19).

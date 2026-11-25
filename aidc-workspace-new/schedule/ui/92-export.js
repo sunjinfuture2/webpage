@@ -174,6 +174,8 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
     $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; ok.disabled=!(fs.length||pdf())||(!ps.length&&!only); };
   d.addEventListener('change',sync); sync();
+  // forty-seventh round: a part's whole row ticks it (its name, what it holds, the room around them) — only 요약 / FULL keep to themselves
+  d.addEventListener('click',e=>{ const r=e.target.closest&&e.target.closest('[data-xwrow]'); if(!r||e.target.closest('.xq-seg,.xq-ck'))return; const b=r.querySelector('[data-xwp]'); if(!b||b.disabled)return; b.checked=!b.checked; b.dispatchEvent(new Event('change',{bubbles:true})); });
   d.addEventListener('click',async e=>{ const T=e.target; if(!T.closest)return; const f=T.closest('[data-xwf]'), all=T.closest('[data-xwall]'), a=T.closest('[data-xw]');
     if(f){ e.stopPropagation(); if(!f.disabled){ const k=f.closest('[data-xwrow]').dataset.xwrow, was=forms[k]; forms[k]=f.dataset.xwf; sync();
         if(was!==forms[k])for(const el of [f.closest('[data-xwrow]').querySelector('[data-xwsay]'),$n(`[data-xwlist] li[data-xk="${k}"] em`)])if(el){ el.classList.remove('j'); void el.offsetWidth; el.classList.add('j'); } } return; }
