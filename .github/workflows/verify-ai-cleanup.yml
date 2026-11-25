@@ -1,12 +1,13 @@
-name: Verify simplified AI overview
+name: Capture PDF layout trial
 on:
   push:
     branches: ['codex/ai-overview-cleanup']
 permissions:
   contents: read
 jobs:
-  test:
+  trial:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: aidc-workspace-new
@@ -18,9 +19,14 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm install --no-save --package-lock=false playwright@1.56.1
       - run: npx playwright install --with-deps chromium
-      - run: npm run build
-      - run: |
-          trap 'tail -n 20 "$RUNNER_TEMP/ai.log"' EXIT
-          npx wrangler dev --local --compatibility-date 2026-10-13 --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/ai.log" 2>&1 &
-          for i in $(seq 1 60); do if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi; sleep 1; done
-          node tests/ai-layout.cjs
+      - run: sudo apt-get install -y fonts-nanum
+      - run: pip install reportlab
+      - run: python tests/make-capture-pdf.py
+      - run: node tests/capture-pdf-live.cjs
+        env:
+          TRIAL_LIMIT: '2'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capture-pdf-trial
+          path: aidc-workspace-new/test-results/capture
