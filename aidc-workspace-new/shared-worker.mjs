@@ -74,7 +74,7 @@ export default {
     if (new URL(req.url).pathname.startsWith('/api/')) {
       // an error that escapes the workspace object comes back as JSON the page can show, never as Cloudflare's HTML page
       try { return await env.WORKSPACE.get(env.WORKSPACE.idFromName('team')).fetch(req); }
-      catch (e) { console.error('workspace request failed:', e && e.stack || e); return json({ error: '서버를 시작하지 못했습니다. 잠시 뒤 다시 시도해 주세요.' }, 503); }
+      catch (e) { console.error('workspace request failed:', e && e.stack || e); return json({ error: '서버를 시작하지 못했습니다. 잠시 뒤 다시 시도해 주세요. (' + String(e && e.message || e).slice(0, 200) + ')', detail: String(e && e.message || e).slice(0, 500) }, 503); }
     }
     return env.ASSETS.fetch(req);
   }
@@ -84,6 +84,11 @@ export class Workspace {
   constructor(ctx, env) {
     this.env = env;
     this.ctx = ctx; this.sql = ctx.storage.sql; this.lastPurge = 0;
+    // Nothing that goes wrong while the object starts may throw out of here: the Worker then only sees "Error 1101" and the
+    // cause is lost. It is kept and every request is answered with it (503) until the object starts cleanly.
+    try { this.start(); } catch (e) { this.startErr = e; console.error('workspace start failed:', e && e.stack || e); }
+  }
+  start() {
     this.sql.exec('CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS users (employee TEXT PRIMARY KEY, name TEXT NOT NULL)');
     // live_sessions replaces the older active_sessions table, which allowed only one session per employee.
@@ -263,6 +268,8 @@ export class Workspace {
   }
 
   async fetch(req) {
+    if (this.startErr) { try { this.start(); this.startErr = null; } catch (e) { this.startErr = e; } }
+    if (this.startErr) return json({ error: '서버를 시작하지 못했습니다. 잠시 뒤 다시 시도해 주세요. (' + String(this.startErr.message || this.startErr).slice(0, 200) + ')', detail: String(this.startErr.stack || this.startErr).slice(0, 1500) }, 503);
     try {
       const url = new URL(req.url); const path = url.pathname;
       if (req.method === 'POST' && req.headers.get('Origin') && req.headers.get('Origin') !== url.origin) return json({ error: '요청 출처 오류' }, 403);

@@ -57,3 +57,12 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm run deploy
+
+      # 배포 직후 실제 사이트가 응답하는지 확인합니다 (로그인 없이 /api/state 를 불러 상태 코드와 응답만 기록: 401 이면 정상).
+      - name: Check the live site answers
+        run: |
+          sleep 5
+          for path in /api/state /; do
+            code=$(curl -s -o /tmp/body -w '%{http_code}' -H 'X-AIDC-Client: 4' "https://sunjin-aidc-workspace-demo.sunjinfuture2.workers.dev$path" || true)
+            echo "$path -> $code"; head -c 1500 /tmp/body; echo
+          done
