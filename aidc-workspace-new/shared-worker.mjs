@@ -1,3 +1,4 @@
+import { movePartnerDescriptions } from './partner-description-migration.mjs';
 import { ensureAIProject, aiProjectRoute } from './ai-project.mjs';
 import seedText from './seed.json';
 import { fetchHolidays } from './holiday-service.mjs';
@@ -96,6 +97,7 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS holidays (year INTEGER PRIMARY KEY, days TEXT NOT NULL, at INTEGER)');
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
     ensureAIProject(this);
+    movePartnerDescriptions(this);
   }
 
   put(id, v) { this.sql.exec('INSERT OR REPLACE INTO records VALUES (?,?)', id, JSON.stringify(v)); }
