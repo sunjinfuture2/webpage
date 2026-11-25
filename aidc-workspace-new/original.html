@@ -1969,7 +1969,7 @@ function renderArchive(){
 
 /* ===================== ITEM (panel / full page) ===================== */
 function newItem(type,extra={}){const id=type[0]+crypto.randomUUID(); const base={id,type,createdAt:new Date().toISOString(),authorId:sharedUser,title:'',proj:S.proj||(PREVIEW_ON&&type==='action'?'':orderedProjects()[0]||'pangyo'),date:TODAY,status:'new',st:'prog',pri:'mid',people:sharedUser?[sharedUser]:[],url:'',body:'',comments:[],created:TODAY};
-  if(type==='contract')base.meetings=[];
+  if(type==='contract')Object.assign(base,{meetings:[],actions:[]});
   if(type==='meeting')Object.assign(base,{partner:'',extAtt:'',actions:[],research:[],checks:[]});
   Object.assign(base,extra); ITEMS.push(base); return base;}
 // An untouched 자료실 row becomes a normal item the first time it is edited, commented on or trashed.
@@ -2157,7 +2157,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
       V('상태',typeof schPreview==='function'&&schPreview()?`<span class="st sch" ${pk('st')}>${schStIcon(it.st==='done'?'완료':'진행')}</span>`:`<span class="st ${it.st==='done'?'done':''}" ${pk('st')}>${svg(it.st==='done'?'i-check':'i-prog',10,it.st==='done'?8:10)}${stTxt[it.st]||stTxt.prog}</span>`),
       V('중요도',`<span class="pri pri-${it.pri||'mid'}" ${pk('pri')}>${priTxt[it.pri||'mid']}</span>`),
       V('담당자',`<span class="people" ${pk('people')}>${who(it.people)}</span>`),
-      ...(it.type==='contract'?[V('관련 미팅',`<span class="chips" ${pk('meetings')}>${linkChips(it,'meetings',E)}</span>`)]:[V(tab?'출처 URL':'URL',urlField(it,E))]),...(PREVIEW_ON&&tab?[V('드롭박스 URL',dbxField(it,E))]:[]),...(PREVIEW_ON&&!tab&&it.type==='research'&&typeof schCatsField==='function'?[V('구분',schCatsField(it,E))]:[]),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
+      ...(it.type==='contract'?[V('관련 미팅',`<span class="chips" ${pk('meetings')}>${linkChips(it,'meetings',E)}</span>`),V('관련 액션',`<span class="chips" ${pk('actions')}>${linkChips(it,'actions',E)}</span>`)]:[V(tab?'출처 URL':'URL',urlField(it,E))]),...(PREVIEW_ON&&tab?[V('드롭박스 URL',dbxField(it,E))]:[]),...(PREVIEW_ON&&!tab&&it.type==='research'&&typeof schCatsField==='function'?[V('구분',schCatsField(it,E))]:[]),...(typeof schItemRows==='function'?schItemRows(it,E,V):[])];
     props=(typeof schItemProps==='function'?schItemProps(it,E,full):null)||(PREVIEW_ON&&it.type==='action'&&!tab&&typeof schActionProps==='function'?schActionProps(it,E,full,{projV,who,pk}):null)||`<div class="props" style="grid-template-columns:449px"><div>${rows.join('')}</div></div>`;
   }
   const cmtTop=full?(meeting?463.4:540.9-18.3):(meeting?481.7:540.9); const hrTop=cmtTop+30.3; const bodyTop=hrTop+(full?64.6:80.2)-1.3;
@@ -2518,6 +2518,7 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-attach]')){attachFile(itemFromEvent()); return;}
   if(el=q('[data-pick]')){const k=el.dataset.pick;const it=itemFromEvent();if(!it||!canEditItem(it))return;e.stopPropagation();it.dirty=true;
     if(PREVIEW_ON&&typeof schPick==='function'&&schPick(el,it,k))return;
+    if(it.type==='contract'&&k==='actions'){schContractActionPick(el,it);return;}
     if(k==='actions'||k==='research'||k==='meetings'){const type=k==='meetings'?'meeting':k==='actions'?'action':'research';const cur=(it[k]||[]).slice();const list=ITEMS.filter(i=>i.type===type&&i.id!==it.id&&(isLive(i)||cur.includes(i.id))).sort((a,b)=>(cur.includes(b.id)-cur.includes(a.id))||String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));const short=t=>{t=(t||'제목 없음').split('\n').map(x=>x.trim()).filter(Boolean).join(' ');return t.length>34?t.slice(0,34)+'…':t;};menuPop(el,[{hd:(k==='meetings'?'미팅':k==='actions'?ACT:'리서치')+' 연결 · 눌러서 추가 / 해제'}].concat(list.slice(0,60).map(i=>({t:short(i.title),k:i.id,sel:cur.includes(i.id),fn:()=>{it[k]=cur.includes(i.id)?cur.filter(x=>x!==i.id):cur.concat(i.id);it.dirty=true;rerenderItem();}}))),{multi:true,cls:'multi link'});return;}
     if(k==='proj'){menuPop(el,orderedProjects().map(id=>({t:pname(PROJECTS[id]),html:PREVIEW_ON?pill(PROJECTS[id],'nosq'):undefined,k:id,sel:it.proj===id,fn:()=>{it.proj=id;rerenderItem();}})),PREVIEW_ON?{cls:'proj-menu'}:undefined);return;}
     if(k==='proj-x'){it.proj='';rerenderItem();return;}
