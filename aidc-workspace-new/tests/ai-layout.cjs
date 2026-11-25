@@ -6,6 +6,8 @@ const legacy=await p.evaluate(()=>{const el=document.querySelector('.phead.rep')
 const before=await state();await p.evaluate(()=>go('project:ai-application-test'));await p.waitForSelector('.ai-overview');
 const below=await p.locator('.ai-overview').evaluate(el=>[...el.parentElement.children].filter(n=>n!==el).map(n=>n.outerHTML).join(''));
 await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inline="summary"]');
+assert.equal(await p.locator('[data-ai-zone],[data-ai-action="column"],.ai-refs,[data-ai-inline="warnings"]').count(),0);
+assert.equal(await p.locator('[data-ai-action="row"][data-ai-index="3"]').innerText(),'＋');
 await p.locator('[data-ai-inline="summary"]').fill('직접 입력한 사업 개요 — 업로드 없이 작성');
 await p.locator('[data-ai-action="row"][data-ai-index="0"]').click();
 await p.locator('[data-ai-inline="sections.0.metrics.0.value"]').fill('10MW');
