@@ -11,9 +11,9 @@ const SCH_RF={when:['기간',{'30':'최근 30일',month:'이번 달',year:'올�
 const schTagNorm=t=>String(t||'').replace(/\s+/g,' ').trim().toUpperCase();
 const schResCats=i=>[...new Set((Array.isArray(i.cats)?i.cats:[]).map(schTagNorm).filter(Boolean))];
 const schResTitleTags=i=>[...String(i.title||'').split('\n')[0].matchAll(/\[([^\[\]\n]{1,16})\]/g)].map(m=>schTagNorm(m[1])).filter(Boolean);
-const schResTagsOf=i=>[...new Set(schResCats(i).concat(schResTitleTags(i)))];
+const schResTagsOf=i=>[...new Set(schResCats(i).concat(schResTitleTags(i)).filter(t=>t!=='기타'))];
 function schResTags(pool){ const n=new Map(); for(const i of pool)for(const t of schResTagsOf(i))n.set(t,(n.get(t)||0)+1); return [...n].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,80); }
-const schRfTags=c=>{ if(c.tag){c.tags=[c.tag];delete c.tag;} return Array.isArray(c.tags)?c.tags:[]; };   // the single choice of before becomes a list
+const schRfTags=c=>{ if(c.tag){c.tags=[c.tag];delete c.tag;} return Array.isArray(c.tags)?c.tags.filter(t=>schTagNorm(t)!=='기타'):[]; };   // the single choice of before becomes a list
 const schTagLabel=t=>t==='-'?'구분 없음':'['+t+']';
 // A list one can tick several of; it stays open. all: [[value, count|null]], isOn(value), toggle(value); tail: html below the list.
 function schMultiPop(el,title,all,isOn,toggle,tail,none,rename){ const draw=()=>`<div class="hd">${esc(title)}</div>${none?`<div class="it ${all.some(([t])=>isOn(t))?'':'sel'}" data-none>${esc(none)}</div><div class="sep"></div>`:''}`+(all.map(([t,n])=>`<div class="it ${isOn(t)?'sel':''}" data-t="${esc(t)}"><i class="ck">${isOn(t)?svg('i-check',9,7.5):''}</i><b>${esc(schTagLabel(t))}</b>${n!=null?`<span class="n">${n}</span>`:''}${rename&&t!=='-'?`<button type="button" class="rn" data-rn="${esc(t)}" title="이 구분의 이름 바꾸기 (모든 리서치에 적용)">이름 바꾸기</button>`:''}</div>`).join('')||'<div class="msg">아직 쓰인 구분이 없습니다.</div>')+(tail||'');
@@ -33,15 +33,15 @@ function schCatRename(old,done){ askInput(`“${old}” 구분의 새 이름 (�
   render(true); const cur=curItem(); if(cur&&cur.type==='research')rerenderItem(cur.id);
   toast(`구분 “${old}”을(를) “${nw}”(으)로 바꿨습니다 · 리서치 ${n}건${skip?` (다른 멤버가 수정 중인 ${skip}건 제외)`:''}`,6000,{t:'되돌리기',fn:()=>{ for(const [id,cats,title] of back){const i=ITEMS.find(q=>q.id===id); if(!i)continue; if(cats)i.cats=cats; else delete i.cats; i.title=title;} render(true); const q=curItem(); if(q&&q.type==='research')rerenderItem(q.id); }});
   if(done)done(nw); }); }
-function schCatsField(it,E){ const own=schResCats(it), auto=schResTitleTags(it).filter(t=>!own.includes(t));
+function schCatsField(it,E){ const own=schResCats(it).filter(t=>t!=='기타'), auto=schResTitleTags(it).filter(t=>t!=='기타'&&!own.includes(t));
   const chips=own.map(t=>`<span class="rc-tag">${esc(t)}${E?`<button type="button" data-pick="uncat" data-k="${esc(t)}" title="이 구분 빼기">${svg('i-x',7,7)}</button>`:''}</span>`).join('')+auto.map(t=>`<span class="rc-tag auto" title="제목의 [${esc(t)}] 에서 온 구분입니다">${esc(t)}</span>`).join('');
   return `<span class="rc-tags">${chips}${E?'<span class="chip add" data-pick="cats">+ 구분 선택</span>':(chips?'':'<span class="plain" style="color:#c4c4c4">없음</span>')}</span>`; }
 function schCatsPick(el,it){ const redraw=()=>{ it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); };
   const set=l=>{ if(l.length)it.cats=l; else delete it.cats; redraw(); }, has=t=>schResCats(it).includes(t);
-  const all=()=>{ const m=new Map(schResTags(liveItems('research',null))); for(const t of schResCats(it))if(!m.has(t))m.set(t,null); return [...m]; };
+  const all=()=>{ const m=new Map(schResTags(liveItems('research',null))); for(const t of schResCats(it))if(t!=='기타'&&!m.has(t))m.set(t,null); return [...m]; };
   let list=all(); const p=schMultiPop(el,'구분 선택 (여러 개 가능)',list,has,t=>{ set(has(t)?schResCats(it).filter(x=>x!==t):schResCats(it).concat(t)); },
     `<div class="msg rc-new"><input id="rc-new" maxlength="16" placeholder="새 구분 입력 후 Enter" autocomplete="off"></div>`,null,old=>schCatRename(old));
-  const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const t=schTagNorm(inp.value); if(!t)return; if(!has(t))set(schResCats(it).concat(t)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
+  const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const t=schTagNorm(inp.value); if(!t||t==='기타')return; if(!has(t))set(schResCats(it).concat(t)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
   p._after=wire; wire(); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
   list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
