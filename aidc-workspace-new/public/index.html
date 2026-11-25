@@ -40,7 +40,6 @@ svg{display:block}
 
 /* ===== LOGIN ===== */
 #login{position:fixed;inset:0;background:#fff;z-index:50}
-#login .logo-ph{position:absolute;left:870px;top:219.7px;width:182.8px;height:182.8px;background:#f7f7f7}
 #login h1{position:absolute;left:0;right:0;top:419px;text-align:center;font-size:25px;font-weight:500;color:#000;letter-spacing:-0.005em}
 #login h1 em{font-style:normal;color:var(--orange)}
 #login .field{position:absolute;left:799.9px;width:323.1px;height:43.6px;background:#f7f7f7;border-radius:5px;border:0;padding:0 17px;font-size:16px;font-weight:600;color:#1c1c1c;outline:none}
@@ -1021,7 +1020,7 @@ svg{display:block}
 /* search pop */
 .srch .res{max-height:300px;overflow:auto;margin-top:6px}
 .srch .res .it .m{font-size:11px;color:var(--t5);margin-left:auto}
-#login .logo-ph{left:calc(50% - 60px);top:calc(50% - 240px);width:120px;height:120px}#login h1{top:calc(50% - 105px)}#login .field,#login .submit,#login .err{left:calc(50% - 162px)}#login .f1{top:calc(50% - 25px)}#login #lg-name{top:calc(50% + 30px)}#login .f2{display:none}#login .keep{display:none}#login .err{top:calc(50% + 80px);width:323px;line-height:1.5}#login .submit{top:calc(50% + 145px)}button:disabled{cursor:not-allowed;color:#888}.ihead .lock{font-size:13px;color:#888;white-space:nowrap}
+#login h1{top:calc(50% - 142px)}#login .field,#login .submit,#login .err,#login .keep{left:calc(50% - 162px)}#login .f1{top:calc(50% - 62px)}#login #lg-name{top:calc(50% - 7px)}#login .f2{display:none}#login .keep{top:calc(50% + 50px)}#login .err{top:calc(50% + 143px);width:323px;line-height:1.5}#login .submit{top:calc(50% + 88px)}button:disabled{cursor:not-allowed;color:#888}.ihead .lock{font-size:13px;color:#888;white-space:nowrap}
 /* ===== 2026-11: real dates, per-project lists, working detail panel ===== */
 html{overflow:hidden}
 .pop{max-height:calc(100vh - 16px);overflow-y:auto}
@@ -3342,6 +3341,10 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
      fixed places), so two cards with the same lines differed in height. */
 .sch-on .sec-title{font-size:28px;font-weight:700;letter-spacing:-0.03em}
 .sch-on .mcard.sm{padding-bottom:31.5px}
+
+/* Owner, 2026-11-26: 저장 of the overview is the black button of the panels too */
+.sch-on .rmeta .rbt .edit.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
+.sch-on .rmeta .rbt .edit.save:hover{background:#2b2b2b;color:#fff}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4310,9 +4313,9 @@ html.mob .pop:not(.mob-day-menu){max-height:calc(100dvh - 24px);overflow-y:auto}
 html.mob .mob-day-menu .it{padding:0}
 html.mob .mob-day-item{width:100%;min-height:44px;padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere}
 html.mob #login{display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;padding:24px 16px}
-html.mob #login > .logo-ph,html.mob #login h1,html.mob #login .field,html.mob #login .submit,html.mob #login .err{position:static;flex:none}
-html.mob #login .logo-ph{width:88px;height:88px;margin-top:auto}
-html.mob #login h1{margin:0 0 14px}
+html.mob #login h1,html.mob #login .field,html.mob #login .submit,html.mob #login .err,html.mob #login .keep{position:static;flex:none}
+html.mob #login .keep{width:min(100%,344px);margin:2px 0}
+html.mob #login h1{margin:auto 0 14px}
 html.mob #login .field,html.mob #login .submit,html.mob #login .err{width:min(100%,344px)}
 html.mob #login .submit{min-height:46px;margin:8px 0 auto}
 html.mob .panel .lib-view.lb,html.mob .ipage .lib-view.lb{position:static;width:100%;padding:0}
@@ -4591,12 +4594,11 @@ html.mob .pt-project-tag.has-x .pt-x{width:28px;height:28px}
 
 <!-- ================= LOGIN ================= -->
 <div id="login">
-  <div class="logo-ph"></div>
-  <h1>We’re working <em>here</em></h1>
+  <h1>SUNJIN AIDC Workspace</h1>
   <input class="field f1" id="lg-id" placeholder="사번" autocomplete="off">
   <input class="field f2" id="lg-pw" type="password" placeholder="비밀번호">
-  <label class="keep"><input type="checkbox" id="lg-keep"><span class="box"><svg width="11" height="9"><use href="#i-check" style="color:#4f4f4f"/></svg></span>로그인 유지</label>
-  <input class="field" id="lg-name" placeholder="이름 (처음 로그인할 때 입력)" autocomplete="name" maxlength="40"><div class="err" id="lg-err">사번과 비밀번호를 입력하세요.</div>
+  <input class="field" id="lg-name" placeholder="이름 (처음 로그인할 때 입력)" autocomplete="name" maxlength="40">
+  <label class="keep"><input type="checkbox" id="lg-keep"><span class="box"><svg width="11" height="9"><use href="#i-check" style="color:#4f4f4f"/></svg></span>자동 로그인</label><div class="err" id="lg-err">사번과 비밀번호를 입력하세요.</div>
   <button class="submit" id="lg-btn">로그인</button>
 </div>
 
@@ -6079,7 +6081,14 @@ $('#content').prepend($('#notice'));
 $('#notice').style.top='8.3px';
 const navigationType=performance.getEntriesByType('navigation')[0]?.type;
 sessionStorage.removeItem('aidc-tab-token');  // older builds kept a per-tab login here
-sharedToken=localStorage.getItem(TOKEN_KEY)||'';
+// 자동 로그인 (owner, 2026-11-26): ticked, the login is kept in localStorage as before and survives closing the browser; not
+// ticked, it is kept in a cookie without an end date, which every tab shares and the browser forgets when it is closed.
+// The choice of the last login is this browser's own (`aidc-auto`, not ticked at first).
+const AUTO_KEY='aidc-auto';
+const tokenCookie=()=>{const m=document.cookie.match(/(?:^|;\s*)aidc-tok=([^;]+)/);try{return m?decodeURIComponent(m[1]):'';}catch{return '';}};
+function tokenKeep(t,auto){ localStorage.removeItem(TOKEN_KEY); document.cookie='aidc-tok=; Path=/; Max-Age=0; SameSite=Strict'; if(!t)return;
+ if(auto)localStorage.setItem(TOKEN_KEY,t); else document.cookie=`aidc-tok=${encodeURIComponent(t)}; Path=/; SameSite=Strict${location.protocol==='https:'?'; Secure':''}`; }
+sharedToken=localStorage.getItem(TOKEN_KEY)||tokenCookie()||'';
 function apiFetch(url,options={}){return fetch(url,{...options,headers:{...options.headers,'X-AIDC-Client':String(CLIENT_VERSION),...(sharedToken?{Authorization:'Bearer '+sharedToken}:{})}});}
 const postJson=(url,body)=>apiFetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 
@@ -6404,7 +6413,7 @@ function reorganizeArchiveV3(){
  ARCH_SECTIONS=topic.filter(x=>x.cards.length).concat(rest.filter(x=>x.cards.length||!['웹사이트','유튜브','블로그'].includes(x.name)));
 }
 async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');
- if(!r.ok){localStorage.removeItem(TOKEN_KEY);sharedToken='';return false;}
+ if(!r.ok){tokenKeep('');sharedToken='';return false;}
  const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);
  const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);
  sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);sharedRev=data.rev!=null?String(data.rev):'';
@@ -6438,14 +6447,15 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  restoreRoute();render();if(S.panel)openAny(S.panel);if(S.my&&PREVIEW_ON&&typeof mpOpen==='function')mpOpen(S.my);S.my=null;sharedUi();sharedConnect();return true;
 }
 async function login(){const employee=$('#lg-id').value.trim();if(!employee){$('#lg-err').textContent='사번을 입력하세요.';$('#lg-err').style.display='block';return;}$('#lg-btn').disabled=true;
- try{const r=await postJson('/api/login',{employee,name:$('#lg-name').value.trim()});const d=await r.json();if(!r.ok)throw Error(d.error);
-  sharedToken=d.token;localStorage.setItem(TOKEN_KEY,sharedToken);localStorage.setItem('aidc-known-name:'+d.employee,d.name);$('#lg-err').style.display='none';await sharedStart();}
+ const auto=!!$('#lg-keep')?.checked; try{localStorage.setItem(AUTO_KEY,auto?'1':'0');}catch{}
+ try{const r=await postJson('/api/login',{employee,name:$('#lg-name').value.trim(),remember:auto});const d=await r.json();if(!r.ok)throw Error(d.error);
+  sharedToken=d.token;tokenKeep(sharedToken,auto);localStorage.setItem('aidc-known-name:'+d.employee,d.name);$('#lg-err').style.display='none';await sharedStart();}
  catch(e){$('#lg-err').textContent=e.message;$('#lg-err').style.display='block';}finally{$('#lg-btn').disabled=false;}}
 async function logout(){closeModal();closePanel(true);await sharedFlush(true);preserveLocal(true);try{await apiFetch('/api/logout',{method:'POST'});}catch{}sharedEnd();history.replaceState(null,'',location.pathname);}
-function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedRev='';sharedSocket?.close();sharedToken='';localStorage.removeItem(TOKEN_KEY);lastHash=null;sharedRestoreRoute=true;
+function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedRev='';sharedSocket?.close();sharedToken='';tokenKeep('');lastHash=null;sharedRestoreRoute=true;
  $('#app').hidden=true;$('#login').style.display='';if(message){$('#lg-err').textContent=message;$('#lg-err').style.display='block';}}
 $('#login').style.display='';$('#app').hidden=true;$('#lg-err').style.display='none';
-$('#lg-btn').addEventListener('click',login);['#lg-id','#lg-pw','#lg-name'].forEach(s=>$(s)?.addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
+$('#lg-btn').addEventListener('click',login);if($('#lg-keep'))$('#lg-keep').checked=localStorage.getItem(AUTO_KEY)==='1';['#lg-id','#lg-pw','#lg-name'].forEach(s=>$(s)?.addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
 $('#lg-id').addEventListener('input',()=>{const n=localStorage.getItem('aidc-known-name:'+$('#lg-id').value.trim().toUpperCase());$('#lg-name').value=n||'';});
 // Logging in or out in another tab of this browser applies here too.
 window.addEventListener('storage',e=>{if(e.key!==TOKEN_KEY||e.newValue===sharedToken)return;if(!e.newValue){if(sharedReady)sharedEnd();}else if(!sharedReady){sharedToken=e.newValue;sharedStart().catch(()=>{});}});
@@ -9971,7 +9981,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
   const meta=`<div class="rmeta"><div class="rml">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
      <span class="m st ${E?'stpick':''}" ${E?'data-pickstatus':''}><b>추진 단계</b>${statusBadge(p.status)}${chev}</span><i class="sep"></i>
      <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)||'<span class="nil">미지정</span>'}</span>${chev}</span></div>
-     <div class="rmr"><div class="rbt"><button class="sh-btn edit ${E?'on':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button>`:`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button>`}</div>
+     <div class="rmr"><div class="rbt"><button class="sh-btn edit ${E?'on save':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button>`:`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button>`}</div>
        <div class="rdt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}<b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</div></div></div>`;
   const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
   // the two rows of figures

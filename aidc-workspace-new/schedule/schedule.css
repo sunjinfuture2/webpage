@@ -2139,3 +2139,7 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
      fixed places), so two cards with the same lines differed in height. */
 .sch-on .sec-title{font-size:28px;font-weight:700;letter-spacing:-0.03em}
 .sch-on .mcard.sm{padding-bottom:31.5px}
+
+/* Owner, 2026-11-26: 저장 of the overview is the black button of the panels too */
+.sch-on .rmeta .rbt .edit.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
+.sch-on .rmeta .rbt .edit.save:hover{background:#2b2b2b;color:#fff}

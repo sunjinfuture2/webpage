@@ -22,7 +22,8 @@ const MAX_CHANGES = 5000;
 
 const json = (v, status = 200, headers = {}) => Response.json(v, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
 // Downloads and inline images are plain browser navigations, so they authenticate with this cookie instead of the Bearer token.
-const fileCookie = (req, token, maxAge) => `aidc_file=${token}; Path=/api/file; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${new URL(req.url).protocol === 'https:' ? '; Secure' : ''}`;
+// maxAge null: a cookie without an end date, forgotten with the browser (a login without 자동 로그인)
+const fileCookie = (req, token, maxAge) => `aidc_file=${token}; Path=/api/file; HttpOnly; SameSite=Lax${maxAge == null ? '' : '; Max-Age=' + maxAge}${new URL(req.url).protocol === 'https:' ? '; Secure' : ''}`;
 // Defence in depth for stored HTML bodies: the page sanitises again before rendering.
 const cleanHtml = s => typeof s !== 'string' ? s : s
   .replace(/<\s*(script|style|object|embed|link|meta|base)\b[\s\S]*?(<\s*\/\s*\1\s*>|$)/gi, '')
@@ -93,7 +94,7 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS users (employee TEXT PRIMARY KEY, name TEXT NOT NULL)');
     // live_sessions replaces the older active_sessions table, which allowed only one session per employee.
     this.sql.exec('CREATE TABLE IF NOT EXISTS live_sessions (token TEXT PRIMARY KEY, employee TEXT, expires INTEGER, seen INTEGER)');
-    for (const col of ['created INTEGER', 'ua TEXT', 'sid TEXT']) { try { this.sql.exec('ALTER TABLE live_sessions ADD COLUMN ' + col); } catch { /* already there */ } }
+    for (const col of ['created INTEGER', 'ua TEXT', 'sid TEXT', 'keep INTEGER']) { try { this.sql.exec('ALTER TABLE live_sessions ADD COLUMN ' + col); } catch { /* already there */ } }
     try { this.sql.exec("UPDATE live_sessions SET sid=lower(hex(randomblob(8))) WHERE sid IS NULL OR sid=''"); } catch { }
     this.sql.exec('CREATE TABLE IF NOT EXISTS edit_locks (id TEXT PRIMARY KEY, token TEXT, employee TEXT, expires INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, employee TEXT, changed TEXT, at TEXT)');
@@ -203,6 +204,7 @@ export class Workspace {
     return '';
   }
   // Login lifetime chosen in 설정 > 보안 (7 / 14 / 30 / 90 days after the last request).
+  sessionKept(token) { try { const r = this.sql.exec('SELECT keep FROM live_sessions WHERE token=?', token).toArray()[0]; return !r || r.keep !== 0; } catch { return true; } }
   sessionMs() { const days = +(this.get('meta:settings')?.security?.sessionDays); return [7, 14, 30, 90].includes(days) ? days * 864e5 : SESSION_MS; }
   cleanup() {
     const now = Date.now();
@@ -289,7 +291,7 @@ export class Workspace {
       if (!fileGet && version < MIN_CLIENT) return json({ error: '새 버전이 배포되었습니다. 새로고침(Ctrl+F5)한 뒤 다시 로그인하세요.', reload: true }, 401);
 
       if (path === '/api/login' && req.method === 'POST') {
-        const { employee, name } = await req.json(); const id = String(employee || '').trim().normalize('NFKC').toUpperCase();
+        const { employee, name, remember } = await req.json(); const id = String(employee || '').trim().normalize('NFKC').toUpperCase();
         if (!/^[A-Z0-9_-]{1,40}$/.test(id)) return json({ error: '사번은 영문·숫자·하이픈·밑줄로 입력하세요.' }, 400);
         this.cleanup();
         const saved = this.sql.exec('SELECT name FROM users WHERE employee=?', id).toArray()[0]; const display = String(saved?.name || name || '').trim();
@@ -297,9 +299,11 @@ export class Workspace {
         const token = crypto.randomUUID(); const now = Date.now();
         this.sql.exec('INSERT OR IGNORE INTO users VALUES (?,?)', id, display);
         this.sql.exec('INSERT INTO live_sessions (token,employee,expires,seen,created,ua,sid) VALUES (?,?,?,?,?,?,?)', token, id, now + this.sessionMs(), now, now, String(req.headers.get('User-Agent') || '').slice(0, 300), crypto.randomUUID().replace(/-/g, '').slice(0, 16));
+        // 자동 로그인 (2026-11-26): a login without it gets a file cookie that ends with the browser; pages of an older build send nothing = kept
+        const keep = remember === false ? 0 : 1; try { this.sql.exec('UPDATE live_sessions SET keep=? WHERE token=?', keep, token); } catch { }
         this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', id, JSON.stringify({ event: 'login' }), new Date().toISOString());
         this.broadcast({ users: this.users() });
-        return json({ employee: id, name: display, token }, 200, { 'Set-Cookie': fileCookie(req, token, this.sessionMs() / 1000) });
+        return json({ employee: id, name: display, token }, 200, { 'Set-Cookie': fileCookie(req, token, keep ? this.sessionMs() / 1000 : null) });
       }
 
       const token = req.headers.get('Authorization')?.replace(/^Bearer /, '') || (path === '/api/live' ? url.searchParams.get('token') : '') || (fileGet ? ((req.headers.get('Cookie') || '').match(/(?:^|;\s*)aidc_file=([^;]+)/)?.[1] || '') : '');
@@ -333,7 +337,7 @@ export class Workspace {
         if (rev !== null && url.searchParams.get('since') === rev) return json({ same: true, rev, users: this.users(), locks: this.locks(), minClient: MIN_CLIENT });
         return json({ employee: me, name: this.users()[me], users: this.users(), locks: this.locks(), minClient: MIN_CLIENT, rev,
           records: Object.fromEntries(this.sql.exec('SELECT * FROM records').toArray().map(r => [r.id, JSON.parse(r.data)]).filter(([k, v]) => !this.hidden(k, v, me))) },
-          200, { 'Set-Cookie': fileCookie(req, token, this.sessionMs() / 1000) });
+          200, { 'Set-Cookie': fileCookie(req, token, this.sessionKept(token) ? this.sessionMs() / 1000 : null) });
       }
       if (path === '/api/live' && req.headers.get('Upgrade') === 'websocket') {
         const pair = new WebSocketPair(); this.ctx.acceptWebSocket(pair[1]); pair[1].serializeAttachment({ token, employee: me });

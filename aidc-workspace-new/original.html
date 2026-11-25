@@ -40,7 +40,6 @@ svg{display:block}
 
 /* ===== LOGIN ===== */
 #login{position:fixed;inset:0;background:#fff;z-index:50}
-#login .logo-ph{position:absolute;left:870px;top:219.7px;width:182.8px;height:182.8px;background:#f7f7f7}
 #login h1{position:absolute;left:0;right:0;top:419px;text-align:center;font-size:25px;font-weight:500;color:#000;letter-spacing:-0.005em}
 #login h1 em{font-style:normal;color:var(--orange)}
 #login .field{position:absolute;left:799.9px;width:323.1px;height:43.6px;background:#f7f7f7;border-radius:5px;border:0;padding:0 17px;font-size:16px;font-weight:600;color:#1c1c1c;outline:none}
@@ -1021,7 +1020,7 @@ svg{display:block}
 /* search pop */
 .srch .res{max-height:300px;overflow:auto;margin-top:6px}
 .srch .res .it .m{font-size:11px;color:var(--t5);margin-left:auto}
-#login .logo-ph{left:calc(50% - 60px);top:calc(50% - 240px);width:120px;height:120px}#login h1{top:calc(50% - 105px)}#login .field,#login .submit,#login .err{left:calc(50% - 162px)}#login .f1{top:calc(50% - 25px)}#login #lg-name{top:calc(50% + 30px)}#login .f2{display:none}#login .keep{display:none}#login .err{top:calc(50% + 80px);width:323px;line-height:1.5}#login .submit{top:calc(50% + 145px)}button:disabled{cursor:not-allowed;color:#888}.ihead .lock{font-size:13px;color:#888;white-space:nowrap}
+#login h1{top:calc(50% - 142px)}#login .field,#login .submit,#login .err,#login .keep{left:calc(50% - 162px)}#login .f1{top:calc(50% - 62px)}#login #lg-name{top:calc(50% - 7px)}#login .f2{display:none}#login .keep{top:calc(50% + 50px)}#login .err{top:calc(50% + 143px);width:323px;line-height:1.5}#login .submit{top:calc(50% + 88px)}button:disabled{cursor:not-allowed;color:#888}.ihead .lock{font-size:13px;color:#888;white-space:nowrap}
 /* ===== 2026-11: real dates, per-project lists, working detail panel ===== */
 html{overflow:hidden}
 .pop{max-height:calc(100vh - 16px);overflow-y:auto}
@@ -1271,12 +1270,11 @@ html{overflow:hidden}
 
 <!-- ================= LOGIN ================= -->
 <div id="login">
-  <div class="logo-ph"></div>
-  <h1>We’re working <em>here</em></h1>
+  <h1>SUNJIN AIDC Workspace</h1>
   <input class="field f1" id="lg-id" placeholder="사번" autocomplete="off">
   <input class="field f2" id="lg-pw" type="password" placeholder="비밀번호">
-  <label class="keep"><input type="checkbox" id="lg-keep"><span class="box"><svg width="11" height="9"><use href="#i-check" style="color:#4f4f4f"/></svg></span>로그인 유지</label>
-  <input class="field" id="lg-name" placeholder="이름 (처음 로그인할 때 입력)" autocomplete="name" maxlength="40"><div class="err" id="lg-err">사번과 비밀번호를 입력하세요.</div>
+  <input class="field" id="lg-name" placeholder="이름 (처음 로그인할 때 입력)" autocomplete="name" maxlength="40">
+  <label class="keep"><input type="checkbox" id="lg-keep"><span class="box"><svg width="11" height="9"><use href="#i-check" style="color:#4f4f4f"/></svg></span>자동 로그인</label><div class="err" id="lg-err">사번과 비밀번호를 입력하세요.</div>
   <button class="submit" id="lg-btn">로그인</button>
 </div>
 

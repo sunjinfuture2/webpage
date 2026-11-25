@@ -1363,3 +1363,18 @@ styles of buttons, fields and titles were gathered from the pages and compared. 
 Left as they are (designs the owner chose, said in the report): two kinds of table (the 자료실 / 협력업체 lists with a line
 under every cell, the schedule tables with whole lines), cards of a row that end at different heights (meetings, research),
 프로젝트 and 협력업체 목록 without a pictogram, the overview's own outlined 저장.
+
+## The login screen, 자동 로그인 and the overview's 저장 (owner, 2026-11-26)
+
+"프로젝트 개요의 저장은 검은버튼으로 바꿔주고, 로그인화면에 그레이영역으로 그래픽 들어갈영역 잡아놓은거 일단 없앤 뒤에 타이틀을
+SUNJIN AIDC Workspace 로 해줘. 그리고 자동로그인 체크 할수있게 만들어줘."
+
+- The overview's 저장 (`.rmeta .rbt .edit`, class `save` while editing) is the black button of the panels.
+- The login screen: the grey square (`.logo-ph`) is gone, the title reads "SUNJIN AIDC Workspace", the form stands in the
+  middle (사번, 이름, 자동 로그인, 로그인; a message below the button). On a phone the same order, centred.
+- 자동 로그인 (the first design's hidden "로그인 유지" box, named and shown): ticked, the login is kept in localStorage as
+  before and survives closing the browser; not ticked, it is kept in a cookie without an end date (`aidc-tok`), which every
+  tab shares and the browser forgets when it closes. The Worker hears `remember` with the login, keeps it in
+  `live_sessions.keep` and gives the file cookie no Max-Age for such a login. Not ticked at first; the browser remembers the
+  last choice (`aidc-auto`). A page of an older build sends nothing and is kept, as before. A browser set to restore the
+  last session may keep cookies without an end date after a restart (the browser's own choice).

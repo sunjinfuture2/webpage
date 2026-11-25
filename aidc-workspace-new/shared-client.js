@@ -38,7 +38,14 @@ $('#content').prepend($('#notice'));
 $('#notice').style.top='8.3px';
 const navigationType=performance.getEntriesByType('navigation')[0]?.type;
 sessionStorage.removeItem('aidc-tab-token');  // older builds kept a per-tab login here
-sharedToken=localStorage.getItem(TOKEN_KEY)||'';
+// 자동 로그인 (owner, 2026-11-26): ticked, the login is kept in localStorage as before and survives closing the browser; not
+// ticked, it is kept in a cookie without an end date, which every tab shares and the browser forgets when it is closed.
+// The choice of the last login is this browser's own (`aidc-auto`, not ticked at first).
+const AUTO_KEY='aidc-auto';
+const tokenCookie=()=>{const m=document.cookie.match(/(?:^|;\s*)aidc-tok=([^;]+)/);try{return m?decodeURIComponent(m[1]):'';}catch{return '';}};
+function tokenKeep(t,auto){ localStorage.removeItem(TOKEN_KEY); document.cookie='aidc-tok=; Path=/; Max-Age=0; SameSite=Strict'; if(!t)return;
+ if(auto)localStorage.setItem(TOKEN_KEY,t); else document.cookie=`aidc-tok=${encodeURIComponent(t)}; Path=/; SameSite=Strict${location.protocol==='https:'?'; Secure':''}`; }
+sharedToken=localStorage.getItem(TOKEN_KEY)||tokenCookie()||'';
 function apiFetch(url,options={}){return fetch(url,{...options,headers:{...options.headers,'X-AIDC-Client':String(CLIENT_VERSION),...(sharedToken?{Authorization:'Bearer '+sharedToken}:{})}});}
 const postJson=(url,body)=>apiFetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 
@@ -363,7 +370,7 @@ function reorganizeArchiveV3(){
  ARCH_SECTIONS=topic.filter(x=>x.cards.length).concat(rest.filter(x=>x.cards.length||!['웹사이트','유튜브','블로그'].includes(x.name)));
 }
 async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch('/api/state');
- if(!r.ok){localStorage.removeItem(TOKEN_KEY);sharedToken='';return false;}
+ if(!r.ok){tokenKeep('');sharedToken='';return false;}
  const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);
  const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);
  sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);sharedRev=data.rev!=null?String(data.rev):'';
@@ -397,14 +404,15 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  restoreRoute();render();if(S.panel)openAny(S.panel);if(S.my&&PREVIEW_ON&&typeof mpOpen==='function')mpOpen(S.my);S.my=null;sharedUi();sharedConnect();return true;
 }
 async function login(){const employee=$('#lg-id').value.trim();if(!employee){$('#lg-err').textContent='사번을 입력하세요.';$('#lg-err').style.display='block';return;}$('#lg-btn').disabled=true;
- try{const r=await postJson('/api/login',{employee,name:$('#lg-name').value.trim()});const d=await r.json();if(!r.ok)throw Error(d.error);
-  sharedToken=d.token;localStorage.setItem(TOKEN_KEY,sharedToken);localStorage.setItem('aidc-known-name:'+d.employee,d.name);$('#lg-err').style.display='none';await sharedStart();}
+ const auto=!!$('#lg-keep')?.checked; try{localStorage.setItem(AUTO_KEY,auto?'1':'0');}catch{}
+ try{const r=await postJson('/api/login',{employee,name:$('#lg-name').value.trim(),remember:auto});const d=await r.json();if(!r.ok)throw Error(d.error);
+  sharedToken=d.token;tokenKeep(sharedToken,auto);localStorage.setItem('aidc-known-name:'+d.employee,d.name);$('#lg-err').style.display='none';await sharedStart();}
  catch(e){$('#lg-err').textContent=e.message;$('#lg-err').style.display='block';}finally{$('#lg-btn').disabled=false;}}
 async function logout(){closeModal();closePanel(true);await sharedFlush(true);preserveLocal(true);try{await apiFetch('/api/logout',{method:'POST'});}catch{}sharedEnd();history.replaceState(null,'',location.pathname);}
-function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedRev='';sharedSocket?.close();sharedToken='';localStorage.removeItem(TOKEN_KEY);lastHash=null;sharedRestoreRoute=true;
+function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedRev='';sharedSocket?.close();sharedToken='';tokenKeep('');lastHash=null;sharedRestoreRoute=true;
  $('#app').hidden=true;$('#login').style.display='';if(message){$('#lg-err').textContent=message;$('#lg-err').style.display='block';}}
 $('#login').style.display='';$('#app').hidden=true;$('#lg-err').style.display='none';
-$('#lg-btn').addEventListener('click',login);['#lg-id','#lg-pw','#lg-name'].forEach(s=>$(s)?.addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
+$('#lg-btn').addEventListener('click',login);if($('#lg-keep'))$('#lg-keep').checked=localStorage.getItem(AUTO_KEY)==='1';['#lg-id','#lg-pw','#lg-name'].forEach(s=>$(s)?.addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
 $('#lg-id').addEventListener('input',()=>{const n=localStorage.getItem('aidc-known-name:'+$('#lg-id').value.trim().toUpperCase());$('#lg-name').value=n||'';});
 // Logging in or out in another tab of this browser applies here too.
 window.addEventListener('storage',e=>{if(e.key!==TOKEN_KEY||e.newValue===sharedToken)return;if(!e.newValue){if(sharedReady)sharedEnd();}else if(!sharedReady){sharedToken=e.newValue;sharedStart().catch(()=>{});}});

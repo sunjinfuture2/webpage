@@ -433,9 +433,9 @@ html.mob .pop:not(.mob-day-menu){max-height:calc(100dvh - 24px);overflow-y:auto}
 html.mob .mob-day-menu .it{padding:0}
 html.mob .mob-day-item{width:100%;min-height:44px;padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere}
 html.mob #login{display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;padding:24px 16px}
-html.mob #login > .logo-ph,html.mob #login h1,html.mob #login .field,html.mob #login .submit,html.mob #login .err{position:static;flex:none}
-html.mob #login .logo-ph{width:88px;height:88px;margin-top:auto}
-html.mob #login h1{margin:0 0 14px}
+html.mob #login h1,html.mob #login .field,html.mob #login .submit,html.mob #login .err,html.mob #login .keep{position:static;flex:none}
+html.mob #login .keep{width:min(100%,344px);margin:2px 0}
+html.mob #login h1{margin:auto 0 14px}
 html.mob #login .field,html.mob #login .submit,html.mob #login .err{width:min(100%,344px)}
 html.mob #login .submit{min-height:46px;margin:8px 0 auto}
 html.mob .panel .lib-view.lb,html.mob .ipage .lib-view.lb{position:static;width:100%;padding:0}
