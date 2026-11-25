@@ -10,7 +10,7 @@ assert.equal(await row.locator('[data-pt-project-pick],.pt-project-add').count()
 assert.equal(await row.locator('.ds').getAttribute('title'),x.body.trim());
 const style=await row.locator('.ds .e').evaluate(n=>({overflow:getComputedStyle(n).textOverflow,clipped:n.scrollWidth>n.clientWidth}));
 assert.equal(style.overflow,'ellipsis');assert.ok(style.clipped);
-await row.locator('[data-act="partner"]').click();
+await row.locator('.nm').hover();await row.locator('[data-act="partner"]').click();
 assert.equal(await p.locator('#panel-pin .pt-project-add').count(),0);
 assert.equal(await p.locator('#panel-pin .pt-project-tag').innerText(),x.full);
 await p.locator('#panel-pin [data-pt-project-pick]').click();
