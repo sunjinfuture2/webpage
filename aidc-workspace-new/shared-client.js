@@ -8,6 +8,10 @@ let sharedReady=false,sharedBusy=false,sharedPendingRedraw=false,sharedRestoreRo
 // for before one of them and arrives after it is older than what the page already has, and must not be applied: it used to put
 // a setting back for a moment (owner, 2026-11-23: the dark mode flipping to light and to dark again after it was switched).
 let sharedSeq=0;
+// The number of the server's records the last whole state was taken at (/api/state answers it as `rev`). The refresh every
+// 15 seconds sends it and gets {same:true} without the records while nothing changed (2026-11-26: the free plan's daily
+// rows read ran out because every open page read the whole table four times a minute).
+let sharedRev='';
 // This open page's own name. A save carries it (`src`) and the Worker hands it on with the broadcast: what comes back over the socket
 // under this name is my own save, which the answer to the request has already brought. It is skipped; applied late it could put
 // back what was changed after it (two quick switches of the theme).
@@ -238,10 +242,11 @@ function sharedConnect(){clearTimeout(sharedConnect.timer);sharedSocket=new WebS
  sharedSocket.onopen=()=>{sharedRefresh();for(const item of ySubs.keys())sharedYSend({y:'join',item,cid:sharedCid});};
  sharedSocket.onclose=()=>{if(sharedReady)sharedConnect.timer=setTimeout(sharedConnect,3000);};
 }
-async function sharedRefresh(){if(sharedBusy||!sharedReady)return;const seq=sharedSeq;try{const r=await apiFetch('/api/state');if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();
+async function sharedRefresh(){if(sharedBusy||!sharedReady)return;const seq=sharedSeq;try{const r=await apiFetch('/api/state'+(sharedRev?'?since='+encodeURIComponent(sharedRev):''));if(r.status===401){sharedEnd();return;}if(!r.ok)return;const d=await r.json();
+ if(d.same){sharedMeta(d);return;}
  if(seq!==sharedSeq||sharedBusy){clearTimeout(sharedRefresh.t);sharedRefresh.t=setTimeout(sharedRefresh,400);return;}   // something was saved or arrived meanwhile: this copy may be older than that, ask again
  sharedMeta(d);
- const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=!same(delta,sharedBase);sharedApply(delta);if(changed)sharedRedraw();}catch{}}
+ const delta={...d.records};Object.keys(sharedBase).forEach(k=>{if(!(k in d.records))delta[k]=null;});const changed=!same(delta,sharedBase);sharedApply(delta);sharedRev=d.rev!=null?String(d.rev):'';if(changed)sharedRedraw();}catch{}}
 // One-time addition (2026-11-16, owner request): the public reference links of the 판교 master schedule workbook go into 자료실.
 // Ids are fixed, so a second browser running this at the same moment cannot create duplicates. Deleting an entry later is final.
 // Each row: [title, url, description, first wording]. Descriptions are short notes, not polite sentences (owner's style rule);
@@ -361,7 +366,7 @@ async function sharedStart(){if(!sharedToken)return false;const r=await apiFetch
  if(!r.ok){localStorage.removeItem(TOKEN_KEY);sharedToken='';return false;}
  const data=await r.json();sharedUser=data.employee;sharedName=data.name;ME=sharedName;sharedMeta(data);
  const agentFixtures=ITEMS.filter(i=>i.agent).map(copy);
- sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);
+ sharedBase=sharedRecords();sharedApply({...Object.fromEntries(Object.keys(sharedBase).map(k=>[k,null])),...data.records});sharedBase=copy(data.records);sharedRev=data.rev!=null?String(data.rev):'';
  // Agent pages (일일동향·시뮬레이터·용어사전) ship with the design; create them once in the shared database.
  for(const a of agentFixtures)if(!item(a.id))ITEMS.push(copy(a));
  // One-time data fixes, recorded in meta:flags so they run once per database.
@@ -396,7 +401,7 @@ async function login(){const employee=$('#lg-id').value.trim();if(!employee){$('
   sharedToken=d.token;localStorage.setItem(TOKEN_KEY,sharedToken);localStorage.setItem('aidc-known-name:'+d.employee,d.name);$('#lg-err').style.display='none';await sharedStart();}
  catch(e){$('#lg-err').textContent=e.message;$('#lg-err').style.display='block';}finally{$('#lg-btn').disabled=false;}}
 async function logout(){closeModal();closePanel(true);await sharedFlush(true);preserveLocal(true);try{await apiFetch('/api/logout',{method:'POST'});}catch{}sharedEnd();history.replaceState(null,'',location.pathname);}
-function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedSocket?.close();sharedToken='';localStorage.removeItem(TOKEN_KEY);lastHash=null;sharedRestoreRoute=true;
+function sharedEnd(message){preserveLocal(true);sharedReady=false;sharedRev='';sharedSocket?.close();sharedToken='';localStorage.removeItem(TOKEN_KEY);lastHash=null;sharedRestoreRoute=true;
  $('#app').hidden=true;$('#login').style.display='';if(message){$('#lg-err').textContent=message;$('#lg-err').style.display='block';}}
 $('#login').style.display='';$('#app').hidden=true;$('#lg-err').style.display='none';
 $('#lg-btn').addEventListener('click',login);['#lg-id','#lg-pw','#lg-name'].forEach(s=>$(s)?.addEventListener('keydown',e=>{if(e.key==='Enter')login();}));

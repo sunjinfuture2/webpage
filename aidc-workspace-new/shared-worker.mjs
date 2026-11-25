@@ -104,6 +104,17 @@ export class Workspace {
     this.sql.exec('CREATE TABLE IF NOT EXISTS co_locks (id TEXT, token TEXT, employee TEXT, expires INTEGER, PRIMARY KEY (id, token))');
     this.sql.exec('CREATE TABLE IF NOT EXISTS ydocs (item TEXT PRIMARY KEY, state BLOB, at INTEGER)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS holidays (year INTEGER PRIMARY KEY, days TEXT NOT NULL, at INTEGER)');
+    // A number that moves with every write of a record (2026-11-26: the free plan's 5 million rows read a day ran out and the
+    // workspace stopped — every open page read the whole records table every 15 seconds). /api/state?since=<that number>
+    // answers {same:true} without reading the table when nothing changed. Kept by triggers, so every writer counts, the
+    // modules of other changes too. If the database refuses triggers the number is left out and every state is whole again.
+    try {
+      this.sql.exec('CREATE TABLE IF NOT EXISTS rev (k INTEGER PRIMARY KEY, n INTEGER NOT NULL)');
+      this.sql.exec('INSERT OR IGNORE INTO rev VALUES (1, 0)');
+      for (const [name, when] of [['rev_ins', 'INSERT'], ['rev_upd', 'UPDATE'], ['rev_del', 'DELETE']])
+        this.sql.exec(`CREATE TRIGGER IF NOT EXISTS ${name} AFTER ${when} ON records BEGIN UPDATE rev SET n = n + 1 WHERE k = 1; END`);
+      this.revOk = true;
+    } catch (e) { this.revOk = false; console.error('state number not available:', e && e.message || e); }
     if (!this.sql.exec('SELECT id FROM records LIMIT 1').toArray().length) { for (const [id, v] of Object.entries(seed)) this.put(id, v); }
     // One-time steps of other changes. Neither may keep the workspace from starting (2026-11-26: the live site answered every
     // request with Cloudflare's "Error 1101 Worker threw exception" — an uncaught error while this object starts); a step
@@ -318,7 +329,9 @@ export class Workspace {
       }
       if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), minClient: MIN_CLIENT }); }
       if (path === '/api/state') {
-        return json({ employee: me, name: this.users()[me], users: this.users(), locks: this.locks(), minClient: MIN_CLIENT,
+        let rev = null; if (this.revOk) { try { const r = this.sql.exec('SELECT n FROM rev WHERE k=1').toArray()[0]; rev = r ? String(r.n) : null; } catch { rev = null; } }
+        if (rev !== null && url.searchParams.get('since') === rev) return json({ same: true, rev, users: this.users(), locks: this.locks(), minClient: MIN_CLIENT });
+        return json({ employee: me, name: this.users()[me], users: this.users(), locks: this.locks(), minClient: MIN_CLIENT, rev,
           records: Object.fromEntries(this.sql.exec('SELECT * FROM records').toArray().map(r => [r.id, JSON.parse(r.data)]).filter(([k, v]) => !this.hidden(k, v, me))) },
           200, { 'Set-Cookie': fileCookie(req, token, this.sessionMs() / 1000) });
       }
