@@ -1,7 +1,7 @@
 name: Check project contract section
 on:
   push:
-    branches: ['codex/project-contract-section']
+    branches: ['codex/contract-relations']
 permissions:
   contents: read
 jobs:

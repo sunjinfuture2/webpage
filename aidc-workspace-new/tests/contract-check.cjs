@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');const {chromium,newUser}=require('./h.cjs');
 (async()=>{const b=await chromium.launch();try{
 const {page:p}=await newUser(b,'CONTRACT_CHECK','계약서 확인',{url:'http://127.0.0.1:8787/'});
-await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('#sch-lower');
+await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('#sch-lower');await p.waitForFunction(()=>schReady('pangyo'));
 const before=await p.evaluate(()=>JSON.stringify(ITEMS.filter(i=>i.type==='meeting')));
 const order=await p.evaluate(()=>{const els=[document.querySelector('.contract-section'),document.querySelector('#sch-actions'),document.querySelector('.meet'),document.querySelector('#sch-lower')];return els.map(e=>e.getBoundingClientRect().top)});
 assert.ok(order.every((v,i)=>!i||v>order[i-1]),JSON.stringify(order));assert.equal(await p.locator('.contract-table .rw').count(),0);
@@ -14,11 +14,14 @@ await p.locator('#panel-pin [data-pick="st"]').click();await p.locator('.pop .it
 const meeting=await p.evaluate(()=>liveItems('meeting','pangyo')[0]);assert.ok(meeting);
 await p.locator('#panel-pin [data-pick="meetings"]').click();
 await p.locator('.pop .it[data-k="'+meeting.id+'"]').click();await p.evaluate(()=>closePop());
+await p.locator('#panel-pin [data-pick="actions"]').click();
+const action=await p.locator('.contract-action-options [data-action-id]').first().getAttribute('data-action-id');assert.ok(action);
+await p.locator('.contract-action-options [data-action-id]').first().click();
 await p.click('#panel-pin [data-ed="publish"]');
 const id=await p.evaluate(async()=>{await sharedFlush(true);return curItem().id;});
 await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);
 await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.contract-table .rw');
-const saved=await p.evaluate(id=>item(id),id);assert.equal(saved.type,'contract');assert.equal(saved.title,'계약서 확인 A');assert.equal(saved.st,'done');assert.equal(saved.pri,'high');assert.ok(saved.meetings.includes(meeting.id));
+const saved=await p.evaluate(id=>item(id),id);assert.equal(saved.type,'contract');assert.equal(saved.title,'계약서 확인 A');assert.equal(saved.st,'done');assert.equal(saved.pri,'high');assert.ok(saved.meetings.includes(meeting.id));assert.ok(saved.actions.includes(action));await p.waitForFunction(()=>schReady('pangyo'));await p.evaluate(()=>render(true));assert.equal(await p.locator('.contract-meetings .chip').count(),1);assert.equal(await p.locator('.contract-actions .chip').count(),1);
 assert.equal(await p.evaluate(()=>JSON.stringify(ITEMS.filter(i=>i.type==='meeting'))),before);
 assert.ok((await p.locator('.contract-table').innerText()).includes('계약서 확인 A'));
 await p.locator('.contract-table .rw .nm').click();await p.waitForSelector('#panel-pin [data-ed="edit"]');
