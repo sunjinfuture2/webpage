@@ -1308,3 +1308,13 @@ as a partner's description is `partnerDesc(p)` (original.html): the short descri
 first paragraph of the body — in the list (one line, cut with dots), in the panel while it is read (three lines of it at most there: the whole
 text stands right below as the body), in the report's partner table; the list's search reads the body too. While a partner is edited the field holds only the short description
 itself (its hint says what is shown when it is left empty), so nothing derived is ever saved.
+
+## A partner's panel: fields and body under the title again (owner, 2026-11-25, forty-sixth round)
+
+"상세보기 내용들이 겹쳐서 안보이잖아": since a partner has a body (another change of the same day) its panel wraps the fields
+and the body in `.partner-content`, which stands in the flow; the panel's rule that places the fields (`.panel .props`,
+114.8 from the left, absolute) no longer applied, so the names of the fields and the body began at the panel's very left
+edge — cut off and out of line with the title. The wrapper now takes the title's room (114.8 from the left, 116 from the
+right in a panel; the full page's measures in `.ipage`; nothing on a phone, where the panel's padding is the room), and the
+body's field while it is edited has no margin of its own. Seen in the panel at 1920 and 1536, read and edited, and on a
+phone. A partner opens only as a panel (it is not an item: no full page).

@@ -3246,6 +3246,16 @@ html.mp-calm .sch-xw .xq-say.j,html.mp-calm .sch-xw .xq-list li em.j{animation:n
 .tbl.partners .rw .ds{min-width:0;overflow:hidden}
 .tbl.partners .rw .ds .e{display:block;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tbl.partners .rw .mt{min-width:0;overflow:hidden}
+
+/* Forty-sixth round (owner, 2026-11-25: "상세보기 내용들이 겹쳐서 안보이잖아"). A partner's panel wraps its fields and its
+   body in .partner-content (the body came with another change of the same day); that wrapper stood in the flow at the
+   panel's left edge, so the names of the fields and the body began at 0 — cut by the panel's edge and away from the title —
+   where every other panel has its fields under the title (.panel .props: 114.8 from the left). The wrapper takes the
+   title's own room: from the title's left edge to its right one. */
+.panel .partner-content{margin:0 116px 0 114.8px}
+.ipage .partner-content{margin:0 60px 0 -1.6px}
+.partner-content .props.simple{left:auto;top:auto}
+.partner-body .editable[contenteditable="true"]{margin:0;padding:0;box-shadow:none;background:transparent}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4054,6 +4064,9 @@ html.mob.sch-on .meet:not(.tv) .track{margin:22px -16px 0;min-height:0}
 
 /* (fortieth round) a panel is one column here: no room is kept at the right of what was the left column */
 html.mob.sch-on .props:has(> .rcol) > div:first-child,html.mob.sch-on .sch-props .sp-grid > div:first-child{padding-right:0}
+
+/* (forty-sixth round) on a phone the panel's own padding is the room: no margin of the wrapper */
+html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0}
 </style>
 </head>
 <body>
