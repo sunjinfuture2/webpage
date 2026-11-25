@@ -23,7 +23,7 @@ assert.equal(await p.evaluate(()=>JSON.stringify(ITEMS.filter(i=>i.type==='meeti
 assert.ok((await p.locator('.contract-table').innerText()).includes('계약서 확인 A'));
 await p.locator('.contract-table .rw .nm').click();await p.waitForSelector('#panel-pin [data-ed="edit"]');
 assert.equal(await p.evaluate(()=>curItem().id),id);
-await p.evaluate(()=>closePanel());await p.evaluate(()=>go('project:bupyeong'));
+await p.evaluate(()=>closePanel());const other=await p.evaluate(()=>orderedProjects().find(k=>k!=='pangyo'));assert.ok(other);await p.evaluate(k=>go('project:'+k),other);await p.waitForFunction(k=>S.proj===k,other);
 assert.equal(await p.locator('.contract-table .rw').count(),0);
 await p.setViewportSize({width:390,height:844});await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.contract-scroll');assert.ok(await p.locator('.contract-scroll').evaluate(e=>e.scrollWidth>e.clientWidth));
 console.log('PASS focused contract creation, properties, meeting link, server save/reload, project isolation, section order and mobile scrolling; existing meetings unchanged');
