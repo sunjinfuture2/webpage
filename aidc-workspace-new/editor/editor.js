@@ -5,6 +5,7 @@ import { DOMParser as PMDOMParser } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { CellSelection } from '@tiptap/pm/tables';
 import { closeHistory } from './hist.js';
+import { indentBlocks } from './indent.js';
 import { Suggestion, exitSuggestion } from '@tiptap/suggestion';
 import { buildExtensions, ID_TYPES } from './schema.js';
 import { upgrade, fillToc, hydrate } from './legacy.js';
@@ -142,7 +143,7 @@ function rangePlugin(inst) {
         if (e.key === 'Backspace' || e.key === 'Delete') { deleteBlocks(ed, r); return true; }
         if (e.shiftKey && !isMod(e) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { growRange(inst, r, e.key === 'ArrowDown' ? 1 : -1); return true; }
         if (e.key === 'Enter') { const b = blocksIn(view.state.doc, r.from, r.to)[0]; if (b) { const s = Selection.findFrom(view.state.doc.resolve(b.pos + 1), 1, true); if (s) view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, s.$from.end())).setMeta('nbRange', null)); } return true; }
-        if (e.key === 'Tab') { e.preventDefault(); return false; }
+        if (e.key === 'Tab') { const handled = indentBlocks(ed, e.shiftKey ? -1 : 1, r); if (handled) e.preventDefault(); return handled; }
         return false; } } });
 }
 function setRange(inst, r) { const { state, view } = inst.editor; inst.anchor = r; const tr = state.tr; try { tr.setSelection(selFor(state.doc, r)); } catch {} view.dispatch(tr.setMeta('nbRange', r)); view.focus(); }

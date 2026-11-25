@@ -1,0 +1,67 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {chromium} from 'playwright';
+import {readFile, mkdtemp, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+const dir=await mkdtemp(join(tmpdir(),'aidc-indent-'));
+let browser;
+try {
+  await build({entryPoints:['tests/indent-browser-entry.js'],bundle:true,format:'iife',outfile:join(dir,'editor.js'),loader:{'.css':'empty'}});
+  browser=await chromium.launch({headless:true});
+  const page=await browser.newPage();
+  const errors=[];
+  page.on('pageerror',e=>errors.push(String(e)));
+  await page.setContent('<!doctype html><html><body><div id="host"></div></body></html>');
+  await page.addScriptTag({content:await readFile(join(dir,'editor.js'),'utf8')});
+  const make=html=>page.evaluate(html=>window.make(html),html);
+  const select=(from,to=from)=>page.evaluate(([a,b])=>window.select(a,b),[from,to]);
+  const snap=()=>page.evaluate(()=>window.inspect());
+  const key=k=>page.keyboard.press(k);
+  const check=(name,f)=>{assert.ok(f,name);console.log('PASS '+name);};
+  await make('<p>A. 핵심 주장</p><h2>B. 소제목</h2><p>· 항목</p>');
+  await select(3); await key('Tab');
+  let s=await snap();
+  check('paragraph indent and exact caret',s.json.content[0].attrs.indent===1&&s.selection.anchor===3);
+  await key('Control+z'); s=await snap();
+  check('undo indent and retain caret',s.json.content[0].attrs.indent===0&&s.selection.anchor===3);
+  await page.evaluate(()=>{const ed=inst.editor;select(1,ed.state.doc.content.size-1);});
+  await key('Tab'); s=await snap();
+  check('paragraph heading and bullet text selected together',s.json.content.every(n=>n.attrs.indent===1));
+  await key('Shift+Tab'); s=await snap();
+  check('multi outdent',s.json.content.every(n=>n.attrs.indent===0));
+  await key('Control+z'); s=await snap();
+  check('undo multi outdent',s.json.content.every(n=>n.attrs.indent===1));
+  const saved=s.html; await make(saved); s=await snap();
+  check('HTML save/reopen retains indentation and text',s.json.content.every(n=>n.attrs.indent===1)&&s.html===saved);
+  await select(2); await key('Tab'); await page.keyboard.type('X'); await key('Control+z'); s=await snap();
+  check('undo typing separately from Tab',s.json.content[0].attrs.indent===2&&!s.json.content[0].content.some(n=>n.text?.includes('X')));
+  await key('Control+z'); s=await snap(); check('next undo reverses Tab',s.json.content[0].attrs.indent===1);
+  await make('<ul><li><p>첫째</p></li><li><p>둘째</p></li></ul>');
+  await select(3); await key('Tab'); s=await snap();
+  check('list moves once only',s.json.content[0].content[0].attrs.indent===1&&s.json.content[0].content[0].content[0].attrs.indent===0);
+  await make('<p>A</p><p>B</p><p>C</p>'); await select(1,7); await key('Tab'); s=await snap();
+  check('selection ending at next paragraph excludes it',JSON.stringify(s.json.content.map(n=>n.attrs.indent))==='[1,1,0]');
+  await make('<p>A</p><p>B</p><p>C</p>');
+  await page.evaluate(()=>{select(1);inst.editor.view.dispatch(inst.editor.state.tr.setMeta('nbRange',{from:0,to:6}));});
+  await key('Tab'); s=await snap();
+  check('handle block selection uses full range',JSON.stringify(s.json.content.map(n=>n.attrs.indent))==='[1,1,0]');
+  await make('<table><tbody><tr><td><p>A</p></td><td><p>B</p></td></tr></tbody></table>');
+  await select(4); await key('Tab'); s=await snap(); const next=s.selection.anchor;
+  check('Tab navigates to next table cell',next>4);
+  await key('Shift+Tab');s=await snap();check('Shift Tab returns to first table cell',s.selection.anchor===4&&s.json.content[0].content[0].content.every(n=>n.content[0].attrs.indent===0));
+  await make('<pre><code>code</code></pre>'); await select(1); await key('Tab');s=await snap();
+  check('code retains two-space Tab',s.json.content[0].content[0].text==='  code');
+  // Exact reported typing sequence, plain numeric text and native ordered lists.
+  for(const html of ['<p data-indent="2">2. test</p>','<ol start="2"><li><p>test</p></li></ol>']){
+    await make(html);
+    await page.evaluate(()=>{const ed=inst.editor;let p;ed.state.doc.descendants((n,pos)=>{if(n.isTextblock)p=pos+1+n.content.size;});select(p);});
+    await key('Enter'); await page.keyboard.type('3.'); await key('Space'); await page.waitForTimeout(300);
+    s=await snap();
+    check('Enter then 3. Space produces bounded list structure: '+html,s.html.length<2500&&((s.html.match(/<li\b/g)||[]).length<=3));
+    console.log('NUMBER SEQUENCE '+s.html);
+    const before=s.html;await make(before);s=await snap();check('numbered content stable on reopen',s.html===before);
+  }
+  check('no browser exceptions',errors.length===0);
+  console.log('ALL EDITOR INDENT CHECKS PASSED');
+} finally {await browser?.close();await rm(dir,{recursive:true,force:true});}
