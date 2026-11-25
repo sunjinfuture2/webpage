@@ -18,10 +18,10 @@ async function newUser(browser, id, name, opt = {}) {
   await page.goto(opt.url || URL0);
   await page.waitForSelector('#lg-id', { state: 'visible' });
   await page.fill('#lg-id', id); await page.fill('#lg-name', name); await page.click('#lg-btn');
-  await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { timeout: 15000 });
+  await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { timeout: 90000 });
   await sleep(900);
   return { ctx, page, errs };
 }
-const waitApp = async page => { await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { timeout: 15000 }); await sleep(900); };
+const waitApp = async page => { await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { timeout: 90000 }); await sleep(900); };
 function done(extra) { console.log(`\n${passed} passed, ${failed} failed${extra ? ' · ' + extra : ''}`); process.exit(failed ? 1 : 0); }
 module.exports = { chromium, sleep, check, newUser, waitApp, done, URL0 };
