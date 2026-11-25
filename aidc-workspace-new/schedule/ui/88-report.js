@@ -53,7 +53,7 @@ const REP_TTL={kpi:'핵심 지표',fin:'사업성 지표',main:'사업 개요',p
 const schRepTtl=(h,k)=>{ const t=h&&h.ttl&&typeof h.ttl==='object'&&typeof h.ttl[k]==='string'?h.ttl[k].replace(/\s+/g,' ').trim():''; return t||REP_TTL[k]||''; };
 const REP_PLUS='<svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 1.5v12M1.5 7.5h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 const schRepState=s=>REP_PLAN_ST[s]?schMark(REP_PLAN_ST[s],s):`<span class="nil">${esc(s||'-')}</span>`;
-function schRepHead(pid){ const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, SC=schHas(pid), EC=E?' editable':'', no=schRepNos()[pid]||'';
+function schRepHead(pid){ if(pid==='ai-application-test')return schAIHead(pid); const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, SC=schHas(pid), EC=E?' editable':'', no=schRepNos()[pid]||'';
   const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${esc(ph)}"`:'', chev=E?svg('i-chev-d',7.2,3.6,'color:#8e8e8e'):'';
   const lines=s=>String(s||'').split('\n').map(x=>x.replace(/^\s*[•·\-–]\s+/,'').trim()).filter(Boolean), nil='<span class="nil">내용 없음</span>';
   // a text: as it was typed, or a list (always for `list`, for 추진 현황 when it has more than one line)

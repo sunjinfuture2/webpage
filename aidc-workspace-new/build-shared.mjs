@@ -87,3 +87,6 @@ html=html.replace('</body>',()=>'<script>'+trial+'</script></body>');
 for(const [i,s] of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].entries())new vm.Script(s[1],{filename:'script-'+i});
 await fs.writeFile(new URL('public/index.html',root),html);
 console.log(`Built and syntax checked. Seed records: ${Object.keys(JSON.parse(seed)).length}`);
+
+// PPTX text reader, loaded only by the AI trial overview.
+await build({entryPoints:[path.join(here,'ai-documents.js')],absWorkingDir:here,bundle:true,format:'iife',minify:true,target:['es2020'],outfile:path.join(here,'public/ai-documents.js')});
