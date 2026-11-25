@@ -29,3 +29,6 @@ jobs:
             sleep 1
           done
           node tests/ai-project-browser.cjs
+
+      - name: Live read only verification
+        run: node tests/ai-project-live.cjs
