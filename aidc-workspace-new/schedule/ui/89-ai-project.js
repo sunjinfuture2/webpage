@@ -22,16 +22,19 @@ function schAIReport(r,editing=false){
   if(s.type==='metrics')body='<div class="rkp '+(zone==='fin'?'fin':'')+'">'+s.metrics.map((m,j)=>'<div class="k">'+field(key+'.metrics.'+j+'.value',m.value,'b')+field(key+'.metrics.'+j+'.label',m.label)+field(key+'.metrics.'+j+'.note',m.note)+(E?'<button class="rx" data-ai-action="delmetric" data-ai-index="'+i+'" data-ai-row="'+j+'">✕</button>':'')+'</div>').join('')+action('row',i,'＋')+'</div>';
   else if(s.type==='table'){
    const plan=zone==='plan'&&s.columns.length===3;
-   body='<div class="rtb '+(plan?'plan':'')+'"><div class="r th" '+(!plan&&s.columns.length!==2?'style="grid-template-columns:repeat('+Math.max(1,s.columns.length)+',minmax(0,1fr))"':'')+'>'+s.columns.map((c,j)=>field(key+'.columns.'+j,c,j===0?'b':'span')).join('')+'</div>'+s.rows.map((row,j)=>'<div class="r" '+(!plan&&s.columns.length!==2?'style="grid-template-columns:repeat('+Math.max(1,s.columns.length)+',minmax(0,1fr))"':'')+'>'+row.map((c,k)=>plan&&k===2&&!E?'<i>'+schRepState(c)+'</i>':field(key+'.rows.'+j+'.'+k,c,k===0?'b':'span')).join('')+(E?'<button class="rx" data-ai-action="delrow" data-ai-index="'+i+'" data-ai-row="'+j+'">✕</button>':'')+'</div>').join('')+'</div>'+action('row',i,'＋');
+   const locationMap=row=>!E&&zone==='main'&&s.columns.length===2&&/^(위치|주소|소재지)$/.test(String(row[0]||'').trim())&&mapQuery(row[1])&&!/자료 없음|확인 필요|보완 필요/.test(row[1])?'<div class="rmapbox">'+mapBox(row[1],'')+'</div>':'';
+   body='<div class="rtb '+(plan?'plan':'')+'"><div class="r th" '+(!plan&&s.columns.length!==2?'style="grid-template-columns:repeat('+Math.max(1,s.columns.length)+',minmax(0,1fr))"':'')+'>'+s.columns.map((c,j)=>field(key+'.columns.'+j,c,j===0?'b':'span')).join('')+'</div>'+s.rows.map((row,j)=>'<div class="r" '+(!plan&&s.columns.length!==2?'style="grid-template-columns:repeat('+Math.max(1,s.columns.length)+',minmax(0,1fr))"':'')+'>'+row.map((c,k)=>plan&&k===2&&!E?'<i>'+schRepState(c)+'</i>':field(key+'.rows.'+j+'.'+k,c,k===0?'b':'span')).join('')+(E?'<button class="rx" data-ai-action="delrow" data-ai-index="'+i+'" data-ai-row="'+j+'">✕</button>':'')+locationMap(row)+'</div>').join('')+'</div>'+action('row',i,'＋');
   }else if(E)body=field(key+'.'+s.type,s[s.type].join(s.type==='paragraphs'?'\n\n':'\n'),'div','rtx',s.type==='paragraphs'?'내용 입력':'한 줄에 한 항목');
   else body=s.type==='bullets'?'<ul class="rul">'+s.bullets.map(t=>'<li>'+schRepTxt(t)+'</li>').join('')+'</ul>':s.paragraphs.map(t=>'<div class="rtx">'+schRepTxt(t)+'</div>').join('');
   const controls=E?'<div class="ai-block-controls"><button type="button" data-ai-action="up" data-ai-index="'+i+'">↑</button><button type="button" data-ai-action="down" data-ai-index="'+i+'">↓</button><button type="button" data-ai-action="remove" data-ai-index="'+i+'">삭제</button></div>':'';
-  return {zone,html:'<div class="rb ai-section"><div class="rt">'+field(key+'.title',s.title)+'</div>'+controls+body+(!E?schAIRefs(s):'')+'</div>'};
+  return {zone,type:s.type,body,html:'<div class="rb ai-section"><div class="rt">'+field(key+'.title',s.title)+'</div>'+controls+body+(!E?schAIRefs(s):'')+'</div>'};
  });
  const group=z=>blocks.filter(b=>z.includes(b.zone)).map(b=>b.html).join('');
- const intro='<div class="rb"><div class="rt">'+field('title',r.title||'사업 개요')+'</div>'+field('summary',r.summary,'div','rtx','사업의 내용을 적습니다')+'</div>';
+ const mainTable=!E?blocks.find(b=>b.zone==='main'&&b.type==='table'):null;
+ const intro='<div class="rb"><div class="rt">'+field('title',r.title||'사업 개요')+'</div><div class="rmain">'+field('summary',r.summary,'div','rtx','사업의 내용을 적습니다')+'</div>'+(mainTable?mainTable.body:'')+'</div>';
+ const mainRest=blocks.filter(b=>['main','plan'].includes(b.zone)&&b!==mainTable).map(b=>b.html).join('');
  const warns='';
- return '<div class="ai-report"><div class="rstats">'+group(['kpi','fin'])+'</div><div class="rcols"><div class="rc rc1">'+intro+group(['main','plan'])+'</div><div class="rc rc2">'+group(['right'])+warns+'</div></div></div>';
+ return '<div class="ai-report"><div class="rstats">'+group(['kpi','fin'])+'</div><div class="rcols"><div class="rc rc1">'+intro+mainRest+'</div><div class="rc rc2">'+group(['right'])+warns+'</div></div></div>';
 }
 function schAIHead(pid){
  const p=PROJECTS[pid],d=headOf(pid),saved=d.aiOverview,E=!!schAIDraft;
