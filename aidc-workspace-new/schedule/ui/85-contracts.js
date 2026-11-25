@@ -36,7 +36,7 @@ function schContractChips(pid){
 }
 function schContractSection(pid){
  const c=schContractFilter(pid);
- return '<div class="sec contract-section" style="margin-top:117.2px"><div class="sec-title sch-title"><span class="sch-ic">'+pict('contract')+'</span>계약서'+plusBtn('new-contract','새 계약서')+'<label class="srch box">'+svg('pic-search',15,15)+'<input data-contract-search aria-label="계약서 검색" placeholder="계약서 검색" value="'+esc(c.q||'')+'"><button type="button" data-contract-clear="q" aria-label="검색 지우기" class="contract-qclear" '+(c.q?'':'hidden')+'>×</button></label></div><div class="contract-filter-chips">'+schContractChips(pid)+'</div><div class="contract-scroll">'+schContractTable(pid)+'</div></div>';
+ return '<div class="sec contract-section" style="margin-top:117.2px"><div class="sec-title sch-title"><span class="sch-ic">'+pict('contract')+'</span>계약서'+plusBtn('new-contract','새 계약서')+'<label class="srch box">'+svg('pic-search',15,15)+'<input data-contract-search aria-label="계약서 검색" placeholder="검색" value="'+esc(c.q||'')+'"><button type="button" data-contract-clear="q" aria-label="검색 지우기" class="contract-qclear" '+(c.q?'':'hidden')+'>×</button></label></div><div class="contract-filter-chips">'+schContractChips(pid)+'</div><div class="contract-scroll">'+schContractTable(pid)+'</div></div>';
 }
 function schContractRefresh(){
  schContractFilterSave();const root=document.querySelector('.contract-section');if(!root)return;
@@ -76,7 +76,7 @@ function schContractTable(pid){
 const schContractStyle=document.createElement('style');schContractStyle.textContent=`
 .contract-section .contract-scroll{margin-top:34px;overflow-x:auto}
 .contract-filter-chips{display:flex;gap:8px;flex-wrap:wrap}.contract-filter-chips:not(:empty){margin-top:18px;margin-bottom:-16px}
-.contract-table .hd [data-contract-col]{cursor:pointer}.contract-qclear{border:0;background:transparent;color:#8e8e8e;cursor:pointer;font-size:18px}.contract-qclear[hidden]{display:none}
+.contract-table .hd [data-contract-col]{cursor:pointer;gap:5px}.contract-table .hd [data-contract-col] svg{flex:none;color:#6f6f6f}.contract-qclear{border:0;background:transparent;color:#8e8e8e;cursor:pointer;font-size:18px}.contract-qclear[hidden]{display:none}
 .contract-section .srch input{min-width:0}html.mob .contract-section .srch.box input{width:110px}
 svg.pict:has(> use[href="#pic-contract"]){transform:scaleX(-1)}
 svg.pict > use[href="#pic-contract"]{stroke:currentColor!important;stroke-width:.85;stroke-linejoin:round}
