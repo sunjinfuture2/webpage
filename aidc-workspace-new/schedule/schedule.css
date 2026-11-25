@@ -2116,3 +2116,18 @@ span.pt-project-tag{cursor:default}
 .pop.sch-at.sch-partner-select{max-height:min(420px,75vh);overflow:auto;width:350px}
 .pop.sch-partner-select .it{display:flex;align-items:center;gap:9px}
 .pop.sch-partner-select .plogo{flex:none}
+
+/* Forty-eighth round (owner, 2026-11-25): a partner's projects in their own colours; an x on each in the open partner; the
+   picker marks a chosen project with an x at its right (as the link window does), no tick at the left */
+.pt-project-tag.pt-pp{background:var(--cbg,#e8f3e5);color:var(--cc,#318d1c)}
+.pt-project-tag.has-x{padding:0 4px 0 0;gap:0}
+.pt-project-tag.has-x .pt-pp-name{border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;line-height:inherit;padding:1px 4px 1px 10px;cursor:pointer;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.pt-project-tag.has-x .pt-x{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;opacity:.7}
+.pt-project-tag.has-x .pt-x:hover{opacity:1;background:rgba(0,0,0,.08)}
+.pt-project-tag.has-x .pt-x svg path{stroke:currentColor}
+.pt-project-tag.has-x .pt-x:disabled{opacity:.3;cursor:default}
+.pt-project-picker .it{justify-content:flex-start;padding-right:8px}
+.pt-project-picker .it.sel{background:#f3f3f3}
+.pt-project-picker .it.sel:hover{background:#e9e9e9}
+.pt-project-picker .it .x{margin-left:auto;padding-left:14px;display:flex;align-items:center;color:#8e8e8e;flex:none}
+html.dark .pt-project-picker .it.sel{background:#2a2a2a}

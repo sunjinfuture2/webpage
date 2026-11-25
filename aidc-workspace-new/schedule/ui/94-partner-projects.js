@@ -34,10 +34,12 @@ function schPartnerScope(scope){
  if(S.ptScope===scope)return;
  S.ptScope=scope;S.partnerProject=scope==='main'?'':scope;S.partnerCat=null;S.q.partner='';S.ptPage=1;S.ptHold=0;
 }
+// forty-eighth round (owner, 2026-11-25): every tag in its project's own colour (the project's pj-* class, as the calendar's
+// pills); in the open partner a tag carries a small x that takes that project away at once.
 function schPartnerProjectTags(pt,editable){
  const ids=schPartnerProjects(pt);
- const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag;
- return editable?'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button>':'<span class="pt-project-tag">'+esc(name)+'</span>';}).join('');
+ const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag,cls=esc(PROJECTS[id].cls||'');
+ return editable?'<span class="pt-project-tag pt-pp has-x '+cls+'"><button type="button" class="pt-pp-name" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button><button type="button" class="pt-x" data-pt-project-off="'+esc(pt.id)+'" data-pid="'+esc(id)+'" title="'+esc(name)+' 빼기" aria-label="'+esc(name)+' 빼기">'+svg('i-x',7,7)+'</button></span>':'<span class="pt-project-tag pt-pp '+cls+'">'+esc(name)+'</span>';}).join('');
  return tags||(editable?'<button type="button" class="pt-project-empty" data-pt-project-pick="'+esc(pt.id)+'">선택</button>':'');
 }
 function schPartnerFilterChip(){
@@ -66,7 +68,7 @@ function schPartnerProjectPick(el,pt){
  const pop=openPop(el,'<div class="hd">관련 프로젝트 · 복수 선택</div><div class="msg" style="padding-top:0"><input class="pt-project-query" placeholder="검색" aria-label="프로젝트 검색"></div><div class="pt-project-options"></div>',{cls:'pt-project-picker'});
  let busy=false;const input=pop.querySelector('input'),box=pop.querySelector('.pt-project-options');
  const draw=()=>{const ids=orderedProjects().filter(id=>!PROJECTS[id].trash&&matchQ(input.value,PROJECTS[id].tag,PROJECTS[id].full)),sel=selected();
- box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'"><i class="ck">'+(sel.includes(id)?svg('i-check',9,8):'')+'</i>'+pill(PROJECTS[id],'nosq')+'</button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
+ box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'" aria-pressed="'+sel.includes(id)+'">'+pill(PROJECTS[id],'nosq')+(sel.includes(id)?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':'')+'</button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
  input.addEventListener('input',draw);
  box.addEventListener('click',async e=>{const b=e.target.closest('[data-pt-project-id]');if(!b||busy)return;e.preventDefault();e.stopPropagation();busy=true;b.disabled=true;
  try{await schPartnerToggleProject(pt,b.dataset.ptProjectId);
@@ -75,7 +77,10 @@ function schPartnerProjectPick(el,pt){
  }finally{busy=false;if(pop.isConnected)draw();}
  });draw();input.focus();
 }
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
+ const off=e.target.closest&&e.target.closest('[data-pt-project-off]');
+ if(off){e.preventDefault();e.stopImmediatePropagation();if(off.disabled)return;off.disabled=true;const pt=PARTNERS.find(p=>p.id===off.dataset.ptProjectOff&&!p.trash);
+  try{if(pt&&await schPartnerToggleProject(pt,off.dataset.pid)){const scroll=$('#content').scrollTop;render(true);$('#content').scrollTop=scroll;if(S.panel===pt.id){const tags=$('#panel-pin .pt-projects');if(tags)tags.innerHTML=schPartnerProjectTags(pt,true);}}}finally{off.disabled=false;}return;}
  const el=e.target.closest&&e.target.closest('[data-pt-project-pick],[data-pt-project-filter],[data-pt-project-clear]');if(!el)return;
  e.preventDefault();e.stopImmediatePropagation();
  if(el.hasAttribute('data-pt-project-pick')){schPartnerProjectPick(el,PARTNERS.find(p=>p.id===el.dataset.ptProjectPick&&!p.trash));return;}

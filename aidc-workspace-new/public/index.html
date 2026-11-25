@@ -3309,6 +3309,31 @@ span.pt-project-tag{cursor:default}
 .partner-unlink:hover{background:#eee;color:#333}
 .tbl.partners .rw .ds{min-width:0;overflow:hidden;font-weight:400}
 .tbl.partners .rw .ds .e{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+
+/* Related-project field shares the label baseline; project picker uses calendar pills. */
+.partner-content .props .pr:has(.pt-projects){align-items:center}
+.partner-content .props .pr .pt-projects{padding:0}
+.partner-content .props .pr .pt-project-tag{line-height:18px;padding:1px 10px}
+.pt-project-picker .it .pill{pointer-events:none;white-space:normal;height:auto;min-height:20px;line-height:18px;max-width:100%;box-sizing:border-box}
+.pt-project-picker .it{align-items:center}
+.pop.sch-at.sch-partner-select{max-height:min(420px,75vh);overflow:auto;width:350px}
+.pop.sch-partner-select .it{display:flex;align-items:center;gap:9px}
+.pop.sch-partner-select .plogo{flex:none}
+
+/* Forty-eighth round (owner, 2026-11-25): a partner's projects in their own colours; an x on each in the open partner; the
+   picker marks a chosen project with an x at its right (as the link window does), no tick at the left */
+.pt-project-tag.pt-pp{background:var(--cbg,#e8f3e5);color:var(--cc,#318d1c)}
+.pt-project-tag.has-x{padding:0 4px 0 0;gap:0}
+.pt-project-tag.has-x .pt-pp-name{border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;line-height:inherit;padding:1px 4px 1px 10px;cursor:pointer;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.pt-project-tag.has-x .pt-x{flex:none;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;opacity:.7}
+.pt-project-tag.has-x .pt-x:hover{opacity:1;background:rgba(0,0,0,.08)}
+.pt-project-tag.has-x .pt-x svg path{stroke:currentColor}
+.pt-project-tag.has-x .pt-x:disabled{opacity:.3;cursor:default}
+.pt-project-picker .it{justify-content:flex-start;padding-right:8px}
+.pt-project-picker .it.sel{background:#f3f3f3}
+.pt-project-picker .it.sel:hover{background:#e9e9e9}
+.pt-project-picker .it .x{margin-left:auto;padding-left:14px;display:flex;align-items:center;color:#8e8e8e;flex:none}
+html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4483,6 +4508,9 @@ html.mob .sch-dlg .pp-tbl .rg s::after{content:none}
 html.mob .sch-dlg .pp-tbl .rg s::before{content:"변경 전 ";color:#656a64}
 html.mob .sch-dlg .pp-tbl .rg strong::before{content:"변경 후 ";color:#656a64}
 html.mob .sch-dlg .bt button{min-height:44px}
+
+/* (forty-eighth round) the x of a partner's project is large enough for a finger */
+html.mob .pt-project-tag.has-x .pt-x{width:28px;height:28px}
 </style>
 </head>
 <body>
@@ -4880,7 +4908,7 @@ const newestFirst=(a,b)=>createdKey(b).localeCompare(createdKey(a));
 const liveItems=(type,pid)=>ITEMS.filter(i=>i.type===type&&isLive(i)&&(!pid||i.proj===pid));
 const hasFiles=it=>!!(it&&(it.body||'').includes('/api/file/')&&itemFiles(it).length);   // the same rule the library goes by (itemFiles)   // only a file that is really attached counts (the fixtures' "file" flag showed a button with nothing behind it)
 const snippet=it=>{const t=(it.body||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/\s+/g,' ').trim();return t.length>62?t.slice(0,62)+'…':t;};
-const sortResearch=list=>list.slice().sort((a,b)=>{const g=x=>isFresh(x)?0:(/^\[REF\]/.test(x.title)?1:2); const ga=g(a),gb=g(b); return ga!==gb?ga-gb:newestFirst(a,b);});
+const sortResearch=list=>list.slice().sort((a,b)=>{const g=x=>(typeof schResTagsOf==='function'?schResTagsOf(x).includes('REF'):/^\s*\[REF\]/i.test(x.title))?0:isFresh(x)?1:2; const ga=g(a),gb=g(b); return ga!==gb?ga-gb:newestFirst(a,b);});
 const PRI_RANK={std:-1,high:0,mid:1,low:2};
 const SORT_KEY={proj:i=>pname(proj(i.proj)),who:i=>userName((i.people||[])[0])||'',title:i=>norm(i.title),date:i=>itemEnd(i)||'',pri:i=>PRI_RANK[i.pri]??9,st:i=>i.st==='done'?1:0,mod:i=>{const n=modDate(i);return n?n.getTime():0;}};
 function sortActs(list){const f=SORT_KEY[S.sort.k],dir=S.sort.dir||1;const base=list.slice().sort(newestFirst);if(!f)return base;
@@ -5214,7 +5242,7 @@ function renderProject(pid){
      <div class="col col2 ${SC?'sch':''}">${SC?schOpsRow(pid):''}<div class="fr"><b>용도지역</b><span class="v${EC}" ${edk('zone')}>${esc(d.zone)}</span></div><div class="fr"><b>사업형태</b><span class="v${EC}" ${edk('kind')}>${esc(d.kind)}</span></div><div class="fr"><b>사업시행자</b>${d.dev||E?lk(d.dev,'dev'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div><div class="fr"><b>토지소유자</b>${d.land||E?lk(d.land,'land'):'<span class="v" style="color:#c4c4c4">미정</span>'}</div>
       <div class="fr"><b>자금조달</b><span class="v${EC}" ${edk('fund')}>${esc(d.fund)}</span></div><div class="fr"><b>총사업비</b><span class="v${EC}" ${edk('cost')}>${esc(d.cost)}</span></div><div class="fr"><b>자금조달방식</b><span class="v${EC}" ${edk('fundType')}>${esc(d.fundType)}</span></div>
       <div class="fr" style="margin-bottom:23.1px"><b>사업규모</b><div class="v ml">${d.scale.map((s,i)=>`<div><b style="margin-right:4px">${esc(s[0])}</b><span class="${EC}" ${edk('scale:'+i)}>${esc(scaleOf(d,i,p[SCALE_FB[i]]))}</span></div>`).join('')}</div></div>
-      <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>${PV?'<small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>':''}`:''}</div></div></div>
+      <div class="fr" style="margin-bottom:0"><b style="margin-top:1.2px">협력업체</b><div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${E?`<button class="sh-btn lib" data-addpartnerrow style="margin:4px 0 0;height:22px;font-size:12px">+ 협력업체</button>${PV?'<small class="at-hint">업체명을 누르면 목록에서 선택할 수 있습니다</small>':''}`:''}</div></div></div>
      <div class="col col3"><div class="fr"><b>개발사업구조</b><div class="v${EC}" ${edk('struct','개발사업 구조를 입력하세요')}>${esc(d.struct)}</div></div><div class="fr"><b>주요개발내용</b><div class="v${EC}" ${edk('main','주요 개발 내용을 입력하세요')}>${esc(d.main)}</div></div></div>
     </div><div class="hr bt"></div></div>`}
    <div data-sec="cal" style="position:relative;margin-top:10px">${renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true})}${rightList({proj:pid})}</div>
@@ -5812,7 +5840,7 @@ document.addEventListener('click',async e=>{
     if(k==='join'&&it){await nbJoin(it);return;}
     if((k==='publish'||k==='save')&&it&&nbPending(it)){toast('파일을 올리는 중입니다. 끝난 뒤 저장하세요.',2600);return;}
     if(k==='publish'&&it){const t=$('.ititle[data-f="title"]',pinOf(it));const tv=t&&!t.classList.contains('empty')?readTitle(t):''; if(!tv){toast('제목을 입력한 후 게시할 수 있습니다.');t&&t.focus();return;} it.title=tv; readUrl(it); readBody(it); it.status='published'; it.mod=nowTxt(); it.updatedAt=new Date().toISOString(); it.updatedBy=sharedUser; it.editing=false; it.dirty=false; delete it.snap; delete it._editOriginal; delete it.sessionNew; if(typeof schAfterSave==='function')schAfterSave(it); if(it.arch){S.archTab=it.arch;S.archPage=1;}else if(it.type==='action')S.actPage=1; else if(it.type==='research')S.resPage=1; rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'게시했습니다.'); if(say)toast(say.text,5200,say.act); else toast('게시했습니다.'); } return;}
-    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} delete it._co; if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
+    if(k==='edit'&&it){if(otherLock('item:'+it.id)){toast('다른 사용자가 수정 중입니다.');return;} delete it._co; if(it.ed===2&&!window.AIDCEditor){toast('편집기를 불러오지 못했습니다. 새로고침한 뒤 다시 시도하세요.',3200);return;} if(adoptRow(it))await sharedFlush(true); if(!await sharedBeginEdit('item:'+it.id))return; if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); if(typeof schResearchPrepareEdit==='function')schResearchPrepareEdit(it); it.editing=true; it.dirty=false; rerenderItem(it.id); const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:b&&(b.isContentEditable||b.dataset.nb==='edit')?serializeBody(b):(it.body||'')}); const nr=nbOf(it); if(nr)setTimeout(()=>{ if(nbOf(it)===nr&&!document.activeElement.closest('.ititle'))nr.inst.focus('end'); },0); return;}
     if(k==='save'&&it){const t=$('.ititle[data-f="title"]',pinOf(it)); if(t&&t.isContentEditable&&(t.classList.contains('empty')||!readTitle(t))){toast('제목을 입력해야 저장할 수 있습니다.');t.focus();return;} saveItem(it); rerenderItem(it.id); render(true); { const say=typeof schSavedSay==='function'&&schSavedSay(it,'저장했습니다.'); if(say)toast(say.text,5200,say.act); else toast('저장했습니다.'); } return;}
     if(k==='cancel'&&it){const along=(NBP[it.id]||[]).length; if(typeof schEditCancel==='function')schEditCancel(it); revertItem(it); rerenderItem(it.id); if(along)toast('함께 수정하던 본문의 변경은 다른 멤버의 화면에 남아 있습니다.',3600); return;}
     if(k==='trash'&&it){confirmTrash((it.title||'').split('\n')[0]||'이 콘텐츠',()=>trashItem(it));return;}
@@ -8560,7 +8588,7 @@ function schPartnerMark(name){ const p=schPartnerOf(name); if(!p)return `<i><svg
   const u=p.site&&p.site!=='-'?urlHref(p.site):''; return `<i class="plogo" title="협력업체 목록에 등록된 업체">${esc([...String(p.name||'').trim()][0]||'')}${u?logoImg(p.site):''}</i>`; }
 let schAtEl=null;
 function schAtClose(){ if(schAtEl){schAtEl=null; if(popEl&&popEl.classList.contains('sch-at'))closePop();} }
-function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
+function schAtShow(el){ const txt=el.textContent, at=txt.lastIndexOf('@'); if(at<0&&el.matches('[data-k^="partner:"]')){schPartnerNamePick(el,true);return;} if(at<0){schAtClose();return;} const q=norm(txt.slice(at+1));
   const hits=PARTNERS.filter(p=>!p.trash&&(!q||norm(p.name).includes(q)||norm(p.cat||'').includes(q))).slice(0,8); schAtEl=el;
   const p=openPop(el,`<div class="hd">협력업체 ${q?`“${esc(txt.slice(at+1).trim())}”`:'목록'}</div>${hits.map((x,i)=>`<div class="it ${i?'':'sel'}" data-at="${esc(x.id)}">${schPartnerMark(x.name)}<span class="t">${esc(x.name)}</span><span class="m">${esc(x.cat||'')}</span></div>`).join('')||'<div class="msg" style="padding-top:0">맞는 협력업체가 없습니다. 이름을 그대로 적어도 됩니다.</div>'}`,{cls:'sch-at'});
   p.addEventListener('mousedown',e=>{ const b=e.target.closest('[data-at]'); if(!b)return; e.preventDefault(); schAtPick(b.dataset.at); }); }
@@ -9943,7 +9971,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
   const mainTx=E||lines(d.main).length?`<div class="rmain">${text('main','사업의 내용을 적습니다',false)}</div>`:'';
   const cR=blk('infra',text('infra','한 줄에 한 항목씩 적습니다',true),'','infra')+blk('struct',text('struct','사업 구조와 수익 모델을 적습니다',false),'','struct')+blk('stat',text('stat','여러 줄로 적으면 항목으로 나뉩니다'),'','stat')
     +blk('risk',text('risk','한 줄에 한 항목씩 적습니다',true),'','risk')
-    +blk('partners',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib radd" data-addpartnerrow title="협력업체 추가" aria-label="협력업체 추가">${REP_PLUS}</button><small class="at-hint">@를 치면 협력업체 목록에서 고를 수 있습니다</small>`:''}</div>`,'pt','partners')
+    +blk('partners',`<div class="partners">${d.partners.map((t,i)=>lk(t,'partner:'+i)).join('')}${!d.partners.length&&!E?nil:''}${E?`<button class="sh-btn lib radd" data-addpartnerrow title="협력업체 추가" aria-label="협력업체 추가">${REP_PLUS}</button><small class="at-hint">업체명을 누르면 목록에서 선택할 수 있습니다</small>`:''}</div>`,'pt','partners')
     +schRepDocs(pid,d,E);
   const cL=blk('main',`${mainTx}<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo&&!mainTx?nil:''}${add('rows','행')}</div>`,'','main')
     +blk('plan',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','일정')}</div>`,'','plan');
@@ -10828,10 +10856,12 @@ function schPartnerScope(scope){
  if(S.ptScope===scope)return;
  S.ptScope=scope;S.partnerProject=scope==='main'?'':scope;S.partnerCat=null;S.q.partner='';S.ptPage=1;S.ptHold=0;
 }
+// forty-eighth round (owner, 2026-11-25): every tag in its project's own colour (the project's pj-* class, as the calendar's
+// pills); in the open partner a tag carries a small x that takes that project away at once.
 function schPartnerProjectTags(pt,editable){
  const ids=schPartnerProjects(pt);
- const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag;
- return editable?'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button>':'<span class="pt-project-tag">'+esc(name)+'</span>';}).join('');
+ const tags=ids.map(id=>{const name=PROJECTS[id].full||PROJECTS[id].tag,cls=esc(PROJECTS[id].cls||'');
+ return editable?'<span class="pt-project-tag pt-pp has-x '+cls+'"><button type="button" class="pt-pp-name" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(name)+'</button><button type="button" class="pt-x" data-pt-project-off="'+esc(pt.id)+'" data-pid="'+esc(id)+'" title="'+esc(name)+' 빼기" aria-label="'+esc(name)+' 빼기">'+svg('i-x',7,7)+'</button></span>':'<span class="pt-project-tag pt-pp '+cls+'">'+esc(name)+'</span>';}).join('');
  return tags||(editable?'<button type="button" class="pt-project-empty" data-pt-project-pick="'+esc(pt.id)+'">선택</button>':'');
 }
 function schPartnerFilterChip(){
@@ -10860,7 +10890,7 @@ function schPartnerProjectPick(el,pt){
  const pop=openPop(el,'<div class="hd">관련 프로젝트 · 복수 선택</div><div class="msg" style="padding-top:0"><input class="pt-project-query" placeholder="검색" aria-label="프로젝트 검색"></div><div class="pt-project-options"></div>',{cls:'pt-project-picker'});
  let busy=false;const input=pop.querySelector('input'),box=pop.querySelector('.pt-project-options');
  const draw=()=>{const ids=orderedProjects().filter(id=>!PROJECTS[id].trash&&matchQ(input.value,PROJECTS[id].tag,PROJECTS[id].full)),sel=selected();
- box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'"><i class="ck">'+(sel.includes(id)?svg('i-check',9,8):'')+'</i><span>'+esc(PROJECTS[id].full||PROJECTS[id].tag)+'</span></button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
+ box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'" aria-pressed="'+sel.includes(id)+'">'+pill(PROJECTS[id],'nosq')+(sel.includes(id)?'<span class="x" title="선택 해제">'+svg('i-x',8,8)+'</span>':'')+'</button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
  input.addEventListener('input',draw);
  box.addEventListener('click',async e=>{const b=e.target.closest('[data-pt-project-id]');if(!b||busy)return;e.preventDefault();e.stopPropagation();busy=true;b.disabled=true;
  try{await schPartnerToggleProject(pt,b.dataset.ptProjectId);
@@ -10869,7 +10899,10 @@ function schPartnerProjectPick(el,pt){
  }finally{busy=false;if(pop.isConnected)draw();}
  });draw();input.focus();
 }
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
+ const off=e.target.closest&&e.target.closest('[data-pt-project-off]');
+ if(off){e.preventDefault();e.stopImmediatePropagation();if(off.disabled)return;off.disabled=true;const pt=PARTNERS.find(p=>p.id===off.dataset.ptProjectOff&&!p.trash);
+  try{if(pt&&await schPartnerToggleProject(pt,off.dataset.pid)){const scroll=$('#content').scrollTop;render(true);$('#content').scrollTop=scroll;if(S.panel===pt.id){const tags=$('#panel-pin .pt-projects');if(tags)tags.innerHTML=schPartnerProjectTags(pt,true);}}}finally{off.disabled=false;}return;}
  const el=e.target.closest&&e.target.closest('[data-pt-project-pick],[data-pt-project-filter],[data-pt-project-clear]');if(!el)return;
  e.preventDefault();e.stopImmediatePropagation();
  if(el.hasAttribute('data-pt-project-pick')){schPartnerProjectPick(el,PARTNERS.find(p=>p.id===el.dataset.ptProjectPick&&!p.trash));return;}
@@ -10884,6 +10917,18 @@ document.addEventListener('click',e=>{
  const field=document.querySelector('#proj-pw .phead [data-k="partner:'+b.dataset.partnerUnlink+'"]');
  if(field){field.textContent='';saveProjectHead();render(true);}
 },true);
+
+function schPartnerNamePick(el,typing=false){
+ if(!S.editProj||!el?.matches('[data-k^="partner:"]'))return;
+ schAtEl=el;const q=typing?norm(el.textContent.replace(/^@/,'')):'';
+ const hits=PARTNERS.filter(p=>!p.trash&&(!q||matchQ(q,p.name,p.cat)));
+ const pop=openPop(el,'<div class="hd">협력업체 선택</div>'+hits.map((p,i)=>'<div class="it '+(i?'':'sel')+'" data-at="'+esc(p.id)+'">'+schPartnerMark(p.name)+'<span class="t">'+esc(p.name)+'</span></div>').join('')+(hits.length?'':'<div class="msg">등록된 업체가 없습니다. 새 이름을 직접 입력할 수 있습니다.</div>'),{cls:'sch-at sch-partner-select'});
+ pop.addEventListener('mousedown',e=>{const b=e.target.closest('[data-at]');if(!b)return;e.preventDefault();schAtPick(b.dataset.at);});
+}
+document.addEventListener('click',e=>{
+ const field=e.target.closest&&e.target.closest('.phead [contenteditable="true"][data-k^="partner:"]');
+ if(field&&S.editProj){e.stopPropagation();schPartnerNamePick(field);}
+});
 </script><script>
 /* ---- mypage/10-mypage.js ---- */
 /* My page (preview switch on): 계정 · 수신함 · 설정 · 휴지통, after the owner's specification "마이페이지 고도화 개발 명세서" (2026-11-19).

@@ -639,3 +639,6 @@ html.mob .sch-dlg .pp-tbl .rg s::after{content:none}
 html.mob .sch-dlg .pp-tbl .rg s::before{content:"변경 전 ";color:#656a64}
 html.mob .sch-dlg .pp-tbl .rg strong::before{content:"변경 후 ";color:#656a64}
 html.mob .sch-dlg .bt button{min-height:44px}
+
+/* (forty-eighth round) the x of a partner's project is large enough for a finger */
+html.mob .pt-project-tag.has-x .pt-x{width:28px;height:28px}

@@ -1332,3 +1332,13 @@ phone. A partner opens only as a panel (it is not an item: no full page).
   name, what it holds, the room around them — only 요약 / FULL keep to themselves (a part without content stays off).
 
 Seen in a contract's panel (search, add, take away, the window coming back) and in the export window. Not run: the suites.
+
+## A partner's projects in their own colours; an x to take one away (owner, 2026-11-25, forty-eighth round)
+
+- The tags of 관련 프로젝트 (the partner list's column and the open partner) were all one green: each is drawn in its
+  project's own colour now — the project's `pj-*` class, the same as the calendar's pills (`.pt-project-tag.pt-pp`).
+- In the open partner a tag has a small x after its name (`[data-pt-project-off]`): a press takes that project away at once
+  (the same path as the picker: the project's overview is locked for the moment, saved, released). The name still opens the
+  picker.
+- The picker (관련 프로젝트 · 복수 선택) marks a chosen project with an x at the right of its row and a grey ground, as the
+  link window does; no tick at the left any more.
