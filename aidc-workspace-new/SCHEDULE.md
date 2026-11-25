@@ -1342,3 +1342,24 @@ Seen in a contract's panel (search, add, take away, the window coming back) and 
   picker.
 - The picker (관련 프로젝트 · 복수 선택) marks a chosen project with an x at the right of its row and a grey ground, as the
   link window does; no tick at the left any more.
+
+## Final audit (owner, 2026-11-26: "기능이나 작동에 문제없는지, 디자인에 일관성이 없는부분은 없는지 쭉 체크해봐")
+
+Every screen of the combined page was walked on the local server (main page, project page, the five kinds of panel, the
+libraries, the export window, the window that makes a project, the my page, the archive, dark mode, 1536 wide, a phone and
+the ?v=1 page): no error in the console, no failed request of the workspace, the tabs, both views, the searches, the
+calendar's arrows, edit + cancel of the overview, a meeting, an action and a partner, and the link picker all work. The
+styles of buttons, fields and titles were gathered from the pages and compared. Four things were made one:
+
+- **Section titles**: 프로젝트 and 협력업체 목록 kept the first design's 29px / 600; every other title is 28px / 700 (액션 is
+  the measure). `.sch-on .sec-title` now gives all of them the same.
+- **Empty values in a panel** are light grey (#c4c4c4): a meeting's 액션 / 리서치 "없음" (linkChips) and its 최종수정일자 "-"
+  were black.
+- **저장 while a panel is edited** is the black button everywhere: a partner, a link card and an archive card (shead) had the
+  white one.
+- **Meeting cards**: the third card on had 6px less padding at the bottom (`.mcard.sm`, the first design's fixed places), so
+  two cards with the same lines differed in height.
+
+Left as they are (designs the owner chose, said in the report): two kinds of table (the 자료실 / 협력업체 lists with a line
+under every cell, the schedule tables with whole lines), cards of a row that end at different heights (meetings, research),
+프로젝트 and 협력업체 목록 without a pictogram, the overview's own outlined 저장.

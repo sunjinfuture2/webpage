@@ -2131,3 +2131,11 @@ span.pt-project-tag{cursor:default}
 .pt-project-picker .it.sel:hover{background:#e9e9e9}
 .pt-project-picker .it .x{margin-left:auto;padding-left:14px;display:flex;align-items:center;color:#8e8e8e;flex:none}
 html.dark .pt-project-picker .it.sel{background:#2a2a2a}
+
+/* Final audit (2026-11-26): one look for the same thing.
+   - Every section title of the combined page is set like 액션 (the measure of the main page since the twenty-fifth round):
+     프로젝트 and 협력업체 목록 kept the first design's 29px / 600 beside 28px / 700 of all the others.
+   - A meeting card has one padding: the first design gave the cards from the third on 6px less at the bottom (they stood at
+     fixed places), so two cards with the same lines differed in height. */
+.sch-on .sec-title{font-size:28px;font-weight:700;letter-spacing:-0.03em}
+.sch-on .mcard.sm{padding-bottom:31.5px}
