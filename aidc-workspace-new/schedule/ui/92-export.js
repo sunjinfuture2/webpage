@@ -104,7 +104,7 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
       sections.push({k:'evid',h:'근거 및 확약',blocks:b}); } }
   if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({k:'meet',h:'미팅',blocks:[schXT(['일자','제목','주요안건','참석자'],cut('meet',ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1100,2500,2300,1300]),...more('meet',ms,5)]}); }
   if(has('part')&&(h.partners||[]).length){ const names=h.partners.map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean);
-    sections.push({k:'part',h:'협력업체',blocks:fullOf('part')?[schXT(['업체','구분','홈페이지','설명'],names.map(nm=>{ const pt=PARTNERS.find(q=>!q.trash&&norm(q.name)===norm(nm))||{}; return [nm,partnerCategories(pt.cat).join(', '),pt.site&&pt.site!=='-'?pt.site:'',oneLine(pt.desc||'')]; }),[1500,1300,1700,2700])]:[schXP(names.join(', '))]}); }
+    sections.push({k:'part',h:'협력업체',blocks:fullOf('part')?[schXT(['업체','구분','홈페이지','설명'],names.map(nm=>{ const pt=PARTNERS.find(q=>!q.trash&&norm(q.name)===norm(nm))||{}; return [nm,partnerCategories(pt.cat).join(', '),pt.site&&pt.site!=='-'?pt.site:'',oneLine(partnerDesc(pt))]; }),[1500,1300,1700,2700])]:[schXP(names.join(', '))]}); }
   const fs=sections.map(s=>fullOf(s.k)), kind=fs.length&&fs.every(Boolean)?'full':fs.some(Boolean)?'mix':'sum';
   sections.forEach((s,i)=>{ s.h=`${i+1}. ${s.h}`; });
   const no=schRepNos()[pid];

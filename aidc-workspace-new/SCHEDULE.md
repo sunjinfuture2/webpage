@@ -1296,3 +1296,15 @@ A partner's description had grown (project names, the meetings it took part in) 
 meetings and out of the table. In the list it is one line now, cut with "…" at the end of its own column (`.ds > .e`; line
 breaks are written as spaces there); the cell's title carries the whole text, and the panel shows it whole as before. The
 column of meetings keeps to its own width too. For both pages (the cell's rule is not under `.sch-on`).
+
+## A partner's description after the move into the body (owner, 2026-11-25, forty-fifth round)
+
+Another change of the same day gave a partner a body (본문) and moved every existing description into it, once, on the
+server (partner-description-migration.mjs; `desc` is empty since, the text is in `body`). The list then showed an empty
+설명 column and the panel "없음" — the owner: "오류생겼어 해결해".
+
+Nothing was moved back (the body is that change's own, and the live database cannot be reached from here). What is SHOWN
+as a partner's description is `partnerDesc(p)` (original.html): the short description when there is one, otherwise the
+first paragraph of the body — in the list (one line, cut with dots), in the panel while it is read (three lines of it at most there: the whole
+text stands right below as the body), in the report's partner table; the list's search reads the body too. While a partner is edited the field holds only the short description
+itself (its hint says what is shown when it is left empty), so nothing derived is ever saved.
