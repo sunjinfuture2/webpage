@@ -42,12 +42,16 @@ const mobileRow=p.locator('.contract-table .rw').filter({hasText:'계약서 확�
 await mobileRow.waitFor();
 assert.ok(await mobileRow.evaluate(row=>{
  const bounds=row.getBoundingClientRect(),title=row.querySelector('.nm').getBoundingClientRect();
- return bounds.left>=0 && bounds.right<=innerWidth+1 && row.scrollWidth<=row.clientWidth+1 && title.bottom<=row.children[1].getBoundingClientRect().top+1;
+ return bounds.left>=0 && bounds.right<=innerWidth+1 && row.scrollWidth<=row.clientWidth+1 && title.bottom<=row.querySelector('.mob-record-meta').getBoundingClientRect().top+1;
 }));
+await mobileRow.locator('.mob-record-more').click();
+assert.ok(await mobileRow.locator('.contract-meetings [data-open]').first().isVisible());
+assert.ok(await mobileRow.locator('.contract-actions [data-open]').first().isVisible());
+await p.locator('.contract-table .mob-column-toggle').click();
 const filters=p.locator('.contract-table .hd');
-assert.ok(await filters.evaluate(el=>el.scrollWidth>el.clientWidth && getComputedStyle(el).overflowX==='auto'));
+assert.ok(await filters.evaluate(el=>!el.hidden && el.scrollWidth<=el.clientWidth+1 && [...el.children].every(c=>c.getBoundingClientRect().right<=innerWidth)));
 await mobileRow.locator('.nm').click();
 await p.waitForSelector('#panel-pin [data-ed="edit"]');
 assert.equal(await p.evaluate(()=>curItem().id),id);
-console.log('PASS contract creation, searchable links, server persistence, project isolation, mobile cards and scrollable filters');
+console.log('PASS contract creation, searchable links, server persistence, project isolation, mobile details and wrapping filters');
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});

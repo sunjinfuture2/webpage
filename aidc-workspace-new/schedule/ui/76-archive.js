@@ -64,7 +64,7 @@ function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
   return h+(q?'':`<button class="sh-btn newsec" data-newsec>구분 새로 만들기</button>`); }
 function schArchBody(){ const q=SCH_ARCH.q.trim(), found=q?schArchFind(q):{docs:[],cards:[]}, docsN=q?found.docs.length:ARCH_TABS.reduce((n,t)=>n+archList(t).length,0), sitesN=q?found.cards.length:ARCH_SECTIONS.reduce((n,s)=>n+s.cards.filter(c=>!c.trash).length,0);
   $$('#arch-pw [data-arview]').forEach(b=>{ b.classList.toggle('on',b.dataset.arview===SCH_ARCH.view); const s=b.querySelector('small'); if(s)s.textContent=b.dataset.arview==='docs'?docsN:sitesN; });
-  const box=$('#ar-body'); if(box)box.innerHTML=SCH_ARCH.view==='sites'?`<div class="ar-sites">${schArchSitesHtml(found)}</div>`:`<div class="ar-docs">${schArchDocsHtml(found)}</div>`; }
+  const box=$('#ar-body'); if(box){box.innerHTML=SCH_ARCH.view==='sites'?`<div class="ar-sites">${schArchSitesHtml(found)}</div>`:`<div class="ar-docs">${schArchDocsHtml(found)}</div>`; schMobTables(box);} }
 function schArchRender(){ if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||''; const pw=$('#arch-pw'), keep=pw.querySelector('input[data-arq]'), had=keep&&document.activeElement===keep, pos=had?keep.selectionStart:0;
   pw.innerHTML=`<div class="arch-title">자료실</div><div class="ar-pv"><div class="ar-top"><div class="ar-views" role="tablist"><button data-arview="docs" role="tab">문서 목록<small></small></button><button data-arview="sites" role="tab">참고사이트<small></small></button></div>
       <label class="srch box ar-q" title="자료실 검색">${svg('pic-search',15,15)}<input data-arq placeholder="자료실 검색 (문서 · 참고사이트)" aria-label="자료실 검색" value="${esc(SCH_ARCH.q)}" autocomplete="off">${qx(SCH_ARCH.q)}</label></div>

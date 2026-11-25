@@ -33,11 +33,14 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
     d.innerHTML=`<div class="box" role="dialog" aria-label="${esc(o.kind==='new'?'관계 연결':o.title)}"><div class="pp-hd"><b>${esc(o.kind==='new'?'관계 연결':o.title)}</b><span><em>${esc(schTaskTitle(a))}</em>${svg('i-sch-arr',13,9)}<em>${esc(schTaskTitle(b))}</em></span></div>
       ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}">${schRelGlyph(ty)}<b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
       <p class="pp-sent">${esc(o.kind==='new'?A.relationshipSentence(type,a.name,b.name):(o.note||''))}</p>${body}
-      <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri" ${err?'disabled':''}>확인</button></div></div>`; const p=d.querySelector('button.pri'); if(p&&!err)p.focus(); };
+      <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri" ${err?'disabled':''}>확인</button></div></div>`; const p=d.querySelector('button.pri'); if(p&&!err)p.focus({preventScroll:schMob()}); };
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; const k=bt.dataset.pp; if(k==='x')close(); else if(k==='ok')ok(); else if(k==='ty'){type=bt.dataset.k;cur=calc();draw();} });
   document.addEventListener('keydown',key,true); draw(); }
 // The small chart of the dialog: one row per task, where it stood (dashed) and where it will stand (solid); the relation in question as a line.
-function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, LW=214, TW=590, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
+function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
+  // The phone dialog reserves 28px for the outer margins and 40px for padding and borders.
+  const chartWidth=schMob()?Math.min(innerWidth-68,596):804;
+  const LW=schMob()?Math.round(chartWidth*.34):214, TW=chartWidth-LW;
   for(const t of tasks)for(const r of [r0.tasks[t.id],r1.tasks[t.id]]){ if(!r)continue; lo=Math.min(lo,D.dayNumber(r.start)); hi=Math.max(hi,D.dayNumber(r.finish)); }
   lo-=3; hi+=4; const px=TW/Math.max(1,hi-lo+1), X=d=>(D.dayNumber(d)-lo)*px, H=top+tasks.length*RH+6, geo=new Map(); let rows='', ax='';
   { let d=D.fromDay(lo).slice(0,8)+'01'; const step=px*30<34?(px*30<12?6:3):1; for(let n=0;n<400&&D.dayNumber(d)<=hi;n++){ const x=X(d); if(x>=0&&x<TW-20&&((+d.slice(5,7)-1)%step===0))ax+=`<i class="mo" style="left:${LW+x}px">${d.slice(2,4)}.${+d.slice(5,7)}</i>`; d=D.addMonths(d,1); } }
@@ -47,7 +50,7 @@ function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r
     rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schNo(t))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
   let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1]),relType); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
   const nx=today>=D.fromDay(lo)&&today<=D.fromDay(hi)?`<i class="td" style="left:${LW+X(today)+px/2}px;top:${top-4}px;height:${H-top+2}px"></i>`:'';
-  return `<div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div>`; }
+  return `<div class="pp-chart-wrap"><div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div></div>`; }
 
 // A change of dates is shown before it is saved too (owner, 2026-11-23: "일자 바꾸면 어떻게 될지 연결 옮기기처럼 보여주고 적용하면 그때").
 // o: { task, title, note, want (the start that was asked for), mutate(draft), label, commit() (how it is saved; default schCommit) }
@@ -77,4 +80,4 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
       :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}
     <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri">적용</button></div></div>`;
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; if(bt.dataset.pp==='x')close(); else if(bt.dataset.pp==='ok')ok(); });
-  document.addEventListener('keydown',key,true); const b=d.querySelector('button.pri'); if(b)b.focus(); }
+  document.addEventListener('keydown',key,true); const b=d.querySelector('button.pri'); if(b)b.focus({preventScroll:schMob()}); }

@@ -2322,7 +2322,7 @@ function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content')
   }catch(err){ // one broken record must not leave a blank screen: say what happened and keep the rest of the app usable
     console.error(err); const pg=$(S.full?'#page-item':S.page==='project'?'#page-project':S.page==='archive'?'#page-archive':'#page-main'); pg.classList.add('on');
     $('.pw,.pin',pg).innerHTML=`<div style="padding:140px 0;font-size:14px;color:#939393;line-height:24px">이 화면을 표시하는 중 문제가 생겼습니다. 새로고침(F5)해 주세요.<br>계속되면 이 문구를 관리자에게 알려 주세요: ${esc(String(err&&err.message||err))}</div>`; }
-  crumbsFor(); sbState(); if(st!=null)$('#content').scrollTop=st; afterNav(); }
+  crumbsFor(); sbState(); if(st!=null){if(schMob())schMobTables();$('#content').scrollTop=st;} afterNav(); }
 function fitTitle(pin){ if(!pin)return; const t=pin.querySelector('.ititle'); const tExtra=t?Math.max(0,t.offsetHeight-53):0; let pExtra=0; const pr=pin.querySelector('.props'); if(pr){pExtra=Math.max(0,pr.offsetHeight-(pr.querySelector('.rcol')?5:6)*42);} const cl=pin.querySelector('.cmt-list'); pin.style.setProperty('--tshift',tExtra+'px'); pin.style.setProperty('--pshift',(tExtra+pExtra)+'px'); pin.style.setProperty('--cshift',(cl?cl.offsetHeight:0)+'px'); if(pin.classList.contains('pin')&&!fitTitle.busy){fitTitle.busy=true;try{nbMount(pin);}finally{fitTitle.busy=false;}} }
 document.addEventListener('input',e=>{ const t=e.target; if(t&&t.matches&&t.matches('.ititle'))fitTitle(t.closest('.pin')); });
 document.addEventListener('mouseover',e=>{ const li=e.target.closest&&e.target.closest('.arch .tabs li[data-tab]'); if(!li)return; const tabs=li.closest('.tabs'); tabs.style.setProperty('--tabidx',[...tabs.querySelectorAll('li[data-tab]')].indexOf(li)); S.hoverTab=li.dataset.tab; });
@@ -2706,7 +2706,7 @@ function renderPaneBase(pane){$$('#mnav .item').forEach(i=>i.classList.toggle('o
     h=`<div class="pane on"><div class="gset"><h2>애널리틱스</h2><div class="desc">${a.mode==='30'?'최근 30일':`${a.y}년 ${a.m}월`} 동안 등록된 항목입니다. (${from.replace(/-/g,'.')} ~ ${to.replace(/-/g,'.')})</div>
       <div class="an-tools"><button class="${a.mode==='30'?'on':''}" data-an="30">최근 30일</button><button class="${a.mode==='month'?'on':''}" data-an="month">월별</button><span class="mnav2"><button data-an="-1" title="이전 달">‹</button><b>${a.y}년 ${a.m}월</b><button data-an="1" title="다음 달">›</button></span></div>
       <div class="stats"><div class="st"><b>${cnt('meeting')}</b><span>미팅</span></div><div class="st"><b>${cnt('action')}</b><span>${ACT} (완료 ${done})</span></div><div class="st"><b>${cnt('research')}</b><span>리서치</span></div><div class="st"><b>${Object.keys(sharedUsers).length}</b><span>멤버</span></div></div>
-      <div class="bars">${orderedProjects().map(k=>{const n=sel.filter(i=>i.proj===k).length;return `<div><span>${esc(pname(PROJECTS[k]))}</span><i style="width:${Math.round(n/max*520)}px"></i>${n}</div>`;}).join('')}</div>
+      <div class="bars">${orderedProjects().map(k=>{const n=sel.filter(i=>i.proj===k).length;return `<div><span>${esc(pname(PROJECTS[k]))}</span><i style="width:${Math.round(n/max*520)}px;--bar-share:${n/max*60}%"></i>${n}</div>`;}).join('')}</div>
       <div class="desc" style="margin-top:34px;font-weight:400;color:#8e8e8e">전체 누적: 미팅 ${pool.filter(i=>i.type==='meeting').length} · ${ACT} ${pool.filter(i=>i.type==='action').length} · 리서치 ${pool.filter(i=>i.type==='research').length}</div></div></div>`;}
   B.innerHTML=h+'<div class="scrollbar" style="display:none"></div>'; B.scrollTop=0;}
 

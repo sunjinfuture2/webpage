@@ -4238,38 +4238,14 @@ html.mob .arch .ar-docs .tabs li{display:grid;place-items:center;width:auto;flex
 html.mob .arch .ar-docs .tabs .bar{height:1px}
 html.mob .arch .ar-docs .tabs .bar i{display:none}
 html.mob .arch .ar-docs .tabs li.on{box-shadow:inset 0 -2px currentColor}
-html.mob .arch .tbl.archive.pv,html.mob .contract-section .contract-table{
-  width:100%!important;min-width:0;margin:18px 0 0;padding:0;overflow:visible
-}
 html.mob .contract-section .contract-scroll{margin-top:4px;overflow:visible}
-html.mob :is(.tbl.archive.pv,.contract-table) > .hd{
-  display:flex;align-items:stretch;width:100%;height:auto;min-height:40px;overflow-x:auto;gap:6px;border-bottom:1px solid #dedede;scrollbar-width:thin
-}
-html.mob :is(.tbl.archive.pv,.contract-table) > .hd > *{
-  display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 8px;border:0;white-space:nowrap;flex:none;font-size:12px
-}
-html.mob :is(.tbl.archive.pv,.contract-table) .rw{
-  display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-start;width:100%;height:auto;min-height:60px;gap:4px 12px;
-  padding:10px 4px;border-bottom:1px solid #e8e8e8
-}
-html.mob :is(.tbl.archive.pv,.contract-table) .rw > div{margin:0;padding:0;max-width:100%;min-height:0;border:0;line-height:1.4;min-width:0;height:auto}
-html.mob :is(.tbl.archive.pv .rw .ttl,.contract-table .rw .nm){flex:1 0 100%;align-items:center;font-size:15px;font-weight:600}
-html.mob .tbl.archive.pv .rw .ttl .tx,html.mob .contract-table .rw .nm .e{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
 html.mob .tbl.archive.pv .rw .ttl .gd{position:static;flex:none;margin:0 5px 0 0}
-html.mob .tbl.archive.pv .rw .ttl .ttl-ic{margin:0 0 0 4px}
-html.mob .tbl.archive.pv .rw :is(.who span,.d,.mod,.pr,.src),html.mob .contract-table .rw > div:not(.nm){font-size:12px;color:#616561}
-html.mob .tbl.archive.pv .rw .who .avatar{width:16px;height:16px}
-html.mob .tbl.archive.pv .rw .who:has(.nil),html.mob .tbl.archive.pv .rw .src:not(:has(a)),html.mob .contract-table .rw .contract-links:empty{display:none}
-html.mob .tbl.archive.pv .rw .d::before{content:"기한 ";margin-right:4px}
-html.mob .tbl.archive.pv .rw .mod::before{content:"수정 ";margin-right:4px}
-html.mob .contract-table .none{position:static;text-align:left;white-space:normal}
+html.mob .tbl.archive.pv .rw .ttl .ttl-ic{position:static;flex:none;margin:0}
 html.mob .pop:not(.mob-day-menu){max-height:calc(100dvh - 24px);overflow-y:auto}
 @media(max-width:359px){
   html.mob .sch-title .sch-tabs button[data-sch]{padding:0 4px;font-size:13px}
   html.mob .rstats .rkp{column-gap:12px}
 }
-html.mob .tbl.archive.pv .hd [data-arcol] em{position:static}
-html.mob .tbl.archive.pv .hd [data-arcol]{border-radius:5px;background:#f6f6f5;margin:3px 0;padding:0 9px;min-height:34px}
 html.mob .mob-day-menu .it{padding:0}
 html.mob .mob-day-item{width:100%;min-height:44px;padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere}
 html.mob #login{display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;padding:24px 16px}
@@ -4304,6 +4280,176 @@ html.mob .sch-net .sn-tools .sh-btn{width:40px;height:40px;margin:0;font-size:20
 /* (forty-seventh round) the link window is as wide as the screen allows */
 html.mob .pop.lp{width:calc(100vw - 32px)}
 html.mob .pop.lp .lp-srch input{font-size:16px}
+
+/* Record lists share the same reading order at phone widths. Spatial views keep their own scroll areas. */
+html.mob .page .tbl.mob-records{
+  width:100%!important;min-width:0;max-width:100%;margin:16px 0 0;padding:0;
+  overflow:visible;border-top:1px solid #dadcd8
+}
+html.mob .page .tbl.mob-records .rw{
+  display:block;width:100%;max-width:100%;min-width:0;height:auto;min-height:52px;
+  padding:10px 3px 12px;margin:0;box-sizing:border-box;border:0;border-bottom:1px solid #e5e6e3;border-radius:0
+}
+html.mob .page .tbl.mob-records .rw > div{
+  position:static;display:block;min-width:0;max-width:100%;height:auto;min-height:0;
+  margin:0!important;padding:0;border:0;overflow:visible;white-space:normal
+}
+html.mob .page .tbl.mob-records .rw .mob-record-title{
+  position:relative;display:flex;align-items:baseline;gap:3px 6px;min-height:26px;
+  font-size:16px;font-weight:600;line-height:1.45;letter-spacing:-.02em;word-break:keep-all;overflow-wrap:anywhere;color:var(--ink)
+}
+html.mob .page .tbl.mob-records .rw.mob-has-details .mob-record-title{margin-right:48px!important}
+html.mob.sch-on .page .tbl.partners.mob-records .rw{padding:10px 3px 12px}
+html.mob .page .tbl.mob-records .rw .mob-record-title :is(.tx,.e),
+html.mob .page .tbl.mob-records .rw .mob-record-details :is(.e,.t,.tx,a){
+  display:inline;min-width:0;max-width:100%;white-space:normal;text-overflow:clip;overflow:visible;
+  overflow-wrap:anywhere;-webkit-line-clamp:unset
+}
+html.mob .page .tbl.mob-records .rw .mob-record-title .acts,
+html.mob .page .tbl.mob-records .rw .gut:empty{display:none}
+html.mob .page .tbl.mob-records .rw .gut:has(.sch-ms){width:9px;align-self:center}
+html.mob .page .tbl.mob-records .rw .gut .sch-ms{position:static}
+html.mob .page .tbl.mob-records .rw .mob-record-title .tdots:not(:empty),
+html.mob .page .tbl.mob-records .rw .mob-record-title > .sdot{position:relative;inset:auto;align-self:flex-start;margin-top:9px;flex:none}
+html.mob .page .tbl.mob-records .rw .mob-record-title .tdots:empty{display:none}
+html.mob .page .tbl.mob-records .rw .mob-record-meta{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin-top:3px!important
+}
+html.mob .mob-summary-field{display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:3px 5px}
+html.mob .mob-summary-field,html.mob .mob-detail-field > *{min-width:0;max-width:100%;overflow-wrap:anywhere}
+html.mob .mob-field-label,html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
+  font-size:12px;line-height:1.55;font-variant-numeric:tabular-nums;color:#565d58
+}
+html.mob .mob-field-label{color:#646b65;font-weight:500}
+html.mob .page .tbl.mob-records .rw .mob-record-details{
+  margin-top:9px!important;padding:6px 10px;background:#f6f7f5;border-radius:6px
+}
+html.mob .mob-detail-field{
+  display:grid;grid-template-columns:minmax(58px,26%) minmax(0,1fr);align-items:baseline;gap:10px;
+  padding:5px 0;font-size:13px;line-height:1.5
+}
+html.mob .mob-detail-field + .mob-detail-field{border-top:1px solid #e6e8e4}
+html.mob .page .tbl.mob-records .rw .mob-detail-field > div,
+html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
+  margin:0!important;padding:0;min-width:0;max-width:100%;height:auto;white-space:normal;overflow-wrap:anywhere;overflow:visible
+}
+html.mob .page .tbl.mob-records .rw :is(.who,.rc-tags,.contract-links,.rg){display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
+html.mob .page .mob-records .mob-detail-field .sch-rg{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px}
+html.mob .page .tbl.mob-records .rw .who span{font-size:12px;white-space:normal}
+html.mob .page .tbl.mob-records .rw .sf-e,
+html.mob .page .tbl.mob-records .rw .mob-detail-field :is(button,a){display:inline-flex;align-items:center;min-height:32px;margin:0;max-width:100%}
+html.mob .mob-record-more,html.mob .mob-column-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;
+  color:#525b54;border:0;background:transparent;cursor:pointer
+}
+html.mob .mob-record-more{position:absolute;right:0;top:2px;width:44px;border-radius:6px}
+html.mob .mob-record-more svg,html.mob .mob-column-toggle svg{flex:none;transition:transform .15s}
+html.mob :is(.mob-record-more,.mob-column-toggle)[aria-expanded="true"] svg{transform:rotate(180deg)}
+html.mob .mob-column-toggle{font-size:13px;padding:0 6px;font-weight:550}
+html.mob .page .tbl.mob-records > .hd{
+  display:flex;flex-wrap:wrap;gap:4px 6px;align-items:stretch;width:100%;min-width:0;height:auto;
+  padding:0 0 8px;background:transparent;border:0;overflow:visible
+}
+html.mob .page .tbl.mob-records > .hd > span{
+  position:static;display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 9px;
+  margin:0;min-height:40px;border:0;border-radius:5px;background:#f3f4f2
+}
+html.mob .page .tbl.mob-records > .hd > span :is(em,svg){position:static;inset:auto;transform:none}
+html.mob .page .tbl.mob-records > .hd > span:is(.flt,.sorted){color:var(--ink);background:#e8ede6}
+html.mob .page .tbl.mob-records :is(.hd,.mob-record-details)[hidden]{display:none}
+html.mob .page .tbl.mob-records .none:not(.sch-role){width:100%;white-space:normal}
+html.mob .page .tbl.mob-records > .ft{position:static;height:0;border:0}
+html.mob .mob-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+html.mob .mob-records :is(button,[role="button"]):focus-visible{outline:2px solid #477a45;outline-offset:1px}
+
+html.mob.sch-on .sec-title .sch-vt + .srch.box,
+html.mob.sch-on .sec-title .srch.box{margin:0;flex:1 0 100%;width:100%;min-width:0;box-sizing:border-box}
+html.mob.sch-on .sec-title .sch-vt{margin:0 0 0 auto}
+html.mob .sch-vt{display:inline-flex;align-items:center;flex:none;max-width:100%;height:auto}
+html.mob .sch-vt button{display:grid;place-items:center;min-width:40px;min-height:40px}
+html.mob.sch-on :is(.meet,.projects).tv [data-vbody]{padding:0}
+html.mob.sch-on .sch-filters.res,html.mob.sch-on .meet .meetf{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;height:auto;gap:4px 12px;margin:10px 0 0
+}
+html.mob.sch-on :is(.sch-filters.res,.meet .meetf) .sf{
+  width:100%;min-width:0;max-width:100%;min-height:40px;box-sizing:border-box
+}
+html.mob.sch-on .meet .meetf .sch-chip{justify-self:start;max-width:100%}
+html.mob [data-sec="research"] > div:has(> .vt-res){margin-top:16px!important}
+@media(min-width:360px){
+  html.mob.sch-on .meet .meetf{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(hover:none){
+  html.mob .page .tbl.mob-records .rw:hover:not(.sel){background:transparent}
+}
+@media(prefers-reduced-motion:reduce){
+  html.mob :is(.mob-record-more,.mob-column-toggle) svg{transition:none}
+}
+
+/* My Page also hosts the original member, team, activity and administration lists. */
+html.mob .modal.mp .mbody :is(.mem,.gset,.upd){
+  position:static;width:100%;min-width:0;max-width:100%;padding:18px 16px 48px;box-sizing:border-box;overflow-wrap:anywhere
+}
+html.mob .mem .tools:empty{display:none}
+html.mob .mem .h{align-items:center;gap:8px}
+html.mob .mem .h :is(h2,.addbtn){margin:0!important}
+html.mob .mem .addbtn,html.mob .gset .btn{min-height:40px}
+html.mob .mem .tbl,html.mob .gset .list{
+  width:100%!important;min-width:0;max-width:100%;margin:18px 0 0;padding:0;border-top:1px solid #dedede;overflow:visible
+}
+html.mob .mem .tbl .hd,html.mob .gset .list .hd{display:none}
+html.mob .mem .tbl .rw,html.mob .gset .list .rw{
+  width:100%;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;
+  padding:10px 2px;height:auto;border-bottom:1px solid #e5e6e3
+}
+html.mob .mem .tbl .rw > div,html.mob .gset .list .rw > span{
+  min-width:0;max-width:100%;margin:0;border:0;padding:0;white-space:normal;overflow-wrap:anywhere
+}
+html.mob .mem .tbl .rw .us{flex:1 0 100%;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+html.mob .mem .tbl .rw .ws{flex-wrap:wrap;gap:6px}
+html.mob .mem .tbl .rw :is(.ro,.ws)::before{font-size:12px;color:#626862;font-weight:400}
+html.mob .mem .tbl .rw .ro::before{content:"역할"}
+html.mob .mem .tbl .rw .ws::before{content:"팀스페이스"}
+html.mob .mem .tbl .rw :is([data-role],[data-wsmore]){display:inline-flex;min-width:38px;min-height:38px;align-items:center;justify-content:center}
+html.mob .mem .pager{width:100%;margin:16px 0 0!important}
+html.mob .gset .list .rw > :first-child{flex:1 0 100%;font-weight:600}
+html.mob .gset .list .rw > span:empty{display:none}
+html.mob .gset .frm{max-width:100%;grid-template-columns:minmax(0,1fr);row-gap:6px!important;margin-top:22px}
+html.mob .gset .frm b:not(:first-child){margin-top:10px}
+html.mob .gset .frm :is(input,select){width:100%;min-width:0;min-height:40px;font-size:16px}
+html.mob .gset .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:18px}
+html.mob .gset .stats .st{width:auto;padding:12px}
+html.mob .gset .bars{width:100%;margin-top:16px}
+html.mob .gset .bars div{gap:6px}
+html.mob .gset .bars div span{width:28%;flex:none;text-align:left;overflow-wrap:anywhere}
+html.mob .gset .bars div i{max-width:var(--bar-share,65%)}
+html.mob .gset .an-tools,html.mob .upd .u .dt{flex-wrap:wrap}
+html.mob .gset .an-tools .mnav2{margin:0}
+html.mob .upd .u .dt span{white-space:normal}
+
+html.mob .dlg.sch-dlg .box:has(.pp-hd){box-sizing:border-box;width:calc(100vw - 28px);max-width:636px;max-height:calc(100dvh - 28px);padding:18px}
+html.mob .sch-dlg .pp-hd span{max-width:100%;flex-wrap:wrap}
+html.mob .sch-dlg .pp-hd em{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+html.mob .sch-dlg .pp-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+html.mob .sch-dlg .pp-types button{height:auto;min-height:40px;padding:4px 6px;gap:4px;white-space:normal}
+html.mob .sch-dlg .pp-cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+html.mob .sch-dlg .pp-cmp > i{display:none}
+html.mob .sch-dlg .pp-cmp .bx{padding:8px}
+html.mob .sch-dlg .pp-cmp .bx.op{grid-column:1/-1;margin:0}
+html.mob .sch-dlg .pp-cmp .bx strong{white-space:normal;overflow-wrap:anywhere;font-size:14px}
+html.mob .sch-dlg .pp-chart-wrap{overflow-x:auto;max-width:100%}
+html.mob .sch-dlg .pp-chart{max-width:none}
+html.mob .sch-dlg .pp-chart .lg{left:0;right:auto;top:2px;gap:4px;font-size:9px}
+html.mob .sch-dlg .pp-chart .lg .br{width:7px}
+html.mob .sch-dlg .pp-tbl{max-height:40dvh}
+html.mob .sch-dlg .pp-tbl .hd{display:none}
+html.mob .sch-dlg .pp-tbl .rw{grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;height:auto;padding:8px 0}
+html.mob .sch-dlg .pp-tbl .nm{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere}
+html.mob .sch-dlg .pp-tbl .rg{display:grid;gap:3px;white-space:normal;font-size:12px}
+html.mob .sch-dlg .pp-tbl .rg s::after{content:none}
+html.mob .sch-dlg .pp-tbl .rg s::before{content:"변경 전 ";color:#656a64}
+html.mob .sch-dlg .pp-tbl .rg strong::before{content:"변경 후 ";color:#656a64}
+html.mob .sch-dlg .bt button{min-height:44px}
 </style>
 </head>
 <body>
@@ -5427,7 +5573,7 @@ function render(keep){ fitLayout(); captureEditor(); const st=keep?$('#content')
   }catch(err){ // one broken record must not leave a blank screen: say what happened and keep the rest of the app usable
     console.error(err); const pg=$(S.full?'#page-item':S.page==='project'?'#page-project':S.page==='archive'?'#page-archive':'#page-main'); pg.classList.add('on');
     $('.pw,.pin',pg).innerHTML=`<div style="padding:140px 0;font-size:14px;color:#939393;line-height:24px">이 화면을 표시하는 중 문제가 생겼습니다. 새로고침(F5)해 주세요.<br>계속되면 이 문구를 관리자에게 알려 주세요: ${esc(String(err&&err.message||err))}</div>`; }
-  crumbsFor(); sbState(); if(st!=null)$('#content').scrollTop=st; afterNav(); }
+  crumbsFor(); sbState(); if(st!=null){if(schMob())schMobTables();$('#content').scrollTop=st;} afterNav(); }
 function fitTitle(pin){ if(!pin)return; const t=pin.querySelector('.ititle'); const tExtra=t?Math.max(0,t.offsetHeight-53):0; let pExtra=0; const pr=pin.querySelector('.props'); if(pr){pExtra=Math.max(0,pr.offsetHeight-(pr.querySelector('.rcol')?5:6)*42);} const cl=pin.querySelector('.cmt-list'); pin.style.setProperty('--tshift',tExtra+'px'); pin.style.setProperty('--pshift',(tExtra+pExtra)+'px'); pin.style.setProperty('--cshift',(cl?cl.offsetHeight:0)+'px'); if(pin.classList.contains('pin')&&!fitTitle.busy){fitTitle.busy=true;try{nbMount(pin);}finally{fitTitle.busy=false;}} }
 document.addEventListener('input',e=>{ const t=e.target; if(t&&t.matches&&t.matches('.ititle'))fitTitle(t.closest('.pin')); });
 document.addEventListener('mouseover',e=>{ const li=e.target.closest&&e.target.closest('.arch .tabs li[data-tab]'); if(!li)return; const tabs=li.closest('.tabs'); tabs.style.setProperty('--tabidx',[...tabs.querySelectorAll('li[data-tab]')].indexOf(li)); S.hoverTab=li.dataset.tab; });
@@ -5811,7 +5957,7 @@ function renderPaneBase(pane){$$('#mnav .item').forEach(i=>i.classList.toggle('o
     h=`<div class="pane on"><div class="gset"><h2>애널리틱스</h2><div class="desc">${a.mode==='30'?'최근 30일':`${a.y}년 ${a.m}월`} 동안 등록된 항목입니다. (${from.replace(/-/g,'.')} ~ ${to.replace(/-/g,'.')})</div>
       <div class="an-tools"><button class="${a.mode==='30'?'on':''}" data-an="30">최근 30일</button><button class="${a.mode==='month'?'on':''}" data-an="month">월별</button><span class="mnav2"><button data-an="-1" title="이전 달">‹</button><b>${a.y}년 ${a.m}월</b><button data-an="1" title="다음 달">›</button></span></div>
       <div class="stats"><div class="st"><b>${cnt('meeting')}</b><span>미팅</span></div><div class="st"><b>${cnt('action')}</b><span>${ACT} (완료 ${done})</span></div><div class="st"><b>${cnt('research')}</b><span>리서치</span></div><div class="st"><b>${Object.keys(sharedUsers).length}</b><span>멤버</span></div></div>
-      <div class="bars">${orderedProjects().map(k=>{const n=sel.filter(i=>i.proj===k).length;return `<div><span>${esc(pname(PROJECTS[k]))}</span><i style="width:${Math.round(n/max*520)}px"></i>${n}</div>`;}).join('')}</div>
+      <div class="bars">${orderedProjects().map(k=>{const n=sel.filter(i=>i.proj===k).length;return `<div><span>${esc(pname(PROJECTS[k]))}</span><i style="width:${Math.round(n/max*520)}px;--bar-share:${n/max*60}%"></i>${n}</div>`;}).join('')}</div>
       <div class="desc" style="margin-top:34px;font-weight:400;color:#8e8e8e">전체 누적: 미팅 ${pool.filter(i=>i.type==='meeting').length} · ${ACT} ${pool.filter(i=>i.type==='action').length} · 리서치 ${pool.filter(i=>i.type==='research').length}</div></div></div>`;}
   B.innerHTML=h+'<div class="scrollbar" style="display:none"></div>'; B.scrollTop=0;}
 
@@ -7539,11 +7685,14 @@ function schPropose(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.dates; if
     d.innerHTML=`<div class="box" role="dialog" aria-label="${esc(o.kind==='new'?'관계 연결':o.title)}"><div class="pp-hd"><b>${esc(o.kind==='new'?'관계 연결':o.title)}</b><span><em>${esc(schTaskTitle(a))}</em>${svg('i-sch-arr',13,9)}<em>${esc(schTaskTitle(b))}</em></span></div>
       ${o.kind==='new'?`<div class="pp-types">${['FS','SS','FF','SF'].map(ty=>`<button data-pp="ty" data-k="${ty}" class="${ty===type?'on':''}">${schRelGlyph(ty)}<b>${ty}</b>${esc(A.relationshipNames[ty])}</button>`).join('')}</div>`:''}
       <p class="pp-sent">${esc(o.kind==='new'?A.relationshipSentence(type,a.name,b.name):(o.note||''))}</p>${body}
-      <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri" ${err?'disabled':''}>확인</button></div></div>`; const p=d.querySelector('button.pri'); if(p&&!err)p.focus(); };
+      <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri" ${err?'disabled':''}>확인</button></div></div>`; const p=d.querySelector('button.pri'); if(p&&!err)p.focus({preventScroll:schMob()}); };
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; const k=bt.dataset.pp; if(k==='x')close(); else if(k==='ok')ok(); else if(k==='ty'){type=bt.dataset.k;cur=calc();draw();} });
   document.addEventListener('keydown',key,true); draw(); }
 // The small chart of the dialog: one row per task, where it stood (dashed) and where it will stand (solid); the relation in question as a line.
-function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, LW=214, TW=590, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
+function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r0=m.res, r1=cur.res, RH=27, top=22, today=schToday(); let lo=Infinity, hi=-Infinity;
+  // The phone dialog reserves 28px for the outer margins and 40px for padding and borders.
+  const chartWidth=schMob()?Math.min(innerWidth-68,596):804;
+  const LW=schMob()?Math.round(chartWidth*.34):214, TW=chartWidth-LW;
   for(const t of tasks)for(const r of [r0.tasks[t.id],r1.tasks[t.id]]){ if(!r)continue; lo=Math.min(lo,D.dayNumber(r.start)); hi=Math.max(hi,D.dayNumber(r.finish)); }
   lo-=3; hi+=4; const px=TW/Math.max(1,hi-lo+1), X=d=>(D.dayNumber(d)-lo)*px, H=top+tasks.length*RH+6, geo=new Map(); let rows='', ax='';
   { let d=D.fromDay(lo).slice(0,8)+'01'; const step=px*30<34?(px*30<12?6:3):1; for(let n=0;n<400&&D.dayNumber(d)<=hi;n++){ const x=X(d); if(x>=0&&x<TW-20&&((+d.slice(5,7)-1)%step===0))ax+=`<i class="mo" style="left:${LW+x}px">${d.slice(2,4)}.${+d.slice(5,7)}</i>`; d=D.addMonths(d,1); } }
@@ -7553,7 +7702,7 @@ function schProposeChart(m,cur,tasks,rel,relType){ const D=AIDCSchedule.dates, r
     rows+=`<div class="lb" style="top:${cy-10}px;width:${LW-14}px" title="${esc(schTaskTitle(t))}"><b>${esc(schNo(t))})</b>${esc(t.name)}</div>${ch&&a?bar(a,'was'):''}${bar(b,ch?'now':'same')}`; });
   let link=''; if(rel&&geo.has(rel[0])&&geo.has(rel[1])){ const c=schLinkPath(geo.get(rel[0]),geo.get(rel[1]),relType); link=`<svg width="${TW}" height="${H}" style="left:${LW}px"><path d="${c.d}"/><path d="${c.head}"/><circle cx="${c.dot[0]}" cy="${c.dot[1]}" r="1.8"/></svg>`; }
   const nx=today>=D.fromDay(lo)&&today<=D.fromDay(hi)?`<i class="td" style="left:${LW+X(today)+px/2}px;top:${top-4}px;height:${H-top+2}px"></i>`:'';
-  return `<div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div>`; }
+  return `<div class="pp-chart-wrap"><div class="pp-chart" style="height:${H}px;width:${LW+TW}px"><div class="ax">${ax}</div>${nx}${rows}${link}<div class="lg"><span><i class="br was"></i>변경 전</span><span><i class="br now"></i>변경 후</span></div></div></div>`; }
 
 // A change of dates is shown before it is saved too (owner, 2026-11-23: "일자 바꾸면 어떻게 될지 연결 옮기기처럼 보여주고 적용하면 그때").
 // o: { task, title, note, want (the start that was asked for), mutate(draft), label, commit() (how it is saved; default schCommit) }
@@ -7583,7 +7732,7 @@ function schProposeDates(pid,o){ const m=schModel(pid), A=AIDCSchedule, D=A.date
       :'<div class="pp-none">예상일이 바뀌는 업무가 없습니다. 선행 업무나 실제일이 일정을 정하고 있을 수 있습니다.</div>'}
     <div class="bt"><button data-pp="x">취소</button><button data-pp="ok" class="pri">적용</button></div></div>`;
   d.addEventListener('click',e=>{ if(e.target===d){close();return;} const bt=e.target.closest('[data-pp]'); if(!bt)return; if(bt.dataset.pp==='x')close(); else if(bt.dataset.pp==='ok')ok(); });
-  document.addEventListener('keydown',key,true); const b=d.querySelector('button.pri'); if(b)b.focus(); }
+  document.addEventListener('keydown',key,true); const b=d.querySelector('button.pri'); if(b)b.focus({preventScroll:schMob()}); }
 
 /* ---- schedule/ui/40-sections.js ---- */
 // Parts of the project page outside the 액션 section: the forecast operation date in the overview and the lower section
@@ -7823,7 +7972,7 @@ function schFitRight(){ const z=LAYOUT.zoom||1; if(document.documentElement.clas
     const h=Math.round((grid.getBoundingClientRect().bottom-el.getBoundingClientRect().top)/z); if(h<160)return; el.style.height=h+'px'; schFitMark(box);
     if(!box._fit){ box._fit=true; const key=S.page+'|'+(S.page==='project'?S.proj:'')+'|'+(S.selDate||''); if(SCH.rs&&SCH.rs.k===key&&SCH.rs.top>0){box.scrollTop=SCH.rs.top;schFitMark(box);}   // redrawn: back to where it stood
       box.addEventListener('scroll',()=>{SCH.rs={k:key,top:box.scrollTop};schFitMark(box);},{passive:true}); } }); }
-function schAfterNav(){ if(!schPreview())return; if(typeof schCalPillsFit==='function')schCalPillsFit(); schFitRight(); { const c=$('#sch-card'), open=item(S.panel||S.full); if(c&&!(S.page==='project'&&c.dataset.pid===S.proj)&&!(open&&open.proj===c.dataset.pid&&open.own)){c.remove();toastPlace();} }   /* the card of a change belongs to its project's page */ if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
+function schAfterNav(){ if(!schPreview())return; schMobTables(); if(typeof schCalPillsFit==='function')schCalPillsFit(); schFitRight(); { const c=$('#sch-card'), open=item(S.panel||S.full); if(c&&!(S.page==='project'&&c.dataset.pid===S.proj)&&!(open&&open.proj===c.dataset.pid&&open.own)){c.remove();toastPlace();} }   /* the card of a change belongs to its project's page */ if(schPop&&!document.contains(schPop._a))schDayPopHide(true); }
 
 // The actions of a day in a small window, while the pointer rests on that day's (pale) count in the calendar. Sizes are those of the
 // owner's picture: 505 wide, rows 48 apart, 44 above the first row and 53 below the last, eight rows before it scrolls.
@@ -8902,7 +9051,7 @@ function schArchSitesHtml(found){ const q=SCH_ARCH.q.trim(); let h='', n=0;
   return h+(q?'':`<button class="sh-btn newsec" data-newsec>구분 새로 만들기</button>`); }
 function schArchBody(){ const q=SCH_ARCH.q.trim(), found=q?schArchFind(q):{docs:[],cards:[]}, docsN=q?found.docs.length:ARCH_TABS.reduce((n,t)=>n+archList(t).length,0), sitesN=q?found.cards.length:ARCH_SECTIONS.reduce((n,s)=>n+s.cards.filter(c=>!c.trash).length,0);
   $$('#arch-pw [data-arview]').forEach(b=>{ b.classList.toggle('on',b.dataset.arview===SCH_ARCH.view); const s=b.querySelector('small'); if(s)s.textContent=b.dataset.arview==='docs'?docsN:sitesN; });
-  const box=$('#ar-body'); if(box)box.innerHTML=SCH_ARCH.view==='sites'?`<div class="ar-sites">${schArchSitesHtml(found)}</div>`:`<div class="ar-docs">${schArchDocsHtml(found)}</div>`; }
+  const box=$('#ar-body'); if(box){box.innerHTML=SCH_ARCH.view==='sites'?`<div class="ar-sites">${schArchSitesHtml(found)}</div>`:`<div class="ar-docs">${schArchDocsHtml(found)}</div>`; schMobTables(box);} }
 function schArchRender(){ if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||''; const pw=$('#arch-pw'), keep=pw.querySelector('input[data-arq]'), had=keep&&document.activeElement===keep, pos=had?keep.selectionStart:0;
   pw.innerHTML=`<div class="arch-title">자료실</div><div class="ar-pv"><div class="ar-top"><div class="ar-views" role="tablist"><button data-arview="docs" role="tab">문서 목록<small></small></button><button data-arview="sites" role="tab">참고사이트<small></small></button></div>
       <label class="srch box ar-q" title="자료실 검색">${svg('pic-search',15,15)}<input data-arq placeholder="자료실 검색 (문서 · 참고사이트)" aria-label="자료실 검색" value="${esc(SCH_ARCH.q)}" autocomplete="off">${qx(SCH_ARCH.q)}</label></div>
@@ -9424,6 +9573,7 @@ function schContractRefresh(){
  schContractFilterSave();const root=document.querySelector('.contract-section');if(!root)return;
  root.querySelector('.contract-scroll').innerHTML=schContractTable(S.proj);root.querySelector('.contract-filter-chips').innerHTML=schContractChips(S.proj);
  root.querySelector('.contract-qclear').hidden=!schContractFilter().q;
+ schMobTables(root);
 }
 function schContractColMenu(el,key){
  const c=schContractFilter(),set=v=>()=>{if(v)c[key]=v;else delete c[key];if(key==='date'){delete c.from;delete c.to;}schContractRefresh();};
@@ -9487,8 +9637,7 @@ function schContractActionPick(el,it){
 // in the head of original.html, which also turns the viewport tag to the width of the device. In that mode:
 //  - fitLayout (original.html) does not scale anything: the page is as wide as the screen, with 16 px at each side, and `--d`
 //    is what is left of the 1338 wide column (a large negative number), so everything that is "1338 + d" wide fits by itself;
-//  - what cannot be narrow (tables, the gantt, the relation map) keeps the narrowest desktop measure inside (`--d:-200px` in
-//    its own scope) and is moved sideways with the finger; cards that stood in a row that was pushed are moved the same way;
+//  - record lists wrap to the viewport. Spatial views (the gantt and the relation map) and card carousels can be panned;
 //  - the sidebar is a drawer over the page (the page's own collapsed state `sb-off`), the panel of an item and the windows
 //    take the whole screen. The rules are schedule/mobile.css; this file holds what needs code.
 // Tablets and the ?v=1 page are left as they were.
@@ -9539,6 +9688,118 @@ document.addEventListener('toggle',e=>{
   if(!el.isConnected||!el.matches?.('details[data-agenda-key]'))return;
   if(el.open)schMobAgendaOpen.add(el.dataset.agendaKey); else schMobAgendaOpen.delete(el.dataset.agendaKey);
 },true);
+
+// A record has one set of cells. On phones the name and these summary fields come first.
+// The other populated cells keep their original links, buttons and labels inside a disclosure.
+const schMobColumns = [
+  ['.vt-res', ['날짜','구분']],
+  ['.vt-meet', ['날짜','시간','참석자']],
+  ['.vt-proj', ['추진 단계','위치']],
+  ['.sch-ev', ['ID','상태','기한']],
+  ['.contract-table', ['날짜','상태']],
+  ['.sch-proc', ['No.','상태','운영 여유']],
+  ['.sch-list, .actions', ['프로젝트','WBS','상태','기한']],
+  ['.partners', ['구분']],
+  ['.archive', ['기한','담당자']]
+];
+const schMobExpanded = new Set();
+let schMobControlId = 0;
+function schMobToggle(target, key, label, name, iconOnly=false){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className=iconOnly?'mob-record-more':'mob-column-toggle';
+  if(!iconOnly)button.append(label+' ');
+  button.insertAdjacentHTML('beforeend',svg('i-chev-d',12,7));
+  target.id='mob-record-'+(++schMobControlId);
+  button.setAttribute('aria-controls',target.id);
+  button.setAttribute('aria-label',[name,label].filter(Boolean).join(' '));
+  const show=open=>{target.hidden=!open; button.setAttribute('aria-expanded',String(open));};
+  show(schMobExpanded.has(key));
+  button.addEventListener('click',e=>{
+    e.stopPropagation();
+    const open=target.hidden;
+    if(open)schMobExpanded.add(key); else schMobExpanded.delete(key);
+    show(open);
+  });
+  return button;
+}
+function schMobKeyButton(el){
+  if(el.hasAttribute('role'))return;
+  el.setAttribute('role','button');
+  el.tabIndex=0;
+  el.addEventListener('keydown',e=>{
+    if(e.target===el && (e.key==='Enter'||e.key===' ')){e.preventDefault();el.click();}
+  });
+}
+function schMobField(label, cell, summary){
+  const field=document.createElement('div');
+  field.className=summary?'mob-summary-field':'mob-detail-field';
+  const caption=document.createElement('span');
+  caption.className='mob-field-label';
+  caption.textContent=label;
+  // Dates, tags and state marks already identify themselves. Keep their label for assistive technology.
+  if(summary && !['기한','운영 여유','WBS','No.','ID'].includes(label))caption.classList.add('mob-sr-only');
+  field.append(caption,cell);
+  return field;
+}
+function schMobRecord(row, labels, summary, tableKey){
+  const cells=Array.from(row.children), title=row.querySelector(':scope > .nm, :scope > .ttl');
+  if(!title)return;
+  const name=title.querySelector('.e,.tx')?.textContent.trim()||Array.from(title.childNodes)
+    .filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent.trim()).join(' ')||title.title;
+  const key=tableKey+'|'+(row.dataset.open||row.dataset.go||row.dataset.partner);
+  const meta=document.createElement('div'), details=document.createElement('div');
+  meta.className='mob-record-meta';
+  details.className='mob-record-details';
+  for(const [i,cell] of cells.entries()){
+    if(cell===title)continue;
+    const label=labels[i], value=cell.textContent.trim();
+    if((!value || value==='-') && !cell.querySelector('a,button,[data-schc]'))continue;
+    const primary=summary.includes(label);
+    (primary?meta:details).append(schMobField(label,cell,primary));
+    // The desktop shows two faces and a hover tooltip. The full roster is also readable by touch.
+    if(cell.matches('.who[title]') && cell.querySelector('.more-n')){
+      const names=document.createElement('span');
+      names.textContent=cell.title;
+      details.append(schMobField('전체 '+label,names,false));
+    }
+  }
+  const actions=title.querySelector('.acts');
+  if(actions){
+    const download=actions.querySelector('[data-act="dl"]'), open=actions.querySelector('[data-act="open"]');
+    if(open && title.querySelector('a[href]'))details.append(schMobField('문서',open,false));
+    if(download)details.append(schMobField('첨부',download,false));
+  }
+  title.classList.add('mob-record-title');
+  if(!title.querySelector('a[href]'))schMobKeyButton(title);
+  row.replaceChildren(title);
+  if(details.childElementCount){
+    row.classList.add('mob-has-details');
+    row.append(schMobToggle(details,key,'추가 정보',name,true));
+  }
+  if(meta.childElementCount)row.append(meta);
+  if(details.childElementCount)row.append(details);
+  row.querySelectorAll('[data-schc],a[data-open]:not([href]),.mob-detail-field .chip[data-open],a[data-cat]').forEach(schMobKeyButton);
+}
+function schMobTables(root=document.querySelector('.page.on')){
+  if(!root || !schMob())return;
+  for(const table of root.querySelectorAll('.tbl:not(.mob-records)')){
+    const config=schMobColumns.find(([selector])=>table.matches(selector));
+    const head=table.querySelector(':scope > .hd');
+    if(!config||!head)continue;
+    table.classList.add('mob-records');
+    const key=[S.page,S.proj||'',config[0]].join('|');
+    const columns=Array.from(head.children);
+    const labels=columns.map(col=>col.textContent.replace(/[▲▼]/g,'').trim());
+    for(const row of table.querySelectorAll(':scope > .rw'))schMobRecord(row,labels,config[1],key);
+    const controls=columns.filter(col=>col.matches('[data-vcol],[data-mcol],[data-sch="col"],[data-contract-col],[data-arcol],[data-sort]'));
+    if(controls.length){
+      controls.forEach(schMobKeyButton);
+      head.replaceChildren(...controls);
+      head.before(schMobToggle(head,key+'|columns','정렬·필터',''));
+    }else head.hidden=true;
+  }
+}
 
 /* ---- schedule/ui/88-report.js ---- */
 // Twenty-fourth round (owner, 2026-11-24): the project overview and the list of projects follow the company's
