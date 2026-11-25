@@ -13,6 +13,9 @@ await p.locator('[data-ai-action="row"][data-ai-index="0"]').click();
 await p.locator('[data-ai-inline="sections.0.metrics.0.value"]').fill('10MW');
 await p.locator('[data-ai-inline="sections.0.metrics.0.label"]').fill('계획 IT 용량');
 await p.locator('[data-ai-inline="sections.0.metrics.0.note"]').fill('전력 승인 미확정');
+await p.locator('[data-ai-action="row"][data-ai-index="2"]').click();
+await p.locator('[data-ai-inline="sections.2.rows.0.0"]').fill('위치');
+await p.locator('[data-ai-inline="sections.2.rows.0.1"]').fill('경기 성남시 분당구 백현동 404-1');
 await p.locator('[data-ai-action="row"][data-ai-index="3"]').click();
 await p.locator('[data-ai-inline="sections.3.rows.0.0"]').fill('2030.01');
 await p.locator('[data-ai-inline="sections.3.rows.0.1"]').fill('서비스 개시');
@@ -23,6 +26,8 @@ await p.locator('[data-ai-inline="sections.5.paragraphs"]').fill('추가 문단�
 await p.click('[data-ai-direct="save"]');await p.waitForSelector('[data-ai-direct="edit"]');
 await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);await p.evaluate(()=>go('project:ai-application-test'));await p.waitForSelector('.ai-overview');
 assert.match(await p.locator('.ai-overview').innerText(),/직접 입력한 사업 개요/);assert.match(await p.locator('.ai-overview').innerText(),/10MW/);
+assert.equal(await p.locator('.ai-overview .rmapbox').count(),1);
+assert.equal(await p.locator('.ai-overview .rc1 > .rb').count(),2);
 const design=await p.locator('.ai-overview').evaluate(el=>({columns:getComputedStyle(el.querySelector('.rcols')).gridTemplateColumns,gap:getComputedStyle(el.querySelector('.rcols')).columnGap,font:getComputedStyle(el.querySelector('.rtx')).fontSize,overflow:el.scrollWidth>el.clientWidth+2}));
 assert.equal(design.columns,legacy.columns);assert.equal(design.gap,legacy.gap);assert.equal(design.font,legacy.font);
 await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inline="summary"]');await p.locator('[data-ai-inline="summary"]').fill('취소할 내용');await p.click('[data-ai-direct="cancel"]');assert.doesNotMatch(await p.locator('.ai-overview').innerText(),/취소할 내용/);
