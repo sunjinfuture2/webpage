@@ -70,7 +70,7 @@ function schPartnerProjectPick(el,pt){
  box.addEventListener('click',async e=>{const b=e.target.closest('[data-pt-project-id]');if(!b||busy)return;e.preventDefault();e.stopPropagation();busy=true;b.disabled=true;
  try{await schPartnerToggleProject(pt,b.dataset.ptProjectId);
  const scroll=$('#content').scrollTop;render(true);$('#content').scrollTop=scroll;
- if(S.panel===pt.id&&!S.editSimple)openPanel(pt.id,true);
+ if(S.panel===pt.id){const tags=$('#panel-pin .pt-projects');if(tags)tags.innerHTML=schPartnerProjectTags(pt,true);}
  }finally{busy=false;if(pop.isConnected)draw();}
  });draw();input.focus();
 }
