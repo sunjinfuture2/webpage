@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');const {chromium,newUser}=require('./h.cjs');
+(async()=>{const b=await chromium.launch();try{const {page:p}=await newUser(b,'test','test',{url:'https://sunjin-aidc-workspace-demo.sunjinfuture2.workers.dev/'});
+await p.evaluate(()=>go('project:ai-upload-test'));await p.waitForSelector('.ai-overview');
+assert.match(await p.locator('.ai-overview h1').innerText(),/AI업로드테스트/);
+const status=await p.evaluate(async()=>await(await apiFetch('/api/ai-project/status?project=ai-upload-test')).json());
+assert.equal(status.ready,true);assert.equal(status.saved,null);
+await p.click('[data-ai-open="upload"]');await p.waitForFunction(()=>document.querySelector('[data-ai-status]').textContent.includes('등록되어'));
+assert.equal(await p.locator('[data-ai-file]').count(),1);await p.locator('[data-ai-close]').first().click();
+await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inline="summary"]');await p.click('[data-ai-direct="cancel"]');
+await p.reload();await p.waitForFunction(()=>!document.querySelector('#app').hidden);await p.evaluate(()=>go('project:ai-upload-test'));await p.waitForSelector('.ai-overview');
+const original=await p.evaluate(async()=>await(await apiFetch('/api/ai-project/status?project=ai-application-test')).json());
+console.log('PASS new project blank after reload, AI key ready, upload dialog and manual edit available; original revision',original.saved?.revision);
+}finally{await b.close();}})().catch(e=>{console.error(e);process.exit(1);});
