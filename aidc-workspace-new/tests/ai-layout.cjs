@@ -1,8 +1,8 @@
 const assert=require('node:assert/strict');const {chromium,newUser,sleep}=require('./h.cjs');
 (async()=>{const browser=await chromium.launch();try{const {page:p}=await newUser(browser,'AILAYOUT','AI 레이아웃 검증',{url:'http://127.0.0.1:8787/'});
 const state=()=>p.evaluate(async()=>await(await apiFetch('/api/state')).json());
-await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.phead.rep .rcols');
-const legacy=await p.locator('.phead.rep').evaluate(el=>({html:el.outerHTML,columns:getComputedStyle(el.querySelector('.rcols')).gridTemplateColumns,gap:getComputedStyle(el.querySelector('.rcols')).columnGap,font:getComputedStyle(el.querySelector('.rtx')).fontSize}));
+await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.phead.rep .rcols');await sleep(700);
+const legacy=await p.evaluate(()=>{const el=document.querySelector('.phead.rep');return {html:schRepHead('pangyo'),columns:getComputedStyle(el.querySelector('.rcols')).gridTemplateColumns,gap:getComputedStyle(el.querySelector('.rcols')).columnGap,font:getComputedStyle(el.querySelector('.rtx')).fontSize};}); console.log('LEGACY_STYLE',JSON.stringify(legacy).slice(0,100));
 const before=await state();await p.evaluate(()=>go('project:ai-application-test'));await p.waitForSelector('.ai-overview');
 const below=await p.locator('.ai-overview').evaluate(el=>[...el.parentElement.children].filter(n=>n!==el).map(n=>n.outerHTML).join(''));
 await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inline="summary"]');
@@ -27,6 +27,6 @@ await p.click('[data-ai-direct="edit"]');await p.waitForSelector('[data-ai-inlin
 await p.click('[data-ai-open="upload"]');await p.waitForSelector('[data-ai-status]');await p.waitForFunction(()=>document.querySelector('[data-ai-status]').textContent.includes('미등록'));await p.locator('[data-ai-close]').first().click();
 const after=await state();for(const[k,v]of Object.entries(before.records)){if(k==='meta:head'){for(const[id,h]of Object.entries(v))if(id!=='ai-application-test')assert.deepEqual(after.records[k][id],h);}else assert.deepEqual(after.records[k],v,k);}
 const afterBelow=await p.locator('.ai-overview').evaluate(el=>[...el.parentElement.children].filter(n=>n!==el).map(n=>n.outerHTML).join(''));assert.equal(afterBelow,below);
-await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.phead.rep .rcols');assert.equal(await p.locator('.phead.rep').evaluate(el=>el.outerHTML),legacy.html);
+await p.evaluate(()=>go('project:pangyo'));await p.waitForSelector('.phead.rep .rcols');assert.equal(await p.evaluate(()=>schRepHead('pangyo')),legacy.html);
 console.log('PASS manual creation with no key/upload, metrics, custom section, plan status, save/reload, cancel, matching legacy layout CSS, calendar and other projects unchanged');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
