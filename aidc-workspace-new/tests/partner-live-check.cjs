@@ -1,5 +1,15 @@
 const assert=require('node:assert/strict');const{chromium,newUser}=require('./h.cjs');
 (async()=>{const b=await chromium.launch();try{const{page:p}=await newUser(b,'test','test',{url:'https://sunjin-aidc-workspace-demo.sunjinfuture2.workers.dev/'});
-const result=await p.evaluate(()=>{const it=liveItems('research').find(x=>schResTagsOf(x).length)||liveItems('research')[0];const root=document.createElement('div');root.innerHTML=schResTable([it]);const detail=document.createElement('div');detail.innerHTML=schCatsField(it,false);return {tags:schResTagsOf(it),cells:[...root.querySelectorAll('.res-categories .rc-tag')].map(x=>x.textContent),other:schResTags(liveItems('research')).some(x=>x[0]==='기타'),detail:[...detail.querySelectorAll('.rc-tag')].map(x=>x.textContent),hidden:schResTagsOf({cats:['기타','전력'],title:'[기타] 제목'}),css:[...document.styleSheets].some(s=>{try{return [...s.cssRules].some(r=>r.selectorText?.includes('.res-categories .rc-tag'))}catch{return false}})}});
-assert.deepEqual(result.cells,result.tags);assert.equal(result.other,false);assert.ok(!result.detail.includes('기타'));assert.deepEqual(result.hidden,['전력']);assert.ok(result.css);console.log('Live research categories use individual tags; Other hidden in list, detail, and choices; CSS loaded.');
+const result=await p.evaluate(()=>{const r=liveItems('research').find(x=>!archTabOf(x)),root=document.createElement('div');root.innerHTML=schResTable([r]);const pid=orderedProjects().find(id=>!PROJECTS[id].trash);return {rid:r.id,pid,head:[...root.querySelectorAll('.hd em')].map(x=>x.textContent),plain:schResearchBodyTitle(r),prefix:schResearchPreviewText(r)};});
+assert.deepEqual(result.head,['날짜','제목','상태','중요도','담당자','최종수정','URL']);
+await p.evaluate(id=>openPanel(id),result.rid);assert.equal(await p.locator('#panel-pin .ititle').innerText(),result.plain.replace(/\n/g,' '));
+await p.evaluate(pid=>{closePanel();go('project:'+pid)},result.pid);
+assert.equal(await p.evaluate(()=>S.partnerProject),result.pid);
+const heads=await p.locator('#page-project .tbl.partners .hd em').allTextContents();assert.deepEqual(heads,['이름','홈페이지','구분','관련 프로젝트']);
+const scope=await p.evaluate(()=>partnerRows().every(pt=>schPartnerProjects(pt).includes(S.proj)));assert.ok(scope);
+await p.locator('#page-project [data-pt-project-clear]').click();assert.equal(await p.evaluate(()=>S.partnerProject),'');
+await p.evaluate(()=>go('archive'));
+const positions=await p.locator('.page.on .tbl.archive.pv .hd [data-arcol]').evaluateAll(ns=>ns.map(n=>{const a=n.querySelector('em').getBoundingClientRect(),b=n.querySelector('svg').getBoundingClientRect();return b.left>=a.right-1}));
+assert.ok(positions.length);assert.ok(positions.every(Boolean));
+console.log('LIVE READ ONLY PASS: research columns / plain detail title, partner related-project column and scoped/cleared list, archive arrow spacing');
 }finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});
