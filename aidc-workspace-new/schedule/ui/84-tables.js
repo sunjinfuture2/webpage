@@ -58,10 +58,10 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 // page, in the meeting table's design. The switch stands beside the section's search box; the choice is this browser's own
 // (`aidc-view`.res) and holds for the main page and the project pages alike.
 function schResTable(rows){ const th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-res"><div class="hd">${th('날짜')}${th('제목')}${th('구분')}${th('담당자')}${th('최종수정')}${th('첨부')}</div>`;
-  for(const r of rows){ const ppl=r.people||[], tags=schResTagsOf(r), ttl=oneLine(cardTitle(r.title)||r.title||'');
-    h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(dateShow(r))}</div><div class="nm" title="${esc(ttl)}">${dotsHtml(r,'tdots')}<span class="e">${esc(ttl||'(제목 없음)')}</span></div>
-      <div class="res-categories"><span class="rc-tags">${tags.map(t=>`<span class="rc-tag" title="${esc(t)}">${esc(t)}</span>`).join('')}</span></div>
+  let h=`<div class="tbl sch-proc sch-vtbl vt-res"><div class="hd">${th('날짜')}${th('제목')}${th('상태')}${th('중요도')}${th('담당자')}${th('최종수정')}${th('URL')}</div>`;
+  for(const r of rows){ const ppl=r.people||[], tags=schResearchPreviewTags(r), ttl=schResearchBodyTitle(r);
+    h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(dateShow(r))}</div><div class="nm" title="${esc(ttl)}">${dotsHtml(r,'tdots')}<span class="e">${schResearchPreviewTitle(r)}</span></div>
+      <div class="res-state">${stIcon(r.st||'prog')}</div><div class="res-priority"><span class="pri pri-${esc(r.pri||'mid')}">${esc(priTxt[r.pri||'mid']||'중간')}</span></div>
       <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:'')}</div>
       <div class="tx"><span class="e">${esc(modDate(r)?modTxt(r,true):'')}</span></div>
       <div class="fl">${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${esc(r.id)}" title="첨부 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
