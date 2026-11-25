@@ -31,7 +31,7 @@ function schContractChips(pid){
  const c=schContractFilter(pid),labels={st:{prog:'진행',done:'완료'},pri:priTxt,date:{today:'오늘',month:'이번 달',past:'지난 날짜',next:'오늘 이후',__none:'날짜 없음'}};
  const chips=SCH_CONTRACT_COLS.filter(([k])=>c[k]).map(([k,t])=>{const v=c[k],txt=labels[k]?.[v]||(k==='who'?(v==='__none'?'미지정':userName(v)):['actions','meetings'].includes(k)?(v==='__none'?'연결 없음':v==='__any'?'연결 있음':oneLine(item(v)?.title)||'연결 항목'):v);return '<button class="sch-chip" data-contract-clear="'+k+'">'+t+': '+esc(txt)+'<i>✕</i></button>';});
  if(c.from||c.to)chips.push('<button class="sch-chip" data-contract-clear="range">기간: '+esc(c.from||'전체')+' ~ '+esc(c.to||'전체')+'<i>✕</i></button>');
- if(c.q||chips.length||c.sort)chips.push('<button class="sh-btn lib" data-contract-clear="all">초기화</button>');
+
  return chips.join('');
 }
 function schContractSection(pid){

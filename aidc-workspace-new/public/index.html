@@ -3281,6 +3281,24 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .tbl.vt-res .res-categories .rc-tags{max-width:100%;gap:5px}
 .tbl.vt-res .res-categories .rc-tag{height:auto;min-height:22px;max-width:100%;white-space:normal;overflow-wrap:anywhere;box-sizing:border-box}
 .tbl.vt-res .rw:has(.res-categories){height:auto;min-height:42px}
+
+/* Research preview: categories belong to the title, followed by state and priority. */
+.tbl.sch-proc.vt-res .hd,.tbl.sch-proc.vt-res .rw{grid-template-columns:112px minmax(260px,1fr) 85px 80px 180px 170px 104px}
+.research-prefix{font-weight:700}
+.tbl.vt-res .research-title-text,.rcard .research-title-text{font-weight:400}
+.rcard .tt.research-preview-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.tbl.vt-res .rw .res-state,.tbl.vt-res .rw .res-priority{align-items:center}
+.tbl.archive.pv .hd span[data-arcol]{position:relative;gap:8px;min-width:0}
+.tbl.archive.pv .hd span[data-arcol] em{position:static!important;left:auto!important;flex:1;min-width:0}
+.tbl.archive.pv .hd span[data-arcol] svg{position:static!important;margin-left:auto;margin-right:8px}
+.tbl.partners .hd [data-pt-project-filter]{display:flex;align-items:center;gap:8px;cursor:pointer}
+.tbl.partners .hd [data-pt-project-filter] em{position:static;left:auto}
+.tbl.partners .pt-projects,.partner-content .pt-projects{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 0;min-width:0}
+.pt-project-tag{border:0;border-radius:5px;padding:3px 8px;background:#edf3e9;color:#43802c;font-size:12px;line-height:18px;cursor:pointer;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.pt-project-add{border:1px solid #ddd;border-radius:4px;width:21px;height:21px;font-size:15px;color:#888;cursor:pointer;background:transparent}
+.pt-project-picker{width:330px;max-height:min(480px,80vh);overflow:auto}
+.pt-project-picker .it{width:100%;text-align:left;display:flex;gap:9px}
+.pt-project-picker .ck{width:12px;flex:none}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -4335,6 +4353,8 @@ html.mob .page .tbl.mob-records .rw .mob-summary-field > div{
 }
 html.mob .page .tbl.mob-records .rw :is(.who,.rc-tags,.contract-links,.rg){display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
 html.mob .page .mob-records .mob-detail-field .sch-rg{max-width:100%;white-space:normal;flex-wrap:wrap;gap:3px 5px}
+html.mob .page .mob-records .mob-detail-field :is(.sch-ua,.pt-project-add){min-width:40px;min-height:40px;justify-content:center}
+html.mob .pt-project-picker .it{min-height:40px}
 html.mob .page .tbl.mob-records .rw .who span{font-size:12px;white-space:normal}
 html.mob .page .tbl.mob-records .rw .sf-e,
 html.mob .page .tbl.mob-records .rw .mob-detail-field :is(button,a){display:inline-flex;align-items:center;min-height:32px;margin:0;max-width:100%}
@@ -4941,8 +4961,7 @@ function actionTable(rows,opts){ // opts: {noproj}
 }
 const cardTitle=t=>{t=(t||'').trim();const m=t.match(/^([\[(][^\])\n]{1,24}[\])])[ \t]*\n?/);return m?m[1]+'\n'+t.slice(m[0].length).replace(/^\s+/,''):t;};
 // preview: a tag in front ("[REF]", "(Energy)") keeps a line of its own, the title after it never takes more than two lines
-function resCardTitle(r){ const ls=(cardTitle(r.title)||'(제목 없음)').split('\n'), tag=ls.length>1&&/^[\[(][^\])]{1,24}[\])]$/.test(ls[0].trim())?ls.shift().trim():'', rest=ls.map(x=>x.trim()).filter(Boolean).join(' ');
-  return `<div class="tt two" title="${esc((tag?tag+' ':'')+rest)}">${tag?`<span class="tg">${esc(tag)}</span>`:''}<span class="t2">${esc(rest)}</span></div>`; }
+function resCardTitle(r){return `<div class="tt two research-preview-title" title="${esc(schResearchPreviewText(r))}">${schResearchPreviewTitle(r)}</div>`; }
 function researchGrid(rows){const sl=S._slide&&S._slide.key==='resPage'?S._slide:null; S._slide=null; const cls=`rgrid${sl?' slide':''}`, st=sl?` style="--rg-dx:${sl.dir>0?44:-44}px"`:''; if(!rows.length)return `<div class="${cls}"${st}><div class="none">${S.q.research?'검색 결과가 없습니다.':PREVIEW_ON&&Object.keys(S.rf||{}).some(k=>k!=='sort')?'조건에 맞는 리서치가 없습니다.':'등록된 리서치가 없습니다.'}</div></div>`;return `<div class="${cls}"${st}>${rows.map(r=>{const f=hasFiles(r), ds=r.desc||(r.card?'':snippet(r));return `<div class="rcard ${ds?'':'nodesc'} ${f?'':'nobtn'} ${!PREVIEW_ON&&(r.title||'').split('\n').length>=4?'t4':''}" data-open="${r.id}">
   ${dotsHtml(r)}<div class="dt">${esc(dateShow(r))}</div>${PREVIEW_ON?resCardTitle(r):`<div class="tt">${esc(cardTitle(r.title)||'(제목 없음)')}</div>`}${ds?`<div class="ds">${esc(ds)}</div>`:''}
   ${f?`<button class="ln-btn" data-act="dl" data-id="${r.id}">다운로드 ${svg('i-dl',10,11,'color:#3d3d3d')}</button>`:''}</div>`;}).join('')}</div>`;}
@@ -5069,10 +5088,10 @@ document.addEventListener('scroll',e=>{if(!e.target.closest?.('.pc-menu'))partne
 // new body by a migration, and the list and the panel read "없음"): the short description when there is one, otherwise the
 // first paragraph of the body (the lines before its first empty line). Nothing is written back: `desc` stays what it is.
 const partnerDesc=p=>{const d=String(p&&p.desc||'').trim(); if(d)return d; const b=String(p&&p.body||'').replace(/\r/g,'').trim(); return b?b.split(/\n\s*\n/)[0].trim():'';};
-function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span><em>관련 미팅</em></span></div>`;
+function partnerTable(rows){let h=`<div class="tbl partners"><div class="hd"><span><em>이름</em></span><span><em>홈페이지</em></span><span><em>구분</em></span><span data-pt-project-filter><em>관련 프로젝트</em>${svg('i-chev-d',8,4)}</span></div>`;
   rows.forEach(r=>{const m=partnerMeeting(r); const u=r.site&&r.site!=='-'?urlHref(r.site):'';
-    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="mt">${m?chipOf(m):''}</div></div>`;});
-  if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
+    h+=`<div class="rw" data-partner="${r.id}"><div class="nm">${PREVIEW_ON?`<span class="lg mono">${esc([...String(r.name||'').trim()][0]||'')}${u?logoImg(r.site):''}</span>`:`<span class="lg"><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></span>`}${esc(r.name)}<span class="acts"><button class="sh-btn" data-act="partner" data-id="${r.id}">열기</button></span></div><div class="hp">${u?`<a href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(r.site)}</a>`:'<span style="color:#c4c4c4">-</span>'}</div><div class="cat">${PREVIEW_ON?partnerCategoryLinks(r.cat,true):`<a data-cat="${esc(r.cat)}">${esc(r.cat)}</a>`}</div><div class="pt-projects">${schPartnerProjectTags(r,true)}</div></div>`;});
+  if(!rows.length)h+=`<div class="none">${S.q.partner||S.partnerCat||S.partnerProject?'조건에 맞는 협력업체가 없습니다.':'등록된 협력업체가 없습니다.'}</div>`;
   h+=`<div class="ft"></div></div>`; return h;}
 // Project cards read the project overview (PHEAD), so editing the overview updates the card.
 const scaleOf=(h,i,fb)=>{const s=h&&h.scale&&h.scale[i];return (s&&s[1])||fb||'';};
@@ -5124,14 +5143,14 @@ function actionSecHtml(pid){if(!pid&&schPreview())return schMainActions(); const
   return `<div class="view-wrap" style="margin-top:28.5px">${actionTable(rows,{noproj:!!pid})}</div>${pager(S.actPage,total,'pg-act').replace('class="pager',`style="margin-top:${pid?32:59}px" class="pager`)}`;}
 function researchSecHtml(pid){const found=liveItems('research',PREVIEW_ON?null:pid).filter(i=>matchQ(S.q.research,i.title,i.desc)), res=PREVIEW_ON?schResFilter(found):sortResearch(found), tbl=PREVIEW_ON&&typeof schViewOf==='function'&&schViewOf('res')==='table', per=tbl?SCH_V_PER:PREVIEW_ON?schResPer():12; const total=Math.max(1,Math.ceil(res.length/per)); S.resPage=Math.min(Math.max(1,S.resPage),total); const rows=res.slice((S.resPage-1)*per,S.resPage*per);
   return `${PREVIEW_ON?schResBar(pid):''}<div style="margin-top:${PREVIEW_ON?34:pid?37:37.1}px">${tbl?schResTable(rows):researchGrid(rows)}</div>${pager(S.resPage,total,'pg-res').replace('class="pager',`style="margin-top:${pid?49.4:59.3}px" class="pager`)}`;}
-const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerCat||(PREVIEW_ON?partnerCategories(p.cat).includes(S.partnerCat):p.cat===S.partnerCat))&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.body,p.site));
+const partnerRows=()=>PARTNERS.filter(p=>!p.trash&&(!S.partnerProject||schPartnerProjects(p).includes(S.partnerProject))&&(!S.partnerCat||(PREVIEW_ON?partnerCategories(p.cat).includes(S.partnerCat):p.cat===S.partnerCat))&&matchQ(S.q.partner,p.name,p.cat,p.desc,p.body,p.site));
 function partnerSecHtml(){const pts=partnerRows(); const total=Math.max(1,Math.ceil(pts.length/10)); S.ptPage=Math.min(Math.max(1,S.ptPage),total);
   return `<div style="margin-top:28.5px">${partnerTable(pts.slice((S.ptPage-1)*10,S.ptPage*10))}</div>${pager(S.ptPage,total,'pg-pt').replace('class="pager','style="margin-top:50.3px" class="pager')}`;}
 function refreshSec(k){const pid=S.page==='project'?S.proj:null; const el=$(`.page.on [data-sec="${k}"]`); if(!el)return;
   if(k==='cal')el.innerHTML=(pid?renderCalendar({proj:pid,year:S.calYp,month:S.calMp,narrow:true}):renderCalendar({year:S.calY,month:S.calM}))+rightList(pid?{proj:pid}:{});
   else if(k==='action')el.innerHTML=actionSecHtml(pid); else if(k==='research')el.innerHTML=researchSecHtml(pid); else if(k==='partner')el.innerHTML=partnerSecHtml();
   afterNav();}
-function renderMain(){ if(schPreview())schPids().forEach(schLoad);
+function renderMain(){ schPartnerScope('main'); if(schPreview())schPids().forEach(schLoad);
   $('#main-pw').innerHTML=`
    <div data-sec="cal" style="position:relative;padding-top:0">${renderCalendar({year:S.calY,month:S.calM})}${rightList({})}</div>
    ${PREVIEW_ON&&schViewOf('proj')==='table'?schProjTableSection():`<div class="projects" style="margin-top:111.5px;height:${PREVIEW_ON?777:675.8}px"><div class="sec-title" style="top:0">프로젝트${PREVIEW_ON?schRepCount():''}${plusBtn('new-proj','새 프로젝트')}<span class="car-cnt" id="proj-cnt"></span></div>${PREVIEW_ON?schProjTools()+schProjBar():''}
@@ -5145,7 +5164,7 @@ function renderMain(){ if(schPreview())schPids().forEach(schLoad);
 }
 function partnerSection(extraStyle){
   return `<div class="sec" id="sec-partners" style="${extraStyle||''}"><div class="sec-title" style="margin-left:-2.8px">협력업체 목록${plusBtn('new-partner','협력업체 추가')}${S.partnerCat&&!PREVIEW_ON?`<button class="sh-btn lib" data-catclear style="color:#4f4f4f">구분: ${esc(S.partnerCat)} ✕</button>`:''}${searchBox('partner','협력업체 검색')}</div>
-     ${PREVIEW_ON?`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="partner">${schPartnerChips()}</div></div>`:''}<div data-sec="partner"${S.ptHold?` style="min-height:${S.ptHold}px"`:''}>${partnerSecHtml()}</div></div>`;}
+     ${PREVIEW_ON?`<div class="sch-chipwrap"><div class="sch-chiprow" data-chips="partner">${schPartnerChips()}${schPartnerFilterChip()}</div></div>`:''}<div data-sec="partner"${S.ptHold?` style="min-height:${S.ptHold}px"`:''}>${partnerSecHtml()}</div></div>`;}
 /* The partner list is the last thing on its page. When it got shorter the page did too and the screen slid to another place,
    and choosing a 구분 pulled the title of the list to the very top of the screen (owner, 2026-11-24: "화면이 이상한 데로
    고정되거나 튄다"). What the list shows now changes in place: where the page would be too short to stay where it is, the
@@ -5168,6 +5187,7 @@ function headOf(pid){const p=PROJECTS[pid]||{}; const h=PHEAD[pid]||(PHEAD[pid]=
   if(!okRows(h.rows,2))h.rows=[['위치',mapQuery(h.loc)||h.loc.split('\n')[0].trim()],['용도지역',h.zone],['대지면적',''],['연면적',scaleOf(h,0,p.area)],['건폐율 / 용적률',''],['규모',''],['사업주체',h.dev],['운영사 / 임차인',''],['수전 계획',scaleOf(h,2,p.power)]];
   h.focus=!!h.focus; if(!Array.isArray(h.docs))h.docs=[]; return h;}
 function renderProject(pid){
+  schPartnerScope(pid);
   const p=PROJECTS[pid], d=headOf(pid); const PV=schPreview(), SC=schHas(pid); if(SC)schLoad(pid);
   const E=S.editProj; const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${ph}"`:''; const EC=E?' editable':'';
   const lk=(t,k)=>`<span class="lk">${PV?schPartnerMark(t):`<i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>`}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a></span>`;
@@ -5191,7 +5211,7 @@ function renderProject(pid){
    ${PV?'':`<div class="road" style="margin-top:94.8px"><div class="sec-title" style="top:0;left:-5px">업무 로드맵</div><div class="hr"></div>
      <div class="box scroll" id="road-box"><div class="inner">${roadmapHtml(pid)}</div></div><div class="ruler" id="road-ruler">${rulerHtml()}</div><div class="hr bt"></div></div>`}
    <div class="sec" style="margin-top:${PV?128:145.7}px;padding-bottom:122.2px"><div class="sec-title ${PV?'sch-title':''}" style="margin-left:-2.8px">${PV?schTitleIcon('research'):''}리서치${plusBtn('new-research','새 리서치')}<button class="sh-btn lib" data-lib="research" style="margin-left:19.6px">라이브러리</button>${PREVIEW_ON&&typeof schViewToggle==='function'?schViewToggle('res'):''}${searchBox('research','리서치 검색')}</div>
-     <div data-sec="research">${researchSecHtml(pid)}</div></div>`;
+     <div data-sec="research">${researchSecHtml(pid)}</div></div>${partnerSection('margin-top:0;padding-bottom:120px')}`;
 }
 // Each project has its own roadmap. An entry made before projects were separated goes with the project of the items it links, else 판교.
 const roadProj=r=>r.proj||((r.items||[]).map(id=>ITEMS.find(i=>i.id===id)).find(Boolean)||{}).proj||'pangyo';
@@ -5210,6 +5230,7 @@ function rulerHtml(){const ys=[0,19.2,39,58.1,77.3,96.4,115.6,134.7,153.8,173,19
 const archList=tab=>ITEMS.filter(i=>i.arch===tab&&isPub(i)).sort(newestFirst).concat(ARCH_ROWS[tab]||[]);
 const hostOf=u=>{try{return new URL(urlHref(u)).hostname.replace(/^www\./,'');}catch{return '';}};
 function renderArchive(){
+  schPartnerScope('main'); // The archive lists workspace partners across projects.
   if(PREVIEW_ON&&typeof schArchRender==='function'){schArchRender();return;}   // search and kinds at the top, documents and sites as two views (schedule/ui/76-archive.js)
   if(!ARCH_TABS.includes(S.archTab))S.archTab=ARCH_TABS[0]||'';
   const rows=archList(S.archTab); const total=Math.max(1,Math.ceil(rows.length/10)); S.archPage=Math.min(Math.max(1,S.archPage),total); const page=rows.slice((S.archPage-1)*10,S.archPage*10);
@@ -5295,7 +5316,7 @@ function nbSession(it){ const id=it.id; return AIDCEditor.collab.makeSession({ci
 // "함께 수정": take part in the edit another member has open
 async function nbJoin(it){ if(!nbCanJoin(it)||it.editing)return; if(adoptRow(it))await sharedFlush(true);
   const r=await sharedJoinEdit('item:'+it.id); if(!r)return;
-  if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); it.editing=true; it.dirty=false; if(r.co)it._co='join'; else delete it._co; rerenderItem(it.id);
+  if(it.status==='locked')it.status='published'; it._editOriginal=copy(it); if(typeof schResearchPrepareEdit==='function')schResearchPrepareEdit(it); it.editing=true; it.dirty=false; if(r.co)it._co='join'; else delete it._co; rerenderItem(it.id);
   const b=$('.ibody[data-f="body"]',pinOf(it)); it.snap=JSON.stringify({title:normT(it.title),body:it.body||''}); void b; }
 // a member who joined waits for the shared document; if the first editor's page does not answer, the join is undone
 function nbCoStart(it,r){ const id=it.id; if(NBNO[id]&&Date.now()-NBNO[id]<8000){ delete NBNO[id]; setTimeout(()=>nbCoRefused(id),0); return; } // the answer "no" was faster than this page
@@ -5398,7 +5419,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
  if(PREVIEW_ON&&it.status!=='new'&&typeof schExpBtn==='function') head+=schExpBtn();
  if(PREVIEW_ON||E||isPub(it)) head+=it.own&&it.task?`<button class="trash" data-schp="del" title="이 업무 삭제" aria-label="이 업무 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:`<button class="trash" data-ed="trash" title="휴지통" aria-label="휴지통"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
   const ph=it.type==='contract'?'새 계약서':meeting?'새 미팅':(it.type==='action'?'새 '+ACT:(tab?'새 자료':'새 리서치'));
-  const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}"${typeof schTitleAttr==='function'?schTitleAttr(it):''}>${titleEmpty?ph:esc(E?it.title:it.title.split('\n').join(' '))}</div>`;
+  const titleEmpty=!it.title; const title=`<div class="ititle ${titleEmpty?'empty':''} ${E?'ed':''}" ${E?'contenteditable="true"':''} data-f="title" data-ph="${ph}"${typeof schTitleAttr==='function'?schTitleAttr(it):''}>${titleEmpty?ph:esc(typeof schResearchBodyTitle==='function'?schResearchBodyTitle(it):(E?it.title:it.title.split('\n').join(' ')))}</div>`;
   const V=(k,inner,cls='')=>`<div class="pr"><span class="k">${k}</span><span class="v ${cls} ${E?'pk':''}" data-pf="${k}">${inner}</span></div>`;
   const none=t=>`<span class="plain" style="color:#c4c4c4">${t}</span>`;
   const who=ppl=>(ppl||[]).length?ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):none(PREVIEW_ON?'미지정':E?'선택':'없음');
@@ -5458,7 +5479,7 @@ function partnerHtml(pt,E){const ms=liveItems('meeting').filter(x=>x.partner&&no
   return `<div class="itype"><i><svg class="pict" aria-hidden="true"><use href="#pic-company"/></svg></i>협력업체</div><div class="ihead">${shead(E,'partner')}</div>${stitle(E,pt.name)}<div class="partner-content"><div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">홈페이지</span><span class="v">${E?sfield('site','예: vessl.ai/ko',site):(u?`<a class="url" style="margin-left:0" href="${esc(u)}" target="_blank" rel="noopener" data-stop>${esc(site)}</a>`:none)}</span></div>
   <div class="pr" style="height:auto;min-height:42px"><span class="k">구분</span><span class="v">${PREVIEW_ON?(E?partnerCategoryEditor(pt.cat,false):partnerCategoryLinks(pt.cat,false)):(E?sfield('cat','구분',pt.cat):`<span class="plain">${esc(pt.cat)}</span>`)}</span></div>
-  <div class="pr" style="height:auto"><span class="k">관련 미팅</span><span class="v"><span class="chips">${ms.length?ms.slice(0,12).map(m=>chipFull(m)).join(''):none}</span></span></div></div></div><section class="partner-body"><h3>본문</h3>${E?sfield('body','내용을 입력하세요',pt.body,true):`<div class="partner-body-text">${esc(pt.body||'')}</div>`}</section></div>`;}
+  <div class="pr" style="height:auto"><span class="k">관련 프로젝트</span><span class="v"><span class="pt-projects">${schPartnerProjectTags(pt,true)}</span></span></div></div></div><section class="partner-body"><h3>본문</h3>${E?sfield('body','내용을 입력하세요',pt.body,true):`<div class="partner-body-text">${esc(pt.body||'')}</div>`}</section></div>`;}
 function archCardHtml(c,si,E){const url=c.url==='#'?'':(c.url||''); const u=urlHref(url); const none='<span class="plain" style="color:#c4c4c4">없음</span>';
   return `<div class="itype">${logoImg(url)||'<i><svg class="pict" aria-hidden="true"><use href="#pic-research"/></svg></i>'}자료실 · ${esc(ARCH_SECTIONS[si].name)}</div><div class="ihead">${shead(E,'card')}</div>${stitle(E,c.name)}<div class="props simple ${E?'editing':''}" style="grid-template-columns:449px"><div>
   <div class="pr"><span class="k">구분</span><span class="v"><span class="plain">${esc(ARCH_SECTIONS[si].name)}</span></span></div>
@@ -5471,7 +5492,7 @@ const simpleStored=(o,k)=>{const v=String(o[k]==null?'':o[k]).trim(); return (k=
 function simpleDirty(){const o=simpleTarget(); if(!o||S.panel!==S.editSimple.id)return false; const v=simpleValues(); return Object.keys(v).some(k=>v[k]!==simpleStored(o,k));}
 function saveSimple(){const e=S.editSimple, o=simpleTarget(); if(!e||!o){S.editSimple=null;return true;} const v=simpleValues(); if(!v.name){toast('이름을 입력해 주세요.');const t=$('#panel-pin [data-sk="name"]');t&&t.focus();return false;}
   if(e.kind==='partner'&&PREVIEW_ON)partnerCategories(v.cat).forEach(partnerCategoryRemember);
-  const old=o.name; Object.keys(v).forEach(k=>{if(v[k]!==simpleStored(o,k))o[k]=v[k];}); if(e.kind==='partner'&&old!==o.name)ITEMS.forEach(x=>{if(x.type==='meeting'&&x.partner===old)x.partner=o.name;}); // meetings keep pointing at the renamed partner
+  const old=o.name; Object.keys(v).forEach(k=>{if(v[k]!==simpleStored(o,k))o[k]=v[k];}); if(e.kind==='partner'&&old!==o.name){for(const h of Object.values(PHEAD))if(Array.isArray(h.partners))h.partners=h.partners.map(n=>norm(n)===norm(old)?o.name:n);} if(e.kind==='partner'&&old!==o.name)ITEMS.forEach(x=>{if(x.type==='meeting'&&x.partner===old)x.partner=o.name;}); // meetings keep pointing at the renamed partner
   S.editSimple=null; return true;}
 document.addEventListener('keydown',e=>{const t=e.target; if(t&&t.dataset&&t.dataset.sk&&!/^(desc|note|body)$/.test(t.dataset.sk)&&e.key==='Enter'&&!e.isComposing){e.preventDefault();t.blur();}});
 document.addEventListener('paste',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-sk]'); if(!t)return; e.preventDefault(); document.execCommand('insertText',false,(e.clipboardData&&e.clipboardData.getData('text/plain'))||'');});
@@ -5732,7 +5753,7 @@ document.addEventListener('click',async e=>{
   if(el=q('.new-research')){const it=newItem('research');openPanel(it.id);return;}
   if(el=q('.new-meeting')){const it=newItem('meeting');openPanel(it.id);return;}
   if(el=q('.new-partner')){openPop(el,`<div class="hd">협력업체 추가</div><div class="msg" style="padding-top:0"><input id="npt-name" placeholder="업체명"><input id="npt-site" placeholder="홈페이지 (예: vessl.ai/ko)" style="margin-top:6px">${PREVIEW_ON?partnerCategoryEditor('',true):'<input id="npt-cat" placeholder="구분" style="margin-top:6px">'}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="it" data-npt="cancel">취소</button><button class="it" data-npt="ok" style="background:#0f0f0f;color:#fff">추가</button></div></div>`);$('#npt-name').focus();return;}
-  if(el=q('[data-npt]')){if(el.dataset.npt==='ok'){const n=$('#npt-name').value.trim();if(!n){$('#npt-name').focus();return;}PARTNERS.unshift({id:'pt'+Date.now(),name:n,site:$('#npt-site').value.trim(),cat:$('#npt-cat').value.trim()||'기타',desc:'',body:'',meet:null});closePop();S.ptPage=1;render(true);toast('협력업체를 추가했습니다.');}else closePop();return;}
+  if(el=q('[data-npt]')){if(el.dataset.npt==='ok'){const n=$('#npt-name').value.trim();if(!n){$('#npt-name').focus();return;}if(S.page==='project'){if(S.editProj){toast('프로젝트 개요를 먼저 저장해 주세요.');return;}if(!await sharedBeginEdit('project:'+S.proj))return;}PARTNERS.unshift({id:'pt'+Date.now(),name:n,site:$('#npt-site').value.trim(),cat:$('#npt-cat').value.trim()||'기타',desc:'',body:'',meet:null});if(S.page==='project'){const h=headOf(S.proj);if(!h.partners.some(x=>norm(x)===norm(n)))h.partners.push(n);await sharedFlush(true);await sharedRelease('project:'+S.proj);}closePop();S.ptPage=1;render(true);toast('협력업체를 추가했습니다.');}else closePop();return;}
   if(el=q('[data-lib]')){openLibrary(el.dataset.lib);return;}
   if(el=q('[data-libopen]')){closePop();openPanel(el.dataset.libopen);return;}
   if(el=q('[data-per]')){menuPop(el,[10,20,50].map(n=>({t:n+'개씩 보기',k:String(n),sel:S.actPer===n,fn:()=>{S.actPer=n;S.actPage=1;render(true);}})),{right:!PREVIEW_ON});return;}
@@ -6197,7 +6218,7 @@ async function sharedResolveConflict(){
 }
 async function sharedSaveProject(button){
  const id=S.proj,root=$('#proj-pw'),title=$('[data-k="__full"]',root)?.textContent.trim();if(!title){toast('프로젝트명을 입력해주세요.');return;}
- saveProjectHead();S._projSaving=true;
+ saveProjectHead();schEnsureProjectPartners(id);S._projSaving=true;
  if(button){button.disabled=true;button.textContent='저장 중…';}
  try{const ok=await sharedFlush(true);if(!ok&&sharedDiff(sharedBase,sharedRecords()).length){toast('저장에 실패했습니다. 입력 내용은 유지됩니다.');return;}S.editProj=false;S._projSnap=null;await sharedRelease('project:'+id);render(true);toast('저장했습니다.');}
  finally{S._projSaving=false;if(button&&button.isConnected){button.disabled=false;button.textContent='저장';}}
@@ -8362,14 +8383,14 @@ function schCatRename(old,done){ askInput(`“${old}” 구분의 새 이름 (�
   toast(`구분 “${old}”을(를) “${nw}”(으)로 바꿨습니다 · 리서치 ${n}건${skip?` (다른 멤버가 수정 중인 ${skip}건 제외)`:''}`,6000,{t:'되돌리기',fn:()=>{ for(const [id,cats,title] of back){const i=ITEMS.find(q=>q.id===id); if(!i)continue; if(cats)i.cats=cats; else delete i.cats; i.title=title;} render(true); const q=curItem(); if(q&&q.type==='research')rerenderItem(q.id); }});
   if(done)done(nw); }); }
 function schCatsField(it,E){ const own=schResCats(it).filter(t=>t!=='기타'), auto=schResTitleTags(it).filter(t=>t!=='기타'&&!own.includes(t));
-  const chips=own.map(t=>`<span class="rc-tag">${esc(t)}${E?`<button type="button" data-pick="uncat" data-k="${esc(t)}" title="이 구분 빼기">${svg('i-x',7,7)}</button>`:''}</span>`).join('')+auto.map(t=>`<span class="rc-tag auto" title="제목의 [${esc(t)}] 에서 온 구분입니다">${esc(t)}</span>`).join('');
+  const chips=own.map(t=>`<span class="rc-tag">${esc(schResearchCategoryLabel(t,it))}${E?`<button type="button" data-pick="uncat" data-k="${esc(t)}" title="이 구분 빼기">${svg('i-x',7,7)}</button>`:''}</span>`).join('')+auto.map(t=>`<span class="rc-tag auto" title="제목의 [${esc(t)}] 에서 온 구분입니다">${esc(t)}</span>`).join('');
   return `<span class="rc-tags">${chips}${E?'<span class="chip add" data-pick="cats">+ 구분 선택</span>':(chips?'':'<span class="plain" style="color:#c4c4c4">없음</span>')}</span>`; }
 function schCatsPick(el,it){ const redraw=()=>{ it.dirty=true; const box=$('.rc-tags',pinOf(it)); if(box)box.outerHTML=schCatsField(it,true); };
   const set=l=>{ if(l.length)it.cats=l; else delete it.cats; redraw(); }, has=t=>schResCats(it).includes(t);
   const all=()=>{ const m=new Map(schResTags(liveItems('research',null))); for(const t of schResCats(it))if(t!=='기타'&&!m.has(t))m.set(t,null); return [...m]; };
-  let list=all(); const p=schMultiPop(el,'구분 선택 (여러 개 가능)',list,has,t=>{ set(has(t)?schResCats(it).filter(x=>x!==t):schResCats(it).concat(t)); },
+  let list=all(); const p=schMultiPop(el,'구분 선택 (여러 개 가능)',list,has,t=>{ set(has(t)?(it.cats||[]).filter(x=>schTagNorm(x)!==t):(it.cats||[]).concat(schResearchCategoryLabel(t))); },
     `<div class="msg rc-new"><input id="rc-new" maxlength="16" placeholder="새 구분 입력 후 Enter" autocomplete="off"></div>`,null,old=>schCatRename(old));
-  const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const t=schTagNorm(inp.value); if(!t||t==='기타')return; if(!has(t))set(schResCats(it).concat(t)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
+  const wire=()=>{ const inp=p.querySelector('#rc-new'); if(!inp)return; inp.addEventListener('keydown',e=>{ if(e.key!=='Enter'||e.isComposing)return; e.preventDefault(); const raw=inp.value.replace(/\s+/g,' ').trim(), t=schTagNorm(raw); if(!t||t==='기타')return; if(!has(t))set((it.cats||[]).concat(raw)); if(!list.some(x=>x[0]===t))list.push([t,null]); p._draw(); const n=p.querySelector('#rc-new'); if(n)n.focus(); }); };
   p._after=wire; wire(); }
 function schResFilter(list){ const c=schRf(), today=TODAY, d30=localDate(new Date(Date.now()-30*864e5).toISOString());
   list=list.filter(i=>{ const d=i.date||localDate(i.createdAt||'')||'';
@@ -9487,13 +9508,13 @@ function schMeetRedraw(){ const pid=S.proj, pk=$('.page.on [data-vpick="meet"]')
 // page, in the meeting table's design. The switch stands beside the section's search box; the choice is this browser's own
 // (`aidc-view`.res) and holds for the main page and the project pages alike.
 function schResTable(rows){ const th=t=>`<span><em>${t}</em></span>`;
-  let h=`<div class="tbl sch-proc sch-vtbl vt-res"><div class="hd">${th('날짜')}${th('제목')}${th('구분')}${th('담당자')}${th('최종수정')}${th('첨부')}</div>`;
-  for(const r of rows){ const ppl=r.people||[], tags=schResTagsOf(r), ttl=oneLine(cardTitle(r.title)||r.title||'');
-    h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(dateShow(r))}</div><div class="nm" title="${esc(ttl)}">${dotsHtml(r,'tdots')}<span class="e">${esc(ttl||'(제목 없음)')}</span></div>
-      <div class="res-categories"><span class="rc-tags">${tags.map(t=>`<span class="rc-tag" title="${esc(t)}">${esc(t)}</span>`).join('')}</span></div>
+  let h=`<div class="tbl sch-proc sch-vtbl vt-res"><div class="hd">${th('날짜')}${th('제목')}${th('상태')}${th('중요도')}${th('담당자')}${th('최종수정')}${th('URL')}</div>`;
+  for(const r of rows){ const ppl=r.people||[], ttl=schResearchBodyTitle(r);
+    h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(dateShow(r))}</div><div class="nm" title="${esc(ttl)}">${dotsHtml(r,'tdots')}<span class="e">${schResearchPreviewTitle(r)}</span></div>
+      <div class="res-state">${stIcon(r.st||'prog')}</div><div class="res-priority"><span class="pri pri-${esc(r.pri||'mid')}">${esc(priTxt[r.pri||'mid']||'중간')}</span></div>
       <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:'')}</div>
       <div class="tx"><span class="e">${esc(modDate(r)?modTxt(r,true):'')}</span></div>
-      <div class="fl">${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${esc(r.id)}" title="첨부 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
+      <div class="fl url">${r.url?schUrlCell(r.url):''}${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${esc(r.id)}" title="첨부 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
   if(!rows.length)h+=`<div class="none">${S.q.research?'검색 결과가 없습니다.':Object.keys(S.rf||{}).some(k=>k!=='sort')?'조건에 맞는 리서치가 없습니다.':'등록된 리서치가 없습니다.'}</div>`;
   return h+`<div class="ft"></div></div>`; }
 
@@ -9562,7 +9583,7 @@ function schContractChips(pid){
  const c=schContractFilter(pid),labels={st:{prog:'진행',done:'완료'},pri:priTxt,date:{today:'오늘',month:'이번 달',past:'지난 날짜',next:'오늘 이후',__none:'날짜 없음'}};
  const chips=SCH_CONTRACT_COLS.filter(([k])=>c[k]).map(([k,t])=>{const v=c[k],txt=labels[k]?.[v]||(k==='who'?(v==='__none'?'미지정':userName(v)):['actions','meetings'].includes(k)?(v==='__none'?'연결 없음':v==='__any'?'연결 있음':oneLine(item(v)?.title)||'연결 항목'):v);return '<button class="sch-chip" data-contract-clear="'+k+'">'+t+': '+esc(txt)+'<i>✕</i></button>';});
  if(c.from||c.to)chips.push('<button class="sch-chip" data-contract-clear="range">기간: '+esc(c.from||'전체')+' ~ '+esc(c.to||'전체')+'<i>✕</i></button>');
- if(c.q||chips.length||c.sort)chips.push('<button class="sh-btn lib" data-contract-clear="all">초기화</button>');
+
  return chips.join('');
 }
 function schContractSection(pid){
@@ -9692,7 +9713,7 @@ document.addEventListener('toggle',e=>{
 // A record has one set of cells. On phones the name and these summary fields come first.
 // The other populated cells keep their original links, buttons and labels inside a disclosure.
 const schMobColumns = [
-  ['.vt-res', ['날짜','구분']],
+  ['.vt-res', ['날짜','상태','중요도']],
   ['.vt-meet', ['날짜','시간','참석자']],
   ['.vt-proj', ['추진 단계','위치']],
   ['.sch-ev', ['ID','상태','기한']],
@@ -9753,7 +9774,10 @@ function schMobRecord(row, labels, summary, tableKey){
   details.className='mob-record-details';
   for(const [i,cell] of cells.entries()){
     if(cell===title)continue;
-    const label=labels[i], value=cell.textContent.trim();
+    const label=labels[i];
+    const download=cell.matches('.fl.url') && cell.querySelector('[data-act="dl"]');
+    if(download)details.append(schMobField('첨부',download,false));
+    const value=cell.textContent.trim();
     if((!value || value==='-') && !cell.querySelector('a,button,[data-schc]'))continue;
     const primary=summary.includes(label);
     (primary?meta:details).append(schMobField(label,cell,primary));
@@ -9792,7 +9816,7 @@ function schMobTables(root=document.querySelector('.page.on')){
     const columns=Array.from(head.children);
     const labels=columns.map(col=>col.textContent.replace(/[▲▼]/g,'').trim());
     for(const row of table.querySelectorAll(':scope > .rw'))schMobRecord(row,labels,config[1],key);
-    const controls=columns.filter(col=>col.matches('[data-vcol],[data-mcol],[data-sch="col"],[data-contract-col],[data-arcol],[data-sort]'));
+    const controls=columns.filter(col=>col.matches('[data-vcol],[data-mcol],[data-sch="col"],[data-contract-col],[data-arcol],[data-sort],[data-pt-project-filter]'));
     if(controls.length){
       controls.forEach(schMobKeyButton);
       head.replaceChildren(...controls);
@@ -10740,6 +10764,92 @@ function schLinkPick(el, it, k, candidates, word){
   draw(); list.scrollTop = st.top || 0; setTimeout(() => { try { input.focus({ preventScroll: true }); } catch (_) {} }, 0);
   return p;
 }
+
+/* ---- schedule/ui/94-partner-projects.js ---- */
+/* Research preview and shared partner/project relationships.
+   PHEAD[project].partners is the single source of membership; partner rows derive their project tags. */
+function schResearchLeading(it){
+ const title=String(it.title||''), tags=[];let rest=title;
+ while(true){const m=rest.match(/^\s*\[([^\[\]\n]{1,24})\]\s*/);if(!m)break;tags.push(m[1].trim());rest=rest.slice(m[0].length);}
+ return {tags,title:rest.trim()};
+}
+function schResearchBodyTitle(it){
+ if(it.type!=='research'||archTabOf(it))return String(it.title||'');
+ return schResearchLeading(it).title;
+}
+function schResearchCategoryLabel(key,it){
+ const raw=[...(it&&Array.isArray(it.cats)?it.cats:[]),...(it?schResearchLeading(it).tags:[]),
+ ...ITEMS.filter(i=>i.type==='research').flatMap(i=>[...(Array.isArray(i.cats)?i.cats:[]),...schResearchLeading(i).tags])];
+ return raw.find(t=>schTagNorm(t)===schTagNorm(key))||key;
+}
+function schResearchPreviewTags(it){return schResTagsOf(it).map(t=>schResearchCategoryLabel(t,it));}
+function schResearchPreviewText(it){return schResearchPreviewTags(it).map(t=>'['+t+']').concat(schResearchBodyTitle(it)).join(' ');}
+function schResearchPreviewTitle(it){
+ return schResearchPreviewTags(it).map(t=>'<strong class="research-prefix">['+esc(t)+']</strong> ').join('')+
+ '<span class="research-title-text">'+esc(schResearchBodyTitle(it)||'(제목 없음)')+'</span>';
+}
+function schResearchPrepareEdit(it){
+ if(it.type!=='research'||archTabOf(it))return;
+ const lead=schResearchLeading(it);if(!lead.tags.length)return;
+ const cats=Array.isArray(it.cats)?it.cats.slice():[];
+ for(const t of lead.tags)if(!cats.some(x=>schTagNorm(x)===schTagNorm(t)))cats.push(t);
+ it.cats=cats;it.title=lead.title;
+}
+function schPartnerProjects(pt){
+ return orderedProjects().filter(id=>!PROJECTS[id].trash&&(PHEAD[id]?.partners||[]).some(n=>norm(n)===norm(pt.name)));
+}
+function schPartnerScope(scope){
+ if(S.ptScope===scope)return;
+ S.ptScope=scope;S.partnerProject=scope==='main'?'':scope;S.partnerCat=null;S.q.partner='';S.ptPage=1;S.ptHold=0;
+}
+function schPartnerProjectTags(pt,editable){
+ const ids=schPartnerProjects(pt);
+ return ids.map(id=>'<button type="button" class="pt-project-tag" data-pt-project-pick="'+esc(pt.id)+'" title="관련 프로젝트 선택">'+esc(PROJECTS[id].tag||PROJECTS[id].full)+'</button>').join('')+
+ (editable?'<button type="button" class="pt-project-add" data-pt-project-pick="'+esc(pt.id)+'" aria-label="관련 프로젝트 선택">+</button>':'');
+}
+function schPartnerFilterChip(){
+ const id=S.partnerProject;
+ return id&&PROJECTS[id]?'<button class="sch-chip" data-pt-project-clear>프로젝트: '+esc(PROJECTS[id].tag||PROJECTS[id].full)+'<i>✕</i></button>':'';
+}
+function schEnsureProjectPartners(pid){
+ const names=PHEAD[pid]?.partners||[];
+ for(const name of names){if(!String(name).trim()||PARTNERS.some(p=>!p.trash&&norm(p.name)===norm(name)))continue;
+ PARTNERS.push({id:'pt'+crypto.randomUUID(),name:String(name).trim(),site:'',cat:'',desc:'',body:'',meet:null});}
+}
+async function schPartnerToggleProject(pt,pid){
+ if(!pt||!PROJECTS[pid]||PROJECTS[pid].trash)return false;
+ if(S.editProj){toast('작성 중인 프로젝트 개요를 먼저 저장해 주세요.');return false;}
+ if(!await sharedBeginEdit('project:'+pid))return false;
+ try{
+  const h=headOf(pid),old=h.partners.slice(),on=old.some(n=>norm(n)===norm(pt.name));
+  h.partners=on?old.filter(n=>norm(n)!==norm(pt.name)):old.concat(pt.name);
+  const ok=await sharedFlush(true);
+  if(!ok){toast('연결을 저장하지 못했습니다. 최신 상태를 확인한 후 다시 선택해 주세요.');return false;}
+  return true;
+ }finally{await sharedRelease('project:'+pid);}
+}
+function schPartnerProjectPick(el,pt){
+ if(!pt)return;const selected=()=>schPartnerProjects(pt);
+ const pop=openPop(el,'<div class="hd">관련 프로젝트 · 복수 선택</div><div class="msg" style="padding-top:0"><input class="pt-project-query" placeholder="검색" aria-label="프로젝트 검색"></div><div class="pt-project-options"></div>',{cls:'pt-project-picker'});
+ let busy=false;const input=pop.querySelector('input'),box=pop.querySelector('.pt-project-options');
+ const draw=()=>{const ids=orderedProjects().filter(id=>!PROJECTS[id].trash&&matchQ(input.value,PROJECTS[id].tag,PROJECTS[id].full)),sel=selected();
+ box.innerHTML=ids.map(id=>'<button type="button" class="it '+(sel.includes(id)?'sel':'')+'" data-pt-project-id="'+esc(id)+'"><i class="ck">'+(sel.includes(id)?svg('i-check',9,8):'')+'</i><span>'+esc(PROJECTS[id].full||PROJECTS[id].tag)+'</span></button>').join('')||'<div class="msg">검색 결과가 없습니다.</div>';};
+ input.addEventListener('input',draw);
+ box.addEventListener('click',async e=>{const b=e.target.closest('[data-pt-project-id]');if(!b||busy)return;e.preventDefault();e.stopPropagation();busy=true;b.disabled=true;
+ try{await schPartnerToggleProject(pt,b.dataset.ptProjectId);
+ const scroll=$('#content').scrollTop;render(true);$('#content').scrollTop=scroll;
+ if(S.panel===pt.id){const tags=$('#panel-pin .pt-projects');if(tags)tags.innerHTML=schPartnerProjectTags(pt,true);}
+ }finally{busy=false;if(pop.isConnected)draw();}
+ });draw();input.focus();
+}
+document.addEventListener('click',e=>{
+ const el=e.target.closest&&e.target.closest('[data-pt-project-pick],[data-pt-project-filter],[data-pt-project-clear]');if(!el)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(el.hasAttribute('data-pt-project-pick')){schPartnerProjectPick(el,PARTNERS.find(p=>p.id===el.dataset.ptProjectPick&&!p.trash));return;}
+ if(el.hasAttribute('data-pt-project-clear')){S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));return;}
+ menuPop(el,[{t:'전체 프로젝트',k:'all',sel:!S.partnerProject,fn:()=>{S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));}},
+ ...orderedProjects().filter(id=>!PROJECTS[id].trash).map(id=>({t:PROJECTS[id].full||PROJECTS[id].tag,k:id,sel:S.partnerProject===id,fn:()=>{S.partnerProject=id;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});
+},true);
 </script><script>
 /* ---- mypage/10-mypage.js ---- */
 /* My page (preview switch on): 계정 · 수신함 · 설정 · 휴지통, after the owner's specification "마이페이지 고도화 개발 명세서" (2026-11-19).

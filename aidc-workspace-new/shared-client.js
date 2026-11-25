@@ -226,7 +226,7 @@ async function sharedResolveConflict(){
 }
 async function sharedSaveProject(button){
  const id=S.proj,root=$('#proj-pw'),title=$('[data-k="__full"]',root)?.textContent.trim();if(!title){toast('프로젝트명을 입력해주세요.');return;}
- saveProjectHead();S._projSaving=true;
+ saveProjectHead();schEnsureProjectPartners(id);S._projSaving=true;
  if(button){button.disabled=true;button.textContent='저장 중…';}
  try{const ok=await sharedFlush(true);if(!ok&&sharedDiff(sharedBase,sharedRecords()).length){toast('저장에 실패했습니다. 입력 내용은 유지됩니다.');return;}S.editProj=false;S._projSnap=null;await sharedRelease('project:'+id);render(true);toast('저장했습니다.');}
  finally{S._projSaving=false;if(button&&button.isConnected){button.disabled=false;button.textContent='저장';}}

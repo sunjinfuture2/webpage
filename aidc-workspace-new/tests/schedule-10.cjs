@@ -64,16 +64,31 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   await ev(() => closePanel(true)); await sleep(300);
 
   console.log('— chips, partners, archive, recent items');
+  const contract=await ev(ids=>{
+    const it=newItem('contract',{proj:'pangyo',status:'published',title:'연결 미팅 검수',meetings:[ids.m1,ids.m2]});
+    go('project:pangyo');return it.id;
+  },made);
+  made.contract=contract;
+  const links=a.locator('.contract-table [data-open="'+contract+'"] .contract-meetings .chip');
+  await links.first().waitFor();
+  const meetings=await links.evaluateAll(chips=>chips.map(c=>{
+    const t=c.querySelector('.t'),bounds=c.getBoundingClientRect(),cell=c.closest('.contract-meetings').getBoundingClientRect();
+    return {colour:getComputedStyle(c).color===getComputedStyle(c.querySelector('svg')).color,
+      title:t.textContent===oneLine(item(c.dataset.open).title),clip:getComputedStyle(t).textOverflow,
+      fits:bounds.height<22 && bounds.left>=cell.left-1 && bounds.right<=cell.right+1};
+  }));
   await ev(() => go('main')); await sleep(900);
-  const ch = await ev(ids => { const t = document.querySelector('#page-main .tbl.partners'); t.scrollIntoView({ block: 'center' }); const rows = [...t.querySelectorAll('.rw')], chips = rows.map(r => r.querySelector('.mt .chip')).filter(Boolean);
-    const one = c => { const it = item(c.dataset.open), cs = getComputedStyle(c), tt = c.querySelector('.t'), mt = c.closest('.mt').getBoundingClientRect(), r = c.getBoundingClientRect(); return { type: it.type, pict: getComputedStyle(c.querySelector('svg')).color, text: cs.color, full: tt.textContent === oneLine(it.title), clip: getComputedStyle(tt).textOverflow, oneRow: r.height < 22, inside: r.right <= mt.right + 1 }; };
-    const meet = chips.map(one).filter(x => x.type === 'meeting'), sh = ITEMS.find(i => i.short && i.title && i.short !== i.title && isLive(i)), html = sh ? chipOf(sh) : '', a = rows[0].querySelector('.cat a');
-    const calLb = document.querySelector('#page-main .cal .ev .lb');
-    return { n: meet.length, sameColour: meet.every(x => x.pict === x.text), full: meet.every(x => x.full && x.oneRow && x.inside && x.clip === 'clip'), short: sh ? { full: html.includes('>' + esc(oneLine(sh.title)) + '<'), cut: html.includes(esc(sh.short) + '<') } : null, under: a ? getComputedStyle(a).borderBottomWidth : '', cal: calLb ? getComputedStyle(calLb).textOverflow : '', calTop: calLb ? getComputedStyle(calLb).top : '', chipTop: chips.length ? getComputedStyle(chips[0].querySelector('.t')).top : '', pictTop: chips.length ? getComputedStyle(chips[0].querySelector('.sq')).top : '' }; }, made);
-  check('a chip\'s pictogram carries its project\'s point colour (it was grey in a coloured chip)', ch.n > 0 && ch.sameColour, ch);
-  check('no shortened titles in chips: the whole title on one line, cut where the room ends, without dots; the calendar\'s own entries end in "…" when they do not fit', ch.full && (!ch.short || (ch.short.full && !ch.short.cut)) && ch.cal === 'ellipsis', ch);
-  check('the text of a calendar entry and of a chip in the partner list\'s 미팅 column stands 1 lower (1.67 and 1), the pictogram does not move', ch.calTop === '1.67px' && ch.chipTop === '1px' && (ch.pictTop === 'auto' || ch.pictTop === '0px'), { cal: ch.calTop, chip: ch.chipTop, pict: ch.pictTop });
-  check('the line under a partner\'s 구분 is half as thick (1px)', ch.under === '1px', ch.under);
+  const ch=await ev(()=>{
+    const sh=ITEMS.find(i=>i.short && i.title && i.short!==i.title && isLive(i)), html=sh?chipOf(sh):'';
+    const category=document.querySelector('#page-main .tbl.partners .rw .cat a'), label=document.querySelector('#page-main .cal .ev .lb');
+    return {short:sh?{full:html.includes('>'+esc(oneLine(sh.title))+'<'),cut:html.includes(esc(sh.short)+'<')}:null,
+      under:getComputedStyle(category).borderBottomWidth,cal:getComputedStyle(label).textOverflow,calTop:getComputedStyle(label).top};
+  });
+  check('linked meeting chips use each project’s pictogram colour',meetings.length===2 && meetings.every(x=>x.colour),meetings);
+  check('linked meeting chips keep the complete title on one line inside their column; calendar entries use ellipsis',
+    meetings.every(x=>x.title && x.fits && x.clip==='clip') && (!ch.short || (ch.short.full && !ch.short.cut)) && ch.cal==='ellipsis',{meetings,ch});
+  check('the calendar label keeps its vertical offset',ch.calTop==='1.67px',ch.calTop);
+  check('the partner category underline is one pixel wide',ch.under==='1px',ch.under);
   const gap = async pg => { await ev(p => go(p), pg); await sleep(1000); return ev(() => { const c = document.querySelector('#content'); c.scrollTop = c.scrollHeight; const pg = document.querySelector('.page.on'), ps = [...pg.querySelectorAll('.pager')].filter(e => e.offsetParent), last = ps[ps.length - 1]; return Math.round(document.querySelector('#pfoot').getBoundingClientRect().top - last.getBoundingClientRect().bottom); }); };
   const gm = await gap('main'), ga = await gap('archive');
   check('the archive stands as far above the footer as the main page (it was 207 further)', Math.abs(ga - gm) <= 2 && ga < 300, { main: gm, archive: ga });
@@ -144,7 +159,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   check('the page everybody else sees is as it was: its calendar selects days, the list has research, chips keep their short form', off.pv === false && off.sel && off.back && off.short && !off.sch && off.rs, off);
 
   // my own records go to the trash
-  await ev(ids => { for (const id of [ids.m1, ids.m2, ids.rs, ids.late, ...ids.many]) { const it = item(id); if (it) { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } } render(true); }, made); await flush();
+  await ev(ids => { for (const id of [ids.m1, ids.m2, ids.rs, ids.late, ids.contract, ...ids.many]) { const it = item(id); if (it) { it.prevStatus = it.status; it.status = 'trash'; it.trashedAt = new Date().toISOString(); } } render(true); }, made); await flush();
   const errs = [...A.errs, ...B.errs, ...C.errs]; check('no script errors', errs.length === 0, errs);
   await browser.close(); done();
 })();

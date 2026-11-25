@@ -79,12 +79,14 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   const pm = await ev(() => { const lg = document.querySelector('#page-main .tbl.partners .rw .nm .lg'); return { w: Math.round(lg.getBoundingClientRect().width * 10) / 10, boxes: [...document.querySelectorAll('#page-main .sec-title .srch')].map(x => x.classList.contains('box') && Math.round(x.getBoundingClientRect().height)) }; });
   check('partner logos 30% smaller (26.6 → 18.6)', Math.abs(pm.w - 18.6) < .3, pm);
   check('the three search boxes look like the project page\'s (grey box, 38 high)', pm.boxes.length === 3 && pm.boxes.every(h => h === 38), pm);
-  const mid = await ev(([t]) => { const m = newItem('meeting', { title: t, proj: 'pangyo', status: 'published' }); const p = PARTNERS.find(x => !x.trash && partnerRows().slice(0, 10).includes(x)); p.meet = m.id; render(true); return { m: m.id, p: p.id }; }, ['6차 협력 미팅 ' + sfx]); await sleep(400);
-  const chip = `#page-main .tbl.partners .rw[data-partner="${mid.p}"] .mt .chip`;
-  const cy = await ev(sel => { const c = document.querySelector(sel); return c ? getComputedStyle(c).top : null; }, chip);
-  await a.click(chip); await sleep(500);
-  check('the meeting tag of a partner stands on the row\'s middle line (no offset since the tenth round) and opens that meeting', cy === '0px' && await ev(id => S.panel === id, mid.m), cy);
-  await ev(() => closePanel(true));
+  const projectPicker=a.locator('#page-main .tbl.partners .rw [data-pt-project-pick]').first();
+  const withinCell=await projectPicker.evaluate(button=>{
+    const b=button.getBoundingClientRect(), cell=button.closest('.pt-projects').getBoundingClientRect();
+    return b.left>=cell.left-1 && b.right<=cell.right+1 && b.top>=cell.top-1 && b.bottom<=cell.bottom+1;
+  });
+  await projectPicker.click();
+  check('the partner project control fits its column and opens the project selector',withinCell && await a.locator('.pt-project-query').isVisible());
+  await a.keyboard.press('Escape');
   const tb = await ev(() => { const t = document.querySelector('#page-main .tbl.sch-list.sch-all'), ttl = document.querySelector('#sec-actions .sec-title').getBoundingClientRect(); return t ? { hd: [...t.querySelectorAll('.hd span')].map(s => s.textContent.trim()), left: Math.round(t.getBoundingClientRect().left - ttl.left), per: !!document.querySelector('#sec-actions .sec-title [data-per]'), perRow: !!document.querySelector('#sec-actions .sch-filters [data-per]') } : null; });
   check('the action table is the project page\'s list with 프로젝트 in front', tb && JSON.stringify(tb.hd) === JSON.stringify(['프로젝트', 'WBS', '업무명', '시작일', '완료일', '중요도', '상태', '담당자', '기한', 'URL']) && Math.abs(tb.left) < 6 && !tb.per && tb.perRow, tb);
   await ev(t => { newItem('action', { title: t, proj: 'pangyo', status: 'published', pri: 'high' }); render(true); }, '6차 높음 ' + sfx); await sleep(300);   // the demo actions are gone: one of our own to filter for
@@ -180,7 +182,7 @@ const V2 = 'http://127.0.0.1:8787/?v=2';
   // clean up what this test wrote
   await ev(() => closePanel(true)); await a.click('#page-project [data-editproj]'); await sleep(1000);
   await ev(() => { saveProjectHead(); PHEAD.pangyo.partners = PHEAD.pangyo.partners.slice(0, -1); render(true); }); await a.click('#page-project [data-editproj]'); await sleep(1500);
-  await ev(async ([ids, m, p]) => { const pt = PARTNERS.find(x => x.id === p); if (pt) pt.meet = null; for (const id of ids.concat(m)) { const it = item(id); if (it) await trashItem(it); } }, [[r1, ...r2], mid.m, mid.p]); await flush(a); await sleep(600);
+  await ev(async ids => { for (const id of ids) { const it=item(id); if(it)await trashItem(it); } }, [r1, ...r2]); await flush(a); await sleep(600);
 
   console.log('— without the preview');
   const C = await newUser(browser, 'R6C' + sfx, '여섯 삼'), c = C.page;

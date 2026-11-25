@@ -2078,3 +2078,21 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .tbl.vt-res .res-categories .rc-tags{max-width:100%;gap:5px}
 .tbl.vt-res .res-categories .rc-tag{height:auto;min-height:22px;max-width:100%;white-space:normal;overflow-wrap:anywhere;box-sizing:border-box}
 .tbl.vt-res .rw:has(.res-categories){height:auto;min-height:42px}
+
+/* Research preview: categories belong to the title, followed by state and priority. */
+.tbl.sch-proc.vt-res .hd,.tbl.sch-proc.vt-res .rw{grid-template-columns:112px minmax(260px,1fr) 85px 80px 180px 170px 104px}
+.research-prefix{font-weight:700}
+.tbl.vt-res .research-title-text,.rcard .research-title-text{font-weight:400}
+.rcard .tt.research-preview-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.tbl.vt-res .rw .res-state,.tbl.vt-res .rw .res-priority{align-items:center}
+.tbl.archive.pv .hd span[data-arcol]{position:relative;gap:8px;min-width:0}
+.tbl.archive.pv .hd span[data-arcol] em{position:static!important;left:auto!important;flex:1;min-width:0}
+.tbl.archive.pv .hd span[data-arcol] svg{position:static!important;margin-left:auto;margin-right:8px}
+.tbl.partners .hd [data-pt-project-filter]{display:flex;align-items:center;gap:8px;cursor:pointer}
+.tbl.partners .hd [data-pt-project-filter] em{position:static;left:auto}
+.tbl.partners .pt-projects,.partner-content .pt-projects{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 0;min-width:0}
+.pt-project-tag{border:0;border-radius:5px;padding:3px 8px;background:#edf3e9;color:#43802c;font-size:12px;line-height:18px;cursor:pointer;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.pt-project-add{border:1px solid #ddd;border-radius:4px;width:21px;height:21px;font-size:15px;color:#888;cursor:pointer;background:transparent}
+.pt-project-picker{width:330px;max-height:min(480px,80vh);overflow:auto}
+.pt-project-picker .it{width:100%;text-align:left;display:flex;gap:9px}
+.pt-project-picker .ck{width:12px;flex:none}

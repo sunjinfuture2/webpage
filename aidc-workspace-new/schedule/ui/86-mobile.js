@@ -59,7 +59,7 @@ document.addEventListener('toggle',e=>{
 // A record has one set of cells. On phones the name and these summary fields come first.
 // The other populated cells keep their original links, buttons and labels inside a disclosure.
 const schMobColumns = [
-  ['.vt-res', ['날짜','구분']],
+  ['.vt-res', ['날짜','상태','중요도']],
   ['.vt-meet', ['날짜','시간','참석자']],
   ['.vt-proj', ['추진 단계','위치']],
   ['.sch-ev', ['ID','상태','기한']],
@@ -120,7 +120,10 @@ function schMobRecord(row, labels, summary, tableKey){
   details.className='mob-record-details';
   for(const [i,cell] of cells.entries()){
     if(cell===title)continue;
-    const label=labels[i], value=cell.textContent.trim();
+    const label=labels[i];
+    const download=cell.matches('.fl.url') && cell.querySelector('[data-act="dl"]');
+    if(download)details.append(schMobField('첨부',download,false));
+    const value=cell.textContent.trim();
     if((!value || value==='-') && !cell.querySelector('a,button,[data-schc]'))continue;
     const primary=summary.includes(label);
     (primary?meta:details).append(schMobField(label,cell,primary));
@@ -159,7 +162,7 @@ function schMobTables(root=document.querySelector('.page.on')){
     const columns=Array.from(head.children);
     const labels=columns.map(col=>col.textContent.replace(/[▲▼]/g,'').trim());
     for(const row of table.querySelectorAll(':scope > .rw'))schMobRecord(row,labels,config[1],key);
-    const controls=columns.filter(col=>col.matches('[data-vcol],[data-mcol],[data-sch="col"],[data-contract-col],[data-arcol],[data-sort]'));
+    const controls=columns.filter(col=>col.matches('[data-vcol],[data-mcol],[data-sch="col"],[data-contract-col],[data-arcol],[data-sort],[data-pt-project-filter]'));
     if(controls.length){
       controls.forEach(schMobKeyButton);
       head.replaceChildren(...controls);

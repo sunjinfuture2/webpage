@@ -15,7 +15,7 @@ const {chromium,newUser,waitApp}=require('./h.cjs');
  await p.locator('#panel-pin .partner-body').waitFor();
  assert.equal(await p.locator('#panel-pin .partner-body-text').innerText(),target.body);
  const props=await p.locator('#panel-pin .props .pr .k').allTextContents();
- assert.deepEqual(props,['홈페이지','구분','관련 미팅']);
+ assert.deepEqual(props,['홈페이지','구분','관련 프로젝트']);
  await p.locator('#panel-pin [data-ed="editpartner"]').click();
  await p.locator('#panel-pin [data-sk="body"]').fill(target.body+'\n본문 추가\n두 줄 유지');
  assert.equal(await p.locator('#panel-pin [data-sk="desc"]').count(),0);

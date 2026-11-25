@@ -118,12 +118,22 @@ async function flow(browser, width, height) {
   await inspect('.vt-rep');
   await inspect('.vt-res');
   await inspect('.tbl.partners');
+  const partnerTable=on('.tbl.partners'), partnerRow=partnerTable.locator('.rw').first();
+  await partnerTable.locator('.mob-column-toggle').tap();
+  await partnerTable.locator('[data-pt-project-filter]').tap();
+  check(width+' related project filter opens from the partner list',await page.locator('.pop .it').first().isVisible());
+  await page.evaluate(()=>closePop());
+  await partnerRow.locator('.mob-record-more').tap();
+  await partnerRow.locator('[data-pt-project-pick]').last().tap();
+  check(width+' related project selector opens inside the expanded partner',await page.locator('.pt-project-query').isVisible() && !await page.evaluate(()=>S.panel));
+  await page.evaluate(()=>closePop());
   await inspect('.sch-all.tbl');
   const pj=on('.vt-rep .rw').first(), dest=(await pj.getAttribute('data-go')).split(':')[1];
   await pj.locator('.mob-record-title').press('Enter');
   await page.waitForFunction(pid=>S.page==='project'&&S.proj===pid,dest);
   await page.evaluate(()=>go('archive'));
   await on('[data-arview="docs"]').tap();
+  check(width+' workspace archive clears the project-only partner filter',await page.evaluate(()=>S.partnerProject===''));
   await inspect('.tbl.archive',true);
   await inspect('.tbl.partners');
   await on('.tbl.archive .mob-column-toggle').tap();
@@ -134,12 +144,13 @@ async function flow(browser, width, height) {
   const longName=await page.evaluate(()=>{
     const fixture=document.createElement('div');document.querySelector('.page.on .pw').append(fixture);
     const title='판교AIDC'.repeat(40);
-    fixture.innerHTML=schResTable([{id:'ui-long-name',title,type:'research',people:[],date:'2026-11-02'}]);
+    fixture.innerHTML=schResTable([{id:'ui-long-name',title,type:'research',url:'https://example.org/schedule',people:[],date:'2026-11-02'}]);
     schMobTables(fixture);
     const node=fixture.querySelector('.mob-record-title .e'), range=document.createRange();
     range.selectNodeContents(node);const lines=[...range.getClientRects()], parent=node.closest('.mob-record-title').getBoundingClientRect();
-    const wraps=node.textContent===title && lines.length>1 && lines.every(r=>r.right<=parent.right+1);
-    fixture.remove();return wraps;
+    const wraps=node.textContent===title && lines.length>1 && lines.every(r=>r.right<=parent.right+1) &&
+      fixture.querySelector('.mob-record-details a[href="https://example.org/schedule"]');
+    fixture.remove();return Boolean(wraps);
   });
   check(width+' unbroken long title wraps in full',longName);
   if(width===360){
@@ -164,7 +175,7 @@ async function flow(browser, width, height) {
     for(const w of [1440,768]){
       await page.setViewportSize({width:w,height:960});
       const grid=await page.locator('.page.on .vt-res .rw').first().evaluate(r=>[getComputedStyle(r).display,r.children.length,document.documentElement.classList.contains('mob')]);
-      check('desktop table at '+w,grid[0]==='grid' && grid[1]===6 && !grid[2],grid);
+      check('desktop table at '+w,grid[0]==='grid' && grid[1]===7 && !grid[2],grid);
     }
     check('desktop has no application errors',!errs.length,errs);
     await ctx.close();

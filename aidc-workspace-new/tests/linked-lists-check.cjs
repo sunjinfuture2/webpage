@@ -1,0 +1,44 @@
+const assert=require('node:assert/strict');const {chromium,newUser,waitApp}=require('./h.cjs');
+(async()=>{const b=await chromium.launch();try{
+ const {page:p}=await newUser(b,'LINK_CHECK','연동검증',{url:'http://127.0.0.1:8787/'});
+ const ids=await p.evaluate(()=>({pt:PARTNERS.find(x=>!x.trash).id,pids:orderedProjects().slice(0,2),rid:liveItems('research').find(x=>!archTabOf(x)).id}));
+ await p.evaluate(({pt,pids})=>{const name=PARTNERS.find(x=>x.id===pt).name;for(const id of pids)PHEAD[id].partners=(PHEAD[id].partners||[]).filter(n=>norm(n)!==norm(name));},ids);await p.evaluate(()=>sharedFlush(true));
+ await p.evaluate(id=>openPanel(id),ids.pt);
+ await p.locator('#panel-pin [data-pt-project-pick]').first().click();
+ for(const pid of ids.pids){await p.locator('[data-pt-project-id="'+pid+'"]').click();await p.waitForFunction(({pt,pid})=>schPartnerProjects(PARTNERS.find(x=>x.id===pt)).includes(pid)&&!sharedBusy,{pt:ids.pt,pid});}
+ await p.keyboard.press('Escape');await p.evaluate(()=>closePop());await p.reload();await waitApp(p);
+ assert.deepEqual(await p.evaluate(id=>schPartnerProjects(PARTNERS.find(x=>x.id===id)).filter(x=>['pangyo','busan'].includes(x)),ids.pt),ids.pids.filter(x=>['pangyo','busan'].includes(x)));
+ for(const pid of ids.pids)assert.ok(await p.evaluate(({pid,pt})=>(PHEAD[pid].partners||[]).includes(PARTNERS.find(x=>x.id===pt).name),{pid,pt:ids.pt}));
+ await p.evaluate(id=>go('project:'+id),ids.pids[0]);
+ assert.equal(await p.evaluate(()=>S.partnerProject),ids.pids[0]);
+ assert.ok(await p.locator('#page-project [data-sec="partner"]').count());
+ assert.ok(await p.locator('#page-project [data-partner="'+ids.pt+'"]').count());
+ await p.locator('#page-project [data-pt-project-clear]').click();assert.equal(await p.evaluate(()=>S.partnerProject),'');
+ await p.locator('#page-project [data-editproj]').first().click();
+ const index=await p.evaluate(({pid,pt})=>PHEAD[pid].partners.findIndex(n=>n===PARTNERS.find(x=>x.id===pt).name),{pid:ids.pids[0],pt:ids.pt});
+ await p.locator('#page-project [data-k="partner:'+index+'"]').fill('');
+ await p.locator('#page-project [data-editproj]').first().click();
+ await p.waitForFunction(()=>!S.editProj&&!sharedBusy);
+ assert.ok(!(await p.evaluate(id=>schPartnerProjects(PARTNERS.find(x=>x.id===id)),ids.pt)).includes(ids.pids[0]));
+ // Add a new partner through the overview and save, making the same registry row.
+ await p.locator('#page-project [data-editproj]').first().click();await p.locator('#page-project [data-addpartnerrow]').click();
+ await p.locator('#page-project [data-k^="partner:"]').last().fill('양방향 신규업체');
+ await p.locator('#page-project [data-editproj]').first().click();await p.waitForFunction(()=>!S.editProj&&!sharedBusy);
+ await p.reload();await waitApp(p);
+ assert.ok(await p.evaluate(pid=>{const x=PARTNERS.find(p=>p.name==='양방향 신규업체');return x&&schPartnerProjects(x).includes(pid);},ids.pids[0]));
+ await p.locator('#page-project .new-partner').click();await p.locator('#npt-name').fill('프로젝트내 생성업체');await p.locator('[data-npt="ok"]').click();await p.waitForFunction(()=>!sharedBusy&&PARTNERS.some(p=>p.name==='프로젝트내 생성업체'));
+ assert.ok(await p.evaluate(()=>schPartnerProjects(PARTNERS.find(p=>p.name==='프로젝트내 생성업체')).includes(S.proj)));
+ console.log('PASS multi-project links, overview removal/addition, scoped list and clear, reload persistence');
+ await p.evaluate(id=>openPanel(id),ids.rid);await p.locator('#panel-pin [data-ed="edit"]').click();
+ await p.locator('#panel-pin [data-f="title"][contenteditable="true"]').fill('안녕하세요');
+ await p.evaluate(id=>{const it=item(id);it.cats=[];it.dirty=true;},ids.rid);
+ await p.locator('#panel-pin [data-pick="cats"]').click();await p.locator('#rc-new').fill('Company');await p.locator('#rc-new').press('Enter');await p.evaluate(()=>closePop());
+ await p.locator('#panel-pin [data-ed="save"]').click();await p.evaluate(()=>sharedFlush(true));
+ await p.reload();await waitApp(p);await p.evaluate(id=>openPanel(id),ids.rid);
+ assert.equal(await p.locator('#panel-pin .ititle').innerText(),'안녕하세요');
+ const res=await p.evaluate(id=>{const r=item(id),root=document.createElement('div');root.innerHTML=schResTable([r]);return {title:root.querySelector('.nm .e').textContent,head:[...root.querySelectorAll('.hd em')].map(x=>x.textContent),prefix:root.querySelector('strong').textContent,card:resCardTitle(r)};},ids.rid);
+ assert.equal(res.title,'[Company] 안녕하세요');assert.deepEqual(res.head,['날짜','제목','상태','중요도','담당자','최종수정','URL']);assert.equal(res.prefix,'[Company]');assert.ok(res.card.includes('research-title-text'));
+ await p.evaluate(()=>{closePanel();go('archive');});
+ const overlaps=await p.locator('.page.on .tbl.archive.pv .hd [data-arcol]').evaluateAll(nodes=>nodes.map(n=>{const e=n.querySelector('em'),s=n.querySelector('svg');return !e||!s||s.getBoundingClientRect().left>=e.getBoundingClientRect().right-1}));
+ assert.ok(overlaps.every(Boolean));console.log('PASS research plain detail / prefixed preview, columns, archive header arrow separation');
+ }finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});
