@@ -5,7 +5,8 @@
 // One model of the document (schExpModel) is written out twice: as a .docx (schExpDocx: WordprocessingML put into a zip by hand,
 // nothing is loaded for it) and as a page for the browser's print window, where "PDF로 저장" makes the PDF (schExpPrint).
 (function(){ const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden'); s.setAttribute('aria-hidden','true');
-  s.innerHTML='<symbol id="i-sch-exp" viewBox="0 0 24 24"><path d="M12 15.2V3.4M7.6 7.6L12 3.2l4.4 4.4M4.2 13.6v5.1a1.9 1.9 0 0 0 1.9 1.9h11.8a1.9 1.9 0 0 0 1.9-1.9v-5.1" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>'
+  s.innerHTML='<symbol id="i-sch-exp2" viewBox="0 0 24 24"><path d="M12 15.2V3.4M7.6 7.6L12 3.2l4.4 4.4M4.2 13.6v5.1a1.9 1.9 0 0 0 1.9 1.9h11.8a1.9 1.9 0 0 0 1.9-1.9v-5.1" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></symbol>'
+   +'<symbol id="i-sch-exp" viewBox="0 0 24 24"><path d="M12 15.2V3.4M7.6 7.6L12 3.2l4.4 4.4M4.2 13.6v5.1a1.9 1.9 0 0 0 1.9 1.9h11.8a1.9 1.9 0 0 0 1.9-1.9v-5.1" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>'
    +'<symbol id="i-sch-fup" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 12.4V7.6M5.9 9.6L8 7.5l2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
    +'<symbol id="i-sch-fdn" viewBox="0 0 16 16"><path d="M2.8 1.6h6.8l3.6 3.6v9.2H2.8zM9.4 1.8v3.6H13M8 7.6v4.8M5.9 10.4L8 12.5l2.1-2.1" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>'
    +'<symbol id="i-sch-xls" viewBox="0 0 16 16"><path d="M2.2 1.6h8.2l3.4 3.4v9.4H2.2zM10.2 1.8v3.4h3.4M5.2 8l3.6 4.4M8.8 8l-3.6 4.4" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>';

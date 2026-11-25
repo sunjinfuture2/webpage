@@ -16,12 +16,12 @@ const schXSafe=s=>String(s||'').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' '
 
 /* ---------- the overview of one project as blocks ---------- */
 function schXOverview(pid,full){ const h=headOf(pid), out=[];
-  if(h.kpi.length)out.push(schXT(['핵심 지표','값'],h.kpi.map(x=>[x[1],x[0]]),[3400,3800]));
-  if(h.fin.length)out.push(schXT(['사업성 지표','값'],h.fin.map(x=>[x[1],x[0]]),[3400,3800]));
-  if(h.main){ out.push(schXP('사업 개요',{b:1})); out.push(schXP(h.main)); }
-  if(full)for(const [t,k] of [['입지 및 전력 인프라','infra'],['사업 구조 및 수익 모델','struct'],['추진 현황 및 주요 특성','stat'],['주요 리스크 및 검토사항','risk']]){ const ls=schXLines(h[k]); if(!ls.length)continue; out.push(schXP(t,{b:1})); ls.forEach(x=>out.push(schXP((ls.length>1?'• ':'')+x,{ind:ls.length>1?1:0}))); }
+  if(h.kpi.length)out.push(schXT([schRepTtl(h,'kpi'),'값'],h.kpi.map(x=>[x[1],x[0]]),[3400,3800]));
+  if(h.fin.length)out.push(schXT([schRepTtl(h,'fin'),'값'],h.fin.map(x=>[x[1],x[0]]),[3400,3800]));
+  if(h.main){ out.push(schXP(schRepTtl(h,'main'),{b:1})); out.push(schXP(h.main)); }
+  if(full)for(const k of ['infra','struct','stat','risk']){ const ls=schXLines(h[k]), t=schRepTtl(h,k); if(!ls.length)continue; out.push(schXP(t,{b:1})); ls.forEach(x=>out.push(schXP((ls.length>1?'• ':'')+x,{ind:ls.length>1?1:0}))); }
   const rows=h.rows.filter(x=>x[0]||x[1]).concat(h.memo?[['비고',h.memo]]:[]); if(rows.length)out.push(schXT(['구분','내용'],rows,[1900,5300]));
-  if(h.plan.length)out.push(schXT(['시기','추진 일정','상태'],h.plan,[1500,4700,1000]));
+  if(h.plan.length)out.push(schXT(['시기',schRepTtl(h,'plan'),'상태'],h.plan,[1500,4700,1000]));
   return out; }
 const schXMeta=pid=>{ const p=PROJECTS[pid], r=schRepOf(pid); return [r.grp,r.stage||'단계 미정',r.focus?'집중 추진':'',r.first?'최초자료일 '+r.first:'',r.asof?'기준일 '+r.asof:'',r.owner?'담당자 '+r.owner:''].filter(Boolean).join(' · '); };
 

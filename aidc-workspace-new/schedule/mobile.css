@@ -259,4 +259,8 @@ html.mob .sch-xw h5{flex-wrap:wrap}
 html.mob .sch-xw h5 > small{display:none}
 html.mob .sch-xw .xq-row{grid-template-columns:minmax(0,1fr) auto;row-gap:3px}
 html.mob .sch-xw .xq-say{grid-column:1/-1;grid-row:2;padding-left:23px}
-html.mob .phead.rep .rfdrop span{display:none}
+
+/* (thirty-sixth round) the pictogram at the phone's size of the trash; the map keeps the row's width here (half of it is too small to read) */
+html.mob .phead .ttl .pexp{width:34px;height:34px;margin:-2px 0 0 4px}
+html.mob .phead .ttl .pexp svg{width:24px;height:24px}
+html.mob .rtb .r .rmapbox{width:100%}

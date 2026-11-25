@@ -1929,3 +1929,18 @@ html.mp-calm .pop.sch-nopick .it{transition:none!important}
 .sch-xw .xw-nt:empty{display:none}
 .sch-xw .xq-side .np-bt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:16px}
 .sch-xw .xq-side .np-bt button{justify-content:center}
+
+/* Thirty-sixth round (owner, 2026-11-25) */
+/* the pictogram beside a project's name: down to the size of the trash at the right of the line (what is drawn of it is as tall
+   as the trash is, in the trash's weight; the button is the trash's 46) */
+.phead .ttl .pexp{width:46px;height:46px;margin:-2.6px 0 0 8px}
+.phead .ttl .pexp svg{width:34px;height:34px}
+/* a block's title while the overview is edited */
+.phead.rep.ed .rt .editable{display:inline-block;min-width:60px;min-height:20px}
+/* every button that adds a row is a "+" alone, drawn larger */
+.phead.rep .radd{width:34px;height:28px;padding:0;gap:0;justify-content:center;color:#3d3d3d}
+.phead.rep .radd svg{flex:none}
+/* the row that takes files: the pictogram and "파일 첨부", as wide as that */
+.phead.rep .rfdrop{align-self:flex-start;height:30px;padding:0 13px 0 11px}
+/* the map inside the row 위치: half as wide */
+.rtb .r .rmapbox{width:50%}

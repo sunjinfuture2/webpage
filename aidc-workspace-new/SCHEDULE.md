@@ -1089,3 +1089,28 @@ in a browser (1920, 1536, a phone).
 tests: schedule-8 / 9 / 15 / 16 choose the file through its card; schedule-16 checks the window's rows, a part's own form and
 the report of mixed forms, and a file put to a block. Brought in step and not run (the owner asks for a regression run when
 one is wanted); looked at in a browser at 1920, 1536 and a phone.
+
+## Titles that can be edited, one "+", the smaller file row (owner, 2026-11-25, thirty-sixth round)
+
+- **The pictogram beside a project's name** is down to the size of the trash at the right of the line: the button is the trash's
+  46, the pictogram 34 — what is drawn of it is then as tall as what is drawn of the trash (24.6 / 24.5) — and it has a symbol of
+  its own, `i-sch-exp2`, in the trash's weight (the content panel keeps `i-sch-exp`). On a phone 24 in 34, the trash's size
+  there.
+- **The fold of the overview** is called "프로젝트 상세" (it read 사업개요; the `?v=1` page keeps its own word).
+- **The titles of the sheet's blocks** — 핵심 지표, 사업성 지표, 사업 개요, 추진 일정, the four texts, 협력업체 (REP_TTL) — can be
+  changed while the overview is edited ("소제목들 텍스트도 수정가능하게"). A changed title is the project's own: the record keeps
+  `ttl = {<block>: title}`, only what differs from the usual title; an emptied title is the usual one again. schRepTtl(h, k)
+  is the title to write — the page and the PDF / Word report use it; the workbook (and the reading of a document) keep the
+  usual titles, because a file is read back by them. saveProjectHead (original.html) takes the fields `data-k="ttl:<block>"`.
+  The titles of the page's own blocks (메인 페이지 목록에 표시되는 값, 첨부 자료 (PDF)) are not editable.
+- **No files on the two rows of figures** (핵심 지표, 사업성 지표): SCH_REP_FBLOCKS is the seven blocks below them. A file that
+  was put to one of the two before is still listed and can be taken off.
+- **Every button that adds a row is a "+" alone** (`.radd`, 34 x 28, the cross 15 px; REP_PLUS): figures, rows of the table,
+  steps, partners, PDFs. What it adds is said by where it stands and by its title ("지표 추가" …).
+- **The row that takes files** reads "파일 첨부" and is as wide as that; the longer words are its title. Files let go on the
+  block are taken as before.
+- **The map inside the row 위치** is half as wide as the row's value (on a phone it keeps the whole width: half of it is too
+  small to read).
+
+tests: schedule-16 was brought in step (the "+", the titles, the file rows, the fold's name) and not run; looked at in a
+browser at 1920, 1536 and a phone.
