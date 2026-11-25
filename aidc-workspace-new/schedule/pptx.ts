@@ -66,8 +66,8 @@ async function make(doc: any, opt: any = {}): Promise<ArrayBuffer> {
   // a title in black alone (the owner's page of figures), a quieter line beside it where there is one
   function headPlain(s: any, title: string, sub?: string) { tx(s, [{ text: title, options: { color: K } }, { text: sub ? '   ' + sub : '', options: { color: GD, fontSize: 14 } }], L, 0.855, 9.9, 0.396, { fontFace: F7, fontSize: 23.52 }); }
   // small grey tabs under a title: what the project is (No., group, stage, 집중 추진 in red, the day the figures are of)
-  function chips(s: any, list: { t: string; red?: boolean }[]) { let x = L; for (const c of list) { if (!c.t) continue; const w = emOf(c.t) * 16 / 72 * 1.1 + 0.2; if (x + w > R) break;
-      s.addText(c.t, { shape: ST.rect, x, y: 1.318, w, h: 0.283, fill: { color: BAND }, line: { color: CHIPLN, width: THIN }, align: 'center', valign: 'middle', margin: 0, fontFace: F7, fontSize: 16, color: c.red ? RED : CHIP, fit: 'none' }); x += w + 0.085; } }
+  function chips(s: any, list: { t: string; red?: boolean }[], sz = 16) { const small = sz < 16; let x = L; for (const c of list) { if (!c.t) continue; const w = emOf(c.t) * sz / 72 * (small ? 1.08 : 1.1) + (small ? 0.16 : 0.2); if (x + w > R) break;
+      s.addText(c.t, { shape: ST.rect, x, y: small ? 1.29 : 1.318, w, h: small ? 0.255 : 0.283, fill: { color: BAND }, line: { color: CHIPLN, width: THIN }, align: 'center', valign: 'middle', margin: 0, fontFace: F7, fontSize: sz, color: c.red ? RED : CHIP, fit: 'none' }); x += w + 0.085; } }
   const chipsOf = (H: any, withFirst?: boolean) => [{ t: H.no ? 'No. ' + H.no : '' }, { t: H.grp }, { t: H.stage }, { t: H.focus ? '집중 추진' : '', red: true }, { t: withFirst && H.first ? '최초자료 ' + H.first : '' }, { t: H.asof ? '기준일 ' + H.asof : '' }];
   // a small heading with a line under it
   function label(s: any, t: string, x: number, y: number, w: number, color = K, sz = 13) { tx(s, t, x, y, w, 0.219, { fontFace: F7, fontSize: sz, color }); line(s, x, y + 0.245, w); return y + 0.245; }
@@ -78,12 +78,12 @@ async function make(doc: any, opt: any = {}): Promise<ArrayBuffer> {
   function table(s: any, x: number, y: number, w: number, head: any[] | null, rows: any[][], colW: number[], o: any = {}) { const sum = colW.reduce((a, b) => a + b, 0), cw = colW.map(c => c / sum * w), rh = o.rowH || 0.37, sz = o.sz || 10, fsz = o.firstSz || 12, B = { pt: THIN, color: LN }, N = { type: 'none' }, bold1 = o.boldFirst !== false;
     const cell = (t: any, i: number, isHead: boolean) => ({ text: (o.flag && !isHead) ? flag(t) : String(t == null ? '' : t), options: { fontFace: isHead || (i === 0 && bold1) ? F7 : F3, fontSize: isHead ? (o.headSz || 12) : i === 0 && bold1 ? fsz : sz, color: K, align: (o.align || [])[i] || 'left', valign: 'middle', margin: [0, 0.05, 0, 0], border: [isHead ? B : N, N, B, N] } });
     const body: any[] = [], hs: number[] = []; let yy = y, n = 0;
-    const lines = rows.map(r => Math.max(...r.map((t, i) => linesOf(t, cw[i] - 0.06, i === 0 && bold1 ? fsz : sz)))), hOfRow = (k: number, pad: number, min: number) => Math.max(min, k * sz * (o.lead || 1.25) / 72 + pad);
+    const lines = rows.map(r => Math.max(...r.map((t, i) => linesOf(t, (cw[i] - 0.06) * (o.wide || 1), i === 0 && bold1 ? fsz : sz)))), hOfRow = (k: number, pad: number, min: number) => Math.max(min, k * sz * (o.lead || 1.25) / 72 + pad);
     let pad = o.pad == null ? 0.14 : o.pad, min = rh; if (o.squeeze && o.maxY) for (const [p2, m2] of [[pad, rh], [0.11, Math.min(rh, 0.29)], [0.085, Math.min(rh, 0.26)]]) { pad = p2; min = m2; if (y + (head ? m2 : 0) + lines.reduce((a, k) => a + hOfRow(k, p2, m2), 0) <= o.maxY) break; }
     if (head) { body.push(head.map((t, i) => cell(t, i, true))); hs.push(min); yy += min; }
     rows.forEach((r, ri) => { if (n < ri) return; const h = hOfRow(lines[ri], pad, min); if (n > 0 && o.maxY && yy + h > o.maxY) return; body.push(r.map((t, i) => cell(t, i, false))); hs.push(h); yy += h; n++; });
     if (!head && body.length) body[0].forEach((c: any) => { c.options.border = [B, N, B, N]; });
-    if (body.length) s.addTable(body, { x, y, w, colW: cw, rowH: hs, autoPage: false });
+    if (body.length && !o.measure) s.addTable(body, { x, y, w, colW: cw, rowH: hs, autoPage: false });
     return { y: yy, n }; }
   // steps over one line: a heading in the signature colour, a mark on the line, two lines of text
   function steps(s: any, y: number, items: any[]) { const n = items.length, gap = CW / Math.max(n, 4); line(s, L, y + 0.274, CW);
@@ -128,41 +128,48 @@ async function make(doc: any, opt: any = {}): Promise<ArrayBuffer> {
   const enOf = (H: any, k: string, en: string) => ttlOf(H, k) === DEF[k] ? en : '';
   const MARK: Record<string, string> = { '완료': 'done', '진행': 'now' };
   const texts = (H: any) => ['infra', 'struct', 'stat', 'risk'].filter(k => (H[k] || []).length).map(k => ({ k, t: ttlOf(H, k), lines: H[k] as string[] }));
-  // 요약: everything on ONE page — figures at the left, the texts, the table, the dates and the risks in two columns beside them
-  function ovOne(SEC: string, H: any, tocName?: string) { const s = page(SEC); headPlain(s, H.name, H.sub); chips(s, chipsOf(H, true)); if (tocName) toc(s, tocName);
-    const y0 = 1.80, src = (H.src || []).join(' / '), yb = src ? BOT - 0.24 : BOT, AW = 1.62, GAP = 0.25, BX = L + AW + GAP, BW = (R - BX - GAP) / 2, CX = BX + BW + GAP;
-    // the figures: one under the other
-    const nF = H.kpi.length + H.fin.length, groups = [[ttlOf(H, 'kpi'), H.kpi], [ttlOf(H, 'fin'), H.fin]].filter(g => (g[1] as any[]).length), roomA = yb - y0 - groups.length * 0.36 - (groups.length - 1) * 0.17;
-    let dz = 8.5, fzA = 15; const dh = (c: any[], z: number) => Math.min(3, linesOf(c[1] || '', AW, z)) * z * 1.1 * LH / 72, sumA = (z: number, fh: number) => groups.reduce((a, g: any) => a + g[1].reduce((b: number, c: any[]) => b + fh + dh(c, z), 0), 0);
-    for (const [z, fz] of [[8.5, 14], [8, 14], [8, 13], [7.5, 12]]) { dz = z; fzA = fz; if (sumA(z, fz / 72 * 1.25) + nF * 0.05 <= roomA) break; }
-    const fh = fzA / 72 * 1.25, gapA = Math.max(0.03, Math.min(0.16, (roomA - sumA(dz, fh)) / Math.max(nF, 1)));
-    let y = y0; for (const [t, list] of groups as any[]) { label(s, t, L, y, AW, K, 11); y += 0.36;
-      for (const c of list) { const f = figRuns(String(c[0]), AW, fzA, 10.5), h = dh(c, dz); tx(s, f.runs, L, y, AW, fh, { fontFace: F7, fontSize: f.sz, color: OR, valign: 'middle' });
-        tx(s, String(c[1] || ''), L, y + fh, AW, h, { fontSize: dz, color: SUB, lineSpacingMultiple: 1.1 }); y += fh + h + gapA; } y += 0.17 - gapA; }
-    vline(s, BX - GAP / 2, y0 + 0.03, yb - y0 - 0.06, THIN, BOX); vline(s, CX - GAP / 2, y0 + 0.03, yb - y0 - 0.06, THIN, BOX);
-    // the blocks of the two columns, in the page's own order
-    const B: any[] = []; if (H.main) B.push({ kind: 'tx', t: ttlOf(H, 'main'), lines: [H.main] }); for (const b of texts(H).filter(b => b.k !== 'risk')) B.push({ kind: 'tx', t: b.t, lines: b.lines });
-    if (H.rows.length) B.push({ kind: 'rows', t: ttlOf(H, 'main') + ' 표', rows: H.rows }); if (H.plan.length) B.push({ kind: 'plan', t: ttlOf(H, 'plan'), rows: H.plan });
-    for (const b of texts(H).filter(b => b.k === 'risk')) B.push({ kind: 'tx', t: b.t, lines: b.lines });
-    const LS = 1.12, lh = (f: number) => f * LS * LH / 72, TH = 0.23, GAPB = 0.14;
-    const rowsH = (b: any, f: number) => b.rows.reduce((a: number, r: any[]) => a + Math.max(0.2, linesOf(r[1], BW - 1.11, f) * f * 1.2 / 72 + 0.085), 0);
-    const planH = (b: any, f: number) => 0.21 + b.rows.reduce((a: number, r: any[]) => a + Math.max(0.2, linesOf(r[1], BW - 1.28, f) * f * 1.2 / 72 + 0.085), 0);
-    const hB = (b: any, f: number) => TH + (b.kind === 'rows' ? rowsH(b, f) : b.kind === 'plan' ? planH(b, f) : b.lines.length > 1 ? b.lines.reduce((a: number, t: string) => a + linesOf(t, BW - 0.12, f) * lh(f) + 0.035, -0.035) : linesOf(b.lines[0], BW, f) * lh(f));
-    // which block goes to which column: the order within a column stays the page's; the texts keep left and the tables right
-    // as long as that fits, otherwise whatever shares the height out best
-    const avail = yb - y0; let f = 8, left: boolean[] = B.map(b => b.kind === 'tx');
-    for (const z of [10, 9.5, 9, 8.5, 8]) { const hs = B.map(b => hB(b, z)), tall = (pick: boolean[], side: boolean) => hs.reduce((a, h, i) => pick[i] === side ? a + h + GAPB : a, -GAPB); let best = left, bestH = 1e9;
-      for (let m = 0; m < (1 << B.length); m++) { const pick = B.map((_b, i) => !!(m >> i & 1)), h = Math.max(tall(pick, true), tall(pick, false)), odd = pick.reduce((a, v, i) => a + (v !== (B[i].kind === 'tx') ? 1 : 0), 0), score = (h <= avail ? 0 : h) + odd * 0.001; if (score < bestH) { bestH = score; best = pick; } }
-      f = z; left = best; if (bestH < 1) break; }
-    const drawCol = (list: any[], x: number) => { let yy = y0; for (const b of list) { tx(s, b.t, x, yy, BW, 0.2, { fontFace: F7, fontSize: f + 1.5 }); yy += TH;
-        if (b.kind === 'rows') yy = table(s, x, yy, BW, null, b.rows, [1.05, BW - 1.05], { rowH: 0.2, sz: f, firstSz: f, flag: true, lead: 1.2, pad: 0.085 }).y;
-        else if (b.kind === 'plan') yy = table(s, x, yy, BW, ['시기', '내용', '상태'], b.rows, [0.72, BW - 1.22, 0.5], { rowH: 0.2, sz: f, firstSz: f, headSz: f, lead: 1.2, pad: 0.085 }).y;
-        else if (b.lines.length > 1) { for (const t of b.lines) { const h = linesOf(t, BW - 0.12, f) * lh(f); tx(s, '•', x, yy, 0.1, 0.18, { fontSize: f + 1, color: OR, fontFace: F7 }); tx(s, t, x + 0.12, yy, BW - 0.12, h, { fontSize: f, lineSpacingMultiple: LS }); yy += h + 0.035; } yy -= 0.035; }
-        else { const h = linesOf(b.lines[0], BW, f) * lh(f); tx(s, b.lines[0], x, yy, BW, h, { fontSize: f, lineSpacingMultiple: LS }); yy += h; }
-        yy += GAPB; } };
-    drawCol(B.filter((_b, i) => left[i]), BX); drawCol(B.filter((_b, i) => !left[i]), CX);
-    if (src) { tx(s, '출처', L, yb + 0.09, 0.35, 0.14, { fontFace: F7, fontSize: 7.5 }); tx(s, src, L + 0.36, yb + 0.09, CW - 1.3, 0.14, { fontSize: 7.5, color: SUB }); }
-    if (H.finNote) tx(s, H.finNote, L, yb - 0.02, AW, 0.1, { fontSize: 1, color: 'FFFFFF' });   // (kept in the file for a search; the figures' column has no room to show it)
+  // 요약: everything on ONE page, in the owner's own design (forty-second round; the measures are those of the page the
+  // owner drew). Three columns between two pale upright lines:
+  //   the figures, one under the other  |  사업 개요 with its table right under the text, then 추진 일정  |  추진 현황, 입지,
+  //   사업 구조, then 리스크 — and 추진 일정 and 리스크 begin on one line.
+  // Titles 9.5pt bold with no line under them, body 8pt light, figures 13pt semibold, grey tabs 13pt; no sources, no note.
+  // What a project does not have is left out and the rest closes up; what does not fit is set smaller (to 7pt), then the
+  // common line of the second row is given up, then the blocks are shared out between the two columns by height.
+  function ovOne(SEC: string, H: any, tocName?: string) { const s = page(SEC); headPlain(s, H.name, H.sub); chips(s, chipsOf(H, true), 13); if (tocName) toc(s, tocName);
+    const Y0 = 1.94, YB = 7.57, AW = 1.62, BX = 2.86, BW = 3.66, CX = 7.10, CW3 = R - CX, TH = 0.23, GAP = 0.18; let ROW2 = 0.27;
+    vline(s, 2.55, 1.97, YB - 1.97, THIN, BOX); vline(s, 6.81, 1.97, YB - 1.97, THIN, BOX);
+    // ---- the figures
+    const groups = ([[ttlOf(H, 'kpi'), H.kpi], [ttlOf(H, 'fin'), H.fin]] as any[]).filter(g => g[1].length); let A = [13, 8, 0.11, 0.33];
+    const dH = (c: any[], dz: number) => Math.min(3, linesOf(c[1] || '', AW, dz)) * dz * 1.1 * LH / 72, tallA = ([fz, dz, gap, gg]: number[]) => groups.reduce((a, g) => a + 0.22 + g[1].reduce((b: number, c: any[]) => b + fz / 13 * 0.24 + 0.01 + dH(c, dz) + gap, -gap), (groups.length - 1) * gg);
+    for (const t of [[13, 8, 0.11, 0.33], [13, 8, 0.07, 0.22], [12, 7.5, 0.06, 0.18], [11, 7, 0.04, 0.14], [10, 7, 0.02, 0.1]]) { A = t; if (Y0 + tallA(t) <= YB) break; }
+    { const [fz, dz, gap, gg] = A, fh = fz / 13 * 0.24; let y = Y0; for (const [t, list] of groups) { tx(s, t, L, y, AW, 0.2, { fontFace: F7, fontSize: 9.5 }); y += 0.22;
+        for (const c of list) { const f = figRuns(String(c[0]), AW * 0.92, fz, Math.min(10, fz - 2)), h = dH(c, dz); tx(s, f.runs, L, y, AW, fh, { fontFace: F6, fontSize: f.sz, color: OR, valign: 'middle' }); tx(s, String(c[1] || ''), L, y + fh + 0.01, AW, h, { fontSize: dz, color: SUB, lineSpacingMultiple: 1.1 }); y += fh + 0.01 + h + gap; }
+        y += gg - gap; } }
+    // ---- the two columns
+    type Blk = { t?: string; lines?: string[]; rows?: any[][]; plan?: any[][] };
+    const main: Blk | null = H.main || H.rows.length ? { t: ttlOf(H, 'main'), lines: H.main ? [H.main] : undefined, rows: H.rows.length ? H.rows : undefined } : null, plan: Blk | null = H.plan.length ? { t: ttlOf(H, 'plan'), plan: H.plan } : null;
+    const tb = texts(H), pick = (k: string): Blk[] => tb.filter(b => b.k === k).map(b => ({ t: b.t, lines: b.lines }));
+    // lines are counted as the owner's own page has them (the usual count keeps a twenty-fifth in hand, which costs a line here)
+    const lh = (f: number) => f * 1.12 * LH / 72, ln = (t: any, w: number, z: number) => linesOf(t, w * 1.04, z);
+    // a block drawn (or only measured) at x, y in a column w wide; says where it ends
+    const put = (b: Blk, x: number, y: number, w: number, f: number, draw: boolean): number => { if (b.t) { if (draw) tx(s, b.t, x, y, w, 0.2, { fontFace: F7, fontSize: 9.5 }); y += TH; }
+      if (b.lines && b.lines.length > 1) { for (const t of b.lines) { const h = ln(t, w - 0.03, f) * lh(f); if (draw) { tx(s, '•', x - 0.05, y, 0.1, 0.18, { fontSize: f + 1, color: OR, fontFace: F7 }); tx(s, t, x + 0.03, y, w - 0.03, h, { fontSize: f, lineSpacingMultiple: 1.12 }); } y += h + 0.04; } y -= 0.04; }
+      else if (b.lines) { const h = ln(b.lines[0], w, f) * lh(f); if (draw) tx(s, b.lines[0], x, y, w, h, { fontSize: f, lineSpacingMultiple: 1.12 }); y += h; }
+      if (b.rows) y = table(s, x, y + (b.lines ? 0.03 : 0), w - 0.03, null, b.rows, [0.97, 2.67], { rowH: 0.22 * f / 8, sz: f, firstSz: f, flag: true, lead: 1.1, pad: 0.03, wide: 1.04, measure: !draw }).y;
+      if (b.plan) y = table(s, x, y, w, ['시기', '내용', '상태'], b.plan, [0.96, 1.99, 0.71], { rowH: 0.22 * f / 8, sz: f, firstSz: f, headSz: f, lead: 1.1, pad: 0.03, wide: 1.04, measure: !draw }).y;
+      return y; };
+    const stack = (list: Blk[], x: number, y: number, w: number, f: number, draw: boolean) => { list.forEach((b, i) => { y = put(b, x, y + (i ? GAP : 0), w, f, draw); }); return y; };
+    let Bt: Blk[] = main ? [main] : [], Bb: Blk[] = plan ? [plan] : [], Ct: Blk[] = [...pick('stat'), ...pick('infra'), ...pick('struct')], Cb: Blk[] = pick('risk'), f = 8, y2 = -1;
+    const tryAt = (z: number) => { const tB = stack(Bt, BX, Y0, BW, z, false), tC = stack(Ct, CX, Y0, CW3, z, false), row = Math.max(Bt.length ? tB : Y0 - ROW2, Ct.length ? tC : Y0 - ROW2) + ROW2;
+      if (Math.max(stack(Bb, BX, row, BW, z, false), stack(Cb, CX, row, CW3, z, false)) <= YB) return row;                                    // the second row on one line
+      const fB = stack(Bb, BX, Bt.length ? tB + ROW2 : Y0, BW, z, false), fC = stack(Cb, CX, Ct.length ? tC + ROW2 : Y0, CW3, z, false); return fB <= YB && fC <= YB ? 0 : -1; };   // each column for itself
+    for (const [z, g2] of [[8, 0.27], [8, 0.2], [7.5, 0.27], [7.5, 0.2], [7, 0.2]]) { f = z; ROW2 = g2; y2 = tryAt(z); if (y2 >= 0) break; }   // the owner's 8pt first, the row's distance given up before the size
+    if (y2 < 0) { // still too much: the blocks of both columns shared out by height, each column for itself
+      const all = [...Bt, ...Bb, ...Ct, ...Cb], hs = all.map(b => put(b, BX, 0, BW, f, false)); let best = 0, bestH = 1e9;
+      for (let m = 0; m < (1 << all.length); m++) { const side = (v: boolean) => hs.reduce((a, h, i) => !!(m >> i & 1) === v ? a + h + GAP : a, -GAP), h = Math.max(side(true), side(false)); if (h < bestH) { bestH = h; best = m; } }
+      Bt = all.filter((_b, i) => !!(best >> i & 1)); Ct = all.filter((_b, i) => !(best >> i & 1)); Bb = []; Cb = []; y2 = 0; }
+    const eB = stack(Bt, BX, Y0, BW, f, true), eC = stack(Ct, CX, Y0, CW3, f, true);
+    stack(Bb, BX, y2 > 0 ? y2 : Bt.length ? eB + ROW2 : Y0, BW, f, true); stack(Cb, CX, y2 > 0 ? y2 : Ct.length ? eC + ROW2 : Y0, CW3, f, true);
     return s; }
   // FULL: the figures on their own page (the owner's design), the overview with its table and dates, the four texts
   function ovFull(SEC: string, H: any, tocOn: boolean) { const sub = tocOn ? H.sub : [H.name, H.sub].filter(Boolean).join('  ·  ');

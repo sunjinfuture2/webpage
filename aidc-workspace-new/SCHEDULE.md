@@ -1232,3 +1232,39 @@ overview of a project, all of it, on one page. schedule/pptx.ts was written anew
 
 tests: schedule-16 counts the slides of a 요약 and of a FULL deck and reads what the module is handed. Brought in step and
 not run.
+
+## The one page of an overview: the owner's design (owner, 2026-11-25, forty-second round)
+
+The owner redrew the one-page form of 프로젝트 상세 in PowerPoint and sent it back: "이걸 기준으로 넣고 빼고 아마 많이 될거야.
+이것도 가이드에 추가해놓고 내보내기 할때 이렇게 디자인을 뽑아줘." It is the measure for that page from now on (ovOne in
+schedule/pptx.ts; the owner's file itself is not in the repository). It replaces what the forty-first round says about the
+one page (two columns shared out by height, 10 to 8pt, a line of sources).
+
+**The page** (inches; the index area and the title are as on every page):
+
+| what | where / how |
+|---|---|
+| title | the project's name 23.52pt bold black, its sub line beside it 14pt bold grey (A6A6A6) |
+| grey tabs | y 1.29, 0.255 high, 13pt bold (767171; 집중 추진 C00000), fill F2F2F2, edge AEAAAA 0.5pt, 0.085 apart: No. · 구분 · 추진 단계 · 집중 추진 · 최초자료 · 기준일 |
+| upright lines | x 2.55 and x 6.81, from 1.97 to 7.57, D9D9D9 0.5pt |
+| column 1 (x 0.704, 1.62 wide) | 핵심 지표, then 사업성 지표 0.33 further down. A title 9.5pt bold, NO line under it; 0.22 below it the first figure: 13pt SemiBold in the signature colour (0.24 high), right under it what it is, 8pt light 595959 (line spacing 110%); 0.11 to the next figure |
+| column 2 (x 2.86, 3.66 wide) | 사업 개요: its text, and right under the text its table WITHOUT a title of its own (label 0.97 bold / value 2.67 light, rows 0.22); then 추진 일정 as a table (시기 0.96 · 내용 1.99 · 상태 0.71, a head row) |
+| column 3 (x 7.10, to 10.723) | 추진 현황 및 주요 특성, 입지 및 전력 인프라, 사업 구조 및 수익 모델; then 주요 리스크 및 검토사항 |
+| second row | 추진 일정 and 주요 리스크 begin on ONE line, 0.27 below the taller of the two upper parts |
+| type | titles 9.5pt bold black; body 8pt light, line spacing 112%; a text of several lines is a list with a small mark in the signature colour 0.05 left of the column; table text 8pt |
+| not on the page | sources, the note under 사업성 지표, any line under a title, any box |
+
+**When content comes and goes** (the owner expects much of that): a block the project does not have is left out and what
+follows closes up; a figure too long for the column is set smaller (its units first); the figures' column tightens its
+distances, then its sizes (13/8 → 12/7.5 → 11/7 → 10/7). The two columns keep the owner's 8pt as long as they can: the
+second row's distance is given up first (0.27 → 0.2), then the size (7.5, 7), then the common line of the second row (each
+column for itself), and only at the end are the blocks shared out between the two columns by height. Lines are counted
+there as the owner's page has them (without the twenty-fifth the other pages keep in hand), because that page is the
+measure: 사업 개요 of 판교 is five lines at 8pt.
+
+The same page is what the main page's export gives for every project. The tabs under the title are 16pt on the page of
+figures of the FULL form (the owner's earlier correction) and 13pt here: `chips(s, list, sz)`.
+
+Seen in LibreOffice with a stand-in typeface, beside the owner's page: the same places and sizes for 판교; the other
+seventeen projects of the list each on one page (the dense ones at 7 to 7.5pt). tests: nothing new to count (schedule-16
+still counts five slides for a 요약 of two parts). Not run.
