@@ -13,7 +13,7 @@ const result=await analyzeAI({name:'report.pdf',kind:'pdf',data:'JVBERi0=',instr
  called={url,opt,body:JSON.parse(opt.body)};
  return Response.json({stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(report)}],usage:{input_tokens:100,output_tokens:200}});
 });
-assert.deepEqual(result.report,report);assert.equal(called.url,'https://api.anthropic.com/v1/messages');assert.equal(called.body.system,AI_PROMPT);assert.deepEqual(called.body.output_config.format.schema,AI_SCHEMA);
+assert.deepEqual(result.report,report);assert.equal(called.body.model,'claude-fable-5-2');assert.equal(called.body.output_config.effort,'high');assert.equal(called.url,'https://api.anthropic.com/v1/messages');assert.equal(called.body.system,AI_PROMPT);assert.deepEqual(called.body.output_config.format.schema,AI_SCHEMA);
 await assert.rejects(()=>analyzeAI({name:'r',kind:'text',text:'문서'}, {ANTHROPIC_API_KEY:'unit-only'},async()=>Response.json({stop_reason:'max_tokens',content:[]})),/끝까지/);
 const records={'project:keep':{full:'기존'},'meta:flags':{existing:true},'meta:order':['keep']};
 const ws={get:id=>records[id],put:(id,v)=>records[id]=v,ctx:{storage:{transactionSync:f=>f()}}};

@@ -1,8 +1,10 @@
 // AI overview is isolated to this project; no schedule or legacy report mutation.
 export const AI_PROJECT_ID='ai-application-test';
-export const AI_MODEL='claude-sonnet-5-5';
+export const AI_MODEL='claude-fable-5-2';
 export const AI_PROMPT=`당신은 사업검토 보고서를 작성하는 분석가다. 제공된 문서를 근거로 프로젝트 상세페이지의 개요를 한국어로 구성한다.
 문서의 양식, 제목, 컬럼은 자유롭다. 정해진 사업 항목을 채우려 하지 말고 이 사업의 핵심, 의사결정에 중요한 정보, 추진 상황과 불확실성을 판단해 섹션 제목과 순서를 설계하라.
+출력은 기존 프로젝트 상세페이지의 틀에 배치한다. zone은 일반 핵심 지표=kpi, 재무·사업성 지표=fin, 왼쪽 사업 개요·속성=main, 왼쪽 추진 일정=plan, 오른쪽 설명·리스크·기타=right이다. kpi와 fin에는 metrics만 배치한다. zone은 표현상의 위치일 뿐 사업 항목이나 컬럼을 강제하지 않는다. 항목명·소제목·표의 열은 문서에 맞게 자유롭게 정한다.
+DSCR 1.20 같은 기준은 DSCR에만 비교하며 IRR(%)과 섞어 비교하지 않는다. '문서에 근거가 없음'은 실제 계약·근거가 존재하지 않는다는 뜻이 아니다. 원문에 없으면 '문서에서 확인되지 않음'으로 쓴다. 분석자의 추론을 사실로 추가하거나 근거 없는 평가('양호하다' 등)를 넣지 않는다. 최종 출력 전 수치·단위·지표 대응과 현재/과거/계획을 다시 검토한다.
 중요한 내용을 요약문으로 먼저 설명하고, 문맥 설명은 paragraphs, 열거는 bullets, 비교·일정은 table, 중요한 수치는 metrics로 구성하라. 같은 내용은 중복하지 마라. 표와 지표 개수는 문서에 맞춰 정하고 불필요한 빈 섹션을 만들지 마라.
 일반적으로 3~12개 섹션이면 충분하나 문서에 맞춰 최대 20개까지 가능하다. 제목은 사업 내용을 반영해 구체적으로 쓰고 기존 보고서 제목을 그대로 따를 필요는 없다. 표는 최대 6열이다.
 숫자는 단위와 기준일, 범위, 현재/계획/목표/미확정, 산정 가정과 함께 보존한다. IT 부하와 수전 용량, 총사업비와 공사비, 사업 IRR과 자기자본 IRR을 혼동하지 마라. 각 섹션 refs에 근거의 실제 PDF 페이지 또는 PPT 슬라이드 번호(1부터)와 짧은 원문 인용을 넣어라.
@@ -14,7 +16,7 @@ const str={type:'string'}, strings={type:'array',items:str};
 const obj=properties=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
 const arr=items=>({type:'array',items});
 export const AI_SCHEMA=obj({title:str,summary:str,sections:arr(obj({
- title:str,type:{type:'string',enum:['paragraphs','bullets','table','metrics']},
+ title:str,zone:{type:'string',enum:['kpi','fin','main','plan','right']},type:{type:'string',enum:['paragraphs','bullets','table','metrics']},
  paragraphs:strings,bullets:strings,columns:strings,rows:arr(strings),
  metrics:arr(obj({label:str,value:str,note:str})),
  refs:arr(obj({page:{type:'integer'},quote:str}))
@@ -27,6 +29,7 @@ export function validateAIReport(r){
  const out={title:txt(r.title,240),summary:txt(r.summary,6000),sections:list(r.sections,20,s=>{
   if(!s||!['paragraphs','bullets','table','metrics'].includes(s.type))bad('지원하지 않는 섹션 형식입니다.');
   const v={title:txt(s.title,120),type:s.type,paragraphs:list(s.paragraphs,20,x=>txt(x,4000)),bullets:list(s.bullets,40,x=>txt(x,1500)),columns:list(s.columns,6,x=>txt(x,120)),rows:list(s.rows,80,row=>list(row,6,x=>txt(x,1500))),metrics:list(s.metrics,20,m=>({label:txt(m.label,160),value:txt(m.value,200),note:txt(m.note,1000)})),refs:list(s.refs,12,x=>{if(!Number.isInteger(x.page)||x.page<1||x.page>600)bad('출처 페이지 번호를 확인해주세요.');return {page:x.page,quote:txt(x.quote,1200)};})};
+  if(s.zone!==undefined){if(!['kpi','fin','main','plan','right'].includes(s.zone))bad('섹션 위치가 올바르지 않습니다.');v.zone=s.zone;}
   if(!v.title)bad('섹션 제목이 비어 있습니다.');
   if(v.type==='table'&&(!v.columns.length||v.rows.some(row=>row.length!==v.columns.length)))bad('표의 열과 셀 개수가 맞지 않습니다.');
   return v;
@@ -54,13 +57,13 @@ export async function analyzeAI(input,env,fetcher=fetch){
   const text=txt(input.text,160000);if(!text)bad('문서에서 읽을 수 있는 텍스트가 없습니다. PDF로 변환해주세요.');
   source={type:'text',text:'<uploaded_document>\n'+text+'\n</uploaded_document>'};
  }else bad('PDF 또는 PPTX 문서를 선택해주세요.');
- const model=env.AI_PROJECT_MODEL||AI_MODEL;
- const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),120000);
+ const model=AI_MODEL;
+ const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),240000);
  try{
   const res=await fetcher('https://api.anthropic.com/v1/messages',{method:'POST',signal:ctl.signal,headers:{'content-type':'application/json','x-api-key':env.ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({
-   model,max_tokens:12000,system:AI_PROMPT,
+   model,max_tokens:20000,system:AI_PROMPT,
    messages:[{role:'user',content:[source,{type:'text',text:'파일명: '+name+'\n대상 사업/중점: '+hint+'\n추가 작성 지침(근거 보존 규칙 안에서 적용): '+instruction}]}],
-   output_config:{format:{type:'json_schema',schema:AI_SCHEMA}}
+   output_config:{effort:'high',format:{type:'json_schema',schema:AI_SCHEMA}}
   })});
   if(!res.ok){if(res.status===401||res.status===403)bad('Claude API 키 또는 이용 권한을 확인해주세요.',502);if(res.status===429)bad('Claude 사용량 제한입니다. 잠시 후 다시 시도해주세요.',429);if(res.status===400)bad('Claude가 문서를 처리하지 못했습니다. 파일·모델 설정 또는 문서 분량을 확인해주세요.',502);bad('Claude 응답에 실패했습니다. 잠시 후 다시 시도해주세요.',502);}
   const data=await res.json();if(data.stop_reason!=='end_turn')bad('분석이 끝까지 완료되지 않았습니다. 문서를 나누거나 다시 분석해주세요.',502);
@@ -75,7 +78,7 @@ export async function aiProjectRoute(ws,req,me,token){
   if(url.searchParams.get('project')!==AI_PROJECT_ID)return answer({error:'AI적용테스트 프로젝트에서만 사용할 수 있습니다.'},403);
   if(!ws.get('project:'+AI_PROJECT_ID))return answer({error:'프로젝트를 찾을 수 없습니다.'},404);
   const current=()=>((ws.get('meta:head')||{})[AI_PROJECT_ID]||{}).aiOverview||null;
-  if(req.method==='GET')return answer({ready:!!ws.env.ANTHROPIC_API_KEY,model:ws.env.AI_PROJECT_MODEL||AI_MODEL,prompt:AI_PROMPT,saved:current()});
+  if(req.method==='GET')return answer({ready:!!ws.env.ANTHROPIC_API_KEY,model:AI_MODEL,prompt:AI_PROMPT,saved:current()});
   if(req.method!=='POST')return answer({error:'지원하지 않는 요청입니다.'},405);
   const size=+(req.headers.get('content-length')||0);if(size>15*1024*1024)bad('문서가 너무 큽니다.',413);
   const text=await req.text();if(text.length>15*1024*1024)bad('문서가 너무 큽니다.',413);
