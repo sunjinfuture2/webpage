@@ -46,7 +46,12 @@ const sfx = Date.now().toString(36).slice(-5);
   console.log('— comments on a block');
   const c1 = await make('블록 댓글 ' + sfx, '<p>첫째 문단입니다.</p><p>둘째 문단입니다.</p>');
   await p.hover('#panel-pin .ibody[data-nb="read"] .nb-doc p:nth-of-type(2)'); await sleep(200);
-  check('CMT hovering a block in read mode offers a comment button beside it', await ev(() => { const b = document.querySelector('#panel-pin .nb-cadd'); return !!b && !b.hidden; }));
+  await ev(() => rerenderItem(S.panel));
+  await p.locator('#panel-pin .nb-cadd').waitFor({state:'visible'});
+  check('CMT the comment button stays beside the hovered block after a shared redraw', await ev(() => {
+    const button = document.querySelector('#panel-pin .nb-cadd'), block = document.querySelector('#panel-pin .nb-doc p:nth-of-type(2)');
+    return !button.hidden && Math.abs(button.getBoundingClientRect().top - block.getBoundingClientRect().top) <= 1;
+  }));
   await p.click('#panel-pin .nb-cadd'); await sleep(250); await kb.type('여기 숫자 확인 부탁드립니다'); await kb.press('Enter'); await sleep(500);
   const bid = await ev(i => { const c = (item(i).comments || [])[0]; return c && c.block; }, c1);
   check('CMT the comment is stored on the item with the block id and its words', await ev(i => { const c = (item(i).comments || [])[0]; return !!c && !!c.block && c.quote === '둘째 문단입니다.' && c.text === '여기 숫자 확인 부탁드립니다' && c.authorId === 'EDJ'; }, c1));

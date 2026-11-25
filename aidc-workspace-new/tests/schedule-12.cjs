@@ -50,9 +50,13 @@ const sumSheet = day => ({ name: '검토요약', rows: [[], ['시험 프로젝�
   await ev(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 20000 }); await sleep(700);
   const bt = await ev(() => { const b = document.querySelector('.phead .rmeta [data-schup]'), e = document.querySelector('.phead .rmeta [data-editproj]'); if (!b || !e) return null; const r = b.getBoundingClientRect(), q = e.getBoundingClientRect(); return { text: b.textContent.trim(), gap: Math.round(r.left - q.right), dy: Math.abs(Math.round(r.top - q.top)), h: Math.round(r.height * 10) / 10, eh: Math.round(q.height * 10) / 10 }; });
   check('"개요 업로드" stands right of 수정 in the overview\'s first line, at the same height (the schedule\'s files are let go in their sections)', bt && bt.text === '개요 업로드' && bt.gap >= 4 && bt.gap <= 14 && bt.dy <= 1 && bt.h === bt.eh, bt);
-  await a.click('[data-editproj]'); await sleep(500);
-  const whileEdit = await ev(() => !!document.querySelector('[data-schup]')); await a.click('[data-canceledit]'); await sleep(500);
-  check('it is not there while the overview is being edited', whileEdit === false && await ev(() => !!document.querySelector('[data-schup]')));
+  const overview = a.locator('#page-project .phead');
+  await overview.locator('[data-editproj]').click();
+  await overview.locator('[data-canceledit]').waitFor();
+  const uploadsWhileEditing = await overview.locator('[data-schup]').count();
+  await overview.locator('[data-canceledit]').click();
+  await overview.locator('[data-schup]').waitFor();
+  check('the overview upload is removed in edit mode and comes back on cancel', uploadsWhileEditing === 0);
   await openUp();
   const w0 = await ev(() => { const d = document.querySelector('#dlg.sch-up'), z = d && d.querySelector('.up-drop'); if (!z) return null; const c = getComputedStyle(z), t = d.querySelector('.up-ttl'), b = d.querySelector('.box').getBoundingClientRect(), tr = t.getBoundingClientRect();
     return { title: t.textContent, centred: Math.abs((tr.left + tr.right) / 2 - (b.left + b.right) / 2) < 2, sub: d.querySelector('.up-sub').textContent, style: c.borderTopStyle, radius: c.borderTopLeftRadius, h: z.offsetHeight, pic: !!z.querySelector('svg.up-pic'), say: z.textContent.trim(), ok: d.querySelector('[data-up="ok"]').disabled, multi: [...d.querySelectorAll('.up-parts .up-part b')].map(x => x.textContent).join(), jin: d.classList.contains('j-in') }; });

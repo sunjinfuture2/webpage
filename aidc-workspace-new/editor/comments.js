@@ -57,8 +57,17 @@ export function hydrateComments(root, itemId) {
   ['mousedown', 'mouseup'].forEach(t => add.addEventListener(t, e => { e.preventDefault(); e.stopPropagation(); }));
   add.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (cur) open(cur.getAttribute('data-id'), add.getBoundingClientRect()); });
   const host = root.parentElement || root; host.append(add);
-  host.addEventListener('mousemove', e => { if (add.contains(e.target)) return; const t = e.target.closest && e.target.closest('[data-id]');
-    if (!t || !root.contains(t) || t.closest('[data-type="synced"],[data-type="itemList"]') || counts.get(t.getAttribute('data-id'))) { if (!t || !root.contains(t)) return; add.hidden = true; cur = null; return; }
-    cur = t; const r = t.getBoundingClientRect(), h = host.getBoundingClientRect(), z = ctx.zoom() || 1; add.hidden = false; add.style.top = Math.round((r.top - h.top) / z + host.scrollTop) + 'px'; });
+  const showFor = t => {
+    if (!t || !root.contains(t)) return;
+    if (t.closest('[data-type="synced"],[data-type="itemList"]') || counts.get(t.getAttribute('data-id'))) { add.hidden = true; cur = null; return; }
+    cur = t; const r = t.getBoundingClientRect(), h = host.getBoundingClientRect(), z = ctx.zoom() || 1;
+    add.hidden = false; add.style.top = Math.round((r.top - h.top) / z + host.scrollTop) + 'px';
+  };
+  host.addEventListener('mousemove', e => { if (!add.contains(e.target)) showFor(e.target.closest?.('[data-id]')); });
+  // A shared update can replace the block without another pointer movement.
+  requestAnimationFrame(() => {
+    if (root.isConnected && root.matches(':hover') && matchMedia('(hover: hover)').matches)
+      showFor(Array.from(root.querySelectorAll('[data-id]:hover')).pop());
+  });
   host.addEventListener('mouseleave', () => { add.hidden = true; cur = null; });
 }

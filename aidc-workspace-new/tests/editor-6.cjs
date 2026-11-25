@@ -17,7 +17,8 @@ const sfx = Date.now().toString(36).slice(-5);
   await ev(() => { NB[S.panel].inst.editor.commands.setContent('<p>첫 문단</p><p>둘째 문단</p>'); }); await sleep(150); await p.click('#panel-pin [data-ed="publish"]'); await sleep(1000);
 
   console.log('— joining');
-  await p.click('#panel-pin [data-ed="edit"]'); await sleep(500);
+  await p.click('#panel-pin [data-ed="edit"]');
+  await p.locator('#panel-pin .ProseMirror[contenteditable="true"]').waitFor();
   check('alone, the editor is the plain one (no shared document)', await ev(() => !!NB[S.panel] && !NB[S.panel].session && !NB[S.panel].inst.collab));
   await sleep(600); await evB(i => openPanel(i), id); await sleep(700);
   check('CO another member sees who is editing and a “함께 수정” button', await evB(() => { const h = document.querySelector('#panel-pin .ihead'); return /첫째 편집님이 수정 중입니다/.test(h.textContent) && !!h.querySelector('[data-ed="join"]'); }), await evB(() => document.querySelector('#panel-pin .ihead').textContent));
