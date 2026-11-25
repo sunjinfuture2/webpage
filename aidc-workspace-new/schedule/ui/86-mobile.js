@@ -28,3 +28,31 @@ document.addEventListener('click',e=>{ if(!schMob()||!e.target.closest)return; c
 },true);
 // (Rows of cards that the desktop page pushes with arrows are moved with the finger here: mobile.css takes the offset of the
 // arrows away and lets the row scroll.)
+
+const schMobDetails = new Set();
+function schMobProjectDetail(pid, open){
+  if(open)schMobDetails.add(pid); else schMobDetails.delete(pid);
+}
+function schProjectCompact(pid, editing){
+  return schMob() ? !editing && !schMobDetails.has(pid) : S.collapsed;
+}
+function schProjectDetailButton(pid, editing){
+  const expanded=!schProjectCompact(pid,editing);
+  return `<button type="button" class="ov" data-collapse aria-expanded="${expanded}">프로젝트 상세 ${svg('i-chev-d',9,5)}</button>`;
+}
+
+// The short list and its continuation share the same rows, order and item links.
+const schMobAgendaOpen = new Set();
+function schMobAgenda(list, row, key, label){
+  const limit=4, first=list.slice(0,limit).map(row).join('');
+  if(list.length<=limit)return first;
+  const rest=list.slice(limit);
+  return first+`<details class="mob-agenda-more" data-agenda-key="${esc(key)}" ${schMobAgendaOpen.has(key)?'open':''}>
+    <summary><span class="more-label">${label} ${rest.length}건 더 보기</span><span class="less-label">${label} 접기</span>${svg('i-chev-d',10,6)}</summary>
+    ${rest.map(row).join('')}</details>`;
+}
+document.addEventListener('toggle',e=>{
+  const el=e.target;
+  if(!el.isConnected||!el.matches?.('details[data-agenda-key]'))return;
+  if(el.open)schMobAgendaOpen.add(el.dataset.agendaKey); else schMobAgendaOpen.delete(el.dataset.agendaKey);
+},true);

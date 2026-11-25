@@ -3807,61 +3807,109 @@ html.mob #app .sb{position:fixed;width:min(292px,84vw);z-index:60;box-shadow:0 0
 html.mob #app.sb-off .sb{transform:translateX(-105%);box-shadow:none}
 html.mob #app .sb-resize,html.mob #app .panel-resize{display:none}
 html.mob #app .tb-logo{display:none}
-html.mob #app .sb-open{display:flex;left:12px;top:10px;width:26px;height:26px;border-radius:6px;background:#efefef;z-index:16}
-html.mob #app:not(.sb-off) .sb-open{display:none}
-html.mob .topbar{height:46px;border-bottom:1px solid #f0f0f0}
-html.mob #app .crumbs,html.mob #app.sb-off .crumbs{left:50px;top:13px;right:140px;white-space:nowrap;overflow:hidden;font-size:14px}
-html.mob .crumbs > *{flex:none}
-html.mob .crumbs > :last-child{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
-html.mob .tb-user{right:74px;top:11px}
-html.mob .tb-user .nm,html.mob .tb-user > span:not(.avatar):not(.av),html.mob .tb-user .name{display:none}
-html.mob .tb-ic.tb-share{right:42px}
-html.mob .tb-ic.tb-star{right:10px}
-html.mob .content{top:46px}
+html.mob #app{--mob-bar:calc(52px + env(safe-area-inset-top,0px))}
+html.mob #app .sb-open,html.mob #app .tb-panel-ic{
+  left:8px;right:auto;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:19
+}
+html.mob #app .sb-open{display:flex;width:44px;height:44px;background:transparent;border-radius:8px}
+html.mob #sb-open .pict{width:22px;height:22px}
+html.mob #app:not(.sb-off) .sb-open,html.mob #app.panel-open .sb-open{display:none}
+html.mob .topbar{display:flex;align-items:center;gap:4px;height:var(--mob-bar);padding:env(safe-area-inset-top,0px) 4px 0 56px;border-bottom:0;box-shadow:inset 0 -1px #ebebeb}
+html.mob #app .topbar .crumbs{position:static;min-width:0;max-width:none;flex:1;align-items:center;font-size:14px;overflow:hidden}
+html.mob .topbar .crumbs > :not(:last-child){display:none}
+html.mob .crumbs > :last-child{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.mob .tb-right,html.mob .tb-user{display:flex;align-items:center;position:static;height:auto;flex:none}
+html.mob .tb-user .nm{display:none}
+html.mob .tb-right .tb-ic,html.mob .tb-user .av,html.mob .tb-user .th-btn,html.mob #panel-ic button{
+  position:relative;inset:auto;display:flex;align-items:center;justify-content:center;width:44px;height:44px;
+  margin:0;padding:0;border-radius:8px;background:transparent
+}
+html.mob .tb-right .tb-ic .pict{width:20px;height:20px}
+html.mob .tb-user .av .dt{top:10px;left:10px}
+html.mob #panel-ic #full-shrink{display:none}
+html.mob #app.full-open:not(.panel-open) #panel-ic #full-shrink{display:flex}
+html.mob #app.full-open:not(.panel-open) #panel-ic #panel-close{display:none}
+html.mob .content,html.mob #app .panel{top:var(--mob-bar)}
 html.mob .toast{max-width:calc(100vw - 24px);white-space:normal;bottom:22px}
 
 /* ---- pages: one column ---- */
 html.mob .page{width:100vw}
-html.mob .notice{left:8px;width:calc(100vw - 16px)}
+html.mob .notice{left:16px;width:calc(100% - 32px)}
+html.mob .notice .head{height:36px;display:flex;align-items:center;gap:8px;padding:0 10px}
+html.mob .notice .head > *{position:static}
+html.mob .notice .lb,html.mob .notice .tri{flex:none}
+html.mob .notice .msg{min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.mob .notice .list li{overflow-wrap:anywhere}
 html.mob .sec-title{font-size:23px;flex-wrap:wrap;align-items:center;row-gap:10px;white-space:normal}
 html.mob .sec-title .srch,html.mob .sec-title .srch.box{flex:1 1 100%;margin:0;width:100%;order:9}
 html.mob .sec-title .srch input,html.mob .sec-title .srch.box input{width:100%;flex:1 1 auto;min-width:0}
 html.mob .sec-title .sch-ic svg{transform:scale(.8);transform-origin:left center}
-html.mob .sec{margin-top:64px!important;padding-bottom:0!important}
+html.mob .page .sec{margin-top:44px!important;padding-bottom:0!important}
 html.mob .sch-filters{flex-wrap:wrap;height:auto;row-gap:14px;column-gap:18px;margin-left:0;margin-top:26px}
 html.mob .sch-filters .sf{min-width:96px}
 html.mob .sch-filters .right{margin-left:0;flex-wrap:wrap;gap:8px}
 html.mob .sch-chipwrap{height:auto}
 html.mob .sch-chiprow{position:static;max-width:none;margin-top:10px}
-html.mob .pager{flex-wrap:wrap;row-gap:6px;margin-top:26px!important}
+html.mob .pager{justify-content:center;align-items:center;flex-wrap:nowrap;gap:2px;margin:18px 0 0!important}
+html.mob .pager button,html.mob .pager .arr{position:static;inset:auto;flex:none;margin:0;width:clamp(34px,9vw,44px);height:44px}
 
 /* ---- the calendar: seven days across the screen, the list of the day below it ---- */
 html.mob [data-sec="cal"]{margin-top:0!important}
 html.mob .cal,html.mob .cal .grid{width:100%}
 html.mob .cal .wd,html.mob .cal .row{grid-template-columns:repeat(7,minmax(0,1fr))}
-html.mob .cal .wd span,html.mob .cal .cell{padding-left:4px}
-html.mob .cal .row{min-height:84px}
-html.mob .cal,html.mob .cal.narrow,html.mob.sch-on .cal:has(> .filters){padding-top:116px}
-html.mob .cal .mon{left:14px;top:62px}
-html.mob .cal .mon h2{font-size:23px}
-html.mob .cal .nav{top:66px;width:24px;height:24px}
-html.mob .cal .nav.prev{left:-8px}
-html.mob .cal .nav.next{left:118px}
-html.mob .cal .legend{position:static;justify-content:flex-end;margin:0 0 10px;gap:12px;font-size:11px}
-html.mob.sch-on .cal > .filters,html.mob .cal .filters{position:static;flex-wrap:wrap;row-gap:6px;margin:0 0 14px;min-height:0}
-html.mob .cal .ev{font-size:10px;padding-left:3px}
-html.mob .cal .ev .sq{display:none}
-html.mob .cal .cell .add{display:none!important}
-html.mob .rlist,html.mob .rlist.sch,html.mob .rlist.sch.pv{position:static!important;width:auto;height:auto!important;max-height:none;margin-top:42px;padding:0;overflow:visible}
+html.mob .cal,html.mob .cal.narrow,html.mob.sch-on .cal:has(> .filters){
+  display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;align-items:center;gap:4px 0;padding:20px 0 0
+}
+html.mob #page-main .cal{padding-top:56px}
+html.mob .cal > .mon,html.mob .cal > .nav{position:static;grid-row:1;margin:0}
+html.mob .cal > .mon{grid-column:1}
+html.mob .cal .mon h2{display:flex;align-items:center;min-height:44px;margin:0;padding:0;font-size:24px;letter-spacing:-.04em}
+html.mob .cal .nav{width:44px;height:44px;border-radius:8px}
+html.mob .cal .nav svg{width:9px;height:14px}
+html.mob .cal .prev{grid-column:2}
+html.mob .cal .next{grid-column:3}
+html.mob .cal .legend,html.mob .cal .filters,html.mob .cal .grid{grid-column:1/-1;min-width:0}
+html.mob .cal .legend{position:static;justify-content:flex-start;gap:16px;margin:0;font-size:12px}
+html.mob .cal .legend span{align-items:center;gap:4px;min-height:32px}
+html.mob .cal .legend i{margin:0}
+html.mob.sch-on .cal > .filters{position:relative;left:0;margin:4px 0;row-gap:6px}
+html.mob .cal .wd{height:26px;align-items:center}
+html.mob .cal .wd span,html.mob .cal .cell{padding-left:3px}
+html.mob .cal .row{min-height:56px}
+html.mob .cal .cell{min-width:0;padding-top:5px;font-size:12px}
+html.mob .cal .cell .n{display:block;width:max-content;min-width:18px;text-align:center;margin:0}
+html.mob .cal.pv .holiday-date,html.mob .cal.pv .holiday-date.has-count{max-width:100%;gap:1px}
+html.mob .cal .cell .acnt{display:flex;justify-content:center;gap:3px;width:calc(100% - 3px);max-width:52px;height:25px;margin:2px 0 0;padding:0 2px;border:0;border-radius:5px;color:#565b59;background:#f1f3f1;font-size:11px}
+html.mob .cal .cell .acnt::before{display:none}
+html.mob .cal.pv .cell .acnt svg{width:9px;height:9px;color:currentColor;opacity:1}
+html.mob .cal .cell.today .acnt{color:var(--pc,#285e32);background:color-mix(in srgb,var(--pc,#285e32) 10%,white)}
+html.mob .cal .cell .acnt .nd{left:auto;right:0;top:-2px;transform:none}
+html.mob .cal .ev,html.mob .cal .evs .more{height:22px;padding:0 3px;font-size:11px;line-height:22px}
+html.mob.sch-on .cal .ev .lb{top:0}
+html.mob .cal .ev .sq,html.mob .cal .cell .add{display:none!important}
+html.mob .mob-day-menu{width:min(340px,calc(100vw - 24px));max-height:min(56dvh,420px);overflow-y:auto}
+html.mob .mob-day-menu .it{min-height:44px;height:auto;padding:10px 12px;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+html.mob .rlist,html.mob .rlist.sch,html.mob .rlist.sch.pv{position:static!important;width:auto;height:auto!important;max-height:none;margin-top:24px;padding:0;overflow:visible}
 html.mob .rlist.sch .rdate{position:static;margin:0 0 8px}
 html.mob .rlist.sch .rscroll{overflow:visible;margin:0;padding:0}
-html.mob .rlist.sch .ra{margin:0;padding:0;height:auto;min-height:40px;flex-wrap:wrap;row-gap:0}
-html.mob .rlist.sch .ra .tt{font-size:14.5px;flex:1 1 60%}
-html.mob .rlist.sch .ra .sch-dd{width:auto;min-width:56px;font-size:13px}
-html.mob .rlist.sch .ra .dt{min-width:0;font-size:12.5px}
+html.mob .rlist.sch .rcap{position:static;margin:0;padding:14px 0 8px}
+html.mob .rlist.sch .rsep{margin-top:14px}
+html.mob .rlist.sch .ra{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"title title person" "due date person";justify-content:start;align-content:center;align-items:center;column-gap:8px;row-gap:2px;min-height:56px;height:auto;margin:0;padding:7px 3px;border-bottom:1px solid #efefef;border-radius:0}
+html.mob .rlist.sch .ra .tt{grid-area:title;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;font-size:14px;line-height:19px;overflow:hidden}
+html.mob .rlist.sch .ra .avstack{grid-area:person;justify-self:end;align-self:center}
+html.mob .rlist.sch .ra .sch-dd{grid-area:due;justify-self:start;width:auto;min-width:0;text-align:left;font-size:12px}
+html.mob .rlist.sch .ra .dt{grid-area:date;width:auto;min-width:0;font-size:12px}
+html.mob .rlist.sch .ra .sp{display:none}
+html.mob .rlist.sch .ra:has(.sch-ms) .tt,html.mob .rlist.sch .ra:has(.sdot) .tt{padding-left:13px}
+html.mob .rlist.sch .ra .sdot,html.mob .rlist.sch .ra .sch-ms{position:absolute;top:14px;left:2px;margin:0}
+html.mob .rlist.sch .ra .sdot.two{left:8px}
+html.mob .mob-agenda-more summary{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer}
+html.mob .mob-agenda-more summary::-webkit-details-marker,html.mob .mob-agenda-more .less-label,html.mob .mob-agenda-more[open] .more-label{display:none}
+html.mob .mob-agenda-more[open] .less-label{display:inline}
+html.mob .mob-agenda-more[open] summary svg{transform:rotate(180deg)}
 
 /* ---- rows of cards that were pushed with arrows: moved with the finger ---- */
-html.mob .projects,html.mob .meet{height:auto!important;margin-top:64px!important}
+html.mob .projects,html.mob .meet{height:auto!important;margin-top:44px!important}
 html.mob .projects .sec-title,html.mob .meet .sec-title{position:static}
 html.mob .sch-vtools{position:static;width:auto;justify-content:flex-start;flex-wrap:wrap;gap:10px;margin-top:12px}
 html.mob .sch-vtools .srch.box{flex:1 1 150px;min-width:0}
@@ -3917,12 +3965,9 @@ html.mob .sg-row.tk .rg,html.mob .sg-row .st,html.mob .sg-left .sg-sum{display:n
 
 /* ---- the panel of an item: the whole screen, its parts one below the other ---- */
 html.mob #app::after{display:none}
-html.mob .panel{top:46px;width:100vw;box-shadow:none}
+html.mob .panel{width:100vw;box-shadow:none}
 html.mob #app.panel-open .sb-open{display:none}
-html.mob .tb-panel-ic{right:auto;left:14px;top:14px;gap:16px;z-index:19}
-html.mob .tb-panel-ic button{width:22px;height:22px}
 html.mob #panel-expand{display:none!important}
-html.mob #app.panel-open .crumbs{left:48px;max-width:none}
 html.mob .panel .pin,html.mob .ipage .pin{width:auto;margin:0;padding:18px 16px 96px;min-height:100%}
 html.mob .pin > .itype,html.mob .pin > .ihead,html.mob .pin > .ititle,html.mob .pin > .props,html.mob .pin > .cmt-row,html.mob .pin > .cmt-list,html.mob .pin > .ihr,html.mob .pin > .ibody{position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:auto!important;margin-left:0;margin-right:0}
 html.mob .pin > .ihead{margin-top:14px;flex-wrap:wrap;row-gap:8px;padding-right:38px}
@@ -4066,7 +4111,162 @@ html.mob.sch-on .meet:not(.tv) .track{margin:22px -16px 0;min-height:0}
 html.mob.sch-on .props:has(> .rcol) > div:first-child,html.mob.sch-on .sch-props .sp-grid > div:first-child{padding-right:0}
 
 /* (forty-sixth round) on a phone the panel's own padding is the room: no margin of the wrapper */
-html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0}
+html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0;padding:16px 0 32px}
+/* Project summary and its detail share the same data in both layouts. */
+html.mob .phead.rep,html.mob .phead.rep.collapsed{
+  display:flex;flex-direction:column;padding:60px 0 6px;border-bottom:1px solid #e7e7e7
+}
+html.mob .phead.rep .ttl{order:-3;align-items:center;gap:4px;min-height:44px;padding-right:44px}
+html.mob .phead.rep .ttl h1{flex:1;min-width:0;font-size:23px;line-height:1.32;overflow-wrap:anywhere}
+html.mob .phead.rep .ttl .pexp,html.mob .phead.rep .pdel{display:grid;place-items:center;width:44px;height:44px;margin:0}
+html.mob .phead.rep .pdel{top:60px}
+html.mob .phead.rep .ttl .pexp svg,html.mob .phead.rep .pdel .pict{width:21px;height:21px}
+html.mob .phead.rep.ai-overview .ttl,html.mob .phead.rep.ed .ttl{padding-right:0}
+html.mob .phead.rep .rep-in,html.mob .phead.rep.collapsed .rep-in{display:contents}
+html.mob .phead.rep > .hr{display:none}
+html.mob .phead.rep .rmeta{order:-2;margin:8px 0 0}
+html.mob .phead.rep .rml{gap:6px 10px}
+html.mob .phead.rep .rml .m{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+html.mob .phead.rep .rmeta .rbt button{min-height:36px}
+html.mob .phead.rep .ov{order:-1;align-self:flex-start;min-height:44px;margin:2px 0 0;gap:8px;color:#515552;font-size:13px}
+html.mob .phead.rep .ov svg{color:inherit;transform:rotate(180deg)}
+html.mob .phead.rep.collapsed .ov svg{transform:none}
+html.mob .phead.rep.collapsed .rep-in > :not(.rmeta),html.mob .phead.rep.collapsed .rmr,html.mob .phead.rep.ed .ov{display:none}
+html.mob .phead.rep .rstats{margin:16px 0 24px}
+html.mob .phead.rep .rcols{gap:20px}
+html.mob .phead.rep .rtb .r > *{min-width:0;overflow-wrap:anywhere}
+
+/* Allow a title and its actions to wrap independently of the view tabs. */
+html.mob .sec-title.sch-title{align-items:center;gap:6px;margin-left:0!important}
+html.mob .sec-title .sch-ic{display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:32px;margin:0}
+html.mob .sec-title .sch-ic :is(svg,.pict){position:static;width:22px;height:22px;transform:none}
+html.mob.sch-on .sec-title :is(.plus-btn,.lib){align-self:center;translate:none;margin:0!important;min-height:36px}
+html.mob .sec-title .plus-btn{min-width:36px}
+html.mob .sec-title .lib{padding:0 10px}
+html.mob .sch-title .sch-tabs{flex-wrap:nowrap;align-items:center;gap:4px;margin:0}
+html.mob .sch-title .sch-tabs i{display:none}
+html.mob .sch-title .sch-tabs button[data-sch]{min-width:0;min-height:40px;padding:0 8px;font-size:14px;color:#626662;white-space:nowrap}
+html.mob .sch-title .sch-tabs button.on{color:var(--ink)}
+html.mob #sch-actions .sch-title > .sch-tabs{order:2;flex:1 0 100%}
+html.mob #sch-lower .sch-tabs.lead{width:100%;justify-content:space-between}
+html.mob #sch-lower .sch-evadd.up{position:static;transform:none;flex:none}
+html.mob .sch-filters{align-items:center;gap:6px 12px;margin-top:14px}
+html.mob .sch-filters .sf,html.mob .sch-filters .ck,html.mob .sch-filters .seg button{min-height:36px;align-items:center}
+html.mob .sch-filters .cks{display:flex;align-items:center;flex-wrap:wrap;gap:2px 12px}
+html.mob .sch-filters .right{align-items:center;gap:6px}
+html.mob .sch-filters .right .sch-xl{min-height:36px;margin:0}
+html.mob #sch-actions .sch-filters .sf{min-width:0;flex:1 1 24%;margin:0}
+html.mob .sec-title .srch.box,html.mob .sch-vtools .srch.box,html.mob .arch .ar-top .srch.box{min-height:44px}
+html.mob .sec-title .srch.box input{min-width:0}
+
+html.mob .sg-mobile-summary{
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.85fr) minmax(0,1.1fr) 30px;align-items:center;gap:6px;
+  padding:10px 12px;border-bottom:1px solid #e7e7e7;color:var(--t2);font-size:11px;line-height:16px;font-variant-numeric:tabular-nums
+}
+html.mob .sg-mobile-summary b,html.mob .sg-mobile-summary small{display:block}
+html.mob .sg-mobile-summary b{color:var(--ink);font-size:13px;white-space:nowrap}
+html.mob .sg-mobile-summary .sch-info{width:30px;height:36px;margin:0}
+html.mob .sg-shade,html.mob .sg-sum.out em{display:none}
+html.mob .sg-corner{padding:0 10px;font-weight:600;color:#4c4c4c}
+html.mob .sg-scroll{overflow:auto;overscroll-behavior-x:contain;max-height:min(58dvh,560px)}
+html.mob .sg-topbar,html.mob .sg-split{display:none}
+html.mob .sg-row.ph{padding:0 5px;gap:3px}
+html.mob .sg-row.ph .tt{min-width:0;overflow:hidden;text-overflow:ellipsis}
+html.mob .sg-row.ph .tw{margin:0 2px;flex:none}
+html.mob .sg-row.ph .n{margin-left:auto;flex:none}
+html.mob .sg-row.ph .pg{margin:0;flex:none}
+html.mob .sg-row.ph .pg:not(.has),html.mob .sg-row.ph .pg .bar{display:none}
+html.mob .sg-row.ph :is(.pm,.add){margin:0;flex:none}
+html.mob .sg-row.tk{padding:0 6px 0 10px}
+html.mob .sg-row.tk .avstack,html.mob .sg-row.tk .sch-dd,html.mob .sg-row.tk .fill{display:none}
+html.mob .sg-axis{overflow:hidden}
+html.mob .sg-axis .mo{padding-left:2px}
+html.mob .sg-axis .dy.tick{padding-left:1px}
+
+/* All gate fields follow the date on one track, including long evidence names. */
+html.mob .sch-gates{margin:18px 0 0;padding:12px 0 0;overflow:auto;max-height:66dvh}
+html.mob .sch-gates .gt{display:block;min-height:0;padding:8px 2px 22px 23px}
+html.mob .sch-gates .gt .ln,html.mob .sch-gates .gt .ln0,html.mob .sch-gates .gt.to-ok .ln,html.mob .sch-gates .gt .ln0.ok{left:5px}
+html.mob .sch-gates .gt .dot{left:1.5px;top:14px}
+html.mob .sch-gates .gt .date{position:static;width:auto;text-align:left;font-size:13px}
+html.mob .sch-gates .gt .date em{display:inline;margin-left:8px}
+html.mob .sch-gates .gt .hd2{gap:6px;margin:6px 0 10px;padding:0}
+html.mob .sch-gates .gt .chip{max-width:100%}
+html.mob .sch-gates .gt dl{grid-template-columns:68px minmax(0,1fr);gap:4px 8px;margin:0;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+html.mob .sch-gates .gt.wait :is(.date,.cat,.chip,dl){opacity:.83}
+
+html.mob .arch .ar-top{margin-bottom:16px}
+html.mob .arch .ar-views{display:flex;gap:12px}
+html.mob .arch .ar-views button{gap:5px;font-size:17px;min-height:40px}
+html.mob .arch .ar-views button small{font-size:13px}
+html.mob .arch .ar-docs .tabs{margin-top:38px}
+html.mob .arch .ar-docs .tabs ul{display:flex;height:44px!important;overflow-x:auto;scrollbar-width:thin}
+html.mob .arch .ar-docs .tabs li{display:grid;place-items:center;width:auto;flex:1 0 auto;min-width:44px;padding:0 6px;font-size:14px}
+html.mob .arch .ar-docs .tabs .bar{height:1px}
+html.mob .arch .ar-docs .tabs .bar i{display:none}
+html.mob .arch .ar-docs .tabs li.on{box-shadow:inset 0 -2px currentColor}
+html.mob .arch .tbl.archive.pv,html.mob .contract-section .contract-table{
+  width:100%!important;min-width:0;margin:18px 0 0;padding:0;overflow:visible
+}
+html.mob .contract-section .contract-scroll{margin-top:4px;overflow:visible}
+html.mob :is(.tbl.archive.pv,.contract-table) > .hd{
+  display:flex;align-items:stretch;width:100%;height:auto;min-height:40px;overflow-x:auto;gap:6px;border-bottom:1px solid #dedede;scrollbar-width:thin
+}
+html.mob :is(.tbl.archive.pv,.contract-table) > .hd > *{
+  display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 8px;border:0;white-space:nowrap;flex:none;font-size:12px
+}
+html.mob :is(.tbl.archive.pv,.contract-table) .rw{
+  display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-start;width:100%;height:auto;min-height:60px;gap:4px 12px;
+  padding:10px 4px;border-bottom:1px solid #e8e8e8
+}
+html.mob :is(.tbl.archive.pv,.contract-table) .rw > div{margin:0;padding:0;max-width:100%;min-height:0;border:0;line-height:1.4;min-width:0;height:auto}
+html.mob :is(.tbl.archive.pv .rw .ttl,.contract-table .rw .nm){flex:1 0 100%;align-items:center;font-size:15px;font-weight:600}
+html.mob .tbl.archive.pv .rw .ttl .tx,html.mob .contract-table .rw .nm .e{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
+html.mob .tbl.archive.pv .rw .ttl .gd{position:static;flex:none;margin:0 5px 0 0}
+html.mob .tbl.archive.pv .rw .ttl .ttl-ic{margin:0 0 0 4px}
+html.mob .tbl.archive.pv .rw :is(.who span,.d,.mod,.pr,.src),html.mob .contract-table .rw > div:not(.nm){font-size:12px;color:#616561}
+html.mob .tbl.archive.pv .rw .who .avatar{width:16px;height:16px}
+html.mob .tbl.archive.pv .rw .who:has(.nil),html.mob .tbl.archive.pv .rw .src:not(:has(a)),html.mob .contract-table .rw .contract-links:empty{display:none}
+html.mob .tbl.archive.pv .rw .d::before{content:"기한 ";margin-right:4px}
+html.mob .tbl.archive.pv .rw .mod::before{content:"수정 ";margin-right:4px}
+html.mob .contract-table .none{position:static;text-align:left;white-space:normal}
+html.mob .pop:not(.mob-day-menu){max-height:calc(100dvh - 24px);overflow-y:auto}
+@media(max-width:359px){
+  html.mob .sch-title .sch-tabs button[data-sch]{padding:0 4px;font-size:13px}
+  html.mob .rstats .rkp{column-gap:12px}
+}
+html.mob .tbl.archive.pv .hd [data-arcol] em{position:static}
+html.mob .tbl.archive.pv .hd [data-arcol]{border-radius:5px;background:#f6f6f5;margin:3px 0;padding:0 9px;min-height:34px}
+html.mob .mob-day-menu .it{padding:0}
+html.mob .mob-day-item{width:100%;min-height:44px;padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere}
+html.mob #login{display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;padding:24px 16px}
+html.mob #login > .logo-ph,html.mob #login h1,html.mob #login .field,html.mob #login .submit,html.mob #login .err{position:static;flex:none}
+html.mob #login .logo-ph{width:88px;height:88px;margin-top:auto}
+html.mob #login h1{margin:0 0 14px}
+html.mob #login .field,html.mob #login .submit,html.mob #login .err{width:min(100%,344px)}
+html.mob #login .submit{min-height:46px;margin:8px 0 auto}
+html.mob .panel .lib-view.lb,html.mob .ipage .lib-view.lb{position:static;width:100%;padding:0}
+html.mob .lib-view .libhd{align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+html.mob .lib-view .libhd b{font-size:22px}
+html.mob .lb-bar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0 0 16px}
+html.mob .lb-bar .lb-q{width:100%;height:44px;border-radius:6px}
+html.mob .lb-kinds{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+html.mob .lb-kinds button{flex:none;height:36px}
+html.mob .lb-card .lb-ov{position:static;display:flex;flex-wrap:wrap;justify-content:flex-start;gap:6px;opacity:1;background:transparent;padding:8px}
+html.mob .lb-card .lb-bt{min-height:36px}
+html.mob .sch-net{height:clamp(260px,58dvh,520px)}
+html.mob .sch-net .sn-tools{left:8px;top:8px}
+html.mob .sb .item{min-height:40px;margin-bottom:2px}
+html.mob .sb .hr{margin:14px 16px}
+html.mob .sb .sec{font-size:11px}
+html.mob .sb .top{padding:8px 12px 4px;height:auto;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center}
+html.mob .sb .top .logo{position:static;grid-column:1/-1;width:max-content;max-width:100%;padding:6px 4px}
+html.mob .sb .top .sqbtn,html.mob .sb .top .inbox{position:relative;inset:auto;width:44px;height:44px}
+html.mob .sb .top .inbox{width:max-content;display:flex;gap:6px;align-items:center;padding:0 8px;font-size:13px}
+html.mob .sb .top .inbox .ic,html.mob .sb .top .inbox .lb{position:static}
+html.mob .sb .top .inbox .badge-red{left:8px;top:7px}
+html.mob .sch-net .sn-tools{gap:4px}
+html.mob .sch-net .sn-tools .sh-btn{width:40px;height:40px;margin:0;font-size:20px}
 </style>
 </head>
 <body>
@@ -4185,7 +4385,7 @@ html.mob .panel .partner-content,html.mob .ipage .partner-content{margin:0}
     <header class="topbar">
       <nav class="crumbs" id="crumbs"></nav>
       <div class="tb-right">
-        <div class="tb-user" id="tb-user"><span class="av"><span class="avatar av22"></span><i class="dt" style="display:none"></i></span><span class="nm">최원 기사</span></div>
+        <div class="tb-user" id="tb-user"><button type="button" class="av" aria-label="계정 메뉴"><span class="avatar av22"></span><i class="dt" style="display:none"></i></button><span class="nm">최원 기사</span></div>
         <button class="tb-ic tb-share" id="tb-share" title="공유"><svg class="pict" aria-hidden="true"><use href="#pic-share"/></svg></button>
         <button class="tb-ic tb-star" id="tb-star" title="즐겨찾기"><svg width="20.8" height="19.7"><use href="#i-star"/></svg></button>
       </div>
@@ -4416,7 +4616,7 @@ let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m; c
   const arm=()=>{clearTimeout(toastT);if(!keep)toastT=setTimeout(()=>t.classList.remove('on'),ms);};
   t.classList.toggle('pv',PV);t.classList.toggle('keep',keep);t.classList.add('on');arm(); toastPlace(); t.onmouseenter=PV?()=>clearTimeout(toastT):null; t.onmouseleave=PV?()=>{if(t.classList.contains('on'))arm();}:null;};
 const pager=(cur,total,cls='')=>{ if(PREVIEW_ON){ // the first and the last page, one back and one on, the numbers ten at a time (owner, 2026-11-23)
-    const from=Math.floor((cur-1)/10)*10+1, to=Math.min(total,from+9), dbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
+    const [from,to]=schPageRange(cur,total), dbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
     let p=`<div class="pager ${cls}" data-total="${total}"><button class="arr ends" data-pg="first" title="처음" aria-label="처음 쪽" ${cur<=1?'disabled':''}>${dbl(true)}</button><button class="arr" data-pg="prev" title="이전" aria-label="이전 쪽" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;
     for(let i=from;i<=to;i++)p+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;
     return p+`<button class="arr" data-pg="next" title="다음" aria-label="다음 쪽" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button><button class="arr ends" data-pg="last" title="마지막" aria-label="마지막 쪽" ${cur>=total?'disabled':''}>${dbl(false)}</button></div>`; }
@@ -4496,9 +4696,9 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=schPreview()?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
   let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
-    <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
+    <button class="nav prev" data-cal="prev" aria-label="이전 달">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
-    <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
+    <button class="nav next" data-cal="next" aria-label="다음 달">${svg('i-nav-r',5.7,10.9)}</button>`;
   if(!opts.proj) h+=`<div class="filters${PREVIEW_ON&&S.calPillsOpen?' open':''}">${orderedProjects().map(k=>pill(PROJECTS[k],(S.filters[k]!==false?'':'off')+' flt nosq').replace('class="pill','data-flt="'+k+'" title="이 프로젝트의 일정 보기/숨기기" class="pill')).join('')}${PREVIEW_ON?`<button type="button" class="fmore" data-calpills hidden></button>`:''}</div>`;
   h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${PV?schCalPict(t,opts.proj?proj(opts.proj).color:''):pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
   h+=`<div class="grid"><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="rows">`;
@@ -4513,14 +4713,17 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     wk.sort((a,b)=>((b.en-b.s)-(a.en-a.s))||(a.s-b.s)||(RANK[a.e.type]-RANK[b.e.type])||newestFirst(a.e,b.e));
     const lanes=[], more={}; let maxLane=-1, eh='';
     wk.forEach(x=>{let l=0; while(lanes[l]&&lanes[l].some(r=>!(x.en<r[0]||x.s>r[1])))l++; (lanes[l]=lanes[l]||[]).push([x.s,x.en]); x.lane=l;});
-    wk.forEach(x=>{const e=x.e; if(x.lane>=CAL_LANES){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
-      const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:9.5); const right=COLX[ec]+COLW[ec]-(x.contR?0:(ec===6?0:8));
+    const laneLimit=mobW?2:CAL_LANES, laneHeight=mobW?24:21.1;
+    const weekHasCounts=mobW&&cnt&&Array.from({length:hi-lo+1},(_,i)=>cnt[lo+i]).some(Boolean);
+    const eventTop=weekHasCounts?54:29, inset=mobW?2:9.5;
+    wk.forEach(x=>{const e=x.e; if(x.lane>=laneLimit){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
+      const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:inset); const right=COLX[ec]+COLW[ec]-(x.contR||ec===6?0:(mobW?2:8));
       const p=proj(e.proj); const rs=e.type==='research'; const first=e.date<mStart?x.s===1:x.s===+e.date.slice(8); const full=(e.title||'').split('\n').join(' ')||'(제목 없음)'; const label=first?esc(full):'';
-      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
+      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*laneHeight}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
       maxLane=Math.max(maxLane,x.lane);});
-    Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+9.5}px;top:${CAL_LANES*21.1}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
-    const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?29+used*21.1+7.7:0;
-    h+=`<div class="row"${need>102.2?` style="min-height:${need}px"`:''}>${cells}<div class="evs" style="height:${Math.max(0,need-29)}px">${eh}</div></div>`;}
+    Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+inset}px;top:${laneLimit*laneHeight}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
+    const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?eventTop+used*laneHeight+(mobW?6:7.7):0;
+    h+=`<div class="row"${need>(mobW?56:102.2)?` style="min-height:${need}px"`:''}>${cells}<div class="evs" style="${mobW?`top:${eventTop}px;`:''}height:${Math.max(0,need-eventTop)}px">${eh}</div></div>`;}
   h+=`</div></div></div></div>`; // rows, grid, cal, cal-wrap (the design left cal-wrap open, which nested the rest of the page inside the calendar block)
   return h;
 }
@@ -5320,6 +5523,10 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-typeflt]')){const k=el.dataset.typeflt;S.typeOff[k]=!S.typeOff[k];refreshSec('cal');return;}
   if(el=q('[data-seltoday]')){S.selDate=null;const n=new Date();if(S.page==='project'){S.calYp=n.getFullYear();S.calMp=n.getMonth()+1;}else{S.calY=n.getFullYear();S.calM=n.getMonth()+1;}refreshSec('cal');return;}
   if(el=q('.cal .cell .add')){const it=newItem('meeting',{date:el.closest('.cell').dataset.date}); openPanel(it.id); return;}
+  if(el=q('button[data-mob-day]')){
+    const date=el.closest('[data-date]').dataset.date, rows=schDayRows(S.proj,date);
+    menuPop(el,[{hd:schD(date)+' · 액션 '+rows.length+'건'},...rows.map((r,i)=>({k:String(i),html:'<button type="button" class="mob-day-item">'+esc(r.title)+'</button>',fn:()=>openPanel(r.id)}))],{cls:'mob-day-menu'}); return;
+  }
   if(el=q('.cal [data-date]')){ if(typeof schPreview==='function'&&schPreview()){ if(el.classList.contains('more'))schCalMore(el); return; }   // owner: no calendar selects days (project 2026-11-19, main 2026-11-23); "+N건" lists what did not fit
     const v=el.dataset.date;S.selDate=v===TODAY?null:v;refreshSec('cal');return;}
   if(el=q('[data-act]')){const a=el.dataset.act,id=el.dataset.id; e.stopPropagation();
@@ -5354,7 +5561,11 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-pickstatus]')){menuPop(el,PSTATUS_ORDER.map(st=>({t:st,k:st,sel:normStatus(PROJECTS[S.proj].status)===st,fn:()=>{saveProjectHead();applyProjectStatus(S.proj,st);render(true);}})));return;}
   if(el=q('[data-pickowner]')){menuPop(el,[{hd:'담당자 선택'}].concat(Object.keys(PEOPLE).map(id=>({t:PEOPLE[id],k:id,ico:av('av15'),sel:PHEAD[S.proj].owner===PEOPLE[id],fn:()=>{saveProjectHead();PHEAD[S.proj].owner=PEOPLE[id];PROJECTS[S.proj].owner=PEOPLE[id];render(true);}}))));return;}
   if(el=q('[data-addpartnerrow]')){saveProjectHead();PHEAD[S.proj].partners=PHEAD[S.proj].partners.concat('');render(true);const last=$$('.page.on .phead .partners a[data-k]').pop();last&&last.focus();return;}
-  if(el=q('[data-collapse]')){S.collapsed=!S.collapsed;$('.phead').classList.toggle('collapsed',S.collapsed);return;}
+  if(el=q('[data-collapse]')){
+    const head=el.closest('.phead'), collapsed=!head.classList.contains('collapsed');
+    if(PREVIEW_ON&&schMob())schMobProjectDetail(S.proj,!collapsed); else S.collapsed=collapsed;
+    head.classList.toggle('collapsed',collapsed); el.setAttribute('aria-expanded',String(!collapsed)); return;
+  }
   if(el=q('[data-tick]')){const box=$('#road-box');const i=+el.dataset.tick;box.scrollTo({top:i*(box.scrollHeight-box.clientHeight)/18,behavior:'smooth'});$$('#road-ruler i').forEach(x=>x.classList.remove('cur'));el.classList.add('cur');return;}
   if(el=q('.road-add')){roadPicker(el); return;}
   if(el=q('[data-roaddel]')){const i=+el.dataset.roaddel;const r=ROADMAP[i];if(!r)return;confirmDlg(`“${(r.title||'').split('\n')[0]}” 항목을 로드맵에서 삭제할까요? 연결된 미팅·액션아이템·리서치는 그대로 남습니다.`,[{t:'삭제',pri:true,fn:()=>{const j=ROADMAP.findIndex(x=>x===r||same(x,r));if(j<0){render(true);toast('그 사이 로드맵이 바뀌었습니다. 다시 시도해 주세요.',2600);return;}ROADMAP.splice(j,1);render(true);toast('로드맵에서 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);return;}
@@ -6653,8 +6864,13 @@ function schActionBody(pid){ const m=schModel(pid);
 
 // The page's pager look, but with its own attribute (the page's own handler would take data-pg for one of its lists).
 // Pages: the first and the last one ("<<", ">>"), one back and one on, and the numbers ten at a time (1-10, 11-20, ...).
+function schPageRange(cur,total){
+  const count=schMob()?3:10;
+  const first=schMob()?Math.max(1,Math.min(cur-1,total-count+1)):Math.floor((cur-1)/count)*count+1;
+  return [first,Math.min(total,first+count-1)];
+}
 const schPgDbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
-function schPager(cur,total,key,top){ const at=`data-sch="page" data-k="${key}" data-t="${total}"`, from=Math.floor((cur-1)/10)*10+1, to=Math.min(total,from+9);
+function schPager(cur,total,key,top){ const at=`data-sch="page" data-k="${key}" data-t="${total}"`, [from,to]=schPageRange(cur,total);
   let h=`<div class="pager" style="margin-top:${top}px"><button class="arr ends" ${at} data-v="first" title="처음" aria-label="처음 쪽" ${cur<=1?'disabled':''}>${schPgDbl(true)}</button><button class="arr" ${at} data-v="prev" title="이전" aria-label="이전 쪽" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;
   for(let i=from;i<=to;i++)h+=`<button ${at} data-v="${i}" class="${i===cur?'cur':''}">${i}</button>`;
   return h+`<button class="arr" ${at} data-v="next" title="다음" aria-label="다음 쪽" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button><button class="arr ends" ${at} data-v="last" title="마지막" aria-label="마지막 쪽" ${cur>=total?'disabled':''}>${schPgDbl(false)}</button></div>`;}
@@ -6748,13 +6964,14 @@ function schLinkPath(a,b,type){ type=/^(FS|SS|FF|SF)$/.test(type||'')?type:'FS';
 function schTextW(text,weight){ const c=schTextW.c||(schTextW.c=document.createElement('canvas').getContext('2d')); if(!schTextW.f)schTextW.f=getComputedStyle(document.body).fontFamily||'sans-serif';
   c.font=`${weight||400} 12px ${schTextW.f}`; return c.measureText(text).width-text.length*.144; }
 function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const m=schModel(pid); if(!m){host.innerHTML='';return;} const A=AIDCSchedule, D=A.dates, P=A.progress;
-  SG.left=document.documentElement.classList.contains('mob')?Math.round(Math.max(132,host.clientWidth*.44)):Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)))   /* a phone: the names only, the chart beside them */;   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
+  const mobile=schMob();
+  SG.left=mobile?Math.round(Math.max(132,host.clientWidth*.44)):Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)))   /* a phone: the names only, the chart beside them */;   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
   const shown=schFiltered(m), shownIds=new Set(shown.map(t=>t.id)), force=schFiltering(), sel=schTaskIdOf(S.panel)||SCHU.sel;
   // time range: like the Schedule app, the long support tail after the operation date is cut (it would flatten everything else)
   const all=m.plan.tasks; let o=Infinity, mx=-Infinity; for(const t of all){const r=m.res.tasks[t.id];o=Math.min(o,D.dayNumber(t.referenceStart),D.dayNumber(r.start));mx=Math.max(mx,D.dayNumber(r.finish));}
   if(!isFinite(o)){ o=D.dayNumber(schToday()); mx=o+150; }   // no task yet: half a year from today
   const origin=o-7, end=Math.min(mx,m.res.operationDate?D.dayNumber(D.addMonths(m.res.operationDate,7)):mx)+14, days=end-origin+1;
-  const viewW=Math.max(300,host.clientWidth-SG.left-1), px=SCHU.scale==='day'?SG.day:SCHU.scale==='week'?5:SCHU.scale==='month'?1.7:Math.max(.05,viewW/days), TW=Math.round(days*px);
+  const viewW=Math.max(mobile?1:300,host.clientWidth-SG.left-1), px=SCHU.scale==='day'?SG.day:SCHU.scale==='week'?5:SCHU.scale==='month'?1.7:Math.max(.05,viewW/days), TW=Math.round(days*px);
   const X=d=>(D.dayNumber(d)-origin)*px; host._px=px; host._o=origin;
   // rows
   const rows=[]; let y=SG.padTop;
@@ -6769,8 +6986,8 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   const months=[]; {let d=first.slice(0,8)+'01'; while(d<=last){months.push(d);d=D.addMonths(d,1);} }
   const yearTop=px<1.2; // too narrow for a label per month: years on top, months (or quarters) below
   if(yearTop){ const years=[...new Set(months.map(x=>x.slice(0,4)))];
-    for(const yv of years){const a=Math.max(0,X(yv+'-01-01')), b=Math.min(TW,X((+yv+1)+'-01-01'));ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${yv}</div>`;}
-    const step=px*30>=22?1:3; for(const d of months){const mo=+d.slice(5,7);if((mo-1)%step)continue;const a=X(d);if(a<0||a>TW-8)continue;ax+=`<div class="dy tick" style="left:${a}px;width:${px*30*step}px">${step===1?mo:Math.ceil(mo/3)+'Q'}</div>`;} }
+    for(const yv of years){const a=Math.max(0,X(yv+'-01-01')), b=Math.min(TW,X((+yv+1)+'-01-01'));ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${!mobile||b-a>=29?yv:''}</div>`;}
+    const step=px*30>=22?1:(mobile&&px*90<20?6:3); for(const d of months){const mo=+d.slice(5,7);if((mo-1)%step)continue;const a=X(d);if(a<0||a>TW-8)continue;ax+=`<div class="dy tick" style="left:${a}px;width:${px*30*step}px">${step===1?mo:(step===6?(mo===1?'상':'하'):Math.ceil(mo/3)+'Q')}</div>`;} }
   else{ for(const d of months){const a=Math.max(0,X(d)), b=Math.min(TW,X(D.addMonths(d,1)));if(b-a<2)continue;ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${b-a>46?d.slice(0,4)+'. '+(+d.slice(5,7)):+d.slice(5,7)}</div>`;}
     if(SCHU.scale==='day'){ for(let n=origin;n<=end;n++){const d=D.fromDay(n), dow=new Date(d+'T00:00:00Z').getUTCDay();ax+=`<div class="dy ${dow===6?'sat':dow===0?'sun':''} ${d===today?'now':''}" style="left:${(n-origin)*px}px;width:${px}px"><i>${+d.slice(8)}</i></div>`;} }
     else if(SCHU.scale==='week'){ for(let n=origin;n<=end;n++){const d=D.fromDay(n);if(new Date(d+'T00:00:00Z').getUTCDay()!==1)continue;ax+=`<div class="dy tick" style="left:${(n-origin)*px}px;width:${px*7}px">${+d.slice(8)}</div>`;} }
@@ -6817,7 +7034,15 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   const nowX=today>=first&&today<=last?X(today)+px/2:-1;
   const crit=all.filter(t=>m.res.tasks[t.id].criticality==='critical').length;
   const hotMonths=months.map(d=>X(d)).filter(a=>a>0&&a<TW).map(a=>`<i class="mline" style="left:${a}px"></i>`).join('');
-  host.innerHTML=`<div class="sg-inner" style="width:${SG.left+TW+1}px"><div class="sg-head"><div class="sg-corner" style="width:${SG.left}px"><span>운영개시 예상 <b>${m.res.operationDate?schD(m.res.operationDate):'미정'}</b>${m.res.operationDelay?`<em>(목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)</em>`:''}</span><span>운영개시 경로 <b>${crit}</b>건</span><span>상태일 <b>${schD(m.plan.statusDate)}</b></span>${schInfo('dates')}</div><div class="sg-axis" style="left:${SG.left+1}px;width:${TW}px">${ax}${hotMonths}</div></div>
+  const summary=`<span>운영개시 예상 <b>${m.res.operationDate?schD(m.res.operationDate):'미정'}</b>${m.res.operationDelay?`<em>(목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)</em>`:''}</span><span>운영개시 경로 <b>${crit}</b>건</span><span>상태일 <b>${schD(m.plan.statusDate)}</b></span>${schInfo('dates')}`;
+  if(mobile){
+    let stats=host.parentElement.querySelector('.sg-mobile-summary');
+    if(!stats){stats=document.createElement('div');stats.className='sg-mobile-summary';host.before(stats);}
+    const date=m.res.operationDate?schD(m.res.operationDate):'미정', slip=m.res.operationDelay;
+    stats.innerHTML=`<div><span>운영개시 예상</span><b>${date}</b>${slip?`<small>목표 대비 ${slip>0?'+':''}${slip}일</small>`:''}</div>
+      <div><span>운영개시 경로</span><b>${crit}건</b></div><div><span>상태일</span><b>${schD(m.plan.statusDate)}</b></div>${schInfo('dates')}`;
+  }
+  host.innerHTML=`<div class="sg-inner" style="width:${SG.left+TW+1}px"><div class="sg-head"><div class="sg-corner" style="width:${SG.left}px">${mobile?'단계 · 업무명':summary}</div><div class="sg-axis" style="left:${SG.left+1}px;width:${TW}px">${ax}${hotMonths}</div></div>
     <div class="sg-body" style="height:${H}px"><i class="sg-band" hidden></i><div class="sg-left" style="width:${SG.left}px;height:${H}px">${L}<i class="sg-split" title="끌어서 표의 폭 조절 · 두 번 누르면 처음 폭"></i></div>
     <div class="sg-right" style="left:${SG.left+1}px;width:${TW}px;height:${H}px">${R}${SCHU.today&&nowX>=0?`<i class="now" style="left:${nowX}px"></i>`:''}<svg class="sg-links" width="${TW}" height="${H}">${links}</svg><svg class="sg-dots" width="${TW}" height="${H}" aria-hidden="true">${dots}</svg></div>${marks}</div></div>`;
   // the horizontal scroll bar: a bar of its own below the chart, kept in step with it; the chart itself shows none
@@ -6853,7 +7078,7 @@ function schRefresh(){ const el=$('[data-sec="sch-act"]'); if(!el||!schHas(S.pro
 // share their start, so several later tasks read as one branching line. Only relations between neighbouring columns are
 // drawn in the "selected task" view; whatever else connects the shown tasks is counted below the map.
 const SN={w:271,h:128.5,gx:89,gy:33.5,trunk:38,pad:60,port:24};
-function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools"><button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (휠: 확대·축소, 끌기: 이동)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
+function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools">${schMob()?`<button type="button" class="sh-btn" data-sch="netzoom" data-k="-1" aria-label="관계도 축소">−</button><button type="button" class="sh-btn" data-sch="netzoom" data-k="1" aria-label="관계도 확대">+</button>`:''}<button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (휠: 확대·축소, 끌기: 이동)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
 function schNetFocus(m){ const sel=schTaskIdOf(S.panel)||SCHU.sel; if(sel&&m.byId.has(sel)&&(!SCHU.phase||SCHU.netMode==='focus'||m.byId.get(sel).phase===SCHU.phase))return sel;
   const list=schFiltered(m); const today=schToday(); const cur=list.find(t=>!AIDCSchedule.progress.isDone(t)&&m.res.tasks[t.id].finish>=today)||list[0]||m.plan.tasks[0]; return cur?cur.id:''; }
 // Columns for the "selected task" view: the task in the middle, what must come before it to the left, what follows to the right.
@@ -7529,20 +7754,22 @@ function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schH
 function schCalBadge(pid,date,count){ let dots='';
   if(date===TODAY){ const rows=schDayRows(pid,date), g=rows.filter(x=>x.green).length, r=rows.filter(x=>x.red).length;
     dots=(g?`<i class="g${g>9?' w':''}" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r${r>9?' w':''}" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
+  if(schMob())return `<button type="button" class="acnt" data-mob-day aria-label="${esc(schD(date))} 액션 ${count}건 보기">${svg('i-sch-tag',10,10)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</button>`;
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* the list is always today's: neither calendar selects days (project: 2026-11-19, main: 2026-11-23) */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
   // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
   let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})</div><div class="rline"></div><div class="rscroll"><div class="rcap cap-ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
   if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
-  evs.forEach(e=>{const p=proj(e.proj);
-    h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;});
+  const meetingRow=e=>{const p=proj(e.proj);
+    return `<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;};
+  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅'):evs.map(meetingRow).join('');
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
-    h+=rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
-    if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
+    h+=schMob()?schMobAgenda(rows,x=>schDayRowHtml(x,true),`${pid}:${D}:action`,'액션'):rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
+    if(!schMob()&&rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
   return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
 // The list beside the calendar ends where the calendar ends (owner, 2026-11-19: "do not show all of today's actions, cut it at the end
@@ -8483,12 +8710,16 @@ function schLibDraw(pin,type,label,rows){ const L=SCH_LIB; if(L.type!==type){L.q
     <div class="lb-wall" id="lb-wall"></div><div class="lb-more" id="lb-more"></div></div>`;
   schLibFill(); }
 // The wall for what is asked for now (search, kind): columns by the room there is, the first cards, a watch on its end.
+function schLibColumnCount(wall){
+  const width=wall.getBoundingClientRect().width/(LAYOUT.zoom||1);
+  return Math.max(schMob()?1:2,Math.min(7,Math.floor((width+16)/226)));
+}
 function schLibFill(){ const L=SCH_LIB, wall=$('#lb-wall'), more=$('#lb-more'); if(!wall)return; const q=norm(L.q);
   L.rows=L.all.filter(f=>(!L.kind||schLibKind(f)===L.kind)&&(!q||norm(f.name).includes(q)||norm((item(f.item)||{}).title||'').includes(q)));
   const cnt=$('#lb-cnt'); if(cnt)cnt.textContent=L.rows.length===L.all.length?`${L.all.length}개 파일`:`${L.all.length}개 중 ${L.rows.length}개`;
   if(!L.all.length){ wall.innerHTML=''; more.innerHTML=`<div class="libempty">첨부된 파일이 아직 없습니다.<br>내용을 수정할 때 첨부한 파일과 이미지가 여기에 모입니다.</div>`; return; }
   if(!L.rows.length){ wall.innerHTML=''; more.innerHTML='<div class="libempty">조건에 맞는 파일이 없습니다.</div>'; return; }
-  const z=LAYOUT.zoom||1, w=wall.getBoundingClientRect().width/z, n=Math.max(2,Math.min(7,Math.floor((w+16)/(210+16))));
+  const n=schLibColumnCount(wall);
   wall.innerHTML=Array.from({length:n},()=>'<div class="lb-col"></div>').join(''); L.cols=[...wall.children]; L.h=L.cols.map(()=>0); L.shown=0; more.innerHTML='<i class="lb-end" id="lb-end"></i>';
   schLibMore(); if(L.io)L.io.disconnect(); L.io=new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting))schLibMore(); },{root:$('#panel'),rootMargin:'0px 0px 900px 0px'}); const end=$('#lb-end'); if(end)L.io.observe(end); }
 function schLibMore(){ const L=SCH_LIB; if(!L.cols.length||L.shown>=L.rows.length)return; const part=L.rows.slice(L.shown,L.shown+36), cw=L.cols[0].getBoundingClientRect().width/(LAYOUT.zoom||1)||236;
@@ -8501,7 +8732,7 @@ function schLibTexts(){ $$('#lb-wall pre[data-lbtxt]').forEach(pre=>{ const id=p
 let schLibT=0;
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='lb-q'){ SCH_LIB.q=e.target.value; clearTimeout(schLibT); schLibT=setTimeout(schLibFill,160); } });
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-lbk]'); if(!b)return; e.stopPropagation(); SCH_LIB.kind=b.dataset.lbk; $$('.lb-kinds button').forEach(x=>x.classList.toggle('on',x===b)); schLibFill(); },true);
-window.addEventListener('resize',()=>{ if($('#lb-wall')&&SCH_LIB.all.length){ clearTimeout(schLibT); schLibT=setTimeout(()=>{ const wall=$('#lb-wall'); if(!wall)return; const n=Math.max(2,Math.min(7,Math.floor((wall.getBoundingClientRect().width/(LAYOUT.zoom||1)+16)/226))); if(n!==SCH_LIB.cols.length)schLibFill(); },200); } });
+window.addEventListener('resize',()=>{ if($('#lb-wall')&&SCH_LIB.all.length){ clearTimeout(schLibT); schLibT=setTimeout(()=>{ const wall=$('#lb-wall'); if(!wall)return; const n=schLibColumnCount(wall); if(n!==SCH_LIB.cols.length)schLibFill(); },200); } });
 
 /* ---- schedule/ui/74-eleventh.js ---- */
 // Eleventh round (owner, 2026-11-23): small things many screens share while the preview is on.
@@ -9242,6 +9473,34 @@ document.addEventListener('click',e=>{ if(!schMob()||!e.target.closest)return; c
 // (Rows of cards that the desktop page pushes with arrows are moved with the finger here: mobile.css takes the offset of the
 // arrows away and lets the row scroll.)
 
+const schMobDetails = new Set();
+function schMobProjectDetail(pid, open){
+  if(open)schMobDetails.add(pid); else schMobDetails.delete(pid);
+}
+function schProjectCompact(pid, editing){
+  return schMob() ? !editing && !schMobDetails.has(pid) : S.collapsed;
+}
+function schProjectDetailButton(pid, editing){
+  const expanded=!schProjectCompact(pid,editing);
+  return `<button type="button" class="ov" data-collapse aria-expanded="${expanded}">프로젝트 상세 ${svg('i-chev-d',9,5)}</button>`;
+}
+
+// The short list and its continuation share the same rows, order and item links.
+const schMobAgendaOpen = new Set();
+function schMobAgenda(list, row, key, label){
+  const limit=4, first=list.slice(0,limit).map(row).join('');
+  if(list.length<=limit)return first;
+  const rest=list.slice(limit);
+  return first+`<details class="mob-agenda-more" data-agenda-key="${esc(key)}" ${schMobAgendaOpen.has(key)?'open':''}>
+    <summary><span class="more-label">${label} ${rest.length}건 더 보기</span><span class="less-label">${label} 접기</span>${svg('i-chev-d',10,6)}</summary>
+    ${rest.map(row).join('')}</details>`;
+}
+document.addEventListener('toggle',e=>{
+  const el=e.target;
+  if(!el.isConnected||!el.matches?.('details[data-agenda-key]'))return;
+  if(el.open)schMobAgendaOpen.add(el.dataset.agendaKey); else schMobAgendaOpen.delete(el.dataset.agendaKey);
+},true);
+
 /* ---- schedule/ui/88-report.js ---- */
 // Twenty-fourth round (owner, 2026-11-24): the project overview and the list of projects follow the company's
 // "AIDC 프로젝트 개발검토 리스트" — a list (NO. · 프로젝트 · 위치 · 사업주체 · 대지면적 · 연면적 · IT LOAD · 추진 단계 · 최초자료일 · 비고,
@@ -9338,8 +9597,8 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
     +schRepDocs(pid,d,E);
   const cL=blk('main',`${mainTx}<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo&&!mainTx?nil:''}${add('rows','행')}</div>`,'','main')
     +blk('plan',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','일정')}</div>`,'','plan');
-  return `<div class="phead rep ${S.collapsed?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1>${!E?`<button type="button" class="pexp" data-projexp title="내보내기 — 이 프로젝트의 지금 진행 상황을 보고서로 (범위 · 요약형/풀버전 · PDF/Word/엑셀)" aria-label="내보내기">${svg('i-sch-exp2',24,24)}</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
-    <div class="ov" data-collapse>프로젝트 상세 ${svg('i-chev-d',7.1,3.5,'color:#8e8e8e')}</div><div class="hr"></div>
+  return `<div class="phead rep ${schProjectCompact(pid,E)?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1>${!E?`<button type="button" class="pexp" data-projexp title="내보내기 — 이 프로젝트의 지금 진행 상황을 보고서로 (범위 · 요약형/풀버전 · PDF/Word/엑셀)" aria-label="내보내기">${svg('i-sch-exp2',24,24)}</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+    ${schProjectDetailButton(pid,E)}<div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${cL}</div><div class="rc rc2">${cR}</div></div></div>
     <div class="hr bt"></div></div>`; }
 // What other screens still read from the overview follows the table: the address (map, search), 용도지역, 사업주체, 총사업비.
@@ -9543,7 +9802,7 @@ function schAIHead(pid){
  const p=PROJECTS[pid],d=headOf(pid),saved=d.aiOverview,E=!!schAIDraft;
  const report=E?schAIDraft.report:saved?.report;
  const no=schRepNos()[pid]||'';
- return '<div class="phead rep ai-overview '+(S.collapsed?'collapsed ':'')+(E?'ed':'')+'"'+schRepPc(p)+'><div class="ttl"><h1 style="color:'+esc(p.color)+'">'+esc(p.full)+'</h1></div><div class="ov" data-collapse>프로젝트 상세 '+svg('i-chev-d',7.1,3.5,'color:#8e8e8e')+'</div><div class="hr"></div><div class="rep-in"><div class="rmeta"><div class="rml"><span class="m no">No. '+no+'</span><span class="m grp">'+esc(d.grp||'구분 없음')+'</span>'+(d.focus?'<span class="m fo on">집중 추진</span>':'')+'<span class="m st"><b>추진 단계</b>'+statusBadge(p.status)+'</span><i class="sep"></i><span class="m who"><b>담당자</b>'+av()+'<span>'+esc(d.owner||p.owner||'미지정')+'</span></span></div><div class="rmr"><div class="rbt">'+(E?'<button type="button" class="sh-btn edit on" data-ai-direct="save">저장</button><button type="button" class="cancel" data-ai-direct="cancel">취소</button>':'<button type="button" class="sh-btn edit" data-ai-direct="edit">수정</button><button type="button" class="sh-btn upx" data-ai-open="upload">'+svg('i-sch-fup',13,13)+'AI 개요 업로드</button>')+'</div><div class="rdt"><b>최초자료일</b><span>'+esc(d.first||'-')+'</span><b>기준일</b><span>'+esc(d.asof||'-')+'</span></div></div></div>'+schAIReport(report,E)+(E?'<div class="ai-add-section"><select data-ai-new-type aria-label="추가할 내용 형식"><option value="paragraphs">문단</option><option value="bullets">목록</option><option value="metrics">지표</option><option value="table">표</option></select><button type="button" class="sh-btn" data-ai-action="add">＋ 항목 추가</button></div>':'')+'</div><div class="hr bt"></div></div>';
+ return '<div class="phead rep ai-overview '+(schProjectCompact(pid,E)?'collapsed ':'')+(E?'ed':'')+'"'+schRepPc(p)+'><div class="ttl"><h1 style="color:'+esc(p.color)+'">'+esc(p.full)+'</h1></div>'+schProjectDetailButton(pid,E)+'<div class="hr"></div><div class="rep-in"><div class="rmeta"><div class="rml"><span class="m no">No. '+no+'</span><span class="m grp">'+esc(d.grp||'구분 없음')+'</span>'+(d.focus?'<span class="m fo on">집중 추진</span>':'')+'<span class="m st"><b>추진 단계</b>'+statusBadge(p.status)+'</span><i class="sep"></i><span class="m who"><b>담당자</b>'+av()+'<span>'+esc(d.owner||p.owner||'미지정')+'</span></span></div><div class="rmr"><div class="rbt">'+(E?'<button type="button" class="sh-btn edit on" data-ai-direct="save">저장</button><button type="button" class="cancel" data-ai-direct="cancel">취소</button>':'<button type="button" class="sh-btn edit" data-ai-direct="edit">수정</button><button type="button" class="sh-btn upx" data-ai-open="upload">'+svg('i-sch-fup',13,13)+'AI 개요 업로드</button>')+'</div><div class="rdt"><b>최초자료일</b><span>'+esc(d.first||'-')+'</span><b>기준일</b><span>'+esc(d.asof||'-')+'</span></div></div></div>'+schAIReport(report,E)+(E?'<div class="ai-add-section"><select data-ai-new-type aria-label="추가할 내용 형식"><option value="paragraphs">문단</option><option value="bullets">목록</option><option value="metrics">지표</option><option value="table">표</option></select><button type="button" class="sh-btn" data-ai-action="add">＋ 항목 추가</button></div>':'')+'</div><div class="hr bt"></div></div>';
 }
 function schAISetField(report,path,value){
  const keys=path.split('.');let node=report;for(const k of keys.slice(0,-1))node=node[k];const key=keys.at(-1);
@@ -9869,6 +10128,10 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='sec'){if(SCHU.sec!==v){SCHU.sec=v;SCHU.evPage=1;schLowerRefresh();}return;}
   if(k==='lowadd'){e.stopPropagation();schLowerAdd(el,pid);return;}
   if(k==='netmode'){SCHU.netMode=v;schRefresh();return;}
+  if(k==='netzoom'){
+    const view=$('#sch-net .sn-scroll').getBoundingClientRect();
+    schNetZoomAt(Number(v),view.left+view.width/2,view.top+view.height/2); return;
+  }
   if(k==='netfit'){ if(SCHU.netFit){SCHU.netFit=false;SCHU.netZoom=1;schNetBuild(pid);schUiSave();}else{schNetZoom(0);SCHU.netFit=true;schUiSave();} return; }
   if(k==='scn-off'){SCHU.scn='';SCH.memo[pid]=null;schRedraw(true);return;}
   if(k==='ops'){SCHU.tab='gantt';const t=m&&m.byWbs.get('W8.6');if(t){SCHU.sel=t.id;if(!SCHU.open.includes(t.phase))SCHU.open.push(t.phase);}schRefresh();const top=$('#sch-actions');if(top)top.scrollIntoView({block:'start',behavior:'smooth'});return;}
@@ -9893,7 +10156,19 @@ let schQT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!(t.matches&&t.matches('input[data-schq]')))return; const key=t.dataset.schq; SCHU[key]=t.value; SCHU.page=1; SCHU.upage=1; SCHU.evPage=1; clearTimeout(schQT); schQT=setTimeout(key==='lq'?schLowerRefresh:schRefresh,140); });
 // Ctrl+Z / Ctrl+Shift+Z undo and redo schedule changes while nothing is being typed.
 document.addEventListener('keydown',e=>{ if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='z'||S.page!=='project'||!schHas(S.proj)||S.full)return; const a=document.activeElement; if(a&&a.matches&&a.matches('input,textarea,select,[contenteditable="true"]'))return; if(!SCH.undo.length&&!SCH.redo.length)return; e.preventDefault(); if(e.shiftKey)schRedo();else schUndo(); });
-window.addEventListener('resize',()=>{ clearTimeout(schQT); schQT=setTimeout(()=>{const g=$('#sch-gantt .sg-scroll');if(g&&SCHU.scale==='fit'){g._key='';schGanttBuild(S.proj);}},200); });
+window.addEventListener('resize',()=>{
+  clearTimeout(schQT);
+  schQT=setTimeout(()=>{
+    const gantt=$('#sch-gantt .sg-scroll');
+    if(gantt&&(schMob()||SCHU.scale==='fit')){
+      if(SCHU.scale==='fit')gantt._key='';
+      schGanttBuild(S.proj);
+    }
+    if(schMob()&&$('#sch-net .sn-scroll')){
+      if(SCHU.netFit)schNetZoom(0); else schNetBuild(S.proj);
+    }
+  },200);
+});
 
 // Dragging a bar of the gantt moves the task's managed dates by whole days (not for a task that has started or whose length is a rule).
 // What is drawn is the forecast, so the new managed start is "forecast start + the days dragged"; if a predecessor still holds the task, the toast says so.
@@ -9917,7 +10192,7 @@ document.addEventListener('mouseover',e=>{ const g=e.target.closest&&e.target.cl
   if(!r){band.hidden=true;return;} band.hidden=false; band.style.top=(r.y+2.1)+'px'; $$(`#sch-gantt [data-row="${id}"]`).forEach(x=>x.classList.add('hover')); });
 
 // the day window of the calendar: it opens a moment after the pointer comes to rest on a pale count and stays while the pointer is on it
-document.addEventListener('mouseover',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell:not(.today):not(.out) .acnt'); if(!b)return; clearTimeout(schPopHideT); clearTimeout(schPopT); if(schPop&&schPop._a===b)return; schPopT=setTimeout(()=>schDayPopShow(b),schPop?60:160); });
+document.addEventListener('mouseover',e=>{ if(schMob())return; const b=e.target.closest&&e.target.closest('.cal.pv .cell:not(.today):not(.out) .acnt'); if(!b)return; clearTimeout(schPopHideT); clearTimeout(schPopT); if(schPop&&schPop._a===b)return; schPopT=setTimeout(()=>schDayPopShow(b),schPop?60:160); });
 document.addEventListener('mouseout',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell .acnt'); if(!b||b.contains(e.relatedTarget))return; clearTimeout(schPopT); if(schPop&&!(e.relatedTarget&&schPop.contains(e.relatedTarget)))schDayPopHide(); });
 document.addEventListener('mousedown',e=>{ if(schPop&&!schPop.contains(e.target))schDayPopHide(true); },true);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&schPop)schDayPopHide(true); });

@@ -28,20 +28,22 @@ function schCalCounts(pid,mStart,mEnd){ const out={}, dim=+mEnd.slice(8), m=schH
 function schCalBadge(pid,date,count){ let dots='';
   if(date===TODAY){ const rows=schDayRows(pid,date), g=rows.filter(x=>x.green).length, r=rows.filter(x=>x.red).length;
     dots=(g?`<i class="g${g>9?' w':''}" title="오늘 일정이 시작된 액션 ${g}건">${g>9?'9+':g}</i>`:'')+(r?`<i class="r${r>9?' w':''}" title="내가 담당·호출·연결된 액션의 변동 ${r}건">${r>9?'9+':r}</i>`:''); }
+  if(schMob())return `<button type="button" class="acnt" data-mob-day aria-label="${esc(schD(date))} 액션 ${count}건 보기">${svg('i-sch-tag',10,10)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</button>`;
   return `<span class="acnt" ${date===TODAY?`title="오늘 진행 중이거나 지연된 액션 ${count}건"`:''}>${svg('i-sch-tag',9.75,9.5)}<b>${count}</b>${dots?`<span class="nd">${dots}</span>`:''}</span>`; }
 function schRightList(opts){ const pid=opts.proj||null, main=!pid, D=TODAY, /* the list is always today's: neither calendar selects days (project: 2026-11-19, main: 2026-11-23) */  P=AIDCSchedule.progress; const all=itemsOn(D,pid), by=t=>all.filter(i=>i.type===t).sort(newestFirst);
   const evs=by('meeting'); const [y,mo,dn]=D.split('-').map(Number), dow='일월화수목금토'[new Date(y,mo-1,dn).getDay()], one=t=>esc((t||'').split('\n').join(' ')||'(제목 없음)');
   // the date stands above the upper line; both lines stay where they are, what is between them scrolls; a caption stays in sight
   let h=`<div class="rlist sch ${main?'':'pv'}" style="${main?'':`top:150px;--pc:${esc(proj(pid).color||'#4f4f4f')}`}"><div class="rdate">${schD(D)} (${dow})</div><div class="rline"></div><div class="rscroll"><div class="rcap cap-ev"><span class="ic">${svg('i-sch-cal',13,13)}</span><span class="lb">주요일정</span></div>`;
   if(!evs.length)h+=`<div class="rnone">오늘 등록된 미팅이 없습니다.</div>`;
-  evs.forEach(e=>{const p=proj(e.proj);
-    h+=`<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;});
+  const meetingRow=e=>{const p=proj(e.proj);
+    return `<div class="ev" data-open="${e.id}">${main?pill(p):''}<div class="tt">${main?'':dotsHtml(e)}<b>${one(e.title)}</b>${avstack(e.people)}</div>${meetLines3(e).some(c=>c.t)?chkHtml(e):''}</div>`;};
+  h+=schMob()?schMobAgenda(evs,meetingRow,`${pid||'main'}:${D}:meeting`,'미팅'):evs.map(meetingRow).join('');
   if(pid){ // the actions of the day: tasks of the schedule and ordinary action items
     const m=schHas(pid)?schModel(pid):null, rows=schDayRows(pid,D);
     h+=`<div class="rsep"></div><div class="rcap act"><span class="ic">${svg('i-sch-tag',13,13)}</span><span class="lb">액션</span><span class="n">${rows.length}</span></div>`;
     if(!rows.length)h+=`<div class="rnone">${schHas(pid)&&!m?'일정을 불러오는 중입니다…':'이 날짜에 진행 중인 액션이 없습니다.'}</div>`;
-    h+=rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
-    if(rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
+    h+=schMob()?schMobAgenda(rows,x=>schDayRowHtml(x,true),`${pid}:${D}:action`,'액션'):rows.slice(0,60).map(x=>schDayRowHtml(x,true)).join('');   // the short year only here; the day window keeps the whole date
+    if(!schMob()&&rows.length>60)h+=`<div class="more">외 ${rows.length-60}건 · 아래 액션 리스트에서 모두 볼 수 있습니다</div>`; }
   return h+`<div class="rtail"></div></div><div class="rline bt"></div></div>`; }
 
 // The list beside the calendar ends where the calendar ends (owner, 2026-11-19: "do not show all of today's actions, cut it at the end

@@ -82,8 +82,13 @@ function schActionBody(pid){ const m=schModel(pid);
 
 // The page's pager look, but with its own attribute (the page's own handler would take data-pg for one of its lists).
 // Pages: the first and the last one ("<<", ">>"), one back and one on, and the numbers ten at a time (1-10, 11-20, ...).
+function schPageRange(cur,total){
+  const count=schMob()?3:10;
+  const first=schMob()?Math.max(1,Math.min(cur-1,total-count+1)):Math.floor((cur-1)/count)*count+1;
+  return [first,Math.min(total,first+count-1)];
+}
 const schPgDbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
-function schPager(cur,total,key,top){ const at=`data-sch="page" data-k="${key}" data-t="${total}"`, from=Math.floor((cur-1)/10)*10+1, to=Math.min(total,from+9);
+function schPager(cur,total,key,top){ const at=`data-sch="page" data-k="${key}" data-t="${total}"`, [from,to]=schPageRange(cur,total);
   let h=`<div class="pager" style="margin-top:${top}px"><button class="arr ends" ${at} data-v="first" title="처음" aria-label="처음 쪽" ${cur<=1?'disabled':''}>${schPgDbl(true)}</button><button class="arr" ${at} data-v="prev" title="이전" aria-label="이전 쪽" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;
   for(let i=from;i<=to;i++)h+=`<button ${at} data-v="${i}" class="${i===cur?'cur':''}">${i}</button>`;
   return h+`<button class="arr" ${at} data-v="next" title="다음" aria-label="다음 쪽" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button><button class="arr ends" ${at} data-v="last" title="마지막" aria-label="마지막 쪽" ${cur>=total?'disabled':''}>${schPgDbl(false)}</button></div>`;}
@@ -177,13 +182,14 @@ function schLinkPath(a,b,type){ type=/^(FS|SS|FF|SF)$/.test(type||'')?type:'FS';
 function schTextW(text,weight){ const c=schTextW.c||(schTextW.c=document.createElement('canvas').getContext('2d')); if(!schTextW.f)schTextW.f=getComputedStyle(document.body).fontFamily||'sans-serif';
   c.font=`${weight||400} 12px ${schTextW.f}`; return c.measureText(text).width-text.length*.144; }
 function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)return; const m=schModel(pid); if(!m){host.innerHTML='';return;} const A=AIDCSchedule, D=A.dates, P=A.progress;
-  SG.left=document.documentElement.classList.contains('mob')?Math.round(Math.max(132,host.clientWidth*.44)):Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)))   /* a phone: the names only, the chart beside them */;   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
+  const mobile=schMob();
+  SG.left=mobile?Math.round(Math.max(132,host.clientWidth*.44)):Math.round(Math.max(340,Math.min(Math.max(340,host.clientWidth-280),SCHU.gl||540)))   /* a phone: the names only, the chart beside them */;   // the outline was 508 wide in the design and is 540 since dates are written in full (eleventh round); its edge can be pulled (SCHU.gl)
   const shown=schFiltered(m), shownIds=new Set(shown.map(t=>t.id)), force=schFiltering(), sel=schTaskIdOf(S.panel)||SCHU.sel;
   // time range: like the Schedule app, the long support tail after the operation date is cut (it would flatten everything else)
   const all=m.plan.tasks; let o=Infinity, mx=-Infinity; for(const t of all){const r=m.res.tasks[t.id];o=Math.min(o,D.dayNumber(t.referenceStart),D.dayNumber(r.start));mx=Math.max(mx,D.dayNumber(r.finish));}
   if(!isFinite(o)){ o=D.dayNumber(schToday()); mx=o+150; }   // no task yet: half a year from today
   const origin=o-7, end=Math.min(mx,m.res.operationDate?D.dayNumber(D.addMonths(m.res.operationDate,7)):mx)+14, days=end-origin+1;
-  const viewW=Math.max(300,host.clientWidth-SG.left-1), px=SCHU.scale==='day'?SG.day:SCHU.scale==='week'?5:SCHU.scale==='month'?1.7:Math.max(.05,viewW/days), TW=Math.round(days*px);
+  const viewW=Math.max(mobile?1:300,host.clientWidth-SG.left-1), px=SCHU.scale==='day'?SG.day:SCHU.scale==='week'?5:SCHU.scale==='month'?1.7:Math.max(.05,viewW/days), TW=Math.round(days*px);
   const X=d=>(D.dayNumber(d)-origin)*px; host._px=px; host._o=origin;
   // rows
   const rows=[]; let y=SG.padTop;
@@ -198,8 +204,8 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   const months=[]; {let d=first.slice(0,8)+'01'; while(d<=last){months.push(d);d=D.addMonths(d,1);} }
   const yearTop=px<1.2; // too narrow for a label per month: years on top, months (or quarters) below
   if(yearTop){ const years=[...new Set(months.map(x=>x.slice(0,4)))];
-    for(const yv of years){const a=Math.max(0,X(yv+'-01-01')), b=Math.min(TW,X((+yv+1)+'-01-01'));ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${yv}</div>`;}
-    const step=px*30>=22?1:3; for(const d of months){const mo=+d.slice(5,7);if((mo-1)%step)continue;const a=X(d);if(a<0||a>TW-8)continue;ax+=`<div class="dy tick" style="left:${a}px;width:${px*30*step}px">${step===1?mo:Math.ceil(mo/3)+'Q'}</div>`;} }
+    for(const yv of years){const a=Math.max(0,X(yv+'-01-01')), b=Math.min(TW,X((+yv+1)+'-01-01'));ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${!mobile||b-a>=29?yv:''}</div>`;}
+    const step=px*30>=22?1:(mobile&&px*90<20?6:3); for(const d of months){const mo=+d.slice(5,7);if((mo-1)%step)continue;const a=X(d);if(a<0||a>TW-8)continue;ax+=`<div class="dy tick" style="left:${a}px;width:${px*30*step}px">${step===1?mo:(step===6?(mo===1?'상':'하'):Math.ceil(mo/3)+'Q')}</div>`;} }
   else{ for(const d of months){const a=Math.max(0,X(d)), b=Math.min(TW,X(D.addMonths(d,1)));if(b-a<2)continue;ax+=`<div class="mo" style="left:${a}px;width:${b-a}px">${b-a>46?d.slice(0,4)+'. '+(+d.slice(5,7)):+d.slice(5,7)}</div>`;}
     if(SCHU.scale==='day'){ for(let n=origin;n<=end;n++){const d=D.fromDay(n), dow=new Date(d+'T00:00:00Z').getUTCDay();ax+=`<div class="dy ${dow===6?'sat':dow===0?'sun':''} ${d===today?'now':''}" style="left:${(n-origin)*px}px;width:${px}px"><i>${+d.slice(8)}</i></div>`;} }
     else if(SCHU.scale==='week'){ for(let n=origin;n<=end;n++){const d=D.fromDay(n);if(new Date(d+'T00:00:00Z').getUTCDay()!==1)continue;ax+=`<div class="dy tick" style="left:${(n-origin)*px}px;width:${px*7}px">${+d.slice(8)}</div>`;} }
@@ -246,7 +252,15 @@ function schGanttBuild(pid){ const host=$('#sch-gantt .sg-scroll'); if(!host)ret
   const nowX=today>=first&&today<=last?X(today)+px/2:-1;
   const crit=all.filter(t=>m.res.tasks[t.id].criticality==='critical').length;
   const hotMonths=months.map(d=>X(d)).filter(a=>a>0&&a<TW).map(a=>`<i class="mline" style="left:${a}px"></i>`).join('');
-  host.innerHTML=`<div class="sg-inner" style="width:${SG.left+TW+1}px"><div class="sg-head"><div class="sg-corner" style="width:${SG.left}px"><span>운영개시 예상 <b>${m.res.operationDate?schD(m.res.operationDate):'미정'}</b>${m.res.operationDelay?`<em>(목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)</em>`:''}</span><span>운영개시 경로 <b>${crit}</b>건</span><span>상태일 <b>${schD(m.plan.statusDate)}</b></span>${schInfo('dates')}</div><div class="sg-axis" style="left:${SG.left+1}px;width:${TW}px">${ax}${hotMonths}</div></div>
+  const summary=`<span>운영개시 예상 <b>${m.res.operationDate?schD(m.res.operationDate):'미정'}</b>${m.res.operationDelay?`<em>(목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)</em>`:''}</span><span>운영개시 경로 <b>${crit}</b>건</span><span>상태일 <b>${schD(m.plan.statusDate)}</b></span>${schInfo('dates')}`;
+  if(mobile){
+    let stats=host.parentElement.querySelector('.sg-mobile-summary');
+    if(!stats){stats=document.createElement('div');stats.className='sg-mobile-summary';host.before(stats);}
+    const date=m.res.operationDate?schD(m.res.operationDate):'미정', slip=m.res.operationDelay;
+    stats.innerHTML=`<div><span>운영개시 예상</span><b>${date}</b>${slip?`<small>목표 대비 ${slip>0?'+':''}${slip}일</small>`:''}</div>
+      <div><span>운영개시 경로</span><b>${crit}건</b></div><div><span>상태일</span><b>${schD(m.plan.statusDate)}</b></div>${schInfo('dates')}`;
+  }
+  host.innerHTML=`<div class="sg-inner" style="width:${SG.left+TW+1}px"><div class="sg-head"><div class="sg-corner" style="width:${SG.left}px">${mobile?'단계 · 업무명':summary}</div><div class="sg-axis" style="left:${SG.left+1}px;width:${TW}px">${ax}${hotMonths}</div></div>
     <div class="sg-body" style="height:${H}px"><i class="sg-band" hidden></i><div class="sg-left" style="width:${SG.left}px;height:${H}px">${L}<i class="sg-split" title="끌어서 표의 폭 조절 · 두 번 누르면 처음 폭"></i></div>
     <div class="sg-right" style="left:${SG.left+1}px;width:${TW}px;height:${H}px">${R}${SCHU.today&&nowX>=0?`<i class="now" style="left:${nowX}px"></i>`:''}<svg class="sg-links" width="${TW}" height="${H}">${links}</svg><svg class="sg-dots" width="${TW}" height="${H}" aria-hidden="true">${dots}</svg></div>${marks}</div></div>`;
   // the horizontal scroll bar: a bar of its own below the chart, kept in step with it; the chart itself shows none

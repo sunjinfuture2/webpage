@@ -5,7 +5,7 @@
 // share their start, so several later tasks read as one branching line. Only relations between neighbouring columns are
 // drawn in the "selected task" view; whatever else connects the shown tasks is counted below the map.
 const SN={w:271,h:128.5,gx:89,gy:33.5,trunk:38,pad:60,port:24};
-function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools"><button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (휠: 확대·축소, 끌기: 이동)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
+function schNetShell(pid,m){ return `<div class="sch-net" id="sch-net"><div class="sn-scroll"></div><div class="sn-tools">${schMob()?`<button type="button" class="sh-btn" data-sch="netzoom" data-k="-1" aria-label="관계도 축소">−</button><button type="button" class="sh-btn" data-sch="netzoom" data-k="1" aria-label="관계도 확대">+</button>`:''}<button class="sh-btn sn-fit" data-sch="netfit" title="전체가 보이게 맞추기 · 다시 누르면 원래 크기 (휠: 확대·축소, 끌기: 이동)">${svg('i-sch-fit',20,20)}</button></div><span class="sn-info"></span></div>`; }
 function schNetFocus(m){ const sel=schTaskIdOf(S.panel)||SCHU.sel; if(sel&&m.byId.has(sel)&&(!SCHU.phase||SCHU.netMode==='focus'||m.byId.get(sel).phase===SCHU.phase))return sel;
   const list=schFiltered(m); const today=schToday(); const cur=list.find(t=>!AIDCSchedule.progress.isDone(t)&&m.res.tasks[t.id].finish>=today)||list[0]||m.plan.tasks[0]; return cur?cur.id:''; }
 // Columns for the "selected task" view: the task in the middle, what must come before it to the left, what follows to the right.

@@ -21,6 +21,10 @@ document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.close
   if(k==='sec'){if(SCHU.sec!==v){SCHU.sec=v;SCHU.evPage=1;schLowerRefresh();}return;}
   if(k==='lowadd'){e.stopPropagation();schLowerAdd(el,pid);return;}
   if(k==='netmode'){SCHU.netMode=v;schRefresh();return;}
+  if(k==='netzoom'){
+    const view=$('#sch-net .sn-scroll').getBoundingClientRect();
+    schNetZoomAt(Number(v),view.left+view.width/2,view.top+view.height/2); return;
+  }
   if(k==='netfit'){ if(SCHU.netFit){SCHU.netFit=false;SCHU.netZoom=1;schNetBuild(pid);schUiSave();}else{schNetZoom(0);SCHU.netFit=true;schUiSave();} return; }
   if(k==='scn-off'){SCHU.scn='';SCH.memo[pid]=null;schRedraw(true);return;}
   if(k==='ops'){SCHU.tab='gantt';const t=m&&m.byWbs.get('W8.6');if(t){SCHU.sel=t.id;if(!SCHU.open.includes(t.phase))SCHU.open.push(t.phase);}schRefresh();const top=$('#sch-actions');if(top)top.scrollIntoView({block:'start',behavior:'smooth'});return;}
@@ -45,7 +49,19 @@ let schQT=0;
 document.addEventListener('input',e=>{ const t=e.target; if(!(t.matches&&t.matches('input[data-schq]')))return; const key=t.dataset.schq; SCHU[key]=t.value; SCHU.page=1; SCHU.upage=1; SCHU.evPage=1; clearTimeout(schQT); schQT=setTimeout(key==='lq'?schLowerRefresh:schRefresh,140); });
 // Ctrl+Z / Ctrl+Shift+Z undo and redo schedule changes while nothing is being typed.
 document.addEventListener('keydown',e=>{ if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='z'||S.page!=='project'||!schHas(S.proj)||S.full)return; const a=document.activeElement; if(a&&a.matches&&a.matches('input,textarea,select,[contenteditable="true"]'))return; if(!SCH.undo.length&&!SCH.redo.length)return; e.preventDefault(); if(e.shiftKey)schRedo();else schUndo(); });
-window.addEventListener('resize',()=>{ clearTimeout(schQT); schQT=setTimeout(()=>{const g=$('#sch-gantt .sg-scroll');if(g&&SCHU.scale==='fit'){g._key='';schGanttBuild(S.proj);}},200); });
+window.addEventListener('resize',()=>{
+  clearTimeout(schQT);
+  schQT=setTimeout(()=>{
+    const gantt=$('#sch-gantt .sg-scroll');
+    if(gantt&&(schMob()||SCHU.scale==='fit')){
+      if(SCHU.scale==='fit')gantt._key='';
+      schGanttBuild(S.proj);
+    }
+    if(schMob()&&$('#sch-net .sn-scroll')){
+      if(SCHU.netFit)schNetZoom(0); else schNetBuild(S.proj);
+    }
+  },200);
+});
 
 // Dragging a bar of the gantt moves the task's managed dates by whole days (not for a task that has started or whose length is a rule).
 // What is drawn is the forecast, so the new managed start is "forecast start + the days dragged"; if a predecessor still holds the task, the toast says so.
@@ -69,7 +85,7 @@ document.addEventListener('mouseover',e=>{ const g=e.target.closest&&e.target.cl
   if(!r){band.hidden=true;return;} band.hidden=false; band.style.top=(r.y+2.1)+'px'; $$(`#sch-gantt [data-row="${id}"]`).forEach(x=>x.classList.add('hover')); });
 
 // the day window of the calendar: it opens a moment after the pointer comes to rest on a pale count and stays while the pointer is on it
-document.addEventListener('mouseover',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell:not(.today):not(.out) .acnt'); if(!b)return; clearTimeout(schPopHideT); clearTimeout(schPopT); if(schPop&&schPop._a===b)return; schPopT=setTimeout(()=>schDayPopShow(b),schPop?60:160); });
+document.addEventListener('mouseover',e=>{ if(schMob())return; const b=e.target.closest&&e.target.closest('.cal.pv .cell:not(.today):not(.out) .acnt'); if(!b)return; clearTimeout(schPopHideT); clearTimeout(schPopT); if(schPop&&schPop._a===b)return; schPopT=setTimeout(()=>schDayPopShow(b),schPop?60:160); });
 document.addEventListener('mouseout',e=>{ const b=e.target.closest&&e.target.closest('.cal.pv .cell .acnt'); if(!b||b.contains(e.relatedTarget))return; clearTimeout(schPopT); if(schPop&&!(e.relatedTarget&&schPop.contains(e.relatedTarget)))schDayPopHide(); });
 document.addEventListener('mousedown',e=>{ if(schPop&&!schPop.contains(e.target))schDayPopHide(true); },true);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&schPop)schDayPopHide(true); });

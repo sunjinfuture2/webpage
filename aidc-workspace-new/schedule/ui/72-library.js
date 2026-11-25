@@ -30,12 +30,16 @@ function schLibDraw(pin,type,label,rows){ const L=SCH_LIB; if(L.type!==type){L.q
     <div class="lb-wall" id="lb-wall"></div><div class="lb-more" id="lb-more"></div></div>`;
   schLibFill(); }
 // The wall for what is asked for now (search, kind): columns by the room there is, the first cards, a watch on its end.
+function schLibColumnCount(wall){
+  const width=wall.getBoundingClientRect().width/(LAYOUT.zoom||1);
+  return Math.max(schMob()?1:2,Math.min(7,Math.floor((width+16)/226)));
+}
 function schLibFill(){ const L=SCH_LIB, wall=$('#lb-wall'), more=$('#lb-more'); if(!wall)return; const q=norm(L.q);
   L.rows=L.all.filter(f=>(!L.kind||schLibKind(f)===L.kind)&&(!q||norm(f.name).includes(q)||norm((item(f.item)||{}).title||'').includes(q)));
   const cnt=$('#lb-cnt'); if(cnt)cnt.textContent=L.rows.length===L.all.length?`${L.all.length}개 파일`:`${L.all.length}개 중 ${L.rows.length}개`;
   if(!L.all.length){ wall.innerHTML=''; more.innerHTML=`<div class="libempty">첨부된 파일이 아직 없습니다.<br>내용을 수정할 때 첨부한 파일과 이미지가 여기에 모입니다.</div>`; return; }
   if(!L.rows.length){ wall.innerHTML=''; more.innerHTML='<div class="libempty">조건에 맞는 파일이 없습니다.</div>'; return; }
-  const z=LAYOUT.zoom||1, w=wall.getBoundingClientRect().width/z, n=Math.max(2,Math.min(7,Math.floor((w+16)/(210+16))));
+  const n=schLibColumnCount(wall);
   wall.innerHTML=Array.from({length:n},()=>'<div class="lb-col"></div>').join(''); L.cols=[...wall.children]; L.h=L.cols.map(()=>0); L.shown=0; more.innerHTML='<i class="lb-end" id="lb-end"></i>';
   schLibMore(); if(L.io)L.io.disconnect(); L.io=new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting))schLibMore(); },{root:$('#panel'),rootMargin:'0px 0px 900px 0px'}); const end=$('#lb-end'); if(end)L.io.observe(end); }
 function schLibMore(){ const L=SCH_LIB; if(!L.cols.length||L.shown>=L.rows.length)return; const part=L.rows.slice(L.shown,L.shown+36), cw=L.cols[0].getBoundingClientRect().width/(LAYOUT.zoom||1)||236;
@@ -48,4 +52,4 @@ function schLibTexts(){ $$('#lb-wall pre[data-lbtxt]').forEach(pre=>{ const id=p
 let schLibT=0;
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='lb-q'){ SCH_LIB.q=e.target.value; clearTimeout(schLibT); schLibT=setTimeout(schLibFill,160); } });
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-lbk]'); if(!b)return; e.stopPropagation(); SCH_LIB.kind=b.dataset.lbk; $$('.lb-kinds button').forEach(x=>x.classList.toggle('on',x===b)); schLibFill(); },true);
-window.addEventListener('resize',()=>{ if($('#lb-wall')&&SCH_LIB.all.length){ clearTimeout(schLibT); schLibT=setTimeout(()=>{ const wall=$('#lb-wall'); if(!wall)return; const n=Math.max(2,Math.min(7,Math.floor((wall.getBoundingClientRect().width/(LAYOUT.zoom||1)+16)/226))); if(n!==SCH_LIB.cols.length)schLibFill(); },200); } });
+window.addEventListener('resize',()=>{ if($('#lb-wall')&&SCH_LIB.all.length){ clearTimeout(schLibT); schLibT=setTimeout(()=>{ const wall=$('#lb-wall'); if(!wall)return; const n=schLibColumnCount(wall); if(n!==SCH_LIB.cols.length)schLibFill(); },200); } });

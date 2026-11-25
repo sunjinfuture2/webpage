@@ -1317,7 +1317,7 @@ html{overflow:hidden}
     <header class="topbar">
       <nav class="crumbs" id="crumbs"></nav>
       <div class="tb-right">
-        <div class="tb-user" id="tb-user"><span class="av"><span class="avatar av22"></span><i class="dt" style="display:none"></i></span><span class="nm">최원 기사</span></div>
+        <div class="tb-user" id="tb-user"><button type="button" class="av" aria-label="계정 메뉴"><span class="avatar av22"></span><i class="dt" style="display:none"></i></button><span class="nm">최원 기사</span></div>
         <button class="tb-ic tb-share" id="tb-share" title="공유"><svg class="pict" aria-hidden="true"><use href="#pic-share"/></svg></button>
         <button class="tb-ic tb-star" id="tb-star" title="즐겨찾기"><svg width="20.8" height="19.7"><use href="#i-star"/></svg></button>
       </div>
@@ -1548,7 +1548,7 @@ let toastT; const toast=(m,ms=1800,act)=>{const t=$('#toast');t.textContent=m; c
   const arm=()=>{clearTimeout(toastT);if(!keep)toastT=setTimeout(()=>t.classList.remove('on'),ms);};
   t.classList.toggle('pv',PV);t.classList.toggle('keep',keep);t.classList.add('on');arm(); toastPlace(); t.onmouseenter=PV?()=>clearTimeout(toastT):null; t.onmouseleave=PV?()=>{if(t.classList.contains('on'))arm();}:null;};
 const pager=(cur,total,cls='')=>{ if(PREVIEW_ON){ // the first and the last page, one back and one on, the numbers ten at a time (owner, 2026-11-23)
-    const from=Math.floor((cur-1)/10)*10+1, to=Math.min(total,from+9), dbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
+    const [from,to]=schPageRange(cur,total), dbl=back=>`<span class="dbl"${back?' style="transform:rotate(180deg)"':''}>${svg('i-pg-arr',3.7,6.5)}${svg('i-pg-arr',3.7,6.5)}</span>`;
     let p=`<div class="pager ${cls}" data-total="${total}"><button class="arr ends" data-pg="first" title="처음" aria-label="처음 쪽" ${cur<=1?'disabled':''}>${dbl(true)}</button><button class="arr" data-pg="prev" title="이전" aria-label="이전 쪽" ${cur<=1?'disabled':''}>${svg('i-pg-arr',3.7,6.5,'transform:rotate(180deg)')}</button>`;
     for(let i=from;i<=to;i++)p+=`<button data-pg="${i}" class="${i===cur?'cur':''}">${i}</button>`;
     return p+`<button class="arr" data-pg="next" title="다음" aria-label="다음 쪽" ${cur>=total?'disabled':''}>${svg('i-pg-arr',3.7,6.5)}</button><button class="arr ends" data-pg="last" title="마지막" aria-label="마지막 쪽" ${cur>=total?'disabled':''}>${dbl(false)}</button></div>`; }
@@ -1628,9 +1628,9 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
   const evs=calItems(opts.proj).filter(i=>i.date<=mEnd&&itemEnd(i)>=mStart&&!(PV&&i.type==='action')).map(i=>({e:i,s:dayNo(i.date),en:dayNo(itemEnd(i))}));
   const today=TODAY.slice(0,7)===mStart.slice(0,7)?+TODAY.slice(8):0; const selD=schPreview()?TODAY:(S.selDate||TODAY); const sel=selD.slice(0,7)===mStart.slice(0,7)?+selD.slice(8):0;
   let h=`<div class="cal-wrap"><div class="cal ${opts.narrow?'narrow':''} ${PV?'pv':''}" ${PV&&opts.proj?`style="--pc:${esc(proj(opts.proj).color||'#4f4f4f')}"`:''}>
-    <button class="nav prev" data-cal="prev">${svg('i-nav-l',5.6,10.9)}</button>
+    <button class="nav prev" data-cal="prev" aria-label="이전 달">${svg('i-nav-l',5.6,10.9)}</button>
     <div class="mon"><h2 data-monpick title="연도·월 선택">${Y}. ${M}</h2></div>
-    <button class="nav next" data-cal="next">${svg('i-nav-r',5.7,10.9)}</button>`;
+    <button class="nav next" data-cal="next" aria-label="다음 달">${svg('i-nav-r',5.7,10.9)}</button>`;
   if(!opts.proj) h+=`<div class="filters${PREVIEW_ON&&S.calPillsOpen?' open':''}">${orderedProjects().map(k=>pill(PROJECTS[k],(S.filters[k]!==false?'':'off')+' flt nosq').replace('class="pill','data-flt="'+k+'" title="이 프로젝트의 일정 보기/숨기기" class="pill')).join('')}${PREVIEW_ON?`<button type="button" class="fmore" data-calpills hidden></button>`:''}</div>`;
   h+=`<div class="legend">${(PV?(opts.proj?['action','meeting','research']:['meeting','research']):['meeting','action','research']).map(t=>`<span class="ty-${t} ${S.typeOff[t]?'off':''}" data-typeflt="${t}" title="눌러서 보기/숨기기"><i>${PV?schCalPict(t,opts.proj?proj(opts.proj).color:''):pict(t)}</i>${PV&&t==='action'?'액션':TYPE_NAME[t]}</span>`).join('')}</div>`;
   h+=`<div class="grid"><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="rows">`;
@@ -1645,14 +1645,17 @@ function renderCalendar(opts){ // opts: {proj, year, month, narrow}
     wk.sort((a,b)=>((b.en-b.s)-(a.en-a.s))||(a.s-b.s)||(RANK[a.e.type]-RANK[b.e.type])||newestFirst(a.e,b.e));
     const lanes=[], more={}; let maxLane=-1, eh='';
     wk.forEach(x=>{let l=0; while(lanes[l]&&lanes[l].some(r=>!(x.en<r[0]||x.s>r[1])))l++; (lanes[l]=lanes[l]||[]).push([x.s,x.en]); x.lane=l;});
-    wk.forEach(x=>{const e=x.e; if(x.lane>=CAL_LANES){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
-      const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:9.5); const right=COLX[ec]+COLW[ec]-(x.contR?0:(ec===6?0:8));
+    const laneLimit=mobW?2:CAL_LANES, laneHeight=mobW?24:21.1;
+    const weekHasCounts=mobW&&cnt&&Array.from({length:hi-lo+1},(_,i)=>cnt[lo+i]).some(Boolean);
+    const eventTop=weekHasCounts?54:29, inset=mobW?2:9.5;
+    wk.forEach(x=>{const e=x.e; if(x.lane>=laneLimit){for(let k=x.s;k<=x.en;k++)more[k]=(more[k]||0)+1;return;}
+      const sc=x.s-ws, ec=x.en-ws; const left=COLX[sc]+(x.contL?0:inset); const right=COLX[ec]+COLW[ec]-(x.contR||ec===6?0:(mobW?2:8));
       const p=proj(e.proj); const rs=e.type==='research'; const first=e.date<mStart?x.s===1:x.s===+e.date.slice(8); const full=(e.title||'').split('\n').join(' ')||'(제목 없음)'; const label=first?esc(full):'';
-      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*21.1}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
+      eh+=`<div class="ev ty-${e.type} ${rs?'rs':p.cls} ${x.contL?'cont-l':''} ${x.contR?'cont-r':''} ${label?'':'bar'}" style="left:${left}px;width:${right-left}px;top:${x.lane*laneHeight}px" data-open="${e.id}" title="${esc(full)}">${label?`<i class="sq">${PV?schCalPict(e.type,p.color):pict(e.type)}${hasMention(e)?'<i class="dt"></i>':''}</i><span class="lb">${label}</span>`:''}</div>`;
       maxLane=Math.max(maxLane,x.lane);});
-    Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+9.5}px;top:${CAL_LANES*21.1}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
-    const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?29+used*21.1+7.7:0;
-    h+=`<div class="row"${need>102.2?` style="min-height:${need}px"`:''}>${cells}<div class="evs" style="height:${Math.max(0,need-29)}px">${eh}</div></div>`;}
+    Object.keys(more).forEach(k=>{eh+=`<div class="more" style="left:${COLX[+k-ws]+inset}px;top:${laneLimit*laneHeight}px" data-date="${ymd(Y,M,+k)}" title="이 날짜의 일정 모두 보기">+${more[k]}건</div>`;});
+    const used=(maxLane+1)+(Object.keys(more).length?1:0); const need=used?eventTop+used*laneHeight+(mobW?6:7.7):0;
+    h+=`<div class="row"${need>(mobW?56:102.2)?` style="min-height:${need}px"`:''}>${cells}<div class="evs" style="${mobW?`top:${eventTop}px;`:''}height:${Math.max(0,need-eventTop)}px">${eh}</div></div>`;}
   h+=`</div></div></div></div>`; // rows, grid, cal, cal-wrap (the design left cal-wrap open, which nested the rest of the page inside the calendar block)
   return h;
 }
@@ -2452,6 +2455,10 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-typeflt]')){const k=el.dataset.typeflt;S.typeOff[k]=!S.typeOff[k];refreshSec('cal');return;}
   if(el=q('[data-seltoday]')){S.selDate=null;const n=new Date();if(S.page==='project'){S.calYp=n.getFullYear();S.calMp=n.getMonth()+1;}else{S.calY=n.getFullYear();S.calM=n.getMonth()+1;}refreshSec('cal');return;}
   if(el=q('.cal .cell .add')){const it=newItem('meeting',{date:el.closest('.cell').dataset.date}); openPanel(it.id); return;}
+  if(el=q('button[data-mob-day]')){
+    const date=el.closest('[data-date]').dataset.date, rows=schDayRows(S.proj,date);
+    menuPop(el,[{hd:schD(date)+' · 액션 '+rows.length+'건'},...rows.map((r,i)=>({k:String(i),html:'<button type="button" class="mob-day-item">'+esc(r.title)+'</button>',fn:()=>openPanel(r.id)}))],{cls:'mob-day-menu'}); return;
+  }
   if(el=q('.cal [data-date]')){ if(typeof schPreview==='function'&&schPreview()){ if(el.classList.contains('more'))schCalMore(el); return; }   // owner: no calendar selects days (project 2026-11-19, main 2026-11-23); "+N건" lists what did not fit
     const v=el.dataset.date;S.selDate=v===TODAY?null:v;refreshSec('cal');return;}
   if(el=q('[data-act]')){const a=el.dataset.act,id=el.dataset.id; e.stopPropagation();
@@ -2486,7 +2493,11 @@ document.addEventListener('click',async e=>{
   if(el=q('[data-pickstatus]')){menuPop(el,PSTATUS_ORDER.map(st=>({t:st,k:st,sel:normStatus(PROJECTS[S.proj].status)===st,fn:()=>{saveProjectHead();applyProjectStatus(S.proj,st);render(true);}})));return;}
   if(el=q('[data-pickowner]')){menuPop(el,[{hd:'담당자 선택'}].concat(Object.keys(PEOPLE).map(id=>({t:PEOPLE[id],k:id,ico:av('av15'),sel:PHEAD[S.proj].owner===PEOPLE[id],fn:()=>{saveProjectHead();PHEAD[S.proj].owner=PEOPLE[id];PROJECTS[S.proj].owner=PEOPLE[id];render(true);}}))));return;}
   if(el=q('[data-addpartnerrow]')){saveProjectHead();PHEAD[S.proj].partners=PHEAD[S.proj].partners.concat('');render(true);const last=$$('.page.on .phead .partners a[data-k]').pop();last&&last.focus();return;}
-  if(el=q('[data-collapse]')){S.collapsed=!S.collapsed;$('.phead').classList.toggle('collapsed',S.collapsed);return;}
+  if(el=q('[data-collapse]')){
+    const head=el.closest('.phead'), collapsed=!head.classList.contains('collapsed');
+    if(PREVIEW_ON&&schMob())schMobProjectDetail(S.proj,!collapsed); else S.collapsed=collapsed;
+    head.classList.toggle('collapsed',collapsed); el.setAttribute('aria-expanded',String(!collapsed)); return;
+  }
   if(el=q('[data-tick]')){const box=$('#road-box');const i=+el.dataset.tick;box.scrollTo({top:i*(box.scrollHeight-box.clientHeight)/18,behavior:'smooth'});$$('#road-ruler i').forEach(x=>x.classList.remove('cur'));el.classList.add('cur');return;}
   if(el=q('.road-add')){roadPicker(el); return;}
   if(el=q('[data-roaddel]')){const i=+el.dataset.roaddel;const r=ROADMAP[i];if(!r)return;confirmDlg(`“${(r.title||'').split('\n')[0]}” 항목을 로드맵에서 삭제할까요? 연결된 미팅·액션아이템·리서치는 그대로 남습니다.`,[{t:'삭제',pri:true,fn:()=>{const j=ROADMAP.findIndex(x=>x===r||same(x,r));if(j<0){render(true);toast('그 사이 로드맵이 바뀌었습니다. 다시 시도해 주세요.',2600);return;}ROADMAP.splice(j,1);render(true);toast('로드맵에서 삭제했습니다.');}},{t:'취소',fn:()=>{}}]);return;}

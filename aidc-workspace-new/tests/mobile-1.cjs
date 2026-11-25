@@ -41,8 +41,17 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1', PHON
   console.log('— a project page');
   await ev(() => go('project:pangyo')); await a.waitForFunction(() => schReady('pangyo'), null, { timeout: 20000 }); await sleep(800);
   const p0 = await fits('#content');
+  const overview = a.locator('.page.on .phead [data-collapse]');
+  check('the phone opens on the summary with the calendar in the first screen', await overview.getAttribute('aria-expanded') === 'false' && await ev(() => document.querySelector('.page.on .cal .grid').getBoundingClientRect().top < innerHeight));
+  await overview.tap();
   const ph = await ev(() => { const X = s => document.querySelector(s).getBoundingClientRect(), c1 = X('.phead .rstats'), c2 = X('.phead .rc1'), c3 = X('.phead .rc2'), h = X('.phead .ttl h1');   /* the sheet of the review list: the band of figures, then the two columns (twenty-sixth round) */ return { stacked: c2.top >= c1.bottom - 1 && c3.top >= c2.bottom - 1, w: [c1, c2, c3].map(r => Math.round(r.width)), h1Right: Math.round(h.right), h: Math.round(X('.phead').height) }; });
   check('the overview stands one column below the other, inside the screen', p0.over <= 0 && ph.stacked && ph.w.every(w => w === 358) && ph.h1Right <= 375 && ph.h > 600, { p0, ph });
+  await overview.tap();
+  await ev(() => { S.calYp=2026; S.calMp=11; refreshSec('cal'); });
+  const day = a.locator('.page.on button[data-mob-day]').first();
+  await day.tap();
+  check('a touch on a day count shows its actions', await a.locator('.mob-day-menu .mob-day-item').count() > 0);
+  await ev(() => closePop());
   const gt = await ev(() => { const g = document.querySelector('#sch-gantt'), l = g.querySelector('.sg-left'); return { w: Math.round(g.getBoundingClientRect().width), left: Math.round(l.getBoundingClientRect().width), rows: g.querySelectorAll('.sg-left .sg-row.ph').length }; });
   check('the gantt shows the names in under half of the screen and the chart beside them', gt.w === 390 && gt.left >= 132 && gt.left <= 190 && gt.rows >= 8, gt);
   const mt = await ev(() => { const box = document.querySelector('.page.on .meet'), t = box.querySelector('.track'); return { ox: getComputedStyle(t).overflowX, circ: [...box.querySelectorAll('.circ')].every(x => getComputedStyle(x).display === 'none'), h: Math.round(box.getBoundingClientRect().height), picks: box.querySelectorAll('[data-mtpick]').length }; });
