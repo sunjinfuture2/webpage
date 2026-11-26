@@ -291,12 +291,21 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   // forty-ninth round: the schedule's chart in the reports (a chart of the phases, in FULL one more per phase) and the project's
   // Excel in the guide workbook's form — a FULL file goes back in with nothing changed, the sheets of a 요약 file are for reading
   const x49 = await ev(async () => { for (let i = 0; i < 80 && !schReady('pangyo'); i++) await new Promise(r => setTimeout(r, 250)); const m = schModel('pangyo'), X = await schXlsx(), parts = ['state', 'act', 'proc', 'gate', 'evid'], out = {};
-    const charts = f => schXProjDoc('pangyo', { parts: ['act'], forms: { act: f } }).sections[0].blocks.filter(b => b.k === 'img' && b.gantt).length;
-    out.charts = { sum: charts('sum'), full: charts('full'), phases: m.phases.filter(g => g.tasks.length).length };
+    const charts = (f, ppt) => schXProjDoc('pangyo', { parts: ['act'], forms: { act: f }, ppt }).sections[0].blocks.filter(b => b.k === 'img' && b.gantt).length;
+    out.charts = { sum: charts('sum'), full: charts('full'), pptSum: charts('sum', 1), pptFull: charts('full', 1), phases: m.phases.filter(g => g.tasks.length).length };
     for (const f of ['full', 'sum']) { const forms = Object.fromEntries(parts.map(k => [k, f])), read = await X.readSheets(new File([await X.makeGuideBook(schXlSpec('pangyo', parts, forms))], 'x.xlsx')), mg = schUpMerge('pangyo', [read]);
       out[f] = { tasks: (read.tasks || []).length, links: (read.links || []).length, same: !!mg.same, none: !!mg.none, view: read.notes.filter(n => /보기용/.test(n.text)).length }; }
     return out; });
-  check('charts (forty-ninth round): 요약 has the chart of the phases, FULL one more for every phase', x49.charts.sum === 1 && x49.charts.full === 1 + x49.charts.phases, x49.charts);
+  check('charts: Word 요약 has the chart of the phases, Word FULL one per phase (the Word guide, fiftieth round); the slides keep the chart of the phases plus one per phase', x49.charts.sum === 1 && x49.charts.full === x49.charts.phases && x49.charts.pptSum === 1 && x49.charts.pptFull === 1 + x49.charts.phases, x49.charts);
+  // fiftieth round: the owner's Word guide — the sheet's margins and rows, the chart alone in 요약, two pages a phase in FULL, the colours
+  const x50 = await ev(async () => { const all = ['state', 'ov', 'act', 'proc', 'gate', 'evid', 'meet', 'part'], sum = Object.fromEntries(all.map(k => [k, 'sum'])), m = schModel('pangyo');
+    const xml = async forms => { const b = await schExpDocx(schXProjDoc('pangyo', { parts: all, forms })), u = new Uint8Array(await b.arrayBuffer()); let s = ''; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode(...u.subarray(i, i + 8192)); return s; };
+    const s1 = await xml(sum), s2 = await xml(Object.assign({}, sum, { act: 'full' })), n = (s, re) => (s.match(re) || []).length;
+    const w = schXProjDoc('pangyo', { parts: ['act'], forms: { act: 'sum' } }).sections[0].blocks.map(b => b.k).join();
+    schExpWin('proj', 'pangyo'); await new Promise(r => setTimeout(r, 300)); const ic = [...document.querySelectorAll('#dlg.sch-xw .xq-files .xq-card svg.xq-fic')].map(x => x.closest('.xq-card').querySelector('input').value).join(); document.querySelector('#dlg') && document.querySelector('#dlg').remove();
+    return { w, ic, phases: m.phases.filter(g => g.tasks.length).length, png: n(s1, /word\/media\/img\d+\.png/g) >= 1, pngFull: n(s2, /word\/media\/img\d+\.png/g) };
+  });
+  check('Word 요약 (owner\'s Word guide): 액션 일정 is its title line, a line of figures and the chart of the phases — no lists; the export window shows a coloured pictogram on each file card', x50.w === 'sh,stat,img' && x50.ic === 'docx,pptx,xlsx' && x50.png && x50.pngFull >= x50.phases, x50);
   check('엑셀 (forty-ninth round): FULL in the guide workbook\'s form loads back with nothing changed; 요약 sheets are for reading and load nothing', x49.full.tasks > 0 && x49.full.links > 0 && x49.full.same && x49.sum.none && x49.sum.view >= 3, x49);
   const [dw] = await Promise.all([a.waitForEvent('download', { timeout: 30000 }), a.click('#dlg.sch-xw [data-xw="ok"]')]); const wbuf = fs.readFileSync(await dw.path());
   const rd = await ev(id => { const doc = schXProjDoc(id, { form: 'full', parts: ['state', 'ov', 'part'], act: 'near', days: 60 }), sum = schXProjDoc(id, { form: 'sum', parts: ['state'], act: 'near', days: 60 }); return { title: doc.title.join(' / '), label: doc.label, secs: doc.sections.map(s => s.h).join(), state: doc.sections[0].blocks.find(b => b.k === 'tbl').rows.map(r => r.join(':')).join('|'), ov: doc.sections[1].blocks.filter(b => b.k === 'p' && b.runs[0].b).map(b => b.runs[0].t).join(), sumSecs: sum.sections.length, html: /class="sec/.test(schExpHtml(doc, '')) }; }, pidD);

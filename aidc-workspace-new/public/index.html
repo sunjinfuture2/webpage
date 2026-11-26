@@ -3345,6 +3345,11 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 /* Owner, 2026-11-26: 저장 of the overview is the black button of the panels too */
 .sch-on .rmeta .rbt .edit.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
 .sch-on .rmeta .rbt .edit.save:hover{background:#2b2b2b;color:#fff}
+
+/* Fiftieth round (owner, 2026-11-26): a pictogram of the kind of file above its name in the export window's file cards, in the
+   kind's colour (schXFileIc in 92-export.js) */
+.sch-xw .xq-files .xq-card{padding:9px 4px 7px;gap:1px}
+.sch-xw .xq-files .xq-card .xq-fic{display:block;flex:none;width:30px;height:30px;margin:0 auto 3px}
 </style>
 <script src="/schedule.js?v=28ad91b5fd00"></script>
 <style id="mp-style">
@@ -8896,71 +8901,124 @@ function schZip(files,type){ const enc=new TextEncoder(), parts=[], cen=[]; let 
     parts.push(new Uint8Array(lh.buffer),nm,data); cen.push(new Uint8Array(ch.buffer),nm); off+=30+nm.length+n; }
   const cs=cen.reduce((a,b)=>a+b.length,0), end=new DataView(new ArrayBuffer(22)); end.setUint32(0,0x06054b50,true); end.setUint16(8,files.length,true); end.setUint16(10,files.length,true); end.setUint32(12,cs,true); end.setUint32(16,off,true);
   return new Blob([...parts,...cen,new Uint8Array(end.buffer)],{type}); }
-const SCH_DOC={w:9889,left:2689,right:7200,text:10319,orange:'E36C0A',line:'BFBFBF',head:'F2F2F2',ink:'222222',grey:'7F7F7F'};
+const SCH_DOC={w:9889,left:2689,right:7200,text:10319,tab:9923,orange:'E36C0A',line:'BFBFBF',head:'F2F2F2',ink:'222222',grey:'7F7F7F',red:'D30000',up:'1F8E00'};
+// (fiftieth round) The owner's Word guide ("내보내기 할때 표준 가이드", 2026-11-26) — what it changed on the sheet, as rules:
+//   · the page: margins 18 mm left and right (1021), 17.5 mm at the top (992); the head line reaches 342 into the right margin
+//   · text: lines of 15.5 pt (310 exact; a short note — "외 n건", the count of gates — keeps 12.5 pt); a paragraph before a table
+//     is kept with it
+//   · tables: across the sheet's whole width (9889), the first column (2689) without lines and holding the section's title when
+//     the section begins with the table; rows of 14.6 pt (292 exact) with 8 above and below, never split; 상태 / 확약 상태 in
+//     colour and bold (SCH_DOC_TONE), 지연 red and bold; the meetings left-aligned
+//   · emphasis: the figures of the sentence of 진행 현황 bold, what is late red (runs with `c`); 운영개시 예상 bold, the progress
+//     bold in grey (0) or green, "지연 n" red in its table
+//   · between blocks: 40 before a table, 120 after it, 240 after the last one of a section, 200 after a section
+const SCH_DOC_TONE={'완료':'177809','승인':'177809','확약':'177809','반영 완료':'177809','진행':'116DA3','진행 중':'116DA3','준비 중':'116DA3','검토 요청':'116DA3','견적 수령':'116DA3','조건부 확약':'116DA3','확인 중':'116DA3',
+  '예정':'626262','계획':'626262','미확약':'626262','목표':'8135A4','확인 전':'886008','확인 필요':'886008','보완·반려':'AF3333','지연':'D30000','보류':'7F7F7F','조건부 미발동':'7F7F7F','미확인':'222222'};
+// a cell of a table as runs, with the Word guide's emphasis (the slides take the plain strings)
+function schXCell(b,ri,ci,t){ const s=String(t==null?'':t), hd=(b.head||[])[ci];
+  if((hd==='상태'||hd==='확약 상태')&&SCH_DOC_TONE[s])return [{t:s,b:1,c:SCH_DOC_TONE[s]}];
+  if(hd==='지연'&&s)return [{t:s,b:1,c:SCH_DOC.red}];
+  if(b.kind==='state'&&ci===1){ const lab=(b.rows[ri]||[])[0];
+    if(lab==='운영개시 예상')return [{t:s,b:1}];
+    if(lab==='전체 진행률'){ const m=/^(\d+%)([\s\S]*)$/.exec(s); if(m)return [{t:m[1],b:1,c:parseInt(m[1],10)>0?SCH_DOC.up:'676767'},{t:m[2]}]; }
+    if(lab==='액션 현황'){ const m=/^([\s\S]*?)(지연 (\d+))([\s\S]*)$/.exec(s); if(m&&+m[3]>0)return [{t:m[1]},{t:m[2],b:1,c:SCH_DOC.red},{t:m[4]}]; } }
+  return [{t:s}]; }
 // a picture of the body or the logo, as bytes with its size (png / jpeg / gif only; anything else is named in words)
 async function schExpImage(src){ try{ const r=await fetch(src,{credentials:'same-origin'}); if(!r.ok)return null; const blob=await r.blob(), type=blob.type, ext=type==='image/png'?'png':type==='image/jpeg'?'jpeg':type==='image/gif'?'gif':''; if(!ext||blob.size>4e6)return null;
     const data=new Uint8Array(await blob.arrayBuffer()), u=URL.createObjectURL(blob), dim=await new Promise(ok=>{const im=new Image();im.onload=()=>ok([im.naturalWidth,im.naturalHeight]);im.onerror=()=>ok(null);im.src=u;}); URL.revokeObjectURL(u); return dim&&dim[0]?{data,ext,w:dim[0],h:dim[1]}:null; }catch(e){ return null; } }
 async function schExpDocx(doc){ const C=SCH_DOC, media=[], rels=[]; let rid=10;
   const rpr=(o={})=>`<w:rPr>${o.b?'<w:b/><w:bCs/>':''}${o.i?'<w:i/><w:iCs/>':''}${o.s?'<w:strike/>':''}<w:color w:val="${o.color||C.ink}"/><w:sz w:val="${o.sz||20}"/><w:szCs w:val="${o.sz||20}"/>${o.u?'<w:u w:val="single"/>':''}</w:rPr>`;
   const run=(t,o)=>`<w:r>${rpr(o)}<w:t xml:space="preserve">${schX(t)}</w:t></w:r>`;
-  const body=(runs,o={})=>`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="${o.cell?4:0}" w:after="${o.cell?4:0}" w:line="250" w:lineRule="exact"/>${o.ind?`<w:ind w:left="${o.ind*240}"/>`:''}<w:jc w:val="${o.center?'center':'both'}"/></w:pPr>${runs.map(r=>run(r.t,{b:r.b||o.b,i:r.i,s:r.s,u:r.u})).join('')}</w:p>`;
-  const spacer=h=>`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0" w:line="${h}" w:lineRule="exact"/><w:rPr><w:sz w:val="4"/><w:szCs w:val="4"/></w:rPr></w:pPr></w:p>`;
-  const nil='<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>';
-  const row2=(heading,inner)=>`<w:tbl><w:tblPr><w:tblW w:w="${C.w}" w:type="dxa"/>${nil}<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${C.left}"/><w:gridCol w:w="${C.right}"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="${C.left}" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:keepNext/><w:snapToGrid w:val="0"/><w:spacing w:line="264" w:lineRule="auto"/></w:pPr>${heading?run(heading,{b:1,color:C.orange,sz:21}):''}</w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="${C.right}" w:type="dxa"/></w:tcPr>${inner||body([{t:''}])}</w:tc></w:tr></w:tbl>`;
-  const bd=k=>`<w:${k} w:val="single" w:sz="4" w:space="0" w:color="${C.line}"/>`;
-  const table=b=>{ const cols=Math.max(b.head?b.head.length:0,...b.rows.map(r=>r.length)); let ws=(b.widths||[]).slice(0,cols); while(ws.length<cols)ws.push(Math.floor(C.right/cols)); const sum=ws.reduce((a,x)=>a+x,0); ws=ws.map(x=>Math.round(x*C.right/sum));
-    const cell=(t,i,hd)=>`<w:tc><w:tcPr><w:tcW w:w="${ws[i]}" w:type="dxa"/>${hd?`<w:shd w:val="clear" w:color="auto" w:fill="${C.head}"/>`:''}<w:vAlign w:val="center"/></w:tcPr>${String(t==null?'':t).split('\n').map(line=>body([{t:line}],{cell:1,center:hd,b:hd})).join('')}</w:tc>`;
-    const tr=(r,hd)=>`<w:tr>${hd?'<w:trPr><w:tblHeader/></w:trPr>':''}${Array.from({length:cols},(_,i)=>cell(r[i],i,hd)).join('')}</w:tr>`;
-    return `<w:tbl><w:tblPr><w:tblW w:w="${C.right}" w:type="dxa"/><w:tblInd w:w="${C.left}" w:type="dxa"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(bd).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="70" w:type="dxa"/><w:right w:w="70" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(x=>`<w:gridCol w:w="${x}"/>`).join('')}</w:tblGrid>${b.head?tr(b.head,true):''}${b.rows.map(r=>tr(r,false)).join('')}</w:tbl>`; };
+  // a paragraph: text 310 exact, a note 250 exact, a cell of a table 8 / 8 and 292 exact (the Word guide)
+  const body=(runs,o={})=>`<w:p><w:pPr>${o.kn?'<w:keepNext/>':''}<w:snapToGrid w:val="0"/><w:spacing w:before="${o.cell?8:0}" w:after="${o.cell?8:0}" w:line="${o.cell?292:o.note?250:310}" w:lineRule="exact"/>${o.ind?`<w:ind w:left="${o.ind*240}"/>`:''}${o.jc===''?'':`<w:jc w:val="${o.jc||(o.center?'center':'both')}"/>`}</w:pPr>${runs.map(r=>run(r.t,{b:r.b||o.b,i:r.i,s:r.s,u:r.u,color:r.c||o.color,sz:r.sz||o.sz})).join('')}</w:p>`;
+  const spacer=(h,kn)=>`<w:p><w:pPr>${kn?'<w:keepNext/>':''}<w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0" w:line="${h}" w:lineRule="exact"/><w:rPr><w:sz w:val="4"/><w:szCs w:val="4"/></w:rPr></w:pPr></w:p>`;
+  const nil='<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>', H1=t=>run(t,{b:1,color:C.orange,sz:21});
+  const row2=(heading,inner)=>`<w:tbl><w:tblPr><w:tblW w:w="${C.w}" w:type="dxa"/>${nil}<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${C.left}"/><w:gridCol w:w="${C.right}"/></w:tblGrid><w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${C.left}" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:keepNext/><w:snapToGrid w:val="0"/><w:spacing w:line="264" w:lineRule="auto"/></w:pPr>${heading?H1(heading):''}</w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="${C.right}" w:type="dxa"/></w:tcPr>${inner||body([{t:''}])}</w:tc></w:tr></w:tbl>`;
+  const bd=k=>`<w:${k} w:val="single" w:sz="4" w:space="0" w:color="${C.line}"/>`, cellRuns=(b,ri,ci,t)=>schXCell(b,ri,ci,t);
+  // a table across the whole width: a first column without lines (the section's title in its head row when the table opens the
+  // section), then the table itself
+  const table=(b,heading,o={})=>{ const cols=Math.max(b.head?b.head.length:0,...b.rows.map(r=>r.length)); let ws=(b.widths||[]).slice(0,cols); while(ws.length<cols)ws.push(Math.floor(C.right/cols)); const sum=ws.reduce((a,x)=>a+x,0); ws=ws.map(x=>Math.round(x*C.right/sum));
+    const jc=b.kind==='meet'?'':'both', lead=hd=>`<w:tc><w:tcPr><w:tcW w:w="${C.left}" w:type="dxa"/><w:tcBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders><w:tcMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr>${hd&&heading?body([{t:heading,b:1,c:C.orange,sz:21}],{cell:1,kn:1,jc:''}):'<w:p/>'}</w:tc>`;
+    const cell=(t,i,hd,ri,kn)=>`<w:tc><w:tcPr><w:tcW w:w="${ws[i]}" w:type="dxa"/>${i===0?`<w:tcBorders>${bd('left')}</w:tcBorders>`:''}${hd?`<w:shd w:val="clear" w:color="auto" w:fill="${C.head}"/>`:''}<w:vAlign w:val="center"/></w:tcPr>${String(t==null?'':t).split('\n').map(line=>body(hd?[{t:line}]:cellRuns(b,ri,i,line),{cell:1,center:hd,b:hd,kn:hd||kn,jc:hd?'center':jc})).join('')}</w:tc>`;
+    const tr=(r,hd,ri,kn)=>`<w:tr><w:trPr><w:cantSplit/>${hd?'<w:tblHeader/>':''}</w:trPr>${lead(hd)}${Array.from({length:cols},(_,i)=>cell(r[i],i,hd,ri,kn)).join('')}</w:tr>`;
+    return `<w:tbl><w:tblPr><w:tblW w:w="${C.w}" w:type="dxa"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(bd).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="70" w:type="dxa"/><w:right w:w="70" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${C.left}"/>${ws.map(x=>`<w:gridCol w:w="${x}"/>`).join('')}</w:tblGrid>${b.head?tr(b.head,true,-1):''}${b.rows.map((r,ri)=>tr(r,false,ri,o.knLast&&ri===b.rows.length-1)).join('')}</w:tbl>`; };
+  // the list of a phase (FULL): the whole width from the margin, 9.5 pt, cells 22 / 55 apart, WBS · dates · state · person centred
+  const wide=b=>{ const cols=b.head.length, ws=b.widths||b.head.map(()=>Math.floor(C.w/cols)), al=i=>b.head[i]==='업무'?'left':'center', pr='w:before="8" w:after="8" w:line="305" w:lineRule="auto"';
+    const cell=(t,i,hd,ri)=>`<w:tc><w:tcPr><w:tcW w:w="${ws[i]}" w:type="dxa"/>${hd?`<w:shd w:val="clear" w:color="auto" w:fill="${C.head}"/>`:''}<w:vAlign w:val="center"/>${b.head[i]!=='업무'?'<w:noWrap/>':''}</w:tcPr><w:p><w:pPr>${hd?'<w:keepNext/>':''}<w:snapToGrid w:val="0"/><w:spacing ${pr}/><w:jc w:val="${hd?'center':al(i)}"/></w:pPr>${(hd?[{t,b:1}]:cellRuns(b,ri,i,t)).map(r=>run(r.t,{b:r.b,color:r.c,sz:19})).join('')}</w:p></w:tc>`;
+    const tr=(r,hd,ri)=>`<w:tr><w:trPr><w:cantSplit/>${hd?'<w:tblHeader/>':''}</w:trPr>${r.map((t,i)=>cell(t,i,hd,ri)).join('')}</w:tr>`;
+    return `<w:tbl><w:tblPr><w:tblW w:w="${C.w}" w:type="dxa"/><w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(bd).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="22" w:type="dxa"/><w:left w:w="55" w:type="dxa"/><w:bottom w:w="22" w:type="dxa"/><w:right w:w="55" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(x=>`<w:gridCol w:w="${x}"/>`).join('')}</w:tblGrid>${tr(b.head,true,-1)}${b.rows.map((r,ri)=>tr(r,false,ri)).join('')}</w:tbl>`; };
+  // a line of the act pages: the section's title, then what the page holds; a line of figures; a small note
+  const subHead=(h,b)=>`<w:p><w:pPr><w:keepNext/>${b.brk?'<w:pageBreakBefore/>':''}<w:tabs><w:tab w:val="left" w:pos="${C.left}"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="120" w:line="288" w:lineRule="auto"/></w:pPr>${H1(h)}<w:r><w:tab/></w:r>${run(b.t,{b:1,sz:21})}</w:p>`;
+  const statLine=b=>{ const ov=b.v==='ov', sep=ov?'      ·      ':'     ·     '; return `<w:p><w:pPr><w:keepNext/><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="${ov?120:180}" w:line="288" w:lineRule="auto"/></w:pPr>${b.items.map(([l,v,t],i)=>(i?run(sep,{color:ov?C.ink:'888888',sz:ov?19:18}):'')+run(l+'   ',{color:ov?C.ink:'595959',sz:ov?19:18})+run(v,{b:1,color:t==='up'?C.up:ov?C.ink:'333333',sz:19})).join('')}</w:p>`; };
+  const noteLine=b=>`<w:p><w:pPr><w:keepNext/><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="120" w:line="288" w:lineRule="auto"/></w:pPr>${run(b.t,{color:'595959',sz:18})}</w:p>`;
   const drawing=(id,name,cx,cy)=>`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${rid}" name="${schX(name)}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${rid}" name="${schX(name)}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
   // sections: text goes into the right column of a two-column sheet without lines; a table stands below it at the same indent
   let xml=''; const T=doc.title;
-  xml+=`<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${C.text}"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[0],{b:1,color:'000000',sz:30})}${doc.label?`<w:r><w:tab/></w:r>${run(doc.label,{color:'000000',sz:18,b:1})}`:''}</w:p>`;
+  xml+=`<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${C.tab}"/></w:tabs><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/><w:ind w:right="396"/></w:pPr>${run(T[0],{b:1,color:'000000',sz:30})}${doc.label?`<w:r><w:tab/></w:r>${run(doc.label,{color:'000000',sz:18,b:1})}`:''}</w:p>`;
   if(T[1])xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="20"/></w:pPr>${run(T[1],{b:1,color:'000000',sz:30})}</w:p>`;
   xml+=`<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="${C.ink}"/></w:pBdr><w:snapToGrid w:val="0"/><w:spacing w:before="40" w:after="140"/></w:pPr></w:p>${spacer(160)}`;
-  for(const s of doc.sections){ if(s.brk)xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
-    for(const b of s.blocks){ if(b.k==='p')buf+=body(b.runs,{ind:b.ind});
-      else if(b.k==='tbl'){ flush(); xml+=spacer(40)+table(b)+spacer(120); }
-      else if(b.k==='brk'){ flush(); xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; }
-      // a chart of the schedule (forty-ninth round): the whole width of the sheet, under what was written before it
-      else if(b.k==='img'&&b.gantt){ flush(); const im=schXGanttBytes(b); if(!im)continue; const id='rId'+(++rid), cx=Math.round(b.lay.w*914400), cy=Math.round(cx*im.h/im.w);
+  const pageBrk='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
+  for(const s of doc.sections){ if(s.brk)xml+=pageBrk; const bl=s.blocks; let heading=s.h, buf=[], any=false, own=false;
+    // text waits in `buf` and goes into the right column of a row without lines, with the section's title at its left
+    const flush=kn=>{ if(buf.length||heading){ xml+=row2(heading,buf.map(x=>x.xml!=null?x.xml:body(x.runs,{ind:x.ind,note:x.note,kn})).join('')); heading=''; buf=[]; any=true; } };
+    for(let i=0;i<bl.length;i++){ const b=bl[i], next=bl[i+1], noteNext=!!(next&&next.k==='p'&&next.note); own=false;
+      if(b.k==='p'){ buf.push(b); continue; }
+      if(b.k==='sh'){ if(buf.length)flush(); heading=''; xml+=subHead(s.h,b); any=true; continue; }
+      if(b.k==='stat'){ if(buf.length)flush(); xml+=statLine(b); continue; }
+      if(b.k==='note'){ if(buf.length)flush(); xml+=noteLine(b); continue; }
+      if(b.k==='tbl'&&b.full){ flush(); xml+=wide(b)+'<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="200" w:line="576" w:lineRule="auto"/></w:pPr></w:p>'; any=true; own=true; continue; }
+      if(b.k==='tbl'){ let h=''; if(buf.length){ flush(true); xml+=spacer(40,true); } else if(heading){ h=heading; heading=''; } else xml+=spacer(40);
+        xml+=table(b,h,{knLast:noteNext})+(i===bl.length-1?spacer(240):spacer(120,noteNext)); any=true; continue; }
+      if(b.k==='brk'){ flush(); xml+=pageBrk; continue; }
+      // a chart of the schedule: the width of the sheet's tables, under the lines that say what it is
+      if(b.k==='img'&&b.gantt){ flush(); const im=schXGanttBytes(b); if(!im)continue; const id='rId'+(++rid), cx=Math.round(b.lay.w*914400), cy=Math.round(cx*im.h/im.w);
         media.push({name:`word/media/img${rid}.png`,data:im.data}); rels.push(`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/img${rid}.png"/>`);
-        xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="60" w:after="160"/></w:pPr>${drawing(id,b.name||'chart',cx,cy)}</w:p>`; any=true; }
-      else if(b.k==='img'){ const im=await schExpImage(b.src); if(!im){ buf+=body([{t:'[이미지'+(b.name?': '+b.name:'')+']'}]); continue; } const id='rId'+(++rid), max=4572000, cx=Math.min(max,im.w*9525), cy=Math.round(cx*im.h/im.w);
+        xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="200" w:line="240" w:lineRule="auto"/><w:jc w:val="left"/></w:pPr>${drawing(id,b.name||'chart',cx,cy)}</w:p>`; any=true; own=true; continue; }
+      if(b.k==='img'){ const im=await schExpImage(b.src); if(!im){ buf.push({k:'p',runs:[{t:'[이미지'+(b.name?': '+b.name:'')+']'}]}); continue; } const id='rId'+(++rid), max=4572000, cx=Math.min(max,im.w*9525), cy=Math.round(cx*im.h/im.w);
         media.push({name:`word/media/img${rid}.${im.ext}`,data:im.data}); rels.push(`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/img${rid}.${im.ext}"/>`);
-        buf+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="60" w:after="60"/></w:pPr>${drawing(id,b.name||'image',cx,cy)}</w:p>`; } }
-    flush(); if(!any)xml+=row2(s.h,''); xml+=spacer(100); }
+        buf.push({xml:`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="60" w:after="60"/></w:pPr>${drawing(id,b.name||'image',cx,cy)}</w:p>`}); } }
+    flush(); if(!any)xml+=row2(s.h,''); if(!own)xml+=spacer(200); }
   const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"', H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
   const logo=await schExpImage('/export/sunjin-logo.png'), logoRun=logo?drawing('rId1','logo',590550,Math.round(590550*logo.h/logo.w)):'';
   const fld=(code,o)=>`<w:r>${rpr(o)}<w:fldChar w:fldCharType="begin"/></w:r><w:r>${rpr(o)}<w:instrText xml:space="preserve"> ${code} </w:instrText></w:r><w:r>${rpr(o)}<w:fldChar w:fldCharType="separate"/></w:r><w:r>${rpr(o)}<w:t>1</w:t></w:r><w:r>${rpr(o)}<w:fldChar w:fldCharType="end"/></w:r>`;
   const files=[
     {name:'[Content_Types].xml',data:H+`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="gif" ContentType="image/gif"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/fontTable.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`},
     {name:'_rels/.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`},
-    {name:'word/document.xml',data:H+`<w:document ${NS}><w:body>${xml}<w:sectPr><w:headerReference w:type="default" r:id="rId2"/><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="993" w:right="566" w:bottom="1021" w:left="1021" w:header="425" w:footer="510" w:gutter="0"/></w:sectPr></w:body></w:document>`},
+    {name:'word/document.xml',data:H+`<w:document ${NS}><w:body>${xml}<w:sectPr><w:headerReference w:type="default" r:id="rId2"/><w:footerReference w:type="default" r:id="rId3"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="992" w:right="1021" w:bottom="1021" w:left="1021" w:header="425" w:footer="510" w:gutter="0"/></w:sectPr></w:body></w:document>`},
     {name:'word/_rels/document.xml.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rIdFont" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/>${rels.join('')}</Relationships>`},
     {name:'word/fontTable.xml',data:H+`<w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:font w:name="Pretendard"><w:altName w:val="맑은 고딕"/><w:charset w:val="81"/><w:family w:val="swiss"/><w:pitch w:val="variable"/></w:font></w:fonts>`},   // every run is Pretendard; where it is not installed Word takes this one font for all of it
     {name:'word/styles.xml',data:H+`<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Pretendard" w:eastAsia="Pretendard" w:hAnsi="Pretendard" w:cs="Pretendard"/><w:color w:val="${C.ink}"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US" w:eastAsia="ko-KR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="a"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>`},
-    {name:'word/header1.xml',data:H+`<w:hdr ${NS}><w:p><w:pPr><w:snapToGrid w:val="0"/><w:jc w:val="right"/></w:pPr>${run(doc.head,{color:C.grey,sz:20})}</w:p></w:hdr>`},
+    {name:'word/header1.xml',data:H+`<w:hdr ${NS}><w:p><w:pPr><w:snapToGrid w:val="0"/><w:ind w:right="-342"/><w:jc w:val="right"/></w:pPr>${run(doc.head,{color:C.grey,sz:20})}</w:p></w:hdr>`},
     {name:'word/footer1.xml',data:H+`<w:ftr ${NS}><w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${C.text}"/></w:tabs><w:snapToGrid w:val="0"/></w:pPr>${logoRun}<w:r><w:tab/></w:r>${fld('PAGE',{b:1})}${run(' / ',{color:C.grey})}${fld('NUMPAGES',{color:C.grey})}</w:p></w:ftr>`},
     ...(logo?[{name:'word/_rels/footer1.xml.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/></Relationships>`},{name:'word/media/logo.png',data:logo.data}]:[]),
     ...media];
   return schZip(files,'application/vnd.openxmlformats-officedocument.wordprocessingml.document'); }
 
 /* ---------- PDF: the same sheet as a page for the browser's print window ---------- */
-function schExpHtml(doc,fontCss){ const e=schX, runs=rs=>rs.map(r=>{let t=e(r.t||''); if(r.b)t=`<b>${t}</b>`; if(r.i)t=`<i>${t}</i>`; if(r.s)t=`<s>${t}</s>`; if(r.u)t=`<u>${t}</u>`; return t;}).join('');
-  const block=b=>b.k==='p'?`<p class="${b.pre?'pre':''}" style="${b.ind?`padding-left:${b.ind*4.2}mm`:''}">${runs(b.runs)}</p>`:b.k==='brk'?'<div class="brk"></div>':b.k==='img'&&b.gantt?`<div class="gx"><img src="${schXGanttSrc(b)}" alt="${e(b.name||'')}"></div>`:b.k==='img'?`<p class="im"><img src="${e(b.src)}" alt=""></p>`
-    :`<table class="d">${b.widths?`<colgroup>${b.widths.map(w=>`<col style="width:${Math.round(w/b.widths.reduce((a,c)=>a+c,0)*1000)/10}%">`).join('')}</colgroup>`:''}${b.head?`<thead><tr>${b.head.map(h=>`<th>${e(h)}</th>`).join('')}</tr></thead>`:''}<tbody>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${e(c).replace(/\n/g,'<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+function schExpHtml(doc,fontCss){ const e=schX, C=SCH_DOC, rn=r=>{let t=e(r.t||''); if(r.b)t=`<b>${t}</b>`; if(r.i)t=`<i>${t}</i>`; if(r.s)t=`<s>${t}</s>`; if(r.u)t=`<u>${t}</u>`; if(r.c)t=`<span style="color:#${r.c}">${t}</span>`; return t;}, runs=rs=>rs.map(rn).join('');
+  const cols=b=>b.widths?`<colgroup>${b.widths.map(w=>`<col style="width:${Math.round(w/b.widths.reduce((a,c)=>a+c,0)*1000)/10}%">`).join('')}</colgroup>`:'';
+  const cell=(b,ri,ci,c)=>String(c==null?'':c).split('\n').map(l=>runs(schXCell(b,ri,ci,l))).join('<br>');
+  const tbl=b=>`<table class="d${b.full?' w':''}${b.kind==='meet'?' l':''}">${cols(b)}${b.head?`<thead><tr>${b.head.map(h=>`<th>${e(h)}</th>`).join('')}</tr></thead>`:''}<tbody>${b.rows.map((r,ri)=>`<tr>${r.map((c,ci)=>`<td${b.full&&b.head[ci]!=='업무'?' class="c"':''}>${cell(b,ri,ci,c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const stat=b=>`<p class="st ${b.v}">${b.items.map(([l,v,t],i)=>`${i?'<i>·</i>':''}<span>${e(l)}</span><b${t==='up'?' class="up"':''}>${e(v)}</b>`).join('')}</p>`;
+  const block=(s,b)=>b.k==='p'?`<p class="${b.pre?'pre':''}${b.note?' nt':''}" style="${b.ind?`padding-left:${b.ind*4.2}mm`:''}">${runs(b.runs)}</p>`:b.k==='brk'?'<div class="brk"></div>':b.k==='sh'?`<div class="sh${b.brk?' brk':''}"><b>${e(s.h)}</b><b>${e(b.t)}</b></div>`
+    :b.k==='stat'?stat(b):b.k==='note'?`<p class="nl">${e(b.t)}</p>`:b.k==='img'&&b.gantt?`<div class="gx"><img src="${schXGanttSrc(b)}" alt="${e(b.name||'')}"></div>`:b.k==='img'?`<p class="im"><img src="${e(b.src)}" alt=""></p>`:tbl(b);
+  // a section whose pages say their own title (액션 일정 in the Word guide) runs across the sheet; the others keep the title at the left
+  const sec=s=>s.blocks.length&&s.blocks[0].k==='sh'?`<section class="flat${s.brk?' brk':''}">${s.blocks.map(b=>block(s,b)).join('')}</section>`:`<section class="sec${s.brk?' brk':''}"><h2>${e(s.h)}</h2><div>${s.blocks.map(b=>block(s,b)).join('')}</div></section>`;
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${e(doc.file)}</title><style>${fontCss||''}
-@page{size:A4;margin:17.5mm 10mm 19mm 18mm;@top-right{content:"${doc.head.replace(/["\\]/g,' ')}";font:10pt Pretendard,'Malgun Gothic',sans-serif;color:#7f7f7f;vertical-align:top;padding-top:7.5mm}@bottom-left{content:"";background:url(/export/sunjin-logo.png) no-repeat left center/15.6mm auto;width:40mm}@bottom-right{content:counter(page) " / " counter(pages);font:700 10pt Pretendard,'Malgun Gothic',sans-serif;color:#222}}
-*{box-sizing:border-box}html,body{margin:0;padding:0}body{font:10pt/12.5pt Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@page{size:A4;margin:17.5mm 18mm 19mm 18mm;@top-right{content:"${doc.head.replace(/["\\]/g,' ')}";font:10pt Pretendard,'Malgun Gothic',sans-serif;color:#7f7f7f;vertical-align:top;padding-top:7.5mm}@bottom-left{content:"";background:url(/export/sunjin-logo.png) no-repeat left center/15.6mm auto;width:40mm}@bottom-right{content:counter(page) " / " counter(pages);font:700 10pt Pretendard,'Malgun Gothic',sans-serif;color:#222}}
+*{box-sizing:border-box}html,body{margin:0;padding:0}body{font:10pt/15.5pt Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 h1{font-size:15pt;line-height:19pt;font-weight:700;color:#000;margin:2pt 0 1pt;display:flex;justify-content:space-between;align-items:baseline;gap:8mm}h1 small{font-size:9pt;font-weight:700;white-space:nowrap}
 .rule{border-bottom:.75pt solid #222;margin:3pt 0 14pt}
-.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.gx{margin:6pt 0 10pt -47.4mm;width:calc(100% + 47.4mm);break-inside:avoid}.sec>div>.gx:first-child{margin-top:20pt}.gx img{display:block;width:100%}.brk{break-before:page;page-break-before:always;height:0}.sec.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
-p{margin:0;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}p.pre{font-family:Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:9pt;white-space:pre-wrap;text-align:left}p.im{margin:3pt 0}p.im img{max-width:100%;max-height:120mm}
-table.d{border-collapse:collapse;width:100%;margin:2pt 0 6pt;table-layout:fixed}table.d th,table.d td{border:.5pt solid #bfbfbf;padding:1.2pt 3.5pt;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}table.d th{background:#f2f2f2;font-weight:700;text-align:center}table.d tr{break-inside:avoid}
+.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:10pt}.gx{margin:0 0 10pt;break-inside:avoid}.sec .gx{margin-left:-47.4mm;width:calc(100% + 47.4mm)}.gx img{display:block;width:100%}.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14.6pt;font-weight:700;color:#${C.orange};margin:0;padding-top:.4pt;break-after:avoid}.sec>div{min-width:0}
+.flat{margin-bottom:10pt}.sh{display:grid;grid-template-columns:47.4mm 1fr;font-size:10.5pt;line-height:14pt;margin:0 0 6pt;break-after:avoid}.sh>b:first-child{color:#${C.orange}}
+p.st{margin:0 0 9pt;font-size:9pt;color:#595959;text-align:left;break-after:avoid}p.st.ov{font-size:9.5pt;color:#222;margin-bottom:6pt}p.st b{font-size:9.5pt;color:#333;margin-left:.6em}p.st.ov b{color:#222}p.st b.up{color:#${C.up}}p.st i{font-style:normal;color:#888;margin:0 1.6em}p.st.ov i{color:#222;margin:0 2.2em}
+p.nl{margin:0 0 6pt;font-size:9pt;color:#595959;text-align:left;break-after:avoid}
+p{margin:0;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}p.nt{line-height:12.5pt}p.pre{font-family:Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:9pt;white-space:pre-wrap;text-align:left}p.im{margin:3pt 0}p.im img{max-width:100%;max-height:120mm}
+table.d{border-collapse:collapse;width:100%;margin:2pt 0 6pt;table-layout:fixed;line-height:14.6pt}table.d th,table.d td{border:.5pt solid #${C.line};padding:.4pt 3.5pt;vertical-align:middle;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}table.d th{background:#${C.head};font-weight:700;text-align:center}table.d tr{break-inside:avoid}table.d.l td{text-align:left}
+table.d.w{font-size:9.5pt;line-height:13.8pt;margin:0 0 14pt}table.d.w th,table.d.w td{padding:1.1pt 2.75pt}table.d.w td{text-align:left}table.d.w td.c{text-align:center;white-space:nowrap}
 @media screen{body{padding:14mm 12mm;max-width:210mm;margin:0 auto}}
 <\/style><\/head><body><h1><span>${e(doc.title[0])}</span>${doc.label?`<small>${e(doc.label)}</small>`:''}</h1>${doc.title[1]?`<h1><span>${e(doc.title[1])}</span></h1>`:''}<div class="rule"></div>
-${doc.sections.map(s=>`<section class="sec${s.brk?' brk':''}"><h2>${e(s.h)}</h2><div>${s.blocks.map(block).join('')}</div></section>`).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
+${doc.sections.map(sec).join('')}<\/body><\/html>`; }   // (closing tags are written with a backslash here: the build looks for the page's own closing body tag)
 function schExpPrint(doc){ let font=''; try{ for(const sh of document.styleSheets){ let rules; try{rules=sh.cssRules;}catch(e){continue;} for(const r of rules)if(r.type===5&&/Pretendard/.test(r.cssText)){font+=r.cssText;} if(font)break; } }catch(e){}
   const old=document.getElementById('sch-print'); if(old)old.remove(); const fr=document.createElement('iframe'); fr.id='sch-print'; fr.setAttribute('aria-hidden','true'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'; document.body.appendChild(fr);
   const d=fr.contentDocument; d.open(); d.write(schExpHtml(doc,font)); d.close(); toast('인쇄 창이 열립니다. 대상에서 ‘PDF로 저장’을 고르면 PDF 파일이 됩니다.',5200);
@@ -10647,7 +10705,7 @@ function schXOverview(pid,full){ const h=headOf(pid), out=[];
   if(h.main){ out.push(schXP(schRepTtl(h,'main'),{b:1})); out.push(schXP(h.main)); }
   if(full)for(const k of ['infra','struct','stat','risk']){ const ls=schXLines(h[k]), t=schRepTtl(h,k); if(!ls.length)continue; out.push(schXP(t,{b:1})); ls.forEach(x=>out.push(schXP((ls.length>1?'• ':'')+x,{ind:ls.length>1?1:0}))); }
   const rows=h.rows.filter(x=>x[0]||x[1]).concat(h.memo?[['비고',h.memo]]:[]); if(rows.length)out.push(schXT(['구분','내용'],rows,[1900,5300]));
-  if(h.plan.length)out.push(schXT(['시기',schRepTtl(h,'plan'),'상태'],h.plan,[1500,4700,1000]));
+  if(h.plan.length)out.push(schXT(['시기',schRepTtl(h,'plan'),'상태'],h.plan,[1500,4700,1000]));   // (its 상태 coloured in Word: SCH_DOC_TONE)
   return out; }
 const schXMeta=pid=>{ const p=PROJECTS[pid], r=schRepOf(pid); return [r.grp,r.stage||'단계 미정',r.focus?'집중 추진':'',r.first?'최초자료일 '+r.first:'',r.asof?'기준일 '+r.asof:'',r.owner?'담당자 '+r.owner:''].filter(Boolean).join(' · '); };
 
@@ -10683,7 +10741,7 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
   const pk=m?m.plan.procurement.length:0, gs=m?schGates(pid,m):[], gOk=gs.filter(g=>g.st==='승인').length, gRest=gs.length-gOk, pn=(h.partners||[]).length, few=(n,c)=>n>c?`앞의 ${c}건 (전체 ${n}건)`:`${n}건`;
   return [{k:'state',t:'진행 현황 요약',n:1,sum:'핵심 문장 · 주요 지표',full:'지표 전체 (승인게이트 · 외부설비 · 기준일까지)'},
     {k:'ov',t:'사업 개요',n:ov+txt,sum:'지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'},
-    {k:'act',t:'액션 일정',n:tasks.length,sum:`일정 그래프 · 지연 ${Math.min(late,8)}건 · 60일 안 ${Math.min(soon,10)}건`,full:`단계마다 그래프와 목록 · 전체 업무 ${tasks.length}건`},
+    {k:'act',t:'액션 일정',n:tasks.length,sum:`전체 단계 그래프${late||soon?` (PPT: 지연 ${Math.min(late,8)} · 60일 안 ${Math.min(soon,10)}건 목록)`:''}`,full:`단계마다 상세 간트와 업무 목록 · 전체 업무 ${tasks.length}건`},
     {k:'proc',t:'외부설비 조달',n:pk,sum:`${few(pk,8)} · 설치완료 · 확약 상태`,full:`전체 ${pk}건 · 예상 PO · 공급사까지`},
     {k:'gate',t:'승인게이트',n:gs.length,sum:`승인 ${gOk} / ${gs.length}${gRest?` · 남은 게이트 ${Math.min(gRest,8)}건`:''}`,full:`전체 ${gs.length}건 · 연결 업무까지`},
     {k:'evid',t:'근거 및 확약',n:ev,sum:'구분별 건수',full:`구분별 목록 ${ev}건`},
@@ -10691,11 +10749,13 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
     {k:'part',t:'협력업체',n:pn,sum:`업체명 ${pn}곳`,full:'구분 · 홈페이지 · 설명까지'}]; }
 // opt: {parts:[keys], forms:{key:'sum'|'full'}} — `form` is the form of a part that names none; `act:'near'` leaves the list of
 // every task out of a full 액션 일정 (the window of the thirty-third round asked for that separately; now the full form holds it).
-function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, forms=opt.forms||{}, fullOf=k=>(forms[k]||opt.form)==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday();
+// opt.ppt: the blocks the slides are made of (schXPptOf) — the PPT guide's 액션 일정 (the chart of the phases with the late and
+// the coming work; FULL a chart and a list per phase). Without it, Word and the print window: the Word guide (fiftieth round).
+function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, forms=opt.forms||{}, fullOf=k=>(forms[k]||opt.form)==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday(), ppt=!!opt.ppt;
   const tasks=m?m.phases.flatMap(g=>g.tasks):[], res=t=>m.res.tasks[t.id], who=t=>schPeople(t).map(userName).join(', ')||'미지정', late=tasks.filter(t=>schLate(m,t)).sort((a,b)=>res(a).finish.localeCompare(res(b).finish));
   const done=tasks.filter(t=>AIDCSchedule.progress.isDone(t)), soonEnd=D.addDays(today,opt.days||60), soon=tasks.filter(t=>schOpen(m,t)&&!schLate(m,t)&&res(t).start<=soonEnd).sort((a,b)=>res(a).start.localeCompare(res(b).start)||res(a).finish.localeCompare(res(b).finish));
-  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[schXP(`외 ${a.length-n}건 (FULL에 전체 수록)`)]:[];
-  if(has('state')){ const F=fullOf('state'), rows=[['추진 단계',r.stage||'미정']], say=[];
+  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[Object.assign(schXP(`외 ${a.length-n}건 (FULL에 전체 수록)`),{note:1})]:[];
+  if(has('state')){ const F=fullOf('state'), rows=[['추진 단계',r.stage||'미정']], say=[], add=(t,o)=>say.push(Object.assign({t},o||{}));
     if(F){ rows.push(['구분',r.grp||'구분 없음'],['담당자',r.owner||'미지정']); if(r.focus)rows.push(['집중 추진','예']); }
     if(m){ const pr=tasks.length?schProgress(m,tasks):null, ms=tasks.filter(t=>t.kind==='milestone'&&schOpen(m,t)).sort((a,b)=>res(a).start.localeCompare(res(b).start))[0], gs=schGates(pid,m), okG=gs.filter(g=>g.st==='승인').length;
       rows.push(['운영개시 예상',m.res.operationDate?schXDay(m.res.operationDate)+(m.res.operationDelay?` (목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)`:''):'미정 (일정에 업무 없음)']);
@@ -10705,13 +10765,24 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
       if(F&&gs.length)rows.push(['승인게이트',`승인 ${okG} / 전체 ${gs.length}`]);
       if(F&&m.plan.procurement.length)rows.push(['외부설비',`${m.plan.procurement.length}건 · 확약 ${m.plan.procurement.filter(x=>x.commitment&&x.commitment!=='미확약').length}건`]);
       if(F)rows.push(['일정 기준일',schXDay(m.plan.statusDate)]);
-      say.push(`추진 단계 ${r.stage||'미정'}${pr?`, 전체 진행률 ${schPct(pr)}%`:''}.`);
-      if(late.length){ const w=late[0]; say.push(`지연 ${late.length}건. 가장 오래 지연된 업무는 ${schTaskTitle(w)} (${D.diffDays(today,res(w).finish)}일 지연, 담당 ${who(w)}).`); } else if(tasks.length)say.push('지연 업무 없음.');
-      if(ms)say.push(`다음 마일스톤은 ${ms.name} (${schXDay(res(ms).start)}).`); if(m.res.operationDate)say.push(`운영개시 예상 ${schXDay(m.res.operationDate)}.`); }
+      add(`추진 단계 ${r.stage||'미정'}`); if(pr){ add(', 전체 진행률 '); add(schPct(pr)+'%',{b:1}); } add('.');
+      if(late.length){ const w=late[0]; add(' '); add(`지연 ${late.length}건`,{b:1,c:'D30000'}); add(`. 가장 오래 지연된 업무는 ${schTaskTitle(w)} (`); add(`${D.diffDays(today,res(w).finish)}일 지연`,{b:1,c:'D30000'}); add(`, 담당 ${who(w)}).`); } else if(tasks.length)add(' 지연 업무 없음.');
+      if(ms)add(` 다음 마일스톤은 ${ms.name} (${schXDay(res(ms).start)}).`); if(m.res.operationDate){ add(' 운영개시 예상 '); add(schXDay(m.res.operationDate),{b:1}); add('.'); } }
     rows.push(['보고서 작성일',schXDay(TODAY)]);
-    sections.push({k:'state',h:'진행 현황',blocks:[...(say.length?[schXP(say.join(' '))]:[]),schXT(['항목','내용'],rows,[1900,5300])]}); }
+    sections.push({k:'state',h:'진행 현황',blocks:[...(say.length?[{k:'p',runs:say,ind:0}]:[]),Object.assign(schXT(['항목','내용'],rows,[1900,5300]),{kind:'state'})]}); }
   if(has('ov')){ const b=schXOverview(pid,fullOf('ov')); if(b.length)sections.push({k:'ov',h:'사업 개요',blocks:b}); }
-  if(has('act')&&m&&tasks.length){ const b=[], full=fullOf('act');
+  if(has('act')&&m&&tasks.length&&!ppt){ const b=[], full=fullOf('act');
+    // (fiftieth round, the owner's Word guide) 요약: the chart of all phases under a line of the opening, the schedule's date and the
+    // count — no lists. FULL: every phase on two pages — "상세 간트" (a line of figures, the chart of its tasks) and "업무 목록" (its
+    // tasks in WBS order: 시작 · 예상 완료 · 상태 · 담당 · 지연, across the whole width). The section's title stands on each of them.
+    if(!full){ b.push({k:'sh',t:'전체 단계 간트'}); b.push({k:'stat',v:'ov',items:[['운영개시 예상',m.res.operationDate?schXDay(m.res.operationDate):'미정'],['일정 기준일',schXDay(m.plan.statusDate)||'-'],['전체',`${tasks.length}건`]]}); b.push({k:'img',name:'전체 단계 간트',wide:1,gantt:schXGanttData(m,'')}); }
+    else for(const g of m.phases){ const G=schXGanttData(m,g.code); if(!G)continue; const ts=g.tasks, dn=ts.filter(t=>AIDCSchedule.progress.isDone(t)).length, a=ts.map(t=>res(t).start).sort()[0], z=ts.map(t=>res(t).finish).sort().pop();
+      b.push({k:'sh',t:`${G.title}  |  상세 간트`,brk:1}); b.push({k:'stat',v:'ph',items:[['업무',`${G.n}건`],['완료',`${dn}건`],['진행률',`${G.pct}%`,G.pct>0?'up':''],['기간',`${schXDay(a)} ~ ${schXDay(z)}`]]}); b.push({k:'img',name:G.title+' 상세 간트',wide:1,gantt:G});
+      b.push({k:'sh',t:`${G.title}  |  업무 목록`,brk:1}); b.push({k:'note',t:`업무 ${G.n}건  ·  WBS 순`});
+      b.push(Object.assign(schXT(['WBS','업무','시작','예상 완료','상태','담당','지연'],ts.map(t=>[schNo(t),t.name,schXDay(res(t).start),schXDay(res(t).finish),schStatus(t),who(t),schLate(m,t)?D.diffDays(today,res(t).finish)+'일':'']),[640,3540,1220,1220,1350,1000,919]),{kind:'tasks',full:1})); }
+    const loose=liveItems('action',pid).filter(i=>!i.own&&!i.task); if(loose.length){ b.push(schXP(`일정 미연결 액션 ${loose.length}건`,{b:1})); if(full)b.push(schXT(['제목','시작','종료','상태','담당자'],loose.map(i=>[oneLine(i.title),schXDay(i.date),schXDay(itemEnd(i)),schItemSt(i),(i.people||[]).map(userName).join(', ')]),[3300,1000,1000,800,1100])); }
+    sections.push({k:'act',h:'액션 일정',blocks:b}); }
+  if(has('act')&&m&&tasks.length&&ppt){ const b=[], full=fullOf('act');
     // (forty-ninth round, owner: "그래프도 같이 위에 나오게", "풀버전으로 하면 각 단계별로 그래프가 1장씩, 그 사이에 리스트가 나오는 형태")
     // the chart of the phases stands first (schedule/ui/95-gantt-export.js); in FULL every phase follows on a page of its own: its
     // chart, then the list of its tasks. A chart block is {k:'img', gantt, wide}: Word and the print window make its picture,
@@ -10729,12 +10800,12 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
       :[schXT(['패키지','설비','예상 설치완료','확약 상태'],all.slice(0,8).map(x=>[x.id,x.name,day(x.installTaskId,'finish'),x.commitment||'미확약']),[900,3700,1400,1200]),...more('proc',all,8)]}); }
   if(has('gate')&&m){ const gs=schGates(pid,m); if(gs.length){ const b=[], rest=gs.filter(g=>g.st!=='승인');
       if(fullOf('gate'))b.push(schXT(['게이트','승인 사항','연결 업무','예상 승인일','상태'],gs.map(g=>[g.user?'추가':g.code,g.title,g.t?schNo(g.t):'',schXDay(g.date),g.st]),[800,3300,900,1200,1000]));
-      else { b.push(schXP(`승인 ${gs.length-rest.length}건 / 전체 ${gs.length}건${rest.length?` · 남은 게이트 ${rest.length}건`:''}`)); if(rest.length){ b.push(schXT(['게이트','승인 사항','예상 승인일','상태'],rest.slice(0,8).map(g=>[g.user?'추가':g.code,g.title,schXDay(g.date),g.st]),[900,3900,1300,1100])); b.push(...more('gate',rest,8)); } }
+      else { b.push(Object.assign(schXP(`승인 ${gs.length-rest.length}건 / 전체 ${gs.length}건${rest.length?` · 남은 게이트 ${rest.length}건`:''}`),{note:1})); if(rest.length){ b.push(schXT(['게이트','승인 사항','예상 승인일','상태'],rest.slice(0,8).map(g=>[g.user?'추가':g.code,g.title,schXDay(g.date),g.st]),[900,3900,1300,1100])); b.push(...more('gate',rest,8)); } }
       sections.push({k:'gate',h:'승인게이트',blocks:b}); } }
   if(has('evid')&&m){ const kinds=SCH_UP_EVK.map(k=>({k,name:SCH_XL_SHEET[k],rows:schEvRows(pid,k)})).filter(x=>x.rows.length); if(kinds.length){ const b=[schXT(['구분','건수','완료·확인 외'],kinds.map(x=>[x.name,x.rows.length,x.rows.filter(r=>!/완료|확인|충족|종결/.test(String(r.st||''))).length]),[3600,1200,1600])];
       if(fullOf('evid'))for(const x of kinds){ b.push(schXP(x.name,{b:1})); b.push(schXT(['ID','제목','상태','기한'],x.rows.slice(0,60).map(r=>[r.no,r.title,r.st,r.due]),[900,4000,1100,1200])); }
       sections.push({k:'evid',h:'근거 및 확약',blocks:b}); } }
-  if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({k:'meet',h:'미팅',blocks:[schXT(['일자','제목','주요안건','참석자'],cut('meet',ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1100,2500,2300,1300]),...more('meet',ms,5)]}); }
+  if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({k:'meet',h:'미팅',blocks:[Object.assign(schXT(['일자','제목','주요안건','참석자'],cut('meet',ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1290,2370,2240,1300]),{kind:'meet'}),...more('meet',ms,5)]}); }
   if(has('part')&&(h.partners||[]).length){ const names=h.partners.map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean);
     sections.push({k:'part',h:'협력업체',blocks:fullOf('part')?[schXT(['업체','구분','홈페이지','설명'],names.map(nm=>{ const pt=PARTNERS.find(q=>!q.trash&&norm(q.name)===norm(nm))||{}; return [nm,partnerCategories(pt.cat).join(', '),pt.site&&pt.site!=='-'?pt.site:'',oneLine(partnerDesc(pt))]; }),[1500,1300,1700,2700])]:[schXP(names.join(', '))]}); }
   const fs=sections.map(s=>fullOf(s.k)), kind=fs.length&&fs.every(Boolean)?'full':fs.some(Boolean)?'mix':'sum';
@@ -10742,7 +10813,7 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
   const no=schRepNos()[pid];
   return {file:`${schXSafe(pname(P))}_보고서(${({sum:'요약',full:'FULL',mix:'맞춤'})[kind]})_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:[P.full||pname(P),`프로젝트 보고서 · ${({sum:'요약형',full:'FULL',mix:'맞춤 구성'})[kind]}`],label:[no?'No. '+no:'',r.grp,r.stage].filter(Boolean).join('  |  '),sections}; }
 // how much a document holds, section by section (the window's right side says it before the file is made)
-const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b of s.blocks){ if(b.k==='tbl'){ tables++; lines+=b.rows.length; } else if(b.k==='p')lines++; } return {k:s.k||'',tables,lines}; });
+const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0, charts=0; for(const b of s.blocks){ if(b.k==='tbl'){ tables++; lines+=b.rows.length; } else if(b.k==='p'||b.k==='stat'||b.k==='note')lines++; else if(b.k==='img'&&b.gantt)charts++; } return {k:s.k||'',tables,lines,charts}; });
 
 /* ---------- the window ---------- */
 // (thirty-fifth round, owner: "옵션 많은 제품 견적 고르는 ui들을 참고해서") The window is put together like the page on which a product
@@ -10755,6 +10826,14 @@ const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b 
 // PPT and 엑셀 can be ticked together ("파일형식을 복수로 고를수도 있게"), and "PDF로도 저장" opens the print window for the same
 // report besides. A project's 엑셀 is still its schedule data, whole (its card says so); the main page's 엑셀 is the list and the
 // sheets that can be read back.
+// (fiftieth round, owner: "내보내기 이쪽에 각각 파일형식에 맞는 픽토그램 넣어줘 컬러까지해서") a page with its corner folded down and a
+// badge with the letter of the kind, in the colour each office program is known by: Word blue (lines of text), PPT orange-red
+// (a chart), 엑셀 green (a grid)
+const SCH_XFILE_IC={docx:['W','2B579A','EEF3FA','<path d="M17.4 14h5.4M17.4 17.4h5.4M17.4 20.8h4" stroke-width="1.3" stroke-linecap="round"/>'],
+  pptx:['P','D24726','FCEEEA','<circle cx="20.3" cy="17.6" r="3.5" fill="none" stroke-width="1.3"/><path d="M20.3 17.6v-3.5a3.5 3.5 0 0 1 3.5 3.5z" stroke="none"/>'],
+  xlsx:['X','217346','EBF4EE','<path d="M17.2 13.8h6v7.8h-6zM17.2 16.4h6M17.2 19h6M20.2 13.8v7.8" fill="none" stroke-width="1.2"/>']};
+function schXFileIc(k){ const v=SCH_XFILE_IC[k]; if(!v)return ''; const [l,c,bg,mark]=v;
+  return `<svg class="xq-fic" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M9.6 3.6h9.6l5.6 5.6v15.4a1.8 1.8 0 0 1-1.8 1.8H9.6a1.8 1.8 0 0 1-1.8-1.8V5.4a1.8 1.8 0 0 1 1.8-1.8z" fill="#${bg}" stroke="#${c}" stroke-width="1.2" stroke-linejoin="round"/><path d="M19.2 3.6v4.3a1.3 1.3 0 0 0 1.3 1.3h4.3" fill="none" stroke="#${c}" stroke-width="1.2" stroke-linejoin="round"/><g stroke="#${c}" fill="#${c}">${mark}</g><rect x="3.4" y="11.6" width="11.6" height="11.6" rx="2.4" fill="#${c}"/><text x="9.2" y="20.15" text-anchor="middle" font-size="8.4" font-weight="700" fill="#fff" font-family="Pretendard,'Malgun Gothic',sans-serif">${l}</text></svg>`; }
 let schPptxLoading=null;
 function schPptx(){ return schPptxLoading||(schPptxLoading=new Promise((ok,no)=>{ if(window.AIDCSchedulePptx){ok(window.AIDCSchedulePptx);return;} const s=document.createElement('script'); s.src='/schedule-pptx.js?v=20019b87a9ca';
   s.onload=()=>window.AIDCSchedulePptx?ok(window.AIDCSchedulePptx):no(Error('PPT 모듈을 불러오지 못했습니다.')); s.onerror=()=>{ schPptxLoading=null; no(Error('PPT 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); })); }
@@ -10772,7 +10851,7 @@ function schXPptHead(pid){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid)
     infra:schXLines(h.infra),struct:schXLines(h.struct),stat:schXLines(h.stat),risk:schXLines(h.risk),partners:(h.partners||[]).map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean)}; }
 function schXPptOf(ctx){ const base={dept:String(SETTINGS.org||'').replace(/\s*AI\s*Data\s*Center\s*$/i,'').trim()||SETTINGS.wsName||'',author:typeof userName==='function'?userName(sharedUser)||'':sharedName||'',today:TODAY};
   if(ctx.main)return Object.assign(base,{kind:'main',asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',sheets:ctx.w.sheets?(ctx.w.sheets==='full'?'full':'sum'):'',projects:ctx.w.sheets?ctx.ids.map(schXPptHead):[],count:ctx.ids.length});
-  const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full'}).sections.forEach(s=>{ full[s.k]=s.blocks; });
+  const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full',ppt:1}).sections.forEach(s=>{ full[s.k]=s.blocks; });
   (full.act||[]).forEach(b=>{ if(b.k==='img'&&b.gantt)schXGanttPpt(b); });   // the charts laid out for the slides (forty-ninth round)
   return Object.assign(base,{kind:'proj',proj:schXPptHead(pid),parts:ctx.parts.slice(),forms:Object.assign({},ctx.forms),full,op:m&&m.res.operationDate||''}); }
 async function schExpPptx(doc,ctx){ const P=await schPptx(), logos=await schXLogos(); return new Blob([await P.make(Object.assign({},doc,{ppt:ctx?schXPptOf(ctx):null}),logos)],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
@@ -10781,7 +10860,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
   const parts=main?[{k:'list',t:'프로젝트 목록 표',n:1,one:'번호 · 구분 · 위치 · 사업주체 · IT LOAD · 추진 단계'},{k:'sheets',t:'프로젝트별 요약',n:1,sum:'프로젝트마다 1장 — 지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'}]:schXProjParts(pid);
   const forms={}; for(const p of parts)forms[p.k]='sum';
   const card=(name,val,label,note,on)=>`<label class="xq-card"><input type="radio" name="${name}" value="${val}" ${on?'checked':''}><b>${esc(label)}</b>${note?`<em>${esc(note)}</em>`:''}</label>`;
-  const fcard=(val,label,note,on,tip)=>`<label class="xq-card" ${tip?`title="${esc(tip)}"`:''}><input type="checkbox" name="xw-file" value="${val}" ${on?'checked':''}><b>${esc(label)}</b><em>${esc(note)}</em></label>`;
+  const fcard=(val,label,note,on,tip)=>`<label class="xq-card" ${tip?`title="${esc(tip)}"`:''}><input type="checkbox" name="xw-file" value="${val}" ${on?'checked':''}>${schXFileIc(val)}<b>${esc(label)}</b><em>${esc(note)}</em></label>`;
   const row=p=>`<div class="xq-row" data-xwrow="${p.k}"><label class="xq-ck"><input type="checkbox" data-xwp="${p.k}" ${p.n&&p.k!=='evid'&&p.k!=='part'?'checked':''} ${p.n?'':'disabled'}><span class="xq-nm">${esc(p.t)}</span></label><span class="xq-say" data-xwsay></span>${p.one?'':`<span class="xq-seg" role="group" aria-label="${esc(p.t)} 형식"><button type="button" data-xwf="sum">요약</button><button type="button" data-xwf="full">FULL</button></span>`}</div>`;
   let step=0; const st=()=>`<i>${++step}</i>`;
   d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="내보내기"><div class="np-hd"><b>내보내기</b></div>
@@ -10804,7 +10883,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     else if(!ps.length){ list='<li class="nil">고른 항목이 없습니다</li>'; }
     else if(main){ const ids=schXMainIds(val('xw-scope')||'all'), w=want(ps); list=(w.list?`<li><span>프로젝트 목록 표</span><em>표</em><i>${ids.length}행</i></li>`:'')+(w.sheets?`<li data-xk="sheets"><span>프로젝트별 요약</span>${docs?tag('sheets'):'<em class="full">전체</em>'}<i>${ids.length}${docs?'장':'시트'}</i></li>`:'');
       if(docs){ const ms=schXMeasure(schXMainDoc(ids,w)); tot=`프로젝트 ${ids.length}건 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; } else tot=`프로젝트 ${ids.length}건 · 시트 ${(w.list?1:0)+(w.sheets?ids.length:0)}개`; }
-    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
+    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${!x?'-':x.charts&&forms[p.k]!=='full'?'그래프':x.lines+'줄'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
     $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; ok.disabled=!(fs.length||pdf())||(!ps.length&&!only); };
   d.addEventListener('change',sync); sync();
   // forty-seventh round: a part's whole row ticks it (its name, what it holds, the room around them) — only 요약 / FULL keep to themselves
@@ -10991,11 +11070,11 @@ function schXGanttData(m,code){ const P=AIDCSchedule.progress, res=t=>m.res.task
   const span=ts=>{ let a='9999',z=''; for(const t of ts){ const x=res(t); if(!x)continue; if(x.start<a)a=x.start; if(x.finish>z)z=x.finish; } return [a,z]; };
   if(!code){ for(const g of m.phases){ if(!g.tasks.length)continue; const [a,z]=span(g.tasks), pr=schProgress(m,g.tasks);
       rows.push({k:'ph',label:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),s:a,e:z,ms:g.tasks.filter(t=>t.kind==='milestone').map(t=>res(t).start),late:g.tasks.filter(t=>schLate(m,t)).length}); }
-    return {phase:'',title:'액션 일정',today:schToday(),op:m.res.operationDate||'',rows}; }
+    return {phase:'',title:'액션 일정',today:schToday(),sd:m.plan.statusDate||'',op:m.res.operationDate||'',rows}; }
   const g=m.phases.find(x=>x.code===code); if(!g||!g.tasks.length)return null;
   for(const t of g.tasks){ const x=res(t); if(!x)continue;
-    rows.push({k:t.kind==='milestone'?'ms':'t',label:`${schNo(t)}) ${t.name}`,s:x.start,e:x.finish,tone:P.isDone(t)?'done':schLate(m,t)?'late':x.criticality==='critical'?'cp':''}); }
-  const pr=schProgress(m,g.tasks); return {phase:g.code,title:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),today:schToday(),op:'',rows}; }
+    rows.push({k:t.kind==='milestone'?'ms':'t',label:`${schNo(t)}) ${t.name}`,no:schNo(t),name:t.name,s:x.start,e:x.finish,tone:P.isDone(t)?'done':schLate(m,t)?'late':x.criticality==='critical'?'cp':''}); }
+  const pr=schProgress(m,g.tasks); return {phase:g.code,title:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),today:schToday(),sd:m.plan.statusDate||'',op:'',rows}; }
 // W x H inches; o.rowMax caps a row's height. Returns {w, h (what was used), items}.
 function schXGanttLayout(G,W,H,o={}){ const items=[], R=(G&&G.rows)||[], C=SCHG; if(!R.length)return {w:W,h:0,items};
   const isPh=!G.phase, T=d=>Date.parse(d+'T00:00:00Z'), mStart=d=>d.slice(0,8)+'01', addM=(d,k)=>{ const t=new Date(T(d)); t.setUTCMonth(t.getUTCMonth()+k); return t.toISOString().slice(0,10); };
@@ -11047,19 +11126,82 @@ function schXGanttPng(lay,dpi=200){ const k=dpi, cv=document.createElement('canv
   c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height); const WT={3:300,4:400,5:500,6:600,7:700};
   for(const it of lay.items){
     if(it.t==='r'){ c.fillStyle='#'+it.fill; c.fillRect(it.x*k,it.y*k,it.w*k,it.h*k); if(it.line){ c.strokeStyle='#'+it.line.c; c.lineWidth=it.line.pt/72*k; c.strokeRect(it.x*k,it.y*k,it.w*k,it.h*k); } }
-    else if(it.t==='l'){ c.save(); c.strokeStyle='#'+it.c; c.lineWidth=Math.max(1,it.pt/72*k); if(it.dash)c.setLineDash([0.04*k,0.03*k]); c.beginPath(); c.moveTo(it.x1*k,it.y1*k); c.lineTo(it.x2*k,it.y2*k); c.stroke(); c.restore(); }
+    else if(it.t==='l'){ c.save(); c.strokeStyle='#'+it.c; c.lineWidth=Math.max(1,it.pt/72*k); if(it.dash)c.setLineDash((it.dp||[0.04,0.03]).map(v=>v*k)); c.beginPath(); c.moveTo(it.x1*k,it.y1*k); c.lineTo(it.x2*k,it.y2*k); c.stroke(); c.restore(); }
     else if(it.t==='d'){ const h=it.s/2*k; c.beginPath(); c.moveTo(it.cx*k,it.cy*k-h); c.lineTo(it.cx*k+h,it.cy*k); c.lineTo(it.cx*k,it.cy*k+h); c.lineTo(it.cx*k-h,it.cy*k); c.closePath(); c.fillStyle='#'+it.fill; c.fill(); if(it.line){ c.strokeStyle='#'+it.line.c; c.lineWidth=it.line.pt/72*k; c.stroke(); } }
     else if(it.t==='x'){ c.font=`${WT[it.wt]||400} ${it.pt/72*k}px Pretendard,'Malgun Gothic',sans-serif`; c.fillStyle='#'+it.c; c.textBaseline=it.va==='t'?'top':'middle'; c.textAlign=it.al==='r'?'right':it.al==='c'?'center':'left';
       const x=it.al==='r'?(it.x+it.w)*k:it.al==='c'?(it.x+it.w/2)*k:it.x*k, y=it.va==='t'?it.y*k:(it.y+it.h/2)*k; c.fillText(it.s,x,y); } }
   return cv.toDataURL('image/png'); }
-// a chart block as Word and the print window take it: the whole width of the sheet (SCH_DOC.text), as tall as its rows want
-function schXGanttSrc(b){ if(b.src)return b.src; const G=b.gantt, n=(G.rows||[]).length, ph=!G.phase, W=SCH_DOC.text/1440, H=Math.min(9.2,0.9+n*(ph?0.32:0.2));
-  const lay=schXGanttLayout(G,W,H,{rowMax:ph?0.32:0.2}); b.src=schXGanttPng(lay,200); b.lay=lay; return b.src; }
+// a chart block as Word and the print window take it (fiftieth round): the Word guide's chart (schXGanttDocLay below) across the
+// width of the sheet's tables (SCH_DOC.w), as tall as its rows want, drawn at the guide's 320 dpi
+function schXGanttSrc(b){ if(b.src)return b.src; const lay=schXGanttDocLay(b.gantt,SCH_DOC.w/1440); b.src=schXGanttPng(lay,320); b.lay=lay; return b.src; }
 // the same charts for the slides (schedule/pptx.ts draws the items at the content width of the template, 10.0 in)
 function schXGanttPpt(b){ const G=b.gantt; b.ppt=G.phase?{full:schXGanttLayout(G,10.0,5.5)}:{sum:schXGanttLayout(G,10.0,3.05),full:schXGanttLayout(G,10.0,5.5)}; return b; }
 // the picture as bytes for Word (no fetch of a data address)
 function schXGanttBytes(b){ const src=schXGanttSrc(b), m=/^data:image\/png;base64,(.*)$/.exec(src); if(!m)return null; const s=atob(m[1]), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
-  return {data:u,w:Math.ceil(b.lay.w*200),h:Math.ceil(b.lay.h*200),ext:'png'}; }
+  return {data:u,w:Math.ceil(b.lay.w*320),h:Math.ceil(b.lay.h*320),ext:'png'}; }
+
+/* ---------- the chart of the Word guide (fiftieth round) ---------- */
+// Owner, 2026-11-26: "내가 보내주는 파일들이 내보내기 할때 표준 가이드가 되는것들이야. 이것들을 기본가이드로 등록하고 써." The Word
+// guide (요약 / 액션 일정 FULL) draws the schedule otherwise than the slides do, and each file keeps to its own guide: the PPT
+// to the PPT guide (schXGanttLayout above, unchanged), Word and the print window to the Word guide (this one). Measured from the
+// guide's pictures (2200 px wide at 320 dpi = the 9889 twips of the sheet's tables):
+//   · 전체 단계 간트 (요약): 개발 단계 | 진행률 | 예상 일정; a row 0.256 in; a dark bar (494949) with its end date in white at its
+//     end, the milestones as open diamonds under it; quarters on the axis (the first month and January as yy.mm, the others
+//     "N월"); the date of the schedule (일정 기준일) a green dashed line; a phase that ends years after the others is drawn into a
+//     short piece at the right, the years between left out ("// … 축 생략").
+//   · 상세 간트 (FULL, a phase): WBS / 업무 | 예상 일정; months on the axis; a thin grey bar (777777) per task, a milestone an open
+//     diamond; rows 0.334 in down to 0.197 in; more than 34 tasks stand in two columns side by side ("왼쪽 열에서 오른쪽 열 순서로").
+// widths measured in the typeface the picture is drawn in (the slides keep schGw: PowerPoint lays their text out itself)
+let schGcv=null; const schGmw=(t,pt,wt)=>{ try{ schGcv=schGcv||document.createElement('canvas').getContext('2d'); schGcv.font=`${({4:400,5:500,6:600,7:700})[wt]||400} ${pt*10}px Pretendard,'Malgun Gothic',sans-serif`; return schGcv.measureText(String(t==null?'':t)).width/720; }catch(e){ return schGw(t,pt); } };
+const schGmfit=(t,pt,wt,w)=>{ t=String(t==null?'':t); if(schGmw(t,pt,wt)<=w)return t; while(t.length>1&&schGmw(t+'…',pt,wt)>w)t=t.slice(0,-1); return t+'…'; };
+const SCHW={ink:'222222',lab:'333333',wbs:'272727',sub:'555555',mute:'666666',bar:'494949',tbar:'777777',ms:'4A4A4A',grid:'DEDEDE',row:'DDDDDD',axis:'777777',sd:'55934F',track:'EEEEEE',up:'1F8E00',div:'BCBCBC'};
+function schXGanttDocLay(G,W){ const items=[], R=((G&&G.rows)||[]).filter(r=>r.s||r.e), C=SCHW; if(!R.length)return {w:W,h:0,items};
+  const isPh=!G.phase, T=d=>Date.parse(d+'T00:00:00Z'), mStart=d=>d.slice(0,8)+'01', addM=(d,k)=>{ const t=new Date(T(d)); t.setUTCMonth(t.getUTCMonth()+k); return t.toISOString().slice(0,10); };
+  const rect=(x,y,w,h,fill,line)=>items.push({t:'r',x,y,w,h,fill,line}), ln=(x1,y1,x2,y2,c,pt,dash,dp)=>items.push({t:'l',x1,y1,x2,y2,c,pt,dash:!!dash,dp}), dia=(cx,cy,s,fill,line)=>items.push({t:'d',cx,cy,s,fill,line}), text=(s,x,y,w,h,pt,wt,c,al,va)=>items.push({t:'x',s,x,y,w,h,pt,wt,c,al:al||'l',va:va||'m'});
+  const day=d=>d?d.slice(2).replace(/-/g,'.'):'', dot=d=>d?d.replace(/-/g,'.'):'', ym=d=>d.slice(2,7).replace('-','.');
+  // the range: the first start's month to the month after the last end; on the chart of the phases one phase that ends 18 months
+  // or more after the next latest gets a short piece of its own at the right, the time between left out
+  const starts=R.map(r=>r.s||r.e).sort(), ends=R.map(r=>r.e||r.s).sort(), d0=mStart(starts[0]); let d1=addM(mStart(ends[ends.length-1]),1), tail=null;
+  if(isPh&&ends.length>1){ const lim=addM(mStart(ends[ends.length-2]),1), late=mStart(ends[ends.length-1]); if(addM(lim,18)<=late&&late>d0){ tail={a:late,b:addM(late,1),gap:[lim,addM(late,-1)]}; d1=lim; } }
+  const split=!isPh&&R.length>34, k=split?Math.ceil(R.length/2):R.length;
+  const rowH=isPh?0.256:split?(k<=40?0.2125:Math.max(0.12,8.5/k)):Math.max(0.197,Math.min(0.334,6.0/k)), pt=isPh?8:rowH>=0.3?8.5:rowH>=0.2?7.5:rowH>=0.16?7:6.5;
+  const yAx=0.37, yEnd=yAx+rowH*k, half=split?W/2-0.09:W;
+  // one chart: its axis, rows and bars between ox and ox+half
+  const chart=(ox,rows)=>{ const X0=ox+(isPh?1.86:split?1.62:2.94), XE=ox+half, tw=tail?0.72:0, gw=tail?0.17:0, X1=XE-tw-gw, t0=T(d0), t1=T(d1);
+    const X=d=>{ if(tail&&d>=tail.a)return XE-tw+(Math.min(T(d),T(tail.b))-T(tail.a))/(T(tail.b)-T(tail.a))*tw; if(tail&&d>=d1)return X1+gw/2; return X0+(Math.min(Math.max(T(d),t0),t1)-t0)/(t1-t0)*(X1-X0); };
+    // the head: what the columns hold
+    if(isPh){ text('개발 단계',ox+0.02,0.02,1.2,0.19,7.5,7,C.ink); text('진행률',ox+1.344,0.02,0.5,0.19,7.5,7,C.ink); }
+    else { text('WBS / 업무',ox+0.0125,0.017,1.6,0.19,7,7,C.ink); }
+    text('예상 일정',X0,isPh?0.02:0.017,1.2,0.19,isPh?7.5:7,7,C.ink);
+    // the axis: the months (or every third / sixth / twelfth), the first and January as yy.mm, the others N월
+    const months=Math.max(1,Math.round((t1-t0)/864e5/30.44)), mw=(X1-X0)/months, step=[1,3,6,12].find(s=>mw*s>=0.3)||12;
+    let lastX=-9; const tick=(x,label)=>{ ln(x,yAx,x,yEnd,C.grid,0.5); if(label&&x-lastX>=0.2&&x+0.12<XE){ text(label,x+0.012,yAx-0.19,0.5,0.17,6,4,C.sub); lastX=x; } };
+    tick(X0,ym(d0)); for(let d=addM(d0,1); d<d1; d=addM(d,1)){ const mo=+d.slice(5,7); if((mo-1)%step)continue; tick(X(d),mo===1?ym(d):mo+'월'); }
+    if(tail){ tick(XE-tw,ym(tail.a)); text('//',X1,yAx-0.19,gw,0.17,6,4,C.sub,'c'); }
+    ln(X0,yAx,XE,yAx,C.axis,0.5);
+    rows.forEach((r,i)=>{ const y=yAx+i*rowH, cy=y+rowH/2; ln(ox,y+rowH,XE,y+rowH,C.row,0.25);
+      if(isPh){ text(`${r.label} (${r.n})`,ox+0.02,y,1.3,rowH,pt,6,C.lab);
+        const tx0=ox+1.344, tw0=0.19; rect(tx0,cy-0.0063,tw0,0.0125,C.track); if(r.pct>0)rect(tx0,cy-0.0063,Math.max(0.006,tw0*Math.min(1,r.pct/100)),0.0125,C.up);
+        text(r.pct+'%',ox+1.5625,y,0.3,rowH,7,r.pct>0?6:4,r.pct>0?C.up:C.mute);
+        const by=y+0.06, bh=0.0875, xa=X(r.s||r.e), xb=Math.max(xa+0.03,X(r.e||r.s)+0.004); rect(xa,by,xb-xa,bh,C.bar);
+        if(tail&&(r.s||r.e)<d1&&(r.e||'')>=tail.a)for(const dx of [-0.018,0.012])ln(X1+gw/2+dx-0.012,by+bh+0.012,X1+gw/2+dx+0.012,by-0.012,'FFFFFF',1.6);
+        const lab=day(r.e), lw=schGmw(lab,6,6); if(xb-xa>=lw+0.07)text(lab,xb-lw-0.035,by,lw+0.01,bh,6,6,'FFFFFF','r'); else if(xb+lw+0.06<XE)text(lab,xb+0.03,by,lw+0.02,bh,6,5,C.bar); else text(lab,xa-lw-0.05,by,lw+0.02,bh,6,5,C.bar,'r');
+        for(const d of r.ms||[])if(d>=d0&&(d<d1||(tail&&d>=tail.a&&d<tail.b)))dia(X(d),y+0.19,0.05,'FFFFFF',{c:C.ms,pt:0.75}); }
+      else { const nx=ox+(split?0.31:0.37), room=X0-nx-0.08; text(String(r.no||''),ox+0.0125,y,nx-ox-0.02,rowH,pt,7,C.wbs); text(schGmfit(r.name||r.label,pt,4,room),nx,y,room+0.04,rowH,pt,4,C.lab);
+        if(r.k==='ms'||!r.s){ const d=r.s||r.e; if(r.k==='ms')dia(X(d),cy,Math.min(0.06,rowH*0.5),'FFFFFF',{c:C.ms,pt:0.75}); else { const x=X(d); rect(x,cy-0.03,0.008,0.06,C.ink); text('예상 완료',x+0.02,y,0.5,rowH,5.5,4,C.sub); } }
+        else { const xa=X(r.s), xb=Math.max(xa+0.02,X(r.e)+Math.max(0.003,(X1-X0)/((t1-t0)/864e5))); rect(xa,cy-0.022,xb-xa,0.044,C.tbar); } } });
+    // the date the schedule stands at: a green dashed line
+    if(G.sd&&G.sd>=d0&&G.sd<d1){ const x=X(G.sd); ln(x,yAx,x,yEnd,C.sd,0.5,true,[0.02,0.012]); }
+    return {sdIn:!!(G.sd&&G.sd>=d0&&G.sd<d1)}; };
+  let info; if(split){ info=chart(0,R.slice(0,k)); chart(W/2+0.09,R.slice(k)); ln(W/2,0.03,W/2,yEnd,C.div,0.5); } else info=chart(0,R);
+  if(tail)text(`${dot(tail.gap[0]).slice(0,7)}–${dot(tail.gap[1]).slice(0,7)} 축 생략`,W-2.4,0.02,2.4,0.19,6,4,C.mute,'r');
+  // the legend under the chart
+  let lx=0.01; const ly=yEnd+0.07, lh=0.17, key=(label,pre)=>{ if(pre)lx=pre(lx)||lx; const w=schGmw(label,6.5,4)+0.02; text(label,lx,ly,w,lh,6.5,4,C.sub); lx+=w+0.13; };
+  const msKey=x=>{ dia(x+0.03,ly+lh/2,0.055,'FFFFFF',{c:C.ms,pt:0.75}); return x+0.085; };
+  if(isPh){ key('마일스톤',msKey); if(info.sdIn)key(`녹색 점선  일정 기준일 ${dot(G.sd)}`); if(tail)key('//  시간축 생략'); return {w:W,h:ly+lh+0.03,items}; }
+  key('막대  업무 기간'); key('마일스톤',msKey); if(info.sdIn)key('녹색 점선  일정 기준일'); if(R.some(r=>r.k!=='ms'&&!r.s))key('|  예상 완료일만 확인된 업무');
+  text(split?'왼쪽 열에서 오른쪽 열 순서로 읽습니다. 업무 전체 이름과 날짜는 다음 목록에 기재했습니다.':'업무 전체 이름과 날짜는 다음 목록에 기재했습니다.',0,ly+lh+0.01,W,0.16,6.5,4,C.mute);
+  return {w:W,h:ly+lh+0.2,items}; }
 
 /* ---- schedule/ui/96-xlsx-export.js ---- */
 /* ---------- a project's Excel in the form of the guide workbook (forty-ninth round) ---------- */

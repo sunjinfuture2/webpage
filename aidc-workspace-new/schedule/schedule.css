@@ -2143,3 +2143,8 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 /* Owner, 2026-11-26: 저장 of the overview is the black button of the panels too */
 .sch-on .rmeta .rbt .edit.save{background:#0f0f0f;border-color:#0f0f0f;color:#fff;font-weight:600;box-shadow:none}
 .sch-on .rmeta .rbt .edit.save:hover{background:#2b2b2b;color:#fff}
+
+/* Fiftieth round (owner, 2026-11-26): a pictogram of the kind of file above its name in the export window's file cards, in the
+   kind's colour (schXFileIc in 92-export.js) */
+.sch-xw .xq-files .xq-card{padding:9px 4px 7px;gap:1px}
+.sch-xw .xq-files .xq-card .xq-fic{display:block;flex:none;width:30px;height:30px;margin:0 auto 3px}

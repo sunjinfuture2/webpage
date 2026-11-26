@@ -1429,3 +1429,50 @@ SCH_XG_HEAD / SCH_XG_LOOK and schedule/xlsx.ts makeGuideBook). schXlSpec builds 
   leaves every 요약 sheet out with the note "요약형으로 내보낸 시트라 보기용입니다…". A FULL file loaded back changes nothing
   (checked on 판교: 233 tasks, 511 relations, every record — "변경 없음").
 - tests: schedule-16 checks both (charts per phase; FULL back = same, 요약 = nothing). Brought in step, not run.
+
+## The owner's standard guides for the exports (owner, 2026-11-26, fiftieth round)
+
+"내가 보내주는 파일들이 내보내기 할때 표준 가이드가 되는것들이야. 이것들을 기본가이드로 등록하고 써." Six files of the 판교 report:
+PPT 요약 / FULL, 엑셀 요약 / FULL, Word 요약 / 액션 일정 FULL. They are NOT in the repository (the repository is public and they
+hold the project's data and people's names); their rules are written here and in the code.
+
+- **PPT and 엑셀**: the two PPT guides and the two workbooks are what the app wrote that morning, unchanged (compared shape by
+  shape and sheet by sheet: the same pages, positions, sheets, widths, merges and fonts; only the data differs). They stand as
+  they are: schedule/pptx.ts (the forty-first / forty-second / forty-ninth rounds) and makeGuideBook (forty-ninth round) are the
+  guide. Do not change their look without the owner.
+- **Word** (and the print window, which is the same report): the owner reworked the Word files; every difference is now a rule
+  (SCH_DOC / SCH_DOC_TONE / schXCell in schedule/ui/70-export.js):
+
+| what | the guide |
+|---|---|
+| the page | margins 18 mm left and right (1021), 17.5 mm top (992); the title's label ends at 9923 (right indent 396); the head line reaches 342 into the right margin |
+| text | 15.5 pt lines (310 exact); a short note ("외 n건 (FULL에 전체 수록)", the count of gates) 12.5 pt; text before a table is kept with it |
+| tables | the sheet's whole width (9889): a first column of 2689 without lines that holds the section's title when the section opens with the table; rows 8 / 8 and 292 exact, never split, the head repeated on a new page; the meetings left-aligned |
+| colour | 상태 / 확약 상태 bold in colour: 완료 · 승인 · 확약 177809, 진행 116DA3, 예정 · 계획 · 미확약 626262, 목표 8135A4, 확인 전 886008, 보완·반려 AF3333; 지연 D30000 bold |
+| 진행 현황 | the sentence's figures bold (progress, the opening), "지연 n건" and "n일 지연" red; in the table 운영개시 예상 bold, the progress bold grey (0 %) or green (1F8E00), "지연 n" red |
+| spacing | 40 before a table, 120 after it, 240 after the last table of a section, 200 after a section |
+| 액션 일정 요약 | ONE line "3. 액션 일정 ⇥ 전체 단계 간트", a line 운영개시 예상 · 일정 기준일 · 전체 n건, the chart of the phases — no lists |
+| 액션 일정 FULL | per phase two pages, each opening with "3. 액션 일정 ⇥ n) 단계  \|  상세 간트" / "…  \|  업무 목록": a line 업무 · 완료 · 진행률 (green above 0) · 기간, the chart of its tasks; then "업무 n건 · WBS 순" and the list across the whole width (WBS · 업무 · 시작 · 예상 완료 · 상태 · 담당 · 지연; 9.5 pt; widths 640 / 3540 / 1220 / 1220 / 1350 / 1000 / 919). No chart of all phases, no lists of late / coming work in FULL |
+
+- **The chart in Word** is the Word guide's, not the slides': schXGanttDocLay in 95-gantt-export.js (measured from the guide's
+  pictures, drawn at 320 dpi across 9889 twips). 전체 단계 간트: 개발 단계 (n) | 진행률 | 예상 일정, rows 0.256 in, a dark bar
+  (494949) with its end date in white, milestones as open diamonds under it, quarters on the axis, 일정 기준일 a green dashed line,
+  a phase ending 18 months or more after the next latest drawn into a short piece at the right ("// … 축 생략"). 상세 간트: WBS
+  bold, the name, a thin grey bar (777777) per task, months on the axis, rows 0.334 down to 0.197 in; more than 34 tasks stand in
+  two columns ("왼쪽 열에서 오른쪽 열 순서로 읽습니다"). The PPT keeps schXGanttLayout. So the rule of the forty-ninth round "one
+  layout for every file" now reads: one layout per guide — change the Word chart in schXGanttDocLay, the slides' in
+  schXGanttLayout.
+- schXProjDoc(pid, {…, ppt:1}) gives the slides their blocks as before (the chart of the phases + late / coming lists + a chart
+  and a list per phase); without `ppt` it gives the Word guide's. New blocks for Word / print: `sh` (the section's title + what the
+  page holds, `brk` for a new page), `stat` (a line of figures, `v` 'ov' | 'ph'), `note`, a table with `full` (across the whole
+  width) and `kind` ('state' | 'meet' | 'tasks').
+- The window's line for 액션 일정 says what each form holds now ("전체 단계 그래프 (PPT: 지연 · 60일 안 목록)", "단계마다 상세 간트와
+  업무 목록"); its list says "그래프" for a part that is a chart only.
+- **Pictograms of the files** (owner: "내보내기 이쪽에 각각 파일형식에 맞는 픽토그램 넣어줘 컬러까지해서"): each file card of the
+  export window has a page with a folded corner and a badge with its letter, in the colour the program is known by — Word 2B579A
+  (lines), PPT D24726 (a chart), 엑셀 217346 (a grid); schXFileIc in 92-export.js, `.xq-fic`.
+
+Checked: the app's 요약 Word file has the guide's 3 pages and the FULL one its 21 (LibreOffice), page by page against the guide;
+the print window's PDF the same; the export window light and dark. tests: schedule-16 checks the blocks of Word 요약, the charts
+of Word and of the slides, and the pictograms. Brought in step and not run.
+

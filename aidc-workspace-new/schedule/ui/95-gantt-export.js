@@ -16,11 +16,11 @@ function schXGanttData(m,code){ const P=AIDCSchedule.progress, res=t=>m.res.task
   const span=ts=>{ let a='9999',z=''; for(const t of ts){ const x=res(t); if(!x)continue; if(x.start<a)a=x.start; if(x.finish>z)z=x.finish; } return [a,z]; };
   if(!code){ for(const g of m.phases){ if(!g.tasks.length)continue; const [a,z]=span(g.tasks), pr=schProgress(m,g.tasks);
       rows.push({k:'ph',label:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),s:a,e:z,ms:g.tasks.filter(t=>t.kind==='milestone').map(t=>res(t).start),late:g.tasks.filter(t=>schLate(m,t)).length}); }
-    return {phase:'',title:'액션 일정',today:schToday(),op:m.res.operationDate||'',rows}; }
+    return {phase:'',title:'액션 일정',today:schToday(),sd:m.plan.statusDate||'',op:m.res.operationDate||'',rows}; }
   const g=m.phases.find(x=>x.code===code); if(!g||!g.tasks.length)return null;
   for(const t of g.tasks){ const x=res(t); if(!x)continue;
-    rows.push({k:t.kind==='milestone'?'ms':'t',label:`${schNo(t)}) ${t.name}`,s:x.start,e:x.finish,tone:P.isDone(t)?'done':schLate(m,t)?'late':x.criticality==='critical'?'cp':''}); }
-  const pr=schProgress(m,g.tasks); return {phase:g.code,title:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),today:schToday(),op:'',rows}; }
+    rows.push({k:t.kind==='milestone'?'ms':'t',label:`${schNo(t)}) ${t.name}`,no:schNo(t),name:t.name,s:x.start,e:x.finish,tone:P.isDone(t)?'done':schLate(m,t)?'late':x.criticality==='critical'?'cp':''}); }
+  const pr=schProgress(m,g.tasks); return {phase:g.code,title:schPhaseLabel(g),n:g.tasks.length,pct:schPct(pr),today:schToday(),sd:m.plan.statusDate||'',op:'',rows}; }
 // W x H inches; o.rowMax caps a row's height. Returns {w, h (what was used), items}.
 function schXGanttLayout(G,W,H,o={}){ const items=[], R=(G&&G.rows)||[], C=SCHG; if(!R.length)return {w:W,h:0,items};
   const isPh=!G.phase, T=d=>Date.parse(d+'T00:00:00Z'), mStart=d=>d.slice(0,8)+'01', addM=(d,k)=>{ const t=new Date(T(d)); t.setUTCMonth(t.getUTCMonth()+k); return t.toISOString().slice(0,10); };
@@ -72,16 +72,79 @@ function schXGanttPng(lay,dpi=200){ const k=dpi, cv=document.createElement('canv
   c.fillStyle='#fff'; c.fillRect(0,0,cv.width,cv.height); const WT={3:300,4:400,5:500,6:600,7:700};
   for(const it of lay.items){
     if(it.t==='r'){ c.fillStyle='#'+it.fill; c.fillRect(it.x*k,it.y*k,it.w*k,it.h*k); if(it.line){ c.strokeStyle='#'+it.line.c; c.lineWidth=it.line.pt/72*k; c.strokeRect(it.x*k,it.y*k,it.w*k,it.h*k); } }
-    else if(it.t==='l'){ c.save(); c.strokeStyle='#'+it.c; c.lineWidth=Math.max(1,it.pt/72*k); if(it.dash)c.setLineDash([0.04*k,0.03*k]); c.beginPath(); c.moveTo(it.x1*k,it.y1*k); c.lineTo(it.x2*k,it.y2*k); c.stroke(); c.restore(); }
+    else if(it.t==='l'){ c.save(); c.strokeStyle='#'+it.c; c.lineWidth=Math.max(1,it.pt/72*k); if(it.dash)c.setLineDash((it.dp||[0.04,0.03]).map(v=>v*k)); c.beginPath(); c.moveTo(it.x1*k,it.y1*k); c.lineTo(it.x2*k,it.y2*k); c.stroke(); c.restore(); }
     else if(it.t==='d'){ const h=it.s/2*k; c.beginPath(); c.moveTo(it.cx*k,it.cy*k-h); c.lineTo(it.cx*k+h,it.cy*k); c.lineTo(it.cx*k,it.cy*k+h); c.lineTo(it.cx*k-h,it.cy*k); c.closePath(); c.fillStyle='#'+it.fill; c.fill(); if(it.line){ c.strokeStyle='#'+it.line.c; c.lineWidth=it.line.pt/72*k; c.stroke(); } }
     else if(it.t==='x'){ c.font=`${WT[it.wt]||400} ${it.pt/72*k}px Pretendard,'Malgun Gothic',sans-serif`; c.fillStyle='#'+it.c; c.textBaseline=it.va==='t'?'top':'middle'; c.textAlign=it.al==='r'?'right':it.al==='c'?'center':'left';
       const x=it.al==='r'?(it.x+it.w)*k:it.al==='c'?(it.x+it.w/2)*k:it.x*k, y=it.va==='t'?it.y*k:(it.y+it.h/2)*k; c.fillText(it.s,x,y); } }
   return cv.toDataURL('image/png'); }
-// a chart block as Word and the print window take it: the whole width of the sheet (SCH_DOC.text), as tall as its rows want
-function schXGanttSrc(b){ if(b.src)return b.src; const G=b.gantt, n=(G.rows||[]).length, ph=!G.phase, W=SCH_DOC.text/1440, H=Math.min(9.2,0.9+n*(ph?0.32:0.2));
-  const lay=schXGanttLayout(G,W,H,{rowMax:ph?0.32:0.2}); b.src=schXGanttPng(lay,200); b.lay=lay; return b.src; }
+// a chart block as Word and the print window take it (fiftieth round): the Word guide's chart (schXGanttDocLay below) across the
+// width of the sheet's tables (SCH_DOC.w), as tall as its rows want, drawn at the guide's 320 dpi
+function schXGanttSrc(b){ if(b.src)return b.src; const lay=schXGanttDocLay(b.gantt,SCH_DOC.w/1440); b.src=schXGanttPng(lay,320); b.lay=lay; return b.src; }
 // the same charts for the slides (schedule/pptx.ts draws the items at the content width of the template, 10.0 in)
 function schXGanttPpt(b){ const G=b.gantt; b.ppt=G.phase?{full:schXGanttLayout(G,10.0,5.5)}:{sum:schXGanttLayout(G,10.0,3.05),full:schXGanttLayout(G,10.0,5.5)}; return b; }
 // the picture as bytes for Word (no fetch of a data address)
 function schXGanttBytes(b){ const src=schXGanttSrc(b), m=/^data:image\/png;base64,(.*)$/.exec(src); if(!m)return null; const s=atob(m[1]), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
-  return {data:u,w:Math.ceil(b.lay.w*200),h:Math.ceil(b.lay.h*200),ext:'png'}; }
+  return {data:u,w:Math.ceil(b.lay.w*320),h:Math.ceil(b.lay.h*320),ext:'png'}; }
+
+/* ---------- the chart of the Word guide (fiftieth round) ---------- */
+// Owner, 2026-11-26: "내가 보내주는 파일들이 내보내기 할때 표준 가이드가 되는것들이야. 이것들을 기본가이드로 등록하고 써." The Word
+// guide (요약 / 액션 일정 FULL) draws the schedule otherwise than the slides do, and each file keeps to its own guide: the PPT
+// to the PPT guide (schXGanttLayout above, unchanged), Word and the print window to the Word guide (this one). Measured from the
+// guide's pictures (2200 px wide at 320 dpi = the 9889 twips of the sheet's tables):
+//   · 전체 단계 간트 (요약): 개발 단계 | 진행률 | 예상 일정; a row 0.256 in; a dark bar (494949) with its end date in white at its
+//     end, the milestones as open diamonds under it; quarters on the axis (the first month and January as yy.mm, the others
+//     "N월"); the date of the schedule (일정 기준일) a green dashed line; a phase that ends years after the others is drawn into a
+//     short piece at the right, the years between left out ("// … 축 생략").
+//   · 상세 간트 (FULL, a phase): WBS / 업무 | 예상 일정; months on the axis; a thin grey bar (777777) per task, a milestone an open
+//     diamond; rows 0.334 in down to 0.197 in; more than 34 tasks stand in two columns side by side ("왼쪽 열에서 오른쪽 열 순서로").
+// widths measured in the typeface the picture is drawn in (the slides keep schGw: PowerPoint lays their text out itself)
+let schGcv=null; const schGmw=(t,pt,wt)=>{ try{ schGcv=schGcv||document.createElement('canvas').getContext('2d'); schGcv.font=`${({4:400,5:500,6:600,7:700})[wt]||400} ${pt*10}px Pretendard,'Malgun Gothic',sans-serif`; return schGcv.measureText(String(t==null?'':t)).width/720; }catch(e){ return schGw(t,pt); } };
+const schGmfit=(t,pt,wt,w)=>{ t=String(t==null?'':t); if(schGmw(t,pt,wt)<=w)return t; while(t.length>1&&schGmw(t+'…',pt,wt)>w)t=t.slice(0,-1); return t+'…'; };
+const SCHW={ink:'222222',lab:'333333',wbs:'272727',sub:'555555',mute:'666666',bar:'494949',tbar:'777777',ms:'4A4A4A',grid:'DEDEDE',row:'DDDDDD',axis:'777777',sd:'55934F',track:'EEEEEE',up:'1F8E00',div:'BCBCBC'};
+function schXGanttDocLay(G,W){ const items=[], R=((G&&G.rows)||[]).filter(r=>r.s||r.e), C=SCHW; if(!R.length)return {w:W,h:0,items};
+  const isPh=!G.phase, T=d=>Date.parse(d+'T00:00:00Z'), mStart=d=>d.slice(0,8)+'01', addM=(d,k)=>{ const t=new Date(T(d)); t.setUTCMonth(t.getUTCMonth()+k); return t.toISOString().slice(0,10); };
+  const rect=(x,y,w,h,fill,line)=>items.push({t:'r',x,y,w,h,fill,line}), ln=(x1,y1,x2,y2,c,pt,dash,dp)=>items.push({t:'l',x1,y1,x2,y2,c,pt,dash:!!dash,dp}), dia=(cx,cy,s,fill,line)=>items.push({t:'d',cx,cy,s,fill,line}), text=(s,x,y,w,h,pt,wt,c,al,va)=>items.push({t:'x',s,x,y,w,h,pt,wt,c,al:al||'l',va:va||'m'});
+  const day=d=>d?d.slice(2).replace(/-/g,'.'):'', dot=d=>d?d.replace(/-/g,'.'):'', ym=d=>d.slice(2,7).replace('-','.');
+  // the range: the first start's month to the month after the last end; on the chart of the phases one phase that ends 18 months
+  // or more after the next latest gets a short piece of its own at the right, the time between left out
+  const starts=R.map(r=>r.s||r.e).sort(), ends=R.map(r=>r.e||r.s).sort(), d0=mStart(starts[0]); let d1=addM(mStart(ends[ends.length-1]),1), tail=null;
+  if(isPh&&ends.length>1){ const lim=addM(mStart(ends[ends.length-2]),1), late=mStart(ends[ends.length-1]); if(addM(lim,18)<=late&&late>d0){ tail={a:late,b:addM(late,1),gap:[lim,addM(late,-1)]}; d1=lim; } }
+  const split=!isPh&&R.length>34, k=split?Math.ceil(R.length/2):R.length;
+  const rowH=isPh?0.256:split?(k<=40?0.2125:Math.max(0.12,8.5/k)):Math.max(0.197,Math.min(0.334,6.0/k)), pt=isPh?8:rowH>=0.3?8.5:rowH>=0.2?7.5:rowH>=0.16?7:6.5;
+  const yAx=0.37, yEnd=yAx+rowH*k, half=split?W/2-0.09:W;
+  // one chart: its axis, rows and bars between ox and ox+half
+  const chart=(ox,rows)=>{ const X0=ox+(isPh?1.86:split?1.62:2.94), XE=ox+half, tw=tail?0.72:0, gw=tail?0.17:0, X1=XE-tw-gw, t0=T(d0), t1=T(d1);
+    const X=d=>{ if(tail&&d>=tail.a)return XE-tw+(Math.min(T(d),T(tail.b))-T(tail.a))/(T(tail.b)-T(tail.a))*tw; if(tail&&d>=d1)return X1+gw/2; return X0+(Math.min(Math.max(T(d),t0),t1)-t0)/(t1-t0)*(X1-X0); };
+    // the head: what the columns hold
+    if(isPh){ text('개발 단계',ox+0.02,0.02,1.2,0.19,7.5,7,C.ink); text('진행률',ox+1.344,0.02,0.5,0.19,7.5,7,C.ink); }
+    else { text('WBS / 업무',ox+0.0125,0.017,1.6,0.19,7,7,C.ink); }
+    text('예상 일정',X0,isPh?0.02:0.017,1.2,0.19,isPh?7.5:7,7,C.ink);
+    // the axis: the months (or every third / sixth / twelfth), the first and January as yy.mm, the others N월
+    const months=Math.max(1,Math.round((t1-t0)/864e5/30.44)), mw=(X1-X0)/months, step=[1,3,6,12].find(s=>mw*s>=0.3)||12;
+    let lastX=-9; const tick=(x,label)=>{ ln(x,yAx,x,yEnd,C.grid,0.5); if(label&&x-lastX>=0.2&&x+0.12<XE){ text(label,x+0.012,yAx-0.19,0.5,0.17,6,4,C.sub); lastX=x; } };
+    tick(X0,ym(d0)); for(let d=addM(d0,1); d<d1; d=addM(d,1)){ const mo=+d.slice(5,7); if((mo-1)%step)continue; tick(X(d),mo===1?ym(d):mo+'월'); }
+    if(tail){ tick(XE-tw,ym(tail.a)); text('//',X1,yAx-0.19,gw,0.17,6,4,C.sub,'c'); }
+    ln(X0,yAx,XE,yAx,C.axis,0.5);
+    rows.forEach((r,i)=>{ const y=yAx+i*rowH, cy=y+rowH/2; ln(ox,y+rowH,XE,y+rowH,C.row,0.25);
+      if(isPh){ text(`${r.label} (${r.n})`,ox+0.02,y,1.3,rowH,pt,6,C.lab);
+        const tx0=ox+1.344, tw0=0.19; rect(tx0,cy-0.0063,tw0,0.0125,C.track); if(r.pct>0)rect(tx0,cy-0.0063,Math.max(0.006,tw0*Math.min(1,r.pct/100)),0.0125,C.up);
+        text(r.pct+'%',ox+1.5625,y,0.3,rowH,7,r.pct>0?6:4,r.pct>0?C.up:C.mute);
+        const by=y+0.06, bh=0.0875, xa=X(r.s||r.e), xb=Math.max(xa+0.03,X(r.e||r.s)+0.004); rect(xa,by,xb-xa,bh,C.bar);
+        if(tail&&(r.s||r.e)<d1&&(r.e||'')>=tail.a)for(const dx of [-0.018,0.012])ln(X1+gw/2+dx-0.012,by+bh+0.012,X1+gw/2+dx+0.012,by-0.012,'FFFFFF',1.6);
+        const lab=day(r.e), lw=schGmw(lab,6,6); if(xb-xa>=lw+0.07)text(lab,xb-lw-0.035,by,lw+0.01,bh,6,6,'FFFFFF','r'); else if(xb+lw+0.06<XE)text(lab,xb+0.03,by,lw+0.02,bh,6,5,C.bar); else text(lab,xa-lw-0.05,by,lw+0.02,bh,6,5,C.bar,'r');
+        for(const d of r.ms||[])if(d>=d0&&(d<d1||(tail&&d>=tail.a&&d<tail.b)))dia(X(d),y+0.19,0.05,'FFFFFF',{c:C.ms,pt:0.75}); }
+      else { const nx=ox+(split?0.31:0.37), room=X0-nx-0.08; text(String(r.no||''),ox+0.0125,y,nx-ox-0.02,rowH,pt,7,C.wbs); text(schGmfit(r.name||r.label,pt,4,room),nx,y,room+0.04,rowH,pt,4,C.lab);
+        if(r.k==='ms'||!r.s){ const d=r.s||r.e; if(r.k==='ms')dia(X(d),cy,Math.min(0.06,rowH*0.5),'FFFFFF',{c:C.ms,pt:0.75}); else { const x=X(d); rect(x,cy-0.03,0.008,0.06,C.ink); text('예상 완료',x+0.02,y,0.5,rowH,5.5,4,C.sub); } }
+        else { const xa=X(r.s), xb=Math.max(xa+0.02,X(r.e)+Math.max(0.003,(X1-X0)/((t1-t0)/864e5))); rect(xa,cy-0.022,xb-xa,0.044,C.tbar); } } });
+    // the date the schedule stands at: a green dashed line
+    if(G.sd&&G.sd>=d0&&G.sd<d1){ const x=X(G.sd); ln(x,yAx,x,yEnd,C.sd,0.5,true,[0.02,0.012]); }
+    return {sdIn:!!(G.sd&&G.sd>=d0&&G.sd<d1)}; };
+  let info; if(split){ info=chart(0,R.slice(0,k)); chart(W/2+0.09,R.slice(k)); ln(W/2,0.03,W/2,yEnd,C.div,0.5); } else info=chart(0,R);
+  if(tail)text(`${dot(tail.gap[0]).slice(0,7)}–${dot(tail.gap[1]).slice(0,7)} 축 생략`,W-2.4,0.02,2.4,0.19,6,4,C.mute,'r');
+  // the legend under the chart
+  let lx=0.01; const ly=yEnd+0.07, lh=0.17, key=(label,pre)=>{ if(pre)lx=pre(lx)||lx; const w=schGmw(label,6.5,4)+0.02; text(label,lx,ly,w,lh,6.5,4,C.sub); lx+=w+0.13; };
+  const msKey=x=>{ dia(x+0.03,ly+lh/2,0.055,'FFFFFF',{c:C.ms,pt:0.75}); return x+0.085; };
+  if(isPh){ key('마일스톤',msKey); if(info.sdIn)key(`녹색 점선  일정 기준일 ${dot(G.sd)}`); if(tail)key('//  시간축 생략'); return {w:W,h:ly+lh+0.03,items}; }
+  key('막대  업무 기간'); key('마일스톤',msKey); if(info.sdIn)key('녹색 점선  일정 기준일'); if(R.some(r=>r.k!=='ms'&&!r.s))key('|  예상 완료일만 확인된 업무');
+  text(split?'왼쪽 열에서 오른쪽 열 순서로 읽습니다. 업무 전체 이름과 날짜는 다음 목록에 기재했습니다.':'업무 전체 이름과 날짜는 다음 목록에 기재했습니다.',0,ly+lh+0.01,W,0.16,6.5,4,C.mute);
+  return {w:W,h:ly+lh+0.2,items}; }

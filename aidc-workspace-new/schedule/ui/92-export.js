@@ -21,7 +21,7 @@ function schXOverview(pid,full){ const h=headOf(pid), out=[];
   if(h.main){ out.push(schXP(schRepTtl(h,'main'),{b:1})); out.push(schXP(h.main)); }
   if(full)for(const k of ['infra','struct','stat','risk']){ const ls=schXLines(h[k]), t=schRepTtl(h,k); if(!ls.length)continue; out.push(schXP(t,{b:1})); ls.forEach(x=>out.push(schXP((ls.length>1?'• ':'')+x,{ind:ls.length>1?1:0}))); }
   const rows=h.rows.filter(x=>x[0]||x[1]).concat(h.memo?[['비고',h.memo]]:[]); if(rows.length)out.push(schXT(['구분','내용'],rows,[1900,5300]));
-  if(h.plan.length)out.push(schXT(['시기',schRepTtl(h,'plan'),'상태'],h.plan,[1500,4700,1000]));
+  if(h.plan.length)out.push(schXT(['시기',schRepTtl(h,'plan'),'상태'],h.plan,[1500,4700,1000]));   // (its 상태 coloured in Word: SCH_DOC_TONE)
   return out; }
 const schXMeta=pid=>{ const p=PROJECTS[pid], r=schRepOf(pid); return [r.grp,r.stage||'단계 미정',r.focus?'집중 추진':'',r.first?'최초자료일 '+r.first:'',r.asof?'기준일 '+r.asof:'',r.owner?'담당자 '+r.owner:''].filter(Boolean).join(' · '); };
 
@@ -57,7 +57,7 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
   const pk=m?m.plan.procurement.length:0, gs=m?schGates(pid,m):[], gOk=gs.filter(g=>g.st==='승인').length, gRest=gs.length-gOk, pn=(h.partners||[]).length, few=(n,c)=>n>c?`앞의 ${c}건 (전체 ${n}건)`:`${n}건`;
   return [{k:'state',t:'진행 현황 요약',n:1,sum:'핵심 문장 · 주요 지표',full:'지표 전체 (승인게이트 · 외부설비 · 기준일까지)'},
     {k:'ov',t:'사업 개요',n:ov+txt,sum:'지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'},
-    {k:'act',t:'액션 일정',n:tasks.length,sum:`일정 그래프 · 지연 ${Math.min(late,8)}건 · 60일 안 ${Math.min(soon,10)}건`,full:`단계마다 그래프와 목록 · 전체 업무 ${tasks.length}건`},
+    {k:'act',t:'액션 일정',n:tasks.length,sum:`전체 단계 그래프${late||soon?` (PPT: 지연 ${Math.min(late,8)} · 60일 안 ${Math.min(soon,10)}건 목록)`:''}`,full:`단계마다 상세 간트와 업무 목록 · 전체 업무 ${tasks.length}건`},
     {k:'proc',t:'외부설비 조달',n:pk,sum:`${few(pk,8)} · 설치완료 · 확약 상태`,full:`전체 ${pk}건 · 예상 PO · 공급사까지`},
     {k:'gate',t:'승인게이트',n:gs.length,sum:`승인 ${gOk} / ${gs.length}${gRest?` · 남은 게이트 ${Math.min(gRest,8)}건`:''}`,full:`전체 ${gs.length}건 · 연결 업무까지`},
     {k:'evid',t:'근거 및 확약',n:ev,sum:'구분별 건수',full:`구분별 목록 ${ev}건`},
@@ -65,11 +65,13 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
     {k:'part',t:'협력업체',n:pn,sum:`업체명 ${pn}곳`,full:'구분 · 홈페이지 · 설명까지'}]; }
 // opt: {parts:[keys], forms:{key:'sum'|'full'}} — `form` is the form of a part that names none; `act:'near'` leaves the list of
 // every task out of a full 액션 일정 (the window of the thirty-third round asked for that separately; now the full form holds it).
-function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, forms=opt.forms||{}, fullOf=k=>(forms[k]||opt.form)==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday();
+// opt.ppt: the blocks the slides are made of (schXPptOf) — the PPT guide's 액션 일정 (the chart of the phases with the late and
+// the coming work; FULL a chart and a list per phase). Without it, Word and the print window: the Word guide (fiftieth round).
+function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid), m=schHas(pid)&&schReady(pid)?schModel(pid):null, forms=opt.forms||{}, fullOf=k=>(forms[k]||opt.form)==='full', has=k=>opt.parts.includes(k), sections=[], D=AIDCSchedule.dates, today=schToday(), ppt=!!opt.ppt;
   const tasks=m?m.phases.flatMap(g=>g.tasks):[], res=t=>m.res.tasks[t.id], who=t=>schPeople(t).map(userName).join(', ')||'미지정', late=tasks.filter(t=>schLate(m,t)).sort((a,b)=>res(a).finish.localeCompare(res(b).finish));
   const done=tasks.filter(t=>AIDCSchedule.progress.isDone(t)), soonEnd=D.addDays(today,opt.days||60), soon=tasks.filter(t=>schOpen(m,t)&&!schLate(m,t)&&res(t).start<=soonEnd).sort((a,b)=>res(a).start.localeCompare(res(b).start)||res(a).finish.localeCompare(res(b).finish));
-  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[schXP(`외 ${a.length-n}건 (FULL에 전체 수록)`)]:[];
-  if(has('state')){ const F=fullOf('state'), rows=[['추진 단계',r.stage||'미정']], say=[];
+  const cut=(k,a,n)=>fullOf(k)?a:a.slice(0,n), more=(k,a,n)=>!fullOf(k)&&a.length>n?[Object.assign(schXP(`외 ${a.length-n}건 (FULL에 전체 수록)`),{note:1})]:[];
+  if(has('state')){ const F=fullOf('state'), rows=[['추진 단계',r.stage||'미정']], say=[], add=(t,o)=>say.push(Object.assign({t},o||{}));
     if(F){ rows.push(['구분',r.grp||'구분 없음'],['담당자',r.owner||'미지정']); if(r.focus)rows.push(['집중 추진','예']); }
     if(m){ const pr=tasks.length?schProgress(m,tasks):null, ms=tasks.filter(t=>t.kind==='milestone'&&schOpen(m,t)).sort((a,b)=>res(a).start.localeCompare(res(b).start))[0], gs=schGates(pid,m), okG=gs.filter(g=>g.st==='승인').length;
       rows.push(['운영개시 예상',m.res.operationDate?schXDay(m.res.operationDate)+(m.res.operationDelay?` (목표 대비 ${m.res.operationDelay>0?'+':''}${m.res.operationDelay}일)`:''):'미정 (일정에 업무 없음)']);
@@ -79,13 +81,24 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
       if(F&&gs.length)rows.push(['승인게이트',`승인 ${okG} / 전체 ${gs.length}`]);
       if(F&&m.plan.procurement.length)rows.push(['외부설비',`${m.plan.procurement.length}건 · 확약 ${m.plan.procurement.filter(x=>x.commitment&&x.commitment!=='미확약').length}건`]);
       if(F)rows.push(['일정 기준일',schXDay(m.plan.statusDate)]);
-      say.push(`추진 단계 ${r.stage||'미정'}${pr?`, 전체 진행률 ${schPct(pr)}%`:''}.`);
-      if(late.length){ const w=late[0]; say.push(`지연 ${late.length}건. 가장 오래 지연된 업무는 ${schTaskTitle(w)} (${D.diffDays(today,res(w).finish)}일 지연, 담당 ${who(w)}).`); } else if(tasks.length)say.push('지연 업무 없음.');
-      if(ms)say.push(`다음 마일스톤은 ${ms.name} (${schXDay(res(ms).start)}).`); if(m.res.operationDate)say.push(`운영개시 예상 ${schXDay(m.res.operationDate)}.`); }
+      add(`추진 단계 ${r.stage||'미정'}`); if(pr){ add(', 전체 진행률 '); add(schPct(pr)+'%',{b:1}); } add('.');
+      if(late.length){ const w=late[0]; add(' '); add(`지연 ${late.length}건`,{b:1,c:'D30000'}); add(`. 가장 오래 지연된 업무는 ${schTaskTitle(w)} (`); add(`${D.diffDays(today,res(w).finish)}일 지연`,{b:1,c:'D30000'}); add(`, 담당 ${who(w)}).`); } else if(tasks.length)add(' 지연 업무 없음.');
+      if(ms)add(` 다음 마일스톤은 ${ms.name} (${schXDay(res(ms).start)}).`); if(m.res.operationDate){ add(' 운영개시 예상 '); add(schXDay(m.res.operationDate),{b:1}); add('.'); } }
     rows.push(['보고서 작성일',schXDay(TODAY)]);
-    sections.push({k:'state',h:'진행 현황',blocks:[...(say.length?[schXP(say.join(' '))]:[]),schXT(['항목','내용'],rows,[1900,5300])]}); }
+    sections.push({k:'state',h:'진행 현황',blocks:[...(say.length?[{k:'p',runs:say,ind:0}]:[]),Object.assign(schXT(['항목','내용'],rows,[1900,5300]),{kind:'state'})]}); }
   if(has('ov')){ const b=schXOverview(pid,fullOf('ov')); if(b.length)sections.push({k:'ov',h:'사업 개요',blocks:b}); }
-  if(has('act')&&m&&tasks.length){ const b=[], full=fullOf('act');
+  if(has('act')&&m&&tasks.length&&!ppt){ const b=[], full=fullOf('act');
+    // (fiftieth round, the owner's Word guide) 요약: the chart of all phases under a line of the opening, the schedule's date and the
+    // count — no lists. FULL: every phase on two pages — "상세 간트" (a line of figures, the chart of its tasks) and "업무 목록" (its
+    // tasks in WBS order: 시작 · 예상 완료 · 상태 · 담당 · 지연, across the whole width). The section's title stands on each of them.
+    if(!full){ b.push({k:'sh',t:'전체 단계 간트'}); b.push({k:'stat',v:'ov',items:[['운영개시 예상',m.res.operationDate?schXDay(m.res.operationDate):'미정'],['일정 기준일',schXDay(m.plan.statusDate)||'-'],['전체',`${tasks.length}건`]]}); b.push({k:'img',name:'전체 단계 간트',wide:1,gantt:schXGanttData(m,'')}); }
+    else for(const g of m.phases){ const G=schXGanttData(m,g.code); if(!G)continue; const ts=g.tasks, dn=ts.filter(t=>AIDCSchedule.progress.isDone(t)).length, a=ts.map(t=>res(t).start).sort()[0], z=ts.map(t=>res(t).finish).sort().pop();
+      b.push({k:'sh',t:`${G.title}  |  상세 간트`,brk:1}); b.push({k:'stat',v:'ph',items:[['업무',`${G.n}건`],['완료',`${dn}건`],['진행률',`${G.pct}%`,G.pct>0?'up':''],['기간',`${schXDay(a)} ~ ${schXDay(z)}`]]}); b.push({k:'img',name:G.title+' 상세 간트',wide:1,gantt:G});
+      b.push({k:'sh',t:`${G.title}  |  업무 목록`,brk:1}); b.push({k:'note',t:`업무 ${G.n}건  ·  WBS 순`});
+      b.push(Object.assign(schXT(['WBS','업무','시작','예상 완료','상태','담당','지연'],ts.map(t=>[schNo(t),t.name,schXDay(res(t).start),schXDay(res(t).finish),schStatus(t),who(t),schLate(m,t)?D.diffDays(today,res(t).finish)+'일':'']),[640,3540,1220,1220,1350,1000,919]),{kind:'tasks',full:1})); }
+    const loose=liveItems('action',pid).filter(i=>!i.own&&!i.task); if(loose.length){ b.push(schXP(`일정 미연결 액션 ${loose.length}건`,{b:1})); if(full)b.push(schXT(['제목','시작','종료','상태','담당자'],loose.map(i=>[oneLine(i.title),schXDay(i.date),schXDay(itemEnd(i)),schItemSt(i),(i.people||[]).map(userName).join(', ')]),[3300,1000,1000,800,1100])); }
+    sections.push({k:'act',h:'액션 일정',blocks:b}); }
+  if(has('act')&&m&&tasks.length&&ppt){ const b=[], full=fullOf('act');
     // (forty-ninth round, owner: "그래프도 같이 위에 나오게", "풀버전으로 하면 각 단계별로 그래프가 1장씩, 그 사이에 리스트가 나오는 형태")
     // the chart of the phases stands first (schedule/ui/95-gantt-export.js); in FULL every phase follows on a page of its own: its
     // chart, then the list of its tasks. A chart block is {k:'img', gantt, wide}: Word and the print window make its picture,
@@ -103,12 +116,12 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
       :[schXT(['패키지','설비','예상 설치완료','확약 상태'],all.slice(0,8).map(x=>[x.id,x.name,day(x.installTaskId,'finish'),x.commitment||'미확약']),[900,3700,1400,1200]),...more('proc',all,8)]}); }
   if(has('gate')&&m){ const gs=schGates(pid,m); if(gs.length){ const b=[], rest=gs.filter(g=>g.st!=='승인');
       if(fullOf('gate'))b.push(schXT(['게이트','승인 사항','연결 업무','예상 승인일','상태'],gs.map(g=>[g.user?'추가':g.code,g.title,g.t?schNo(g.t):'',schXDay(g.date),g.st]),[800,3300,900,1200,1000]));
-      else { b.push(schXP(`승인 ${gs.length-rest.length}건 / 전체 ${gs.length}건${rest.length?` · 남은 게이트 ${rest.length}건`:''}`)); if(rest.length){ b.push(schXT(['게이트','승인 사항','예상 승인일','상태'],rest.slice(0,8).map(g=>[g.user?'추가':g.code,g.title,schXDay(g.date),g.st]),[900,3900,1300,1100])); b.push(...more('gate',rest,8)); } }
+      else { b.push(Object.assign(schXP(`승인 ${gs.length-rest.length}건 / 전체 ${gs.length}건${rest.length?` · 남은 게이트 ${rest.length}건`:''}`),{note:1})); if(rest.length){ b.push(schXT(['게이트','승인 사항','예상 승인일','상태'],rest.slice(0,8).map(g=>[g.user?'추가':g.code,g.title,schXDay(g.date),g.st]),[900,3900,1300,1100])); b.push(...more('gate',rest,8)); } }
       sections.push({k:'gate',h:'승인게이트',blocks:b}); } }
   if(has('evid')&&m){ const kinds=SCH_UP_EVK.map(k=>({k,name:SCH_XL_SHEET[k],rows:schEvRows(pid,k)})).filter(x=>x.rows.length); if(kinds.length){ const b=[schXT(['구분','건수','완료·확인 외'],kinds.map(x=>[x.name,x.rows.length,x.rows.filter(r=>!/완료|확인|충족|종결/.test(String(r.st||''))).length]),[3600,1200,1600])];
       if(fullOf('evid'))for(const x of kinds){ b.push(schXP(x.name,{b:1})); b.push(schXT(['ID','제목','상태','기한'],x.rows.slice(0,60).map(r=>[r.no,r.title,r.st,r.due]),[900,4000,1100,1200])); }
       sections.push({k:'evid',h:'근거 및 확약',blocks:b}); } }
-  if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({k:'meet',h:'미팅',blocks:[schXT(['일자','제목','주요안건','참석자'],cut('meet',ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1100,2500,2300,1300]),...more('meet',ms,5)]}); }
+  if(has('meet')){ const ms=liveItems('meeting',pid).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))); if(ms.length)sections.push({k:'meet',h:'미팅',blocks:[Object.assign(schXT(['일자','제목','주요안건','참석자'],cut('meet',ms,5).map(i=>{ const mp=meetParts(i); return [schXDay(i.date),oneLine(i.title),mp.agenda||'',(i.people||[]).map(userName).join(', ')]; }),[1290,2370,2240,1300]),{kind:'meet'}),...more('meet',ms,5)]}); }
   if(has('part')&&(h.partners||[]).length){ const names=h.partners.map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean);
     sections.push({k:'part',h:'협력업체',blocks:fullOf('part')?[schXT(['업체','구분','홈페이지','설명'],names.map(nm=>{ const pt=PARTNERS.find(q=>!q.trash&&norm(q.name)===norm(nm))||{}; return [nm,partnerCategories(pt.cat).join(', '),pt.site&&pt.site!=='-'?pt.site:'',oneLine(partnerDesc(pt))]; }),[1500,1300,1700,2700])]:[schXP(names.join(', '))]}); }
   const fs=sections.map(s=>fullOf(s.k)), kind=fs.length&&fs.every(Boolean)?'full':fs.some(Boolean)?'mix':'sum';
@@ -116,7 +129,7 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
   const no=schRepNos()[pid];
   return {file:`${schXSafe(pname(P))}_보고서(${({sum:'요약',full:'FULL',mix:'맞춤'})[kind]})_${TODAY.replace(/-/g,'')}`,head:schXHead(),title:[P.full||pname(P),`프로젝트 보고서 · ${({sum:'요약형',full:'FULL',mix:'맞춤 구성'})[kind]}`],label:[no?'No. '+no:'',r.grp,r.stage].filter(Boolean).join('  |  '),sections}; }
 // how much a document holds, section by section (the window's right side says it before the file is made)
-const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b of s.blocks){ if(b.k==='tbl'){ tables++; lines+=b.rows.length; } else if(b.k==='p')lines++; } return {k:s.k||'',tables,lines}; });
+const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0, charts=0; for(const b of s.blocks){ if(b.k==='tbl'){ tables++; lines+=b.rows.length; } else if(b.k==='p'||b.k==='stat'||b.k==='note')lines++; else if(b.k==='img'&&b.gantt)charts++; } return {k:s.k||'',tables,lines,charts}; });
 
 /* ---------- the window ---------- */
 // (thirty-fifth round, owner: "옵션 많은 제품 견적 고르는 ui들을 참고해서") The window is put together like the page on which a product
@@ -129,6 +142,14 @@ const schXMeasure=doc=>doc.sections.map(s=>{ let tables=0, lines=0; for(const b 
 // PPT and 엑셀 can be ticked together ("파일형식을 복수로 고를수도 있게"), and "PDF로도 저장" opens the print window for the same
 // report besides. A project's 엑셀 is still its schedule data, whole (its card says so); the main page's 엑셀 is the list and the
 // sheets that can be read back.
+// (fiftieth round, owner: "내보내기 이쪽에 각각 파일형식에 맞는 픽토그램 넣어줘 컬러까지해서") a page with its corner folded down and a
+// badge with the letter of the kind, in the colour each office program is known by: Word blue (lines of text), PPT orange-red
+// (a chart), 엑셀 green (a grid)
+const SCH_XFILE_IC={docx:['W','2B579A','EEF3FA','<path d="M17.4 14h5.4M17.4 17.4h5.4M17.4 20.8h4" stroke-width="1.3" stroke-linecap="round"/>'],
+  pptx:['P','D24726','FCEEEA','<circle cx="20.3" cy="17.6" r="3.5" fill="none" stroke-width="1.3"/><path d="M20.3 17.6v-3.5a3.5 3.5 0 0 1 3.5 3.5z" stroke="none"/>'],
+  xlsx:['X','217346','EBF4EE','<path d="M17.2 13.8h6v7.8h-6zM17.2 16.4h6M17.2 19h6M20.2 13.8v7.8" fill="none" stroke-width="1.2"/>']};
+function schXFileIc(k){ const v=SCH_XFILE_IC[k]; if(!v)return ''; const [l,c,bg,mark]=v;
+  return `<svg class="xq-fic" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M9.6 3.6h9.6l5.6 5.6v15.4a1.8 1.8 0 0 1-1.8 1.8H9.6a1.8 1.8 0 0 1-1.8-1.8V5.4a1.8 1.8 0 0 1 1.8-1.8z" fill="#${bg}" stroke="#${c}" stroke-width="1.2" stroke-linejoin="round"/><path d="M19.2 3.6v4.3a1.3 1.3 0 0 0 1.3 1.3h4.3" fill="none" stroke="#${c}" stroke-width="1.2" stroke-linejoin="round"/><g stroke="#${c}" fill="#${c}">${mark}</g><rect x="3.4" y="11.6" width="11.6" height="11.6" rx="2.4" fill="#${c}"/><text x="9.2" y="20.15" text-anchor="middle" font-size="8.4" font-weight="700" fill="#fff" font-family="Pretendard,'Malgun Gothic',sans-serif">${l}</text></svg>`; }
 let schPptxLoading=null;
 function schPptx(){ return schPptxLoading||(schPptxLoading=new Promise((ok,no)=>{ if(window.AIDCSchedulePptx){ok(window.AIDCSchedulePptx);return;} const s=document.createElement('script'); s.src='/schedule-pptx.js?v=__SCH_PPTX_V__';
   s.onload=()=>window.AIDCSchedulePptx?ok(window.AIDCSchedulePptx):no(Error('PPT 모듈을 불러오지 못했습니다.')); s.onerror=()=>{ schPptxLoading=null; no(Error('PPT 모듈을 불러오지 못했습니다.')); }; document.head.appendChild(s); })); }
@@ -146,7 +167,7 @@ function schXPptHead(pid){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid)
     infra:schXLines(h.infra),struct:schXLines(h.struct),stat:schXLines(h.stat),risk:schXLines(h.risk),partners:(h.partners||[]).map(x=>String(x).replace(/^@/,'').trim()).filter(Boolean)}; }
 function schXPptOf(ctx){ const base={dept:String(SETTINGS.org||'').replace(/\s*AI\s*Data\s*Center\s*$/i,'').trim()||SETTINGS.wsName||'',author:typeof userName==='function'?userName(sharedUser)||'':sharedName||'',today:TODAY};
   if(ctx.main)return Object.assign(base,{kind:'main',asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',sheets:ctx.w.sheets?(ctx.w.sheets==='full'?'full':'sum'):'',projects:ctx.w.sheets?ctx.ids.map(schXPptHead):[],count:ctx.ids.length});
-  const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full'}).sections.forEach(s=>{ full[s.k]=s.blocks; });
+  const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full',ppt:1}).sections.forEach(s=>{ full[s.k]=s.blocks; });
   (full.act||[]).forEach(b=>{ if(b.k==='img'&&b.gantt)schXGanttPpt(b); });   // the charts laid out for the slides (forty-ninth round)
   return Object.assign(base,{kind:'proj',proj:schXPptHead(pid),parts:ctx.parts.slice(),forms:Object.assign({},ctx.forms),full,op:m&&m.res.operationDate||''}); }
 async function schExpPptx(doc,ctx){ const P=await schPptx(), logos=await schXLogos(); return new Blob([await P.make(Object.assign({},doc,{ppt:ctx?schXPptOf(ctx):null}),logos)],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
@@ -155,7 +176,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
   const parts=main?[{k:'list',t:'프로젝트 목록 표',n:1,one:'번호 · 구분 · 위치 · 사업주체 · IT LOAD · 추진 단계'},{k:'sheets',t:'프로젝트별 요약',n:1,sum:'프로젝트마다 1장 — 지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'}]:schXProjParts(pid);
   const forms={}; for(const p of parts)forms[p.k]='sum';
   const card=(name,val,label,note,on)=>`<label class="xq-card"><input type="radio" name="${name}" value="${val}" ${on?'checked':''}><b>${esc(label)}</b>${note?`<em>${esc(note)}</em>`:''}</label>`;
-  const fcard=(val,label,note,on,tip)=>`<label class="xq-card" ${tip?`title="${esc(tip)}"`:''}><input type="checkbox" name="xw-file" value="${val}" ${on?'checked':''}><b>${esc(label)}</b><em>${esc(note)}</em></label>`;
+  const fcard=(val,label,note,on,tip)=>`<label class="xq-card" ${tip?`title="${esc(tip)}"`:''}><input type="checkbox" name="xw-file" value="${val}" ${on?'checked':''}>${schXFileIc(val)}<b>${esc(label)}</b><em>${esc(note)}</em></label>`;
   const row=p=>`<div class="xq-row" data-xwrow="${p.k}"><label class="xq-ck"><input type="checkbox" data-xwp="${p.k}" ${p.n&&p.k!=='evid'&&p.k!=='part'?'checked':''} ${p.n?'':'disabled'}><span class="xq-nm">${esc(p.t)}</span></label><span class="xq-say" data-xwsay></span>${p.one?'':`<span class="xq-seg" role="group" aria-label="${esc(p.t)} 형식"><button type="button" data-xwf="sum">요약</button><button type="button" data-xwf="full">FULL</button></span>`}</div>`;
   let step=0; const st=()=>`<i>${++step}</i>`;
   d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="내보내기"><div class="np-hd"><b>내보내기</b></div>
@@ -178,7 +199,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     else if(!ps.length){ list='<li class="nil">고른 항목이 없습니다</li>'; }
     else if(main){ const ids=schXMainIds(val('xw-scope')||'all'), w=want(ps); list=(w.list?`<li><span>프로젝트 목록 표</span><em>표</em><i>${ids.length}행</i></li>`:'')+(w.sheets?`<li data-xk="sheets"><span>프로젝트별 요약</span>${docs?tag('sheets'):'<em class="full">전체</em>'}<i>${ids.length}${docs?'장':'시트'}</i></li>`:'');
       if(docs){ const ms=schXMeasure(schXMainDoc(ids,w)); tot=`프로젝트 ${ids.length}건 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; } else tot=`프로젝트 ${ids.length}건 · 시트 ${(w.list?1:0)+(w.sheets?ids.length:0)}개`; }
-    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${x?x.lines+'줄':'-'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
+    else { const ms=schXMeasure(schXProjDoc(pid,{parts:ps,forms})); list=parts.filter(p=>ps.includes(p.k)).map(p=>{ const x=ms.find(s=>s.k===p.k); return `<li data-xk="${p.k}"><span>${esc(p.t)}</span>${tag(p.k)}<i>${!x?'-':x.charts&&forms[p.k]!=='full'?'그래프':x.lines+'줄'}</i></li>`; }).join(''); tot=`항목 ${ms.length}개 · 표 ${ms.reduce((n,x)=>n+x.tables,0)}개 · ${ms.reduce((n,x)=>n+x.lines,0)}줄`; }
     $n('[data-xwlist]').innerHTML=list; $n('[data-xwtot]').textContent=tot; ok.disabled=!(fs.length||pdf())||(!ps.length&&!only); };
   d.addEventListener('change',sync); sync();
   // forty-seventh round: a part's whole row ticks it (its name, what it holds, the room around them) — only 요약 / FULL keep to themselves
