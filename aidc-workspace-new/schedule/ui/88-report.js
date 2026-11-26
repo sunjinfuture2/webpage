@@ -53,7 +53,15 @@ const REP_TTL={kpi:'핵심 지표',fin:'사업성 지표',main:'사업 개요',p
 const schRepTtl=(h,k)=>{ const t=h&&h.ttl&&typeof h.ttl==='object'&&typeof h.ttl[k]==='string'?h.ttl[k].replace(/\s+/g,' ').trim():''; return t||REP_TTL[k]||''; };
 const REP_PLUS='<svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 1.5v12M1.5 7.5h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 const schRepState=s=>REP_PLAN_ST[s]?schMark(REP_PLAN_ST[s],s):`<span class="nil">${esc(s||'-')}</span>`;
-function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, SC=schHas(pid), EC=E?' editable':'', no=schRepNos()[pid]||'';
+// the export and delete pictograms of a project's title line (every project's head carries them while it is not edited)
+const schRepExpBtn=()=>`<button type="button" class="pexp" data-projexp title="내보내기 — 이 프로젝트의 지금 진행 상황을 보고서로 (범위 · 요약형/풀버전 · PDF/Word/엑셀)" aria-label="내보내기">${svg('i-sch-exp2',24,24)}</button>`;
+const schRepDelBtn=()=>`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`;
+// (owner, 2026-11-26: "여기에는 왜 프로젝트 삭제 픽토그램이 안뜨는지 확인해보고 수정해") the AI trial projects draw a head of their
+// own (schAIHead in 89-ai-project.js, another session's file — left as it is) that had neither pictogram; they are put into its
+// title line here, as on every other project, and left out while its overview is edited
+function schRepTitleTools(html){ if(/data-ai-direct="save"/.test(html))return html; const k='</h1></div>', i=html.indexOf(k); if(i<0)return html;
+  return html.slice(0,i)+'</h1>'+schRepExpBtn()+'</div>'+schRepDelBtn()+html.slice(i+k.length); }
+function schRepHead(pid){ if(schAIProject(pid))return schRepTitleTools(schAIHead(pid)); const p=PROJECTS[pid], d=headOf(pid), E=!!S.editProj, SC=schHas(pid), EC=E?' editable':'', no=schRepNos()[pid]||'';
   const edk=(k,ph='입력')=>E?`contenteditable="true" data-k="${k}" data-ph="${esc(ph)}"`:'', chev=E?svg('i-chev-d',7.2,3.6,'color:#8e8e8e'):'';
   const lines=s=>String(s||'').split('\n').map(x=>x.replace(/^\s*[•·\-–]\s+/,'').trim()).filter(Boolean), nil='<span class="nil">내용 없음</span>';
   // a text: as it was typed, or a list (always for `list`, for 추진 현황 when it has more than one line)
@@ -93,7 +101,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schAIHead(pid); const p=PR
     +schRepDocs(pid,d,E);
   const cL=blk('main',`${mainTx}<div class="rtb">${ops}${d.rows.map((r,i)=>`<div class="r">${cell('b',`rows:${i}:0`,'구분',r[0])}${cell('span',`rows:${i}:1`,'내용',r[1])}${del('rows',i)}${mapOf(r)}</div>`).join('')}${d.memo||E?`<div class="r memo"><b>비고</b>${cell('span','memo','비고 (짧은 메모)',d.memo)}</div>`:''}${!d.rows.length&&!E&&!ops&&!d.memo&&!mainTx?nil:''}${add('rows','행')}</div>`,'','main')
     +blk('plan',`<div class="rtb plan">${d.plan.length?'<div class="r th"><b>시기</b><span>내용</span><i>상태</i></div>':''}${d.plan.map((r,i)=>`<div class="r">${cell('b',`plan:${i}:0`,'시기',r[0])}${cell('span',`plan:${i}:1`,'내용',r[1])}<i class="${E?'pk':''}" ${E?`data-k="plan:${i}:2" data-repstate title="상태 선택"`:''}>${schRepState(r[2])}${chev}</i>${del('plan',i)}</div>`).join('')}${!d.plan.length&&!E?nil:''}${add('plan','일정')}</div>`,'','plan');
-  return `<div class="phead rep ${schProjectCompact(pid,E)?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1>${!E?`<button type="button" class="pexp" data-projexp title="내보내기 — 이 프로젝트의 지금 진행 상황을 보고서로 (범위 · 요약형/풀버전 · PDF/Word/엑셀)" aria-label="내보내기">${svg('i-sch-exp2',24,24)}</button>`:''}</div>${!E?`<button class="trash pdel" data-projdel title="프로젝트 삭제" aria-label="프로젝트 삭제"><svg class="pict" aria-hidden="true"><use href="#pic-trash"/></svg></button>`:''}
+  return `<div class="phead rep ${schProjectCompact(pid,E)?'collapsed':''} ${E?'ed':''}"${schRepPc(p)}><div class="ttl"><h1 class="${EC}" style="color:${p.color}" ${edk('__full','사업명')}>${esc(p.full)}</h1>${!E?schRepExpBtn():''}</div>${!E?schRepDelBtn():''}
     ${schProjectDetailButton(pid,E)}<div class="hr"></div>
     <div class="rep-in">${meta}${list}${stats}<div class="rcols"><div class="rc rc1">${cL}</div><div class="rc rc2">${cR}</div></div></div>
     <div class="hr bt"></div></div>`; }

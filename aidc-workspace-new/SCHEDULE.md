@@ -1472,6 +1472,11 @@ hold the project's data and people's names); their rules are written here and in
   export window has a page with a folded corner and a badge with its letter, in the colour the program is known by — Word 2B579A
   (lines), PPT D24726 (a chart), 엑셀 217346 (a grid); schXFileIc in 92-export.js, `.xq-fic`.
 
+- **The AI trial projects' title line** (owner: "여기에는 왜 프로젝트 삭제 픽토그램이 안뜨는지 확인해보고 수정해"): AI적용테스트 /
+  AI업로드테스트 draw a head of their own (schAIHead in 89-ai-project.js, another session's file) that had no export and no delete
+  pictogram. schRepHead now puts both into it (schRepTitleTools in 88-report.js, the buttons schRepExpBtn / schRepDelBtn shared
+  with every project's head), left out while its overview is edited; 89-ai-project.js itself is untouched.
+
 Checked: the app's 요약 Word file has the guide's 3 pages and the FULL one its 21 (LibreOffice), page by page against the guide;
 the print window's PDF the same; the export window light and dark. tests: schedule-16 checks the blocks of Word 요약, the charts
 of Word and of the slides, and the pictograms. Brought in step and not run.
