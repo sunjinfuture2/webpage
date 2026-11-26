@@ -370,9 +370,9 @@ export class Workspace {
         return json({ name, users: this.users(), formerUsers: this.formerUsers() });
       }
       if (path === '/api/members/delete' && req.method === 'POST') {
+        const b = await req.json();
         const R = this.roles();
         if (!R.admin(me)) return json({ error: '멤버 삭제는 소유자·관리자만 할 수 있습니다.' }, 403);
-        const b = await req.json();
         if (!Array.isArray(b.ids) || !b.ids.length || b.ids.length > 1000 || b.ids.some(id => typeof id !== 'string')) return json({ error: '삭제할 사용자를 선택하세요.' }, 400);
         const ids = [...new Set(b.ids)], users = this.users();
         if (ids.some(id => !Object.hasOwn(users,id))) return json({ error: '멤버 목록이 변경되었습니다. 다시 선택하세요.' }, 409);
