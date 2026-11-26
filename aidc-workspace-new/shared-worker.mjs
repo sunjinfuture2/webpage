@@ -92,6 +92,7 @@ export class Workspace {
   start() {
     this.sql.exec('CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
     this.sql.exec('CREATE TABLE IF NOT EXISTS users (employee TEXT PRIMARY KEY, name TEXT NOT NULL)');
+    this.sql.exec('CREATE TABLE IF NOT EXISTS removed_users (employee TEXT PRIMARY KEY, name TEXT NOT NULL, at TEXT NOT NULL)');
     // live_sessions replaces the older active_sessions table, which allowed only one session per employee.
     this.sql.exec('CREATE TABLE IF NOT EXISTS live_sessions (token TEXT PRIMARY KEY, employee TEXT, expires INTEGER, seen INTEGER)');
     for (const col of ['created INTEGER', 'ua TEXT', 'sid TEXT', 'keep INTEGER']) { try { this.sql.exec('ALTER TABLE live_sessions ADD COLUMN ' + col); } catch { /* already there */ } }
@@ -151,6 +152,7 @@ export class Workspace {
   // may this member read the item (and so its versions)? A draft is only its writer's.
   readable(id, me) { const v = this.get('item:' + id); return !!v && !this.privateDraft(v, me); }
   get(id) { const r = this.sql.exec('SELECT data FROM records WHERE id=?', id).toArray()[0]; return r ? JSON.parse(r.data) : null; }
+  formerUsers() { return Object.fromEntries(this.sql.exec('SELECT employee,name FROM removed_users').toArray().map(u => [u.employee,u.name])); }
   users() { return Object.fromEntries(this.sql.exec('SELECT * FROM users').toArray().map(u => [u.employee, u.name])); }
   locks() {
     const now = Date.now();
@@ -189,6 +191,8 @@ export class Workspace {
       return '';
     }
     if (id === 'meta:members') {
+      const removed = this.formerUsers();
+      if (c.field ? Object.hasOwn(removed,c.field) : Object.keys(c.after || {}).some(k => Object.hasOwn(removed,k))) return '삭제된 멤버의 정보는 변경할 수 없습니다.';
       if (!R.hasOwner) return '';
       const one = (who, before, after) => { const a = before || {}, b = after || {}, ra = a.role || '멤버', rb = b.role || '멤버';
         if (ra !== rb) { if (!R.owner(me)) return '역할은 소유자만 바꿀 수 있습니다.'; if (ra === '소유자' && R.owners.length <= 1 && R.owners[0] === who) return '마지막 소유자는 바꿀 수 없습니다. 다른 소유자를 먼저 지정하세요.'; }
@@ -293,6 +297,7 @@ export class Workspace {
       if (path === '/api/login' && req.method === 'POST') {
         const { employee, name, remember } = await req.json(); const id = String(employee || '').trim().normalize('NFKC').toUpperCase();
         if (!/^[A-Z0-9_-]{1,40}$/.test(id)) return json({ error: '사번은 영문·숫자·하이픈·밑줄로 입력하세요.' }, 400);
+        if (this.sql.exec('SELECT employee FROM removed_users WHERE employee=?', id).toArray().length) return json({ error: '삭제된 멤버입니다. 관리자에게 문의하세요.' }, 403);
         this.cleanup();
         const saved = this.sql.exec('SELECT name FROM users WHERE employee=?', id).toArray()[0]; const display = String(saved?.name || name || '').trim();
         if (!display || display.length > 40) return json({ error: '처음 로그인할 때 이름을 입력하세요. (40자 이내)' }, 400);
@@ -302,7 +307,7 @@ export class Workspace {
         // 자동 로그인 (2026-11-26): a login without it gets a file cookie that ends with the browser; pages of an older build send nothing = kept
         const keep = remember === false ? 0 : 1; try { this.sql.exec('UPDATE live_sessions SET keep=? WHERE token=?', keep, token); } catch { }
         this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', id, JSON.stringify({ event: 'login' }), new Date().toISOString());
-        this.broadcast({ users: this.users() });
+        this.broadcast({ users: this.users(), formerUsers: this.formerUsers() });
         return json({ employee: id, name: display, token }, 200, { 'Set-Cookie': fileCookie(req, token, keep ? this.sessionMs() / 1000 : null) });
       }
 
@@ -331,11 +336,11 @@ export class Workspace {
         const y = Number(url.searchParams.get('y')); if (!Number.isInteger(y) || y < 2000 || y > 2100) return json({ error: '연도를 확인해주세요.' }, 400);
         return json(await this.holidays(y));
       }
-      if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), minClient: MIN_CLIENT }); }
+      if (path === '/api/heartbeat') { this.cleanup(); return json({ locks: this.locks(), users: this.users(), formerUsers: this.formerUsers(), minClient: MIN_CLIENT }); }
       if (path === '/api/state') {
         let rev = null; if (this.revOk) { try { const r = this.sql.exec('SELECT n FROM rev WHERE k=1').toArray()[0]; rev = r ? String(r.n) : null; } catch { rev = null; } }
-        if (rev !== null && url.searchParams.get('since') === rev) return json({ same: true, rev, users: this.users(), locks: this.locks(), minClient: MIN_CLIENT });
-        return json({ employee: me, name: this.users()[me], users: this.users(), locks: this.locks(), minClient: MIN_CLIENT, rev,
+        if (rev !== null && url.searchParams.get('since') === rev) return json({ same: true, rev, users: this.users(), formerUsers: this.formerUsers(), locks: this.locks(), minClient: MIN_CLIENT });
+        return json({ employee: me, name: this.users()[me], users: this.users(), formerUsers: this.formerUsers(), locks: this.locks(), minClient: MIN_CLIENT, rev,
           records: Object.fromEntries(this.sql.exec('SELECT * FROM records').toArray().map(r => [r.id, JSON.parse(r.data)]).filter(([k, v]) => !this.hidden(k, v, me))) },
           200, { 'Set-Cookie': fileCookie(req, token, this.sessionKept(token) ? this.sessionMs() / 1000 : null) });
       }
@@ -361,16 +366,46 @@ export class Workspace {
       if (path === '/api/me' && req.method === 'POST') { // change my own display name
         const name = String((await req.json()).name || '').trim();
         if (!name || name.length > 40 || /[\u0000-\u001f\u007f]/.test(name)) return json({ error: '이름은 1~40자로 입력하세요. (제어문자는 쓸 수 없습니다)' }, 400);
-        this.sql.exec('UPDATE users SET name=? WHERE employee=?', name, me); this.broadcast({ users: this.users() });
-        return json({ name, users: this.users() });
+        this.sql.exec('UPDATE users SET name=? WHERE employee=?', name, me); this.broadcast({ users: this.users(), formerUsers: this.formerUsers() });
+        return json({ name, users: this.users(), formerUsers: this.formerUsers() });
+      }
+      if (path === '/api/members/delete' && req.method === 'POST') {
+        const R = this.roles();
+        if (!R.admin(me)) return json({ error: '멤버 삭제는 소유자·관리자만 할 수 있습니다.' }, 403);
+        const b = await req.json();
+        if (!Array.isArray(b.ids) || !b.ids.length || b.ids.length > 1000 || b.ids.some(id => typeof id !== 'string')) return json({ error: '삭제할 사용자를 선택하세요.' }, 400);
+        const ids = [...new Set(b.ids)], users = this.users();
+        if (ids.some(id => !Object.hasOwn(users,id))) return json({ error: '멤버 목록이 변경되었습니다. 다시 선택하세요.' }, 409);
+        if (ids.includes(me)) return json({ error: '현재 로그인한 사용자는 삭제할 수 없습니다.' }, 400);
+        if (!R.owner(me) && ids.some(id => R.role(id) === '소유자')) return json({ error: '소유자는 소유자만 삭제할 수 있습니다.' }, 403);
+        if (R.owners.length && R.owners.every(id => ids.includes(id))) return json({ error: '마지막 소유자는 삭제할 수 없습니다.' }, 400);
+        const members = {...R.m}, at = new Date().toISOString();
+        this.ctx.storage.transactionSync(() => {
+          for (const id of ids) {
+            this.sql.exec('INSERT OR REPLACE INTO removed_users VALUES (?,?,?)', id, users[id], at);
+            this.sql.exec('DELETE FROM live_sessions WHERE employee=?', id);
+            this.sql.exec('DELETE FROM edit_locks WHERE employee=?', id);
+            this.sql.exec('DELETE FROM co_locks WHERE employee=?', id);
+            this.sql.exec('DELETE FROM users WHERE employee=?', id);
+            delete members[id];
+          }
+          this.put('meta:members', members);
+          this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify({event:'delete-members',title:ids.length+'명 삭제',ids}), at);
+        });
+        this.promote();
+        const data = {deleted:ids, users:this.users(), formerUsers:this.formerUsers(), records:{'meta:members':members}, locks:this.locks()};
+        this.broadcast(data);
+        return json(data);
       }
       if (path === '/api/user' && req.method === 'POST') { // register a member ahead of their first login
+        if (!this.roles().admin(me)) return json({ error: '멤버 추가는 소유자·관리자만 할 수 있습니다.' }, 403);
         const b = await req.json(); const id = String(b.employee || '').trim().normalize('NFKC').toUpperCase(); const name = String(b.name || '').trim();
         if (!/^[A-Z0-9_-]{1,40}$/.test(id)) return json({ error: '사번은 영문·숫자·하이픈·밑줄로 입력하세요.' }, 400);
         if (!name || name.length > 40) return json({ error: '이름은 1~40자로 입력하세요.' }, 400);
         if (this.sql.exec('SELECT employee FROM users WHERE employee=?', id).toArray().length) return json({ error: '이미 등록된 사번입니다.' }, 409);
-        this.sql.exec('INSERT INTO users VALUES (?,?)', id, name); this.broadcast({ users: this.users() });
-        return json({ employee: id, name, users: this.users() });
+        this.sql.exec('DELETE FROM removed_users WHERE employee=?', id);
+        this.sql.exec('INSERT INTO users VALUES (?,?)', id, name); this.broadcast({ users: this.users(), formerUsers: this.formerUsers() });
+        return json({ employee: id, name, users: this.users(), formerUsers: this.formerUsers() });
       }
       if (path === '/api/versions' && req.method === 'GET') { // the list (no bodies), newest first
         const id = url.searchParams.get('item') || ''; if (!this.readable(id, me)) return json({ error: '항목을 찾을 수 없습니다.' }, 404);
@@ -457,7 +492,7 @@ export class Workspace {
           if (summary.length) this.sql.exec('INSERT INTO history(employee,changed,at) VALUES (?,?,?)', me, JSON.stringify(summary), new Date().toISOString());
         });
         if (conflict) return json({ error: '다른 사용자의 변경과 겹칩니다.', conflict }, 409);
-        if (Object.keys(applied).length) this.broadcast({ records: applied, users: this.users(), locks: this.locks(), ...(src ? { src } : {}) });
+        if (Object.keys(applied).length) this.broadcast({ records: applied, users: this.users(), formerUsers: this.formerUsers(), locks: this.locks(), ...(src ? { src } : {}) });
         if (!refused.length) return json({ records: applied });
         const back = { ...applied }; for (const d of refused) if (!(d.id in back)) back[d.id] = this.get(d.id) ?? null;
         return json({ records: back, denied: refused, error: refused[0].why });

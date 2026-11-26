@@ -420,7 +420,7 @@ setInterval(sharedFlush,250);setInterval(sharedRefresh,15000);window.addEventLis
 window.addEventListener('beforeunload',()=>{preserveLocal(true);saveRoute();});
 setInterval(async()=>{if(!sharedReady)return;try{const r=await apiFetch('/api/heartbeat',{method:'POST'});if(r.status===401){sharedEnd();return;}sharedMeta(await r.json());}catch{}},20000);
 setInterval(()=>{if(sharedPendingRedraw)sharedRedraw();saveRoute();},600);
-function sharedMeta(data){const changed=data.locks&&!same(data.locks,sharedLocks);if(data.users){sharedUsers=data.users;Object.assign(PEOPLE,sharedUsers);}
+function sharedMeta(data){if(data.formerUsers)Object.assign(PEOPLE,data.formerUsers);const changed=data.locks&&!same(data.locks,sharedLocks);if(data.users){sharedUsers=data.users;Object.assign(PEOPLE,sharedUsers);}
  if(data.minClient>CLIENT_VERSION&&sessionStorage.getItem('aidc-reloaded-for')!==String(data.minClient)){ // a newer build is live
   if(!openItems().some(x=>x.editing||x.status==='new')&&!S.editProj){sessionStorage.setItem('aidc-reloaded-for',String(data.minClient));location.reload();}else toast('새 버전이 배포되었습니다. 저장한 뒤 새로고침해 주세요.',5000);}
  if(data.locks){sharedLocks=data.locks;for(const id of [...ownedLocks])if(!lockMine(sharedLocks[id])){ownedLocks.delete(id);const it=id.startsWith('item:')?item(id.slice(5)):null;
