@@ -185,3 +185,5 @@ html.mp-calm *,html.mp-calm *::before,html.mp-calm *::after{transition:none!impo
 .mem.mem-selectable .tbl .hd span em.em2{left:145px}
 .mem.mem-selectable .tbl .rw .us .nm{margin-left:0}
 .mem-confirm .box .bt button.pri{background:#d32f2f;color:#fff;border:1px solid #d32f2f}
+
+.mem.mem-selectable .tbl .hd>span:first-child>em:first-of-type{left:25px}
