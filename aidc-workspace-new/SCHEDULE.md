@@ -1481,3 +1481,51 @@ Checked: the app's 요약 Word file has the guide's 3 pages and the FULL one its
 the print window's PDF the same; the export window light and dark. tests: schedule-16 checks the blocks of Word 요약, the charts
 of Word and of the slides, and the pictograms. Brought in step and not run.
 
+## 개요 업로드 reads Word, PPT and the report's PDF (owner, 2026-11-26, fiftieth round)
+
+"개요 업로드에서 pdf나 ppt, 워드, 엑셀을 각각 업로드할때 내용만 맞으면 그대로 프로젝트 페이지에 개요 업로드가 돼?" — "ㅇㅇ 그렇게
+진행해줘". 개요 업로드 (and the window that makes a project) take .pdf · .docx · .pptx · .xlsx · .json. Nothing is sent anywhere
+and no language model is called: the files' own words and tables are read by the overview's titles (SCH_DOC_HEADS) and the heads
+of its tables, as the Excel file always was. schedule/ui/89b-docread-office.js:
+
+- **Word**: the zip is opened in the browser (schUnzip: DecompressionStream 'deflate-raw', no library), word/document.xml becomes
+  blocks (schDocDocxFlow: paragraphs, tables with their rows; the sheet's first column without lines is recognised as the
+  section's title). schDocWordSheets reads the head line ("name ⇥ No. n | 구분 | 추진 단계"; the main page's report "… 개발검토
+  리스트 ⇥ 기준일 …"), the numbered sections 진행 현황 and 사업 개요 (the others — schedule, gates, … — are not the overview),
+  on the main page's report a project per section titled with its name (and its line "구분 · 단계 · 집중 추진 · 최초자료일 ·
+  기준일 · 담당자") and the list table. schDocFlowEntry turns the blocks into the entry: a head "T | 값" = figures (the report
+  writes caption | value), "구분 | 내용" = the table (비고 = the memo), "시기 | … | 상태" = the dates, "항목 | 내용" = the label
+  values (추진 단계), a title paragraph = the text under it ("• " lines a list).
+- **PPT**: presentation.xml gives the slides' order; every text box and table with where it stands and its type size
+  (schDocPptxSlides). schDocPptSheets: the project from the page's title line ("name 프로젝트 보고서 I …", or the name in large type
+  on the main page's report), the grey tabs (No. · 구분 · 추진 단계 · 집중 추진 · 최초자료 · 기준일), the sub line; every element
+  belongs to the title beside it on its line, else the nearest title above it that it stands under, else the nearest title above
+  (a row of steps wider than its title). Figures are the large type in the largest one's colour, their captions what stands under
+  them ("(…)" set on a line of its own for the room joins back); FULL's steps of 추진 일정 are a date box and the "state / what"
+  box under it; "[기준일: …]" is the date of the figures.
+- **PDF of the report** (the print window's sheet): the tables are found by their rules — pdf.js hands every drawn path with its
+  box (schDocPdfRules follows the transformation), an upright rule bounds a cell from its top to its bottom, so a row is the cells
+  that share top and bottom and a cell's words are those inside it, however many lines they take (a Korean word or a number cut at
+  the cell's edge joins without a space). The sections' titles are the left column, the rest is text (schDocPdfFlow), read by the
+  Word rules. Only a PDF with a report's head line is read so, and both readings (this and the review list's, schDocPdfSheet) are
+  made: the one that finds more is kept — the owner's review list PDF still gives its 18 projects.
+- Checked on 판교 (export, read back, schDocApplyTo): Word 요약 / FULL / every part FULL / the main page's 요약 and FULL, PPT the
+  same five, the print window's PDF the same five — **0 cells changed** each time; Excel as before (FULL loads back unchanged).
+  The owner's six guide files are read too (what differs is the live data, not the reading). A Word file saved again in Word
+  (the owner's guide: Word joins tables that touch) reads the same.
+- Not read: .doc / .ppt / .xls / .hwp (said so), scanned PDFs (pictures), titles renamed per project in a hand-made document.
+
+## The projects' table: the star (owner, 2026-11-26, fiftieth round)
+
+"프로젝트 선텍에 표형태로 봤을때도 즐겨찾기 별모양 넘버랑 프로젝트 사이에 넣어줘": a column of 34 px between NO. and 프로젝트 with
+the cards' star (grey outline, yellow when on; schRepStarT); a starred row stands first as a starred card does; pressing it does
+not open the project. The column is `.pfav` — never `.pst`, which is the page's status pill. The table's smallest widths now add
+up to 1110 (the rule of the thirtieth round: no more than 1138).
+
+## Research cards: one weight for 구분 and title (owner, 2026-11-26, fiftieth round)
+
+"리서치에 카드 형태로 보이는 곳에만 구분이랑 그외 제목까지 굵은 폰트굵기로 통일": on a research card the bracketed 구분 and the
+title are both 600 (the card title's weight); the research table keeps its bold 구분 and regular title.
+
+tests: schedule-16 checks the round trip of Word / PPT, the star column and the cards' weight. Brought in step and not run.
+

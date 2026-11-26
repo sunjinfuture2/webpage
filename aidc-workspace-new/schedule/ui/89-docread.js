@@ -25,15 +25,34 @@ async function schDocRead(file){ const name=file.name||'', ext=((name.match(/\.(
   if(file.size>SCH_DOCR_MAX)throw new Error('25MB 이하의 파일을 선택해주세요.');
   if(ext==='pdf'||file.type==='application/pdf'){ const lib=await schPdfLib(), data=new Uint8Array(await file.arrayBuffer()); let doc;
     try{ doc=await lib.getDocument({data,cMapUrl:'/pdf/cmaps/',cMapPacked:true,isEvalSupported:false}).promise; }catch(e){ throw new Error('PDF를 열지 못했습니다. 암호가 걸렸거나 손상된 파일일 수 있습니다.'); }
-    const pages=[]; for(let n=1;n<=Math.min(doc.numPages,150);n++){ const pg=await doc.getPage(n), vp=pg.getViewport({scale:1}), tc=await pg.getTextContent();
-      pages.push({w:vp.width,h:vp.height,items:tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({s:schDocFix(i.str).trim(),x:i.transform[4],y:vp.height-i.transform[5],h:i.height||Math.abs(i.transform[3])||0,w:i.width||0})).filter(i=>i.s)}); }
+    const pages=[]; for(let n=1;n<=Math.min(doc.numPages,150);n++){ const pg=await doc.getPage(n), vp=pg.getViewport({scale:1}), tc=await pg.getTextContent(); let rules={hs:[],vs:[]};
+      try{ rules=schDocPdfRules(await pg.getOperatorList(),lib.OPS,vp.height); }catch(e){}
+      pages.push({w:vp.width,h:vp.height,rules,items:tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({s:schDocFix(i.str).trim(),x:i.transform[4],y:vp.height-i.transform[5],h:i.height||Math.abs(i.transform[3])||0,w:i.width||0})).filter(i=>i.s)}); }
     try{ doc.destroy(); }catch(e){}
     return {name,kind:'pdf',pages}; }
   if(ext==='xlsx'){ const X=await schXlsx(), r=await X.readCells(file); return {name,kind:'xlsx',sheets:r.sheets.map(sh=>({name:sh.name,rows:sh.rows.map(r=>r.map(schDocFix))}))}; }
   if(ext==='json'){ let data=null; try{ data=JSON.parse(await file.text()); }catch(e){ data=null; } return {name,kind:'json',data}; }
-  throw new Error('PDF 또는 엑셀(.xlsx) 파일만 올릴 수 있습니다.'); }
+  // (fiftieth round) Word and PowerPoint: their words and tables as they stand (89b-docread-office.js)
+  if(ext==='docx'||ext==='pptx'){ const z=await schUnzip(new Uint8Array(await file.arrayBuffer()));
+    if(ext==='docx'){ const x=await z.text('word/document.xml'); if(!x)throw new Error('Word 문서의 본문을 찾지 못했습니다.'); return Object.assign({name,kind:'docx'},schDocWordSheets(schDocDocxFlow(x))); }
+    return Object.assign({name,kind:'pptx'},schDocPptSheets(await schDocPptxSlides(z))); }
+  if(['doc','ppt','xls','hwp'].includes(ext))throw new Error('예전 형식(.doc · .ppt · .xls · .hwp)은 읽지 못합니다. .docx · .pptx · .xlsx로 저장해서 올려주세요.');
+  throw new Error('PDF · Word · PPT · 엑셀(.xlsx) 파일만 올릴 수 있습니다.'); }
 
 /* ---------- a page of a PDF ---------- */
+// (fiftieth round) the lines a page draws — a table's rules: thin and long, level (hs) or upright (vs), in the page's own measure
+// (points from the upper left, as the text). pdf.js hands every path with its box (constructPath: [paint, data, minMax]); the
+// current transformation is followed through save / restore / transform and the forms a page paints.
+function schDocPdfRules(ol,OPS,H){ const mul=(m,n)=>[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]];
+  let ctm=[1,0,0,1,0,0]; const st=[], hs=[], vs=[];
+  for(let i=0;i<ol.fnArray.length;i++){ const f=ol.fnArray[i], a=ol.argsArray[i];
+    if(f===OPS.save)st.push(ctm); else if(f===OPS.restore)ctm=st.pop()||ctm; else if(f===OPS.transform)ctm=mul(ctm,a);
+    else if(f===OPS.paintFormXObjectBegin){ st.push(ctm); if(a&&a[0]&&a[0].length===6)ctm=mul(ctm,a[0]); } else if(f===OPS.paintFormXObjectEnd)ctm=st.pop()||ctm;
+    else if(f===OPS.constructPath){ const mm=a&&a[2]; if(!mm||mm.length<4||!isFinite(mm[0]))continue;
+      const pts=[[mm[0],mm[1]],[mm[2],mm[3]],[mm[0],mm[3]],[mm[2],mm[1]]].map(([x,y])=>[ctm[0]*x+ctm[2]*y+ctm[4],H-(ctm[1]*x+ctm[3]*y+ctm[5])]), xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+      const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+      if(y1-y0<=1.6&&x1-x0>=6)hs.push({y:(y0+y1)/2,x0,x1}); else if(x1-x0<=1.6&&y1-y0>=5)vs.push({x:(x0+x1)/2,y0,y1}); } }
+  return {hs,vs}; }
 // items that stand on one line, left to right, as one text: a gap is a space, pieces that touch are one word
 function schDocJoin(items){ const a=[...items].sort((p,q)=>p.x-q.x); let out=''; a.forEach((it,i)=>{ if(i){ const pv=a[i-1], gap=it.x-(pv.x+pv.w); if(gap>Math.max(1,(it.h||8)*.2)&&!/^[,.:;)\]%]/.test(it.s)&&!/[(\[]$/.test(out))out+=' '; } out+=it.s; }); return out.replace(/\s+/g,' ').trim(); }
 const schDocLines=items=>{ const a=[...items].sort((p,q)=>p.y-q.y||p.x-q.x), lines=[]; for(const it of a){ const L=lines[lines.length-1]; if(L&&Math.abs(L.y-it.y)<=Math.max(3,(it.h||8)*.38))L.it.push(it); else lines.push({y:it.y,it:[it]}); } for(const L of lines)L.it.sort((p,q)=>p.x-q.x); return lines; };
@@ -143,10 +162,18 @@ function schDocXlsSheet(sh){ const e={name:'',sub:'',grp:'',stage:'',first:'',as
 /* ---------- a document -> the data of the list ---------- */
 function schDocToReport(doc){ if(doc.kind==='json'){ const d=doc.data; if(!d||d.kind!==REP_KIND||!Array.isArray(d.projects)||!d.projects.length)return {error:'개발검토 리스트 자료 파일이 아닙니다.'}; return Object.assign({},d,{found:{projects:d.projects.length}}); }
   const list=[], sheets=[]; let asof='';
+  // (fiftieth round) the app's own report as a PDF is read as its Word file is (89b-docread-office.js); a PDF of another make (the
+  // review list) as before — both readings are made and the one that finds more is kept
+  const pf=doc.kind==='pdf'?schDocPdfFlow(doc.pages):null, fl=[], fs=[];
+  if(pf){ const w=schDocWordSheets(pf.flow); if(w.list.length)for(const r of schDocXlsList(w.list)){ r.name=r.name.replace(/^\[집중\]\s*/,()=>{ r.focus=true; return ''; }); fl.push(r); } for(const s of w.sheets){ const e=schDocFlowEntry(s); if(e)fs.push(e); } }
+  const worth=(l,ss)=>l.length*3+ss.reduce((n,e)=>n+e.kpi.length+e.fin.length+e.rows.length+e.plan.length+e.infra.length+e.risk.length+(e.ov?2:0)+(e.model?1:0)+(e.stat&&e.stat.length?1:0),0);
   if(doc.kind==='pdf'){ let text=0; for(const pg of doc.pages){ text+=pg.items.length; const rows=schDocPdfList(pg); if(rows.length){ list.push(...rows); const flat=schDocSq(pg.items.filter(i=>i.y<60).map(i=>i.s).join('')), a=flat.match(/기준일:?(\d{4}\.\d{1,2}\.\d{1,2})/); if(a&&!asof)asof=a[1]; continue; } const e=schDocPdfSheet(pg); if(e&&e.name)sheets.push(e); }
-    if(!text)return {error:'이 PDF에는 글자가 없습니다 (스캔한 그림으로 보입니다). 글자를 선택할 수 있는 PDF나 엑셀 파일을 올려주세요.'}; }
+    if(!text)return {error:'이 PDF에는 글자가 없습니다 (스캔한 그림으로 보입니다). 글자를 선택할 수 있는 PDF나 엑셀 파일을 올려주세요.'};
+    if((fl.length||fs.length)&&worth(fl,fs)>=worth(list,sheets)){ list.length=0; sheets.length=0; list.push(...fl); sheets.push(...fs); } }
+  else if(doc.kind==='docx'||doc.kind==='pptx'){ if(doc.list&&doc.list.length)for(const r of schDocXlsList(doc.list)){ r.name=r.name.replace(/^\[집중\]\s*/,()=>{ r.focus=true; return ''; }); list.push(r); } if(doc.listAsof)asof=doc.listAsof;
+    for(const s of doc.sheets){ const e=schDocFlowEntry(s); if(e)sheets.push(e); } }
   else for(const sh of doc.sheets){ const rows=schDocXlsList(sh.rows); if(rows.length){ list.push(...rows); continue; } const e=schDocXlsSheet(sh); if(e&&e.name)sheets.push(e); }
-  if(!list.length&&!sheets.length)return {error:'문서에서 프로젝트 개요를 찾지 못했습니다. 제목(핵심 지표 · 사업 개요 · 추진 일정 등)이나 목록 표의 머리글(NO. · 프로젝트 · 위치 …)이 그대로 있는 문서여야 합니다.'};
+  if(!list.length&&!sheets.length)return {error:'문서에서 프로젝트 개요를 찾지 못했습니다. 제목(핵심 지표 · 사업 개요 · 추진 일정 등)이나 목록 표의 머리글(NO. · 프로젝트 · 위치 …)이 그대로 있는 문서여야 합니다. 앱에서 내보낸 보고서(Word · PPT · 엑셀)는 그대로 다시 올릴 수 있습니다.'};
   // one entry per project: the list's row and the project's own sheet, found by the name
   const by=new Map(), key=n=>norm(n).replace(/\s+/g,''), order=[];
   for(const r of list){ const k=key(r.name); if(!by.has(k)){ by.set(k,{name:r.name.replace(/\s+/g,' ').trim()}); order.push(k); } const t=by.get(k); Object.assign(t,{grp:r.grp||t.grp||'',stage:r.stage||t.stage||'',first:r.first||t.first||'',list:Object.assign({},t.list,r.list)}); if(r.sub)t.sub=r.sub; if(r.asof)t.asof=r.asof; if(r.owner)t.owner=r.owner; if(r.focus!==undefined)t.focus=r.focus; }
@@ -162,8 +189,8 @@ function schDocSays(p){ const a=[]; if(p.kpi&&p.kpi.length)a.push(`핵심 지표
 /* ---------- the field a file is let go on (the look of the Excel upload window) ---------- */
 // One field: {file, reading, doc, rep, err}. host is the element the field is drawn in; change() is called whenever it changed.
 function schDocField(host,state,change,hint){ const draw=()=>{ const f=state.file, r=state.rep;
-    host.innerHTML=`<label class="up-drop ${f?'has':''} ${state.err?'bad':''}" data-docdrop tabindex="0"><input type="file" data-docfile accept=".pdf,.xlsx,.json,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>${f?`<span class="up-top">${svg('i-sch-fup',14,14)}<span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span>${state.reading?'<span class="rd">읽는 중…</span>':''}<button type="button" class="rm" data-docrm title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button></span>${r&&!r.error?`<span class="up-tags"><span>프로젝트<b>${r.projects.length}</b></span>${r.projects.length===1?`<span>${esc(schDocSays(r.projects[0]))}</span>`:''}</span>`:''}`
-      :`${schUpFolder(64,50)}<span>${esc(hint||'PDF 또는 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택')}</span>`}</label>${state.err?`<div class="up-nt err">${esc(state.err)}</div>`:''}`; };
+    host.innerHTML=`<label class="up-drop ${f?'has':''} ${state.err?'bad':''}" data-docdrop tabindex="0"><input type="file" data-docfile accept=".pdf,.docx,.pptx,.xlsx,.json,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>${f?`<span class="up-top">${svg('i-sch-fup',14,14)}<span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span>${state.reading?'<span class="rd">읽는 중…</span>':''}<button type="button" class="rm" data-docrm title="이 파일 빼기" aria-label="이 파일 빼기">${svg('i-x',9,9)}</button></span>${r&&!r.error?`<span class="up-tags"><span>프로젝트<b>${r.projects.length}</b></span>${r.projects.length===1?`<span>${esc(schDocSays(r.projects[0]))}</span>`:''}</span>`:''}`
+      :`${schUpFolder(64,50)}<span>${esc(hint||'PDF · Word · PPT · 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택')}</span>`}</label>${state.err?`<div class="up-nt err">${esc(state.err)}</div>`:''}`; };
   const take=async f=>{ if(!f)return; const run=state.run=(state.run||0)+1; Object.assign(state,{file:f,reading:true,doc:null,rep:null,err:''}); draw(); change();
     try{ const doc=await schDocRead(f); if(state.run!==run)return; const rep=schDocToReport(doc); state.doc=doc; if(rep.error){ state.err=rep.error; state.rep=null; } else state.rep=rep; }
     catch(e){ if(state.run!==run)return; state.err=String(e&&e.message||e); }
@@ -185,7 +212,7 @@ function schDocApplyTo(pid,entry){ const x=schRepNorm(entry), p=PROJECTS[pid], h
   return {n,undo:()=>{ PHEAD[pid]=before.head; Object.assign(PROJECTS[pid],before.proj); render(true); }}; }
 function schDocOpen(pid){ if(!PROJECTS[pid]||$('#dlg'))return; if(S.editProj){ toast('사업개요를 수정하는 중에는 올릴 수 없습니다. 먼저 저장하거나 취소해 주세요.',4200); return; }
   closePop(); const d=document.createElement('div'); d.id='dlg'; d.className='dlg sch-dlg sch-up sch-docup'; const st={}; let pick=0;
-  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="개요 업로드"><h3 class="up-ttl">개요 업로드</h3><p class="up-sub">PDF 또는 엑셀 문서의 내용으로 이 프로젝트의 사업개요를 채웁니다 · 처음 채울 때와 고칠 때 모두 씁니다</p><div data-docfield></div><div data-docres></div>
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="개요 업로드"><h3 class="up-ttl">개요 업로드</h3><p class="up-sub">PDF · Word · PPT · 엑셀 문서의 내용으로 이 프로젝트의 사업개요를 채웁니다 · 처음 채울 때와 고칠 때 모두 씁니다</p><div data-docfield></div><div data-docres></div>
     <div class="bt"><button data-doc="x">닫기</button><button data-doc="ok" class="pri" disabled>적용</button></div></div>`;
   document.body.appendChild(d); const res=d.querySelector('[data-docres]'), ok=d.querySelector('[data-doc="ok"]');
   const chosen=()=>st.rep&&st.rep.projects[pick];

@@ -2148,3 +2148,16 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
    kind's colour (schXFileIc in 92-export.js) */
 .sch-xw .xq-files .xq-card{padding:9px 4px 7px;gap:1px}
 .sch-xw .xq-files .xq-card .xq-fic{display:block;flex:none;width:30px;height:30px;margin:0 auto 3px}
+/* the star of the projects' table: a column of its own between NO. and 프로젝트 (fiftieth round; `.pfav`, never `.pst` — that is the
+   page's status pill) */
+.tbl.sch-proc.vt-rep .hd,.tbl.sch-proc.vt-rep .rw{grid-template-columns:122px 34px minmax(170px,1.5fr) minmax(108px,.8fr) minmax(140px,1.3fr) minmax(96px,.7fr) minmax(96px,.7fr) minmax(150px,1.4fr) minmax(96px,.62fr) minmax(98px,.62fr)}
+.tbl.sch-proc.vt-rep .rw .pfav{display:flex;align-items:center;justify-content:center;padding:0}
+.tbl.sch-proc.vt-rep .hd .pfav{padding:0}
+.tbl.sch-proc.vt-rep .pstar.t{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;cursor:pointer}
+.tbl.sch-proc.vt-rep .pstar.t:hover{background:#f3f3f2}
+.tbl.sch-proc.vt-rep .pstar.t:hover svg path{stroke:#9a9a9a}
+.tbl.sch-proc.vt-rep .pstar.t.on:hover svg path{stroke:#e0a800}
+/* research as cards: the 구분 in brackets and the title in one bold weight, the card title's (fiftieth round, owner: "리서치에 카드
+   형태로 보이는 곳에만 구분이랑 그외 제목까지 굵은 폰트굵기로 통일"); the table keeps its bold 구분 and regular title */
+.rcard .research-prefix,.rcard .research-title-text{font-weight:600}
+

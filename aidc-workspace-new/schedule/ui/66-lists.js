@@ -156,7 +156,7 @@ function schNewProject(){ closePop(); const old=$('#dlg'); if(old)old.remove(); 
     m.hidden=!many(); if(many())m.textContent=`문서에 프로젝트가 ${doc.rep.projects.length}건 있습니다. 한 번에 만들거나 덮어씁니다 (아래 사업명 · 구분 · 추진 단계는 쓰지 않습니다).`;
     for(const i of d.querySelectorAll('.np-f input, .np-f button'))i.disabled=many(); $n('.np-f').classList.toggle('dim',many());
     ok.disabled=busy||!!doc.reading||!(many()||name()); ok.textContent=many()?`${doc.rep.projects.length}건 만들기`:'프로젝트 만들기'; };
-  schDocField($n('[data-docfield]'),doc,sync,'PDF 또는 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택'); sync();
+  schDocField($n('[data-docfield]'),doc,sync,'PDF · Word · PPT · 엑셀 문서를 여기에 끌어다 놓거나 눌러서 선택'); sync();
   const make=async()=>{ if(busy||doc.reading)return;
     if(many()){ const rep=doc.rep, fn=doc.file?doc.file.name:''; close(); schRepAsk(rep,fn); return; }
     const n=name(); if(!n){$n('#np2-err').textContent='사업명을 입력하세요.';$n('#np2-name').focus();return;}

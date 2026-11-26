@@ -39,9 +39,9 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
   // the button is on only when there is a name, or a document that could be read
   const npw = () => ev(() => { const d = document.querySelector('#dlg.sch-np'); return { ok: !d.querySelector('[data-np2="ok"]').disabled, drop: !!d.querySelector('[data-docdrop]'), say: (d.querySelector('[data-docdrop]') || {}).textContent.trim(), site: !!d.querySelector('#np2-site'), pdf: !!d.querySelector('#np2-pdf'), err: (d.querySelector('.np-doc .up-nt.err') || {}).textContent || '', has: !!d.querySelector('[data-docdrop].has') }; });
   const n0 = await npw(); await a.fill('#np2-name', NAME); await sleep(150); const n1 = await npw(); await a.fill('#np2-name', ''); await sleep(150); const n2 = await npw();
-  check('a field for a PDF or an Excel document; no 부지, no attached PDF; the button is on once there is a name', n0.drop && /PDF 또는 엑셀 문서/.test(n0.say) && !n0.site && !n0.pdf && n0.ok === false && n1.ok === true && n2.ok === false, { n0, n1, n2 });
+  check('a field for a PDF, Word, PPT or Excel document; no 부지, no attached PDF; the button is on once there is a name', n0.drop && /PDF · Word · PPT · 엑셀 문서/.test(n0.say) && !n0.site && !n0.pdf && n0.ok === false && n1.ok === true && n2.ok === false, { n0, n1, n2 });
   await a.setInputFiles('#dlg [data-docfile]', { name: '메모.txt', mimeType: 'text/plain', buffer: Buffer.from('x') }); await sleep(400); const n3 = await npw();
-  check('a file that is neither is told so and does not turn the button on', n3.has && /PDF 또는 엑셀\(\.xlsx\) 파일만 올릴 수 있습니다/.test(n3.err) && n3.ok === false, n3);
+  check('a file that is none of them is told so and does not turn the button on', n3.has && /PDF · Word · PPT · 엑셀\(\.xlsx\) 파일만 올릴 수 있습니다/.test(n3.err) && n3.ok === false, n3);
   await a.click('#dlg [data-docrm]'); await sleep(200);
   await a.fill('#np2-name', NAME); await a.click('.sch-np [data-grp="Small AIDC"]'); await a.click('.sch-np [data-st="사업제안"]');
   const PDF = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
@@ -305,6 +305,20 @@ const V2 = 'http://127.0.0.1:8787/?v=2', V1 = 'http://127.0.0.1:8787/?v=1';
     schExpWin('proj', 'pangyo'); await new Promise(r => setTimeout(r, 300)); const ic = [...document.querySelectorAll('#dlg.sch-xw .xq-files .xq-card svg.xq-fic')].map(x => x.closest('.xq-card').querySelector('input').value).join(); document.querySelector('#dlg') && document.querySelector('#dlg').remove();
     return { w, ic, phases: m.phases.filter(g => g.tasks.length).length, png: n(s1, /word\/media\/img\d+\.png/g) >= 1, pngFull: n(s2, /word\/media\/img\d+\.png/g) };
   });
+  // fiftieth round: the overview goes out as Word / PPT / the print window's PDF and comes back by 개요 업로드 with nothing changed
+  const x50r = await ev(async () => { const pid = 'pangyo', out = {}, parts = ['state', 'ov'];
+    const back = async (name, blob) => { const rep = schDocToReport(await schDocRead(new File([blob], name))); if (rep.error) return 'error: ' + rep.error; const e = rep.projects.find(x => norm(x.name) === norm(PROJECTS[pid].full)); if (!e) return 'no entry'; const r = schDocApplyTo(pid, e); r.undo(); return r.n; };
+    for (const f of ['sum', 'full']) { const forms = { state: 'sum', ov: f }; out['docx-' + f] = await back('a.docx', await schExpDocx(schXProjDoc(pid, { parts, forms }))); out['pptx-' + f] = await back('a.pptx', await schExpPptx(schXProjDoc(pid, { parts, forms }), { pid, parts, forms })); }
+    const w = { list: true, sheets: 'full' }; out.main = await back('m.docx', await schExpDocx(schXMainDoc([pid], w)));
+    return out; });
+  check('개요 업로드 reads the app\'s own Word and PPT reports (요약 / FULL, the main page\'s) back with no cell changed', Object.values(x50r).every(n => n === 0), x50r);
+  const x50t = await ev(async () => { go('main', false, true); await new Promise(r => setTimeout(r, 500)); const b = document.querySelector('[data-vt="proj:table"]'); if (b) b.click(); await new Promise(r => setTimeout(r, 500));
+    const hd = [...document.querySelectorAll('.page.on .vt-rep .hd > span')].map(s => s.className || s.textContent.trim()).slice(0, 3).join(), row = document.querySelector('.page.on .vt-rep .rw'), cells = row ? [...row.children].slice(0, 3).map(c => c.className) : [];
+    const k = row && row.querySelector('[data-pstar]').dataset.pstar; const was = S.favs.includes('project:' + k); row.querySelector('[data-pstar]').click(); await new Promise(r => setTimeout(r, 300)); const now = S.favs.includes('project:' + k); const first = document.querySelector('.page.on .vt-rep .rw [data-pstar]').dataset.pstar; if (now !== was) toggleFav('project:' + k);
+    const c = document.querySelector('[data-vt="proj:cards"]'); if (c) c.click(); await new Promise(r => setTimeout(r, 300));
+    const rc = document.querySelector('.page.on .rcard .research-title-text'), rp = document.querySelector('.page.on .rcard .research-prefix');
+    return { hd, cells, toggled: now !== was, first: now ? first === k : true, page: location.hash, w: rc ? getComputedStyle(rc).fontWeight : '', wp: rp ? getComputedStyle(rp).fontWeight : '' }; });
+  check('the projects\' table has the star between NO. and 프로젝트 (a starred row stands first, the click does not open the project); research cards write 구분 and title in one weight', /pfav/.test(x50t.hd) && x50t.cells[1] === 'w pfav' && x50t.toggled && x50t.first && /page=main/.test(x50t.page) && (x50t.w === '' || x50t.w === '600') && (x50t.wp === '' || x50t.wp === '600'), x50t);
   check('Word 요약 (owner\'s Word guide): 액션 일정 is its title line, a line of figures and the chart of the phases — no lists; the export window shows a coloured pictogram on each file card', x50.w === 'sh,stat,img' && x50.ic === 'docx,pptx,xlsx' && x50.png && x50.pngFull >= x50.phases, x50);
   check('엑셀 (forty-ninth round): FULL in the guide workbook\'s form loads back with nothing changed; 요약 sheets are for reading and load nothing', x49.full.tasks > 0 && x49.full.links > 0 && x49.full.same && x49.sum.none && x49.sum.view >= 3, x49);
   const [dw] = await Promise.all([a.waitForEvent('download', { timeout: 30000 }), a.click('#dlg.sch-xw [data-xw="ok"]')]); const wbuf = fs.readFileSync(await dw.path());

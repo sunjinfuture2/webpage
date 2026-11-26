@@ -172,14 +172,17 @@ function schRepCards(ids){ ids=[...ids.filter(schRepPinned),...ids.filter(k=>!sc
 // stays group by group and a row says its group with the badge.)
 // schRepSeq: the projects in the order the table lists them (group by group unless an order was chosen).
 function schRepSeq(ids){ return schPf().sort?ids:REP_GRPS.concat('').flatMap(g=>ids.filter(k=>schRepOf(k).grp===g)); }
+// (fiftieth round, owner: "프로젝트 선택에 표형태로 봤을때도 즐겨찾기 별모양 넘버랑 프로젝트 사이에 넣어줘") the table has the cards'
+// star too, in a column of its own between NO. and 프로젝트, and starred rows stand first as starred cards do
+const schRepStarT=on=>`<svg width="18" height="17" viewBox="0 0 21 20" aria-hidden="true"><path d="M10.4 1.4l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L1.7 7.7l6-.9z" fill="${on?'#ffce00':'#fff'}" stroke="${on?'#f2b600':'#c4c4c4'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
 function schRepTable(){ const ids=schProjFilter(orderedProjects()), c=schPf(), nos=schRepNos();
-  const seq=schRepSeq(ids), total=Math.max(1,Math.ceil(seq.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total);
+  const seq0=schRepSeq(ids), seq=[...seq0.filter(schRepPinned),...seq0.filter(k=>!schRepPinned(k))], total=Math.max(1,Math.ceil(seq.length/SCH_V_PER)); S.pjPage=Math.min(Math.max(1,S.pjPage||1),total);
   const page=seq.slice((S.pjPage-1)*SCH_V_PER,S.pjPage*SCH_V_PER);
   const th=t=>`<span><em>${t}</em></span>`, tm=(k,t,on,srt)=>`<span data-vcol="proj:${k}" class="${srt?'sorted':''} ${on?'flt':''}" title="눌러서 정렬 · 조건 선택"><em>${t}</em>${svg('i-chev-d',8,4)}</span>`;
   const cell=(v,cls)=>`<div class="tx ${cls||''}" title="${esc(v||'')}"><span class="e">${schRepListTxt(v)}</span></div>`;
   const row=k=>{ const p=PROJECTS[k], r=schRepOf(k);
-    return `<div class="rw ${r.focus?'focus':''}" data-go="project:${esc(k)}"${schRepPc(p)}><div class="w no"><span>${nos[k]||''}</span>${schRepGrpTag(r.grp)}</div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}${r.sub?' — '+esc(r.sub):''}">${r.focus?'<i class="fo" title="현재 집중 추진 중인 프로젝트">집중</i>':''}<span class="e">${esc(p.full||pname(p))}</span></div>${cell(r.site)}${cell(r.dev)}${cell(r.area,'num')}${cell(r.gfa,'num')}${cell(r.load)}<div class="st"><span style="color:${esc(PSTATUS[r.stage]||'#8e8e8e')}"><i></i>${esc(r.stage||'미정')}</span></div>${cell(r.first,'dt')}</div>`; };
-  let h=`<div class="tbl sch-proc sch-vtbl vt-proj vt-rep"><div class="hd">${th('NO.')}${tm('name','프로젝트',!!c.grp||!!c.focus,!!c.sort&&c.sort!=='first')}${tm('region','위치',!!c.region,false)}${th('사업주체')}${th('대지면적(m²)')}${th('연면적(m²)')}${th('IT LOAD (수전용량)')}${tm('st','추진 단계',!!c.st,false)}${tm('first','최초자료일',false,c.sort==='first')}</div>`;
+    return `<div class="rw ${r.focus?'focus':''}" data-go="project:${esc(k)}"${schRepPc(p)}><div class="w no"><span>${nos[k]||''}</span>${schRepGrpTag(r.grp)}</div><div class="w pfav"><button type="button" class="pstar t ${schRepPinned(k)?'on':''}" data-pstar="${esc(k)}" aria-pressed="${schRepPinned(k)}" title="${schRepPinned(k)?'즐겨찾기 해제 (맨 앞 고정 풀기)':'즐겨찾기 · 맨 앞에 고정'}">${schRepStarT(schRepPinned(k))}</button></div><div class="nm" style="color:${esc(p.color||'')}" title="${esc(p.full||'')}${r.sub?' — '+esc(r.sub):''}">${r.focus?'<i class="fo" title="현재 집중 추진 중인 프로젝트">집중</i>':''}<span class="e">${esc(p.full||pname(p))}</span></div>${cell(r.site)}${cell(r.dev)}${cell(r.area,'num')}${cell(r.gfa,'num')}${cell(r.load)}<div class="st"><span style="color:${esc(PSTATUS[r.stage]||'#8e8e8e')}"><i></i>${esc(r.stage||'미정')}</span></div>${cell(r.first,'dt')}</div>`; };
+  let h=`<div class="tbl sch-proc sch-vtbl vt-proj vt-rep"><div class="hd">${th('NO.')}<span class="pfav" title="즐겨찾기"></span>${tm('name','프로젝트',!!c.grp||!!c.focus,!!c.sort&&c.sort!=='first')}${tm('region','위치',!!c.region,false)}${th('사업주체')}${th('대지면적(m²)')}${th('연면적(m²)')}${th('IT LOAD (수전용량)')}${tm('st','추진 단계',!!c.st,false)}${tm('first','최초자료일',false,c.sort==='first')}</div>`;
   h+=page.map(row).join('');
   if(!ids.length)h+=`<div class="none">조건에 맞는 프로젝트가 없습니다.</div>`;
   return h+`<div class="ft"></div></div>${seq.length>SCH_V_PER?schVPager('proj',S.pjPage,total):''}`; }
@@ -246,8 +249,10 @@ function schRepAsk(data,fname){ closePop(); const old=$('#dlg'); if(old)old.remo
 /* ---------- the star of a card ---------- */
 // (before the page's own click handler, which would open the project the card stands for)
 document.addEventListener('click',e=>{ if(!PREVIEW_ON)return; const el=e.target.closest&&e.target.closest('[data-pstar]'); if(!el)return; e.stopPropagation(); e.preventDefault();
-  const on=toggleFav('project:'+el.dataset.pstar); S.car.proj=0; const inner=$('#proj-inner'); if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); applyCarousel('proj'); if(typeof schMobApply==='function'){ const t=inner.closest('.track'); if(t)t.scrollLeft=0; } }
-  toast(on?'즐겨찾기에 추가했습니다 · 카드가 맨 앞에 고정됩니다.':'즐겨찾기를 해제했습니다.',2600); },true);
+  const on=toggleFav('project:'+el.dataset.pstar); S.car.proj=0; const body=$('.page.on [data-vbody="proj"]'), inner=$('#proj-inner');
+  if(body){ S.pjPage=1; body.innerHTML=schProjTable(); }
+  else if(inner&&inner.offsetParent){ inner.innerHTML=projectCards(); applyCarousel('proj'); if(typeof schMobApply==='function'){ const t=inner.closest('.track'); if(t)t.scrollLeft=0; } }
+  toast(on?`즐겨찾기에 추가했습니다 · ${body?'표':'카드'}의 맨 앞에 고정됩니다.`:'즐겨찾기를 해제했습니다.',2600); },true);
 
 /* ---------- the main calendar's project tags: one line, the rest folded ---------- */
 // (twenty-seventh round, owner 2026-11-24: "프로젝트 태그들 1줄만 나오고 접히게") The button stands at the end of the line and says how many tags
