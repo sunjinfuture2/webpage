@@ -18,6 +18,73 @@ async function makeBook(sheets: { name: string; rows: unknown[][]; widths?: numb
   return new Uint8Array(await book.xlsx.writeBuffer()).buffer as ArrayBuffer;
 }
 
+// ---- The project's Excel in the form of the owner's guide workbook (forty-ninth round, owner 2026-11-26: "엑셀은 누르면 내가
+//저번에 첨부해줬던 요거 대로 각 요약형태랑 풀버전 뜯어만들어. 이걸 반대로 넣었을때도 정상적으로 데이터가 입력될수 있게") ----
+// The page hands over what each sheet holds (schXlSpec in schedule/ui/96-xlsx-export.js); this writes it in the guide's manner:
+// the title in row 1 or 2, a line of notes under it, the head in the guide's own row (dark blue, white, bold), the rows below
+// (every other one pale on the sheets that have bands), the guide's column widths, the frozen corner, no grid lines. The gantt
+// sheet 마스터스케줄 is drawn as in the guide: five rows a task (the bar on the three middle rows: red CP, orange 주의, blue the
+// rest; the progress as the dark middle line), five rows a phase on a pale band with a dark line, one narrow column a day.
+// Values only, no formulas: a sheet of the FULL form is read back by readSheets below exactly as it is written. A sheet of the
+// 요약 form is marked in the hidden sheet __AIDC_EXPORT and readSheets leaves it out (it is for reading, not for loading).
+type GSheet = { type: 'table' | 'gantt'; name: string; title?: string; titleRow?: number; note?: string; notes?: string[]; headRow: number; head: string[]; widths?: number[];
+  rows?: unknown[][]; dates?: number[]; pct?: number[]; size?: number; band?: boolean; freeze?: [number, number]; tab?: string; headFill?: string; font?: string; titleSize?: number; titleColor?: string;
+  blocks?: { ph?: boolean; cells: unknown[]; s: string; e: string; pct?: number; tone?: string; ms?: boolean }[]; from?: string; to?: string; line2?: string };
+async function makeGuideBook(spec: { project: string; exported: string; forms: Record<string, string>; sheets: GSheet[] }): Promise<ArrayBuffer> {
+  const ExcelJS = (await import('exceljs')).default, book = new ExcelJS.Workbook(); book.creator = 'AIDC WorkSpace'; book.created = new Date();
+  const INK = 'FF20324A', HEAD = 'FF203D62', BAND = 'FFF1F5F9', TITLE = 'FF17365D', NOTE = 'FF617188';
+  const dayOfIso = (v: unknown) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v ?? '')); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null; };
+  const wlen = (t: unknown) => { let n = 0; for (const c of String(t ?? '')) n += (c.codePointAt(0) || 0) > 0x2e80 ? 1.85 : 1.05; return n; };
+  const fit = (row: unknown[], widths: number[], size: number) => { let lines = 1; row.forEach((v, i) => { const w = Math.max(4, (widths[i] || 12) - 1.5), all = String(v ?? '').split('\n').reduce((a, p) => a + Math.max(1, Math.ceil(wlen(p) / w)), 0); lines = Math.max(lines, all); }); return Math.min(160, Math.max(size >= 11 ? 22 : 20, lines * (size + 3.4) + 7)); };
+  for (const s of spec.sheets) {
+    const ws = book.addWorksheet(s.name, { views: [{ showGridLines: false, state: 'frozen', xSplit: (s.freeze || [0, s.headRow])[0], ySplit: (s.freeze || [0, s.headRow])[1] }], properties: s.tab ? { tabColor: { argb: 'FF' + s.tab } } : undefined });
+    const font = s.font || 'Arial', size = s.size || 10, widths = s.widths || [];
+    if (s.type === 'table') widths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+    const tr = s.titleRow || 2; if (s.title) { const c = ws.getCell(tr, 1); c.value = s.title; c.font = { name: s.font || 'Arial', size: s.titleSize || 16, bold: true, color: { argb: 'FF' + (s.titleColor || '17365D') } }; ws.getRow(tr).height = s.titleSize && s.titleSize < 16 ? 28 : 20.65; }
+    (s.notes || (s.note ? [s.note] : [])).forEach((t, i) => { const c = ws.getCell(tr + 1 + (s.line2 ? 1 : 0) + i, 1); c.value = t; c.font = { name: font, size: 10, color: { argb: NOTE } }; });
+    const headStyle = (c: any) => { c.font = { name: s.headFill ? '맑은 고딕' : font, size, bold: true, color: { argb: 'FFFFFFFF' } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + (s.headFill || '203D62') } }; c.alignment = { vertical: 'middle', wrapText: true, horizontal: s.headFill ? 'center' : undefined }; };
+    if (s.type === 'table') {
+      const hr = ws.getRow(s.headRow); s.head.forEach((h, i) => { const c = hr.getCell(i + 1); c.value = h; headStyle(c); }); hr.height = 34;
+      (s.rows || []).forEach((row, ri) => { const r = ws.getRow(s.headRow + 1 + ri);
+        row.forEach((v, i) => { const c = r.getCell(i + 1), d = dayOfIso(v);   // a day written yyyy-mm-dd is a date cell (read back as the same day)
+          c.value = d ? d : (v === '' || v === undefined ? null : v as any); if (d) c.numFmt = 'yyyy-mm-dd'; if ((s.pct || []).includes(i) && typeof v === 'number') c.numFmt = '0%';
+          c.font = { name: font, size, color: { argb: INK } }; c.alignment = { vertical: 'middle', wrapText: true }; if (s.band && ri % 2 === 0) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND } }; });
+        for (let i = row.length; i < s.head.length; i++) { const c = r.getCell(i + 1); c.font = { name: font, size, color: { argb: INK } }; if (s.band && ri % 2 === 0) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND } }; }
+        r.height = fit(row, widths, size); });
+      continue; }
+    // ---- the gantt sheet ----
+    const A = (s.head || []).length, T0 = Date.parse((s.from || '2026-01-01') + 'T00:00:00Z'), T1 = Date.parse((s.to || '2026-12-31') + 'T00:00:00Z'), days = Math.max(1, Math.round((T1 - T0) / 864e5)), C0 = A + 2; // A..M, then one narrow column, then the days
+    widths.forEach((w, i) => { ws.getColumn(i + 1).width = w; }); for (let k = 0; k < days; k++) ws.getColumn(C0 + k).width = 0.3125;
+    if (s.line2) { const c = ws.getCell(2, 1); c.value = s.line2; c.font = { name: font, size: 13, bold: true, color: { argb: 'FF9C5700' } }; ws.getRow(2).height = 25.05; }
+    const hr = ws.getRow(s.headRow); hr.height = 28.05; ws.getRow(s.headRow + 1).height = 2.25;
+    s.head.forEach((h, i) => { const c = hr.getCell(i + 1 + (i ? 1 : 0)); c.value = h; headStyle(c); }); headStyle(hr.getCell(2)); ws.mergeCells(s.headRow, 1, s.headRow, 2);
+    // months over the days, their first days as numbers in the thin row under the head (as the guide keeps them)
+    for (let k = 0; k < days;) { const d = new Date(T0 + k * 864e5), y = d.getUTCFullYear(), mo = d.getUTCMonth(); let n = 0; while (k + n < days && new Date(T0 + (k + n) * 864e5).getUTCMonth() === mo) n++;
+      const c = hr.getCell(C0 + k); c.value = `${String(y).slice(2)}년 ${mo + 1}월`; headStyle(c); c.alignment = { horizontal: 'center', vertical: 'middle' }; c.font = { name: font, size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
+      for (let j = 1; j < n; j++) headStyle(hr.getCell(C0 + k + j)); if (n > 1) ws.mergeCells(s.headRow, C0 + k, s.headRow, C0 + k + n - 1); k += n; }
+    const help = ws.getRow(s.headRow + 1); for (let k = 0; k < days; k++) { help.getCell(C0 + k).value = Math.round((T0 + k * 864e5) / 864e5) + 25569; }
+    const fill = (c: any, argb: string) => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb } }; };
+    let r = s.headRow + 2;
+    for (const b of s.blocks || []) {
+      const H = b.ph ? [12, 5.25, 1.5, 5.25, 12] : [14.25, 5.25, 1.5, 5.25, 14.25]; H.forEach((h, i) => { ws.getRow(r + i).height = h; });
+      b.cells.forEach((v, i) => { const col = i + 1 + (i ? 1 : 0), c = ws.getCell(r, col), d = (s.dates || []).includes(i) ? dayOfIso(v) : null;
+        c.value = d ? d : (v === '' || v === undefined || v === null ? null : v as any); if (d) c.numFmt = 'yyyy-mm-dd'; if ((s.pct || []).includes(i) && typeof v === 'number') c.numFmt = '0%';
+        c.font = { name: font, size, bold: !!b.ph, color: { argb: INK } }; c.alignment = { vertical: 'middle', wrapText: !b.ph, horizontal: i >= 3 && i <= 6 ? 'center' : undefined }; if (b.ph) fill(c, 'FFE1E8F0');
+        ws.mergeCells(r, col, r + 4, i ? col : 2); });
+      if (b.ph) { for (let i = 0; i < 5; i++) { const row = ws.getRow(r + i); for (let k = 0; k < days; k++) fill(row.getCell(C0 + k), 'FFE1E8F0'); } }
+      const ka = Math.max(0, Math.round((Date.parse(b.s + 'T00:00:00Z') - T0) / 864e5)), kb0 = Math.round((Date.parse(b.e + 'T00:00:00Z') - T0) / 864e5), kb = Math.min(days - 1, b.ms ? Math.max(ka + 2, kb0 + 1) : kb0);
+      if (ka < days && kb >= 0 && kb >= ka) {
+        if (b.ph) { const row = ws.getRow(r + 2); for (let k = ka; k <= kb; k++) fill(row.getCell(C0 + k), 'FF172B4D'); }
+        else { const col = b.tone === 'cp' ? 'FFC62828' : b.tone === 'warn' ? 'FFEBA43A' : 'FF4472A5', done = b.pct && b.pct > 0 ? Math.round((kb - ka + 1) * Math.min(1, b.pct)) : 0;
+          for (let i = 1; i <= 3; i++) { const row = ws.getRow(r + i); for (let k = ka; k <= kb; k++) fill(row.getCell(C0 + k), i === 2 && k - ka < done ? 'FF1B3658' : col); } } }
+      r += 5; }
+  }
+  // what the file is: which sheets are 요약 (for reading only) and which FULL (loaded back as they are)
+  const meta = book.addWorksheet('__AIDC_EXPORT', { state: 'veryHidden' }); meta.getCell(1, 1).value = 'AIDC_EXPORT_V1'; meta.getCell(2, 1).value = JSON.stringify({ project: spec.project, exported: spec.exported, forms: spec.forms });
+  book.views = [{ x: 0, y: 0, width: 24000, height: 14000, firstSheet: 0, activeTab: 0, visibility: 'visible' }];
+  return new Uint8Array(await book.xlsx.writeBuffer()).buffer as ArrayBuffer;
+}
+
 // ---- Reading the owner's guide workbook for the upload window (owner, 2026-11-23; schedule/ui/82-upload.js) ----
 // The Schedule app's importFile wants all thirteen sheets at fixed rows. An upload may be the whole workbook or a file that holds
 // only some of its sheets, so every known sheet is read on its own: the header row is looked for (first cell), columns are found by
@@ -94,6 +161,8 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
   const wbsOf = (v: unknown) => { const s = squash(v).toUpperCase(); return /^W\d+\.\d+$/.test(s) ? s : ''; };
 
   const out: any = { name: file.name, size: file.size, sha, backup: false, found: [], other: [], notes, records: {} };
+  // (forty-ninth round) a file this app wrote names its 요약 sheets in __AIDC_EXPORT: they are for reading only and stay out
+  const viewOnly = new Set<string>(); { const mw = book.worksheets.find((w: any) => w.name === '__AIDC_EXPORT'); if (mw) { try { const j = JSON.parse(String(mw.getCell(2, 1).value || '{}')); for (const [k, v] of Object.entries(j.forms || {})) if (v === 'sum') viewOnly.add(squash(k)); out.exported = j; } catch (e) { /* not ours */ } } }
   out.backup = !!book.worksheets.find((w: any) => w.name === '__SUNJIN_BACKUP');
   const known = new Set(['검토요약', '마스터스케줄', '단계별업무분장', '업무연결', '운영영향 분석', ...Object.keys(RECORD_SHEETS)].map(squash));
   // a sheet by its name; when no sheet has that name, the first other sheet whose head has the titles that sheet must have
@@ -101,10 +170,11 @@ async function readSheets(file: File, opt?: { tasks?: 'list' | 'gantt' }) {
   for (const [n, def] of Object.entries(RECORD_SHEETS)) if (def.need.length) SIGN[n] = [[def.first, ...def.need]];
   const found = new Map<string, any>(), claimed = new Set<any>();
   const sheet = (name: string) => { if (found.has(name)) return found.get(name);
+    if (viewOnly.has(squash(name))) { note(name, 'info', '요약형으로 내보낸 시트라 보기용입니다. 반영하려면 FULL로 내보낸 엑셀을 올려주세요.'); found.set(name, undefined); return undefined; }
     let ws = book.worksheets.find((w: any) => squash(w.name) === squash(name));
-    if (!ws && SIGN[name]) { ws = (book.worksheets as any[]).find(w => !claimed.has(w) && w.name !== '__SUNJIN_BACKUP' && !known.has(squash(w.name)) && SIGN[name].some(need => hasHeads(w, need))); if (ws) note(name, 'info', `시트 이름이 달라 머리글로 찾았습니다: "${ws.name}"`); }
+    if (!ws && SIGN[name]) { ws = (book.worksheets as any[]).find(w => !claimed.has(w) && w.name !== '__SUNJIN_BACKUP' && w.name !== '__AIDC_EXPORT' && !viewOnly.has(squash(w.name)) && !known.has(squash(w.name)) && SIGN[name].some(need => hasHeads(w, need))); if (ws) note(name, 'info', `시트 이름이 달라 머리글로 찾았습니다: "${ws.name}"`); }
     if (ws) claimed.add(ws); found.set(name, ws); return ws; };
-  for (const w of book.worksheets as any[]) { if (w.name === '__SUNJIN_BACKUP') continue; (known.has(squash(w.name)) ? out.found : out.other).push(w.name); }
+  for (const w of book.worksheets as any[]) { if (w.name === '__SUNJIN_BACKUP' || w.name === '__AIDC_EXPORT') continue; (known.has(squash(w.name)) ? out.found : out.other).push(w.name); }
 
   // tasks: 단계별업무분장 (the input sheet), or the dates of 마스터스케줄 when the file has only that one
   const readTasks = (name: string, partial: boolean) => {
@@ -210,4 +280,4 @@ async function readCells(file: File) {
   return { name: file.name, sheets };
 }
 
-(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, readSheets, readCells };
+(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, makeGuideBook, readSheets, readCells };

@@ -118,6 +118,11 @@ async function schExpDocx(doc){ const C=SCH_DOC, media=[], rels=[]; let rid=10;
   for(const s of doc.sections){ if(s.brk)xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; let heading=s.h, buf='', any=false; const flush=()=>{ if(buf||heading){ xml+=row2(heading,buf); heading=''; buf=''; any=true; } };
     for(const b of s.blocks){ if(b.k==='p')buf+=body(b.runs,{ind:b.ind});
       else if(b.k==='tbl'){ flush(); xml+=spacer(40)+table(b)+spacer(120); }
+      else if(b.k==='brk'){ flush(); xml+='<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>'; }
+      // a chart of the schedule (forty-ninth round): the whole width of the sheet, under what was written before it
+      else if(b.k==='img'&&b.gantt){ flush(); const im=schXGanttBytes(b); if(!im)continue; const id='rId'+(++rid), cx=Math.round(b.lay.w*914400), cy=Math.round(cx*im.h/im.w);
+        media.push({name:`word/media/img${rid}.png`,data:im.data}); rels.push(`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/img${rid}.png"/>`);
+        xml+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="60" w:after="160"/></w:pPr>${drawing(id,b.name||'chart',cx,cy)}</w:p>`; any=true; }
       else if(b.k==='img'){ const im=await schExpImage(b.src); if(!im){ buf+=body([{t:'[이미지'+(b.name?': '+b.name:'')+']'}]); continue; } const id='rId'+(++rid), max=4572000, cx=Math.min(max,im.w*9525), cy=Math.round(cx*im.h/im.w);
         media.push({name:`word/media/img${rid}.${im.ext}`,data:im.data}); rels.push(`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/img${rid}.${im.ext}"/>`);
         buf+=`<w:p><w:pPr><w:snapToGrid w:val="0"/><w:spacing w:before="60" w:after="60"/></w:pPr>${drawing(id,b.name||'image',cx,cy)}</w:p>`; } }
@@ -140,14 +145,14 @@ async function schExpDocx(doc){ const C=SCH_DOC, media=[], rels=[]; let rid=10;
 
 /* ---------- PDF: the same sheet as a page for the browser's print window ---------- */
 function schExpHtml(doc,fontCss){ const e=schX, runs=rs=>rs.map(r=>{let t=e(r.t||''); if(r.b)t=`<b>${t}</b>`; if(r.i)t=`<i>${t}</i>`; if(r.s)t=`<s>${t}</s>`; if(r.u)t=`<u>${t}</u>`; return t;}).join('');
-  const block=b=>b.k==='p'?`<p class="${b.pre?'pre':''}" style="${b.ind?`padding-left:${b.ind*4.2}mm`:''}">${runs(b.runs)}</p>`:b.k==='img'?`<p class="im"><img src="${e(b.src)}" alt=""></p>`
+  const block=b=>b.k==='p'?`<p class="${b.pre?'pre':''}" style="${b.ind?`padding-left:${b.ind*4.2}mm`:''}">${runs(b.runs)}</p>`:b.k==='brk'?'<div class="brk"></div>':b.k==='img'&&b.gantt?`<div class="gx"><img src="${schXGanttSrc(b)}" alt="${e(b.name||'')}"></div>`:b.k==='img'?`<p class="im"><img src="${e(b.src)}" alt=""></p>`
     :`<table class="d">${b.widths?`<colgroup>${b.widths.map(w=>`<col style="width:${Math.round(w/b.widths.reduce((a,c)=>a+c,0)*1000)/10}%">`).join('')}</colgroup>`:''}${b.head?`<thead><tr>${b.head.map(h=>`<th>${e(h)}</th>`).join('')}</tr></thead>`:''}<tbody>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${e(c).replace(/\n/g,'<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${e(doc.file)}</title><style>${fontCss||''}
 @page{size:A4;margin:17.5mm 10mm 19mm 18mm;@top-right{content:"${doc.head.replace(/["\\]/g,' ')}";font:10pt Pretendard,'Malgun Gothic',sans-serif;color:#7f7f7f;vertical-align:top;padding-top:7.5mm}@bottom-left{content:"";background:url(/export/sunjin-logo.png) no-repeat left center/15.6mm auto;width:40mm}@bottom-right{content:counter(page) " / " counter(pages);font:700 10pt Pretendard,'Malgun Gothic',sans-serif;color:#222}}
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{font:10pt/12.5pt Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 h1{font-size:15pt;line-height:19pt;font-weight:700;color:#000;margin:2pt 0 1pt;display:flex;justify-content:space-between;align-items:baseline;gap:8mm}h1 small{font-size:9pt;font-weight:700;white-space:nowrap}
 .rule{border-bottom:.75pt solid #222;margin:3pt 0 14pt}
-.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.sec.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
+.sec{display:grid;grid-template-columns:47.4mm 1fr;margin-bottom:6pt}.gx{margin:6pt 0 10pt -47.4mm;width:calc(100% + 47.4mm);break-inside:avoid}.sec>div>.gx:first-child{margin-top:20pt}.gx img{display:block;width:100%}.brk{break-before:page;page-break-before:always;height:0}.sec.brk{break-before:page;page-break-before:always}.sec>h2{font-size:10.5pt;line-height:14pt;font-weight:700;color:#E36C0A;margin:0;break-after:avoid}.sec>div{min-width:0}
 p{margin:0;text-align:justify;word-break:keep-all;overflow-wrap:anywhere}p.pre{font-family:Pretendard,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:9pt;white-space:pre-wrap;text-align:left}p.im{margin:3pt 0}p.im img{max-width:100%;max-height:120mm}
 table.d{border-collapse:collapse;width:100%;margin:2pt 0 6pt;table-layout:fixed}table.d th,table.d td{border:.5pt solid #bfbfbf;padding:1.2pt 3.5pt;vertical-align:middle;text-align:left;word-break:keep-all;overflow-wrap:anywhere}table.d th{background:#f2f2f2;font-weight:700;text-align:center}table.d tr{break-inside:avoid}
 @media screen{body{padding:14mm 12mm;max-width:210mm;margin:0 auto}}

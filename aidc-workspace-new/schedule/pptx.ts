@@ -202,32 +202,31 @@ async function make(doc: any, opt: any = {}): Promise<ArrayBuffer> {
     if (pick.length) { label(s, '한눈에 보기', L, y, CW); y = figs(s, y + 0.56, pick.map(k => { const v = String(get(k)), m = /^(.*?)\s*\((.*)\)$/.exec(v), late = k === '액션 현황' && /지연 (\d+)/.exec(v); return late ? ['지연 ' + late[1] + '건', k + '\n' + v.replace(/ · 지연 \d+/, '')] : [m ? m[1] : v, k + (m ? '\n' + m[2] : '')]; })) + 0.5; }
     if (say) { bodyTitle(s, '요약', L - 0.022, y, 4.3); para(s, say, L - 0.022, y + 0.28, 4.3, 11); }
     const rest = rows.filter(r => !pick.includes(r[0])); if (rest.length) { tx(s, '[진행 현황]', say ? 5.56 : L, y + 0.02, 2.5, 0.19, { fontSize: 10 }); tx(s, '[상태일: ' + dayDot + ']', 8.3, y + 0.02, 2.416, 0.19, { fontSize: 10, align: 'right' }); table(s, say ? 5.57 : L + 0.009, y + 0.28, say ? 5.15 : CW - 0.02, null, rest, [1.43, 3.7], { rowH: 0.33, firstSz: 11.5, maxY: BOT }); } }
-  // the phases as the template draws a schedule: the years as bands, the months on one line, a line with two ends for each phase
-  function phaseChart(s: any, rows: any[][], yBand: number, rh: number, small: boolean) { const ph = rows.map(r => { const [a, b] = String(r[4] || '').split('~'); return { name: String(r[0]), n: r[1], done: r[2], pct: r[3], s: iso(a), e: iso(b) }; }).filter(p => p.s && p.e); if (!ph.length) return yBand;
-    const qf = (d: string) => { const m = Number(d.slice(5, 7)); return `${d.slice(0, 4)}-${String(m - (m - 1) % 3).padStart(2, '0')}-01`; }, addM = (d: string, k: number) => { const t = new Date(T(d)); t.setUTCMonth(t.getUTCMonth() + k); return t.toISOString().slice(0, 10); };
-    const d0 = qf(ph.map(p => p.s).sort()[0]), ends = ph.map(p => p.e).sort(), far = ends[ends.length - 1], op = iso(P.op), d1cand = op && op > d0 ? addM(qf(op), 6) : addM(qf(far), 3), cap = addM(d0, 60), d1 = [d1cand, addM(qf(far), 3), cap].sort()[0];
-    const t0 = T(d0), t1 = T(d1) - 864e5, X0 = 3.25, X1 = 10.63, X = (d: string) => X0 + (Math.min(Math.max(T(d), t0), t1) - t0) / (t1 - t0) * (X1 - X0), months = Math.round((t1 - t0) / 864e5 / 30.44), stepM = months <= 30 ? 3 : months <= 60 ? 6 : 12;
-    for (let yy = Number(d0.slice(0, 4)); yy <= Number(d1.slice(0, 4)); yy++) { const a = [`${yy}-01-01`, d0].sort()[1], b = [`${yy}-12-31`, new Date(t1).toISOString().slice(0, 10)].sort()[0]; if (a > b) continue; const xa = X(a) + 0.03, xb = X(addM(b, 0)) - 0.03 + (b.endsWith('12-31') ? (X1 - X0) / (t1 - t0) * 864e5 : 0); if (xb - xa < 0.25) continue; rect(s, xa, yBand, Math.min(xb, X1) - xa, 0.222, BAND); tx(s, String(yy), xa, yBand, Math.min(xb, X1) - xa, 0.222, { fontFace: F5, fontSize: 10, align: 'center', valign: 'middle' }); }
-    const ay = yBand + (small ? 0.52 : 0.66), cd = small ? 0.38 : 0.46; line(s, X0, ay, X1 - X0, 0.75, OR);
-    for (let d = d0; T(d) <= t1; d = addM(d, stepM)) { const x = X(d); s.addText(Number(d.slice(5, 7)) + '월', { shape: ST.ellipse, x: x - cd / 2, y: ay - cd / 2, w: cd, h: cd, fill: { color: 'FFFFFF' }, line: { color: OR, width: 0.75 }, align: 'center', valign: 'middle', margin: 0, fontFace: F7, fontSize: small ? 8 : 9.5, color: OR }); }
-    const my = ay + cd / 2 + 0.07; if (T(day) >= t0 && T(day) <= t1) { const xt = X(day); s.addShape(ST.triangle, { x: xt - 0.06, y: my, w: 0.123, h: 0.117, fill: { color: OR }, line: { type: 'none' }, flipV: true }); tx(s, '상태일 ' + day.slice(5).replace('-', '.'), xt + 0.1, my - 0.03, 1.2, 0.17, { fontFace: F4, fontSize: 9, color: OR }); }
-    const y0 = my + 0.24; line(s, 0.745, y0, R - 0.745 + 0.02); let cutAny = false;
-    ph.forEach((p, i) => { const y = y0 + i * rh, cy = y + rh / 2, stat = `업무 ${p.n}건 · 완료 ${p.done}건 · ${p.pct}`;
-      if (small) { tx(s, p.name, 0.745, y, 1.55, rh, { fontFace: F7, fontSize: 10.5, valign: 'middle' }); tx(s, `${p.n}건 · ${p.pct}`, 2.2, y, 0.95, rh, { fontFace: F4, fontSize: 8.5, color: SUB, valign: 'middle', align: 'right' }); }
-      else { tx(s, p.name, 0.745, y + 0.09, 2.3, 0.202, { fontFace: F7, fontSize: 12 }); tx(s, stat, 0.745, y + 0.3, 2.4, 0.17, { fontFace: F4, fontSize: 9.5, color: SUB }); }
-      const xa = X(p.s), over = T(p.e) > t1, xb = over ? X1 : X(p.e); cutAny = cutAny || over; line(s, xa, cy, Math.max(0.02, xb - xa), 0.75, OR); dot(s, xa, cy, 0.073, OR); if (!over) dot(s, xb, cy, 0.073, OR);
-      const txt = p.s.slice(2, 7).replace('-', '.') + ' ~ ' + p.e.slice(2, 7).replace('-', '.'), fs = small ? 8.5 : 9.5;
-      if (over) tx(s, '* ' + txt, xb - 1.3, cy - (small ? 0.2 : 0.25), 1.3, 0.16, { fontFace: F4, fontSize: fs, align: 'right' }); else if (xb + 1.15 < X1 + 0.1) tx(s, txt, xb + 0.1, cy - 0.09, 1.1, 0.18, { fontFace: F4, fontSize: fs, color: SUB }); else tx(s, txt, xa - 1.2, cy - 0.09, 1.1, 0.18, { fontFace: F4, fontSize: fs, color: SUB, align: 'right' });
-      line(s, 0.745, y + rh, R - 0.745 + 0.02); });
-    let yEnd = y0 + ph.length * rh; if (cutAny) { tx(s, `* 표시 범위(${d0.slice(0, 7).replace('-', '. ')} ~ ${new Date(t1).toISOString().slice(0, 7).replace('-', '. ')}) 뒤로 이어지는 단계`, L, yEnd + 0.08, 8, 0.18, { fontSize: small ? 8.5 : 10, color: SUB }); yEnd += small ? 0.24 : 0.3; }
-    return yEnd; }
-  function actPages(SEC: string, blocks: any[], full: boolean) { const tb = tblsOf(blocks), ph = tb[0] || { rows: [] }, total = ph.rows.reduce((a: number, r: any[]) => a + Number(r[1] || 0), 0), desc = `개발 단계 ${ph.rows.length}개 · 업무 ${total}건`;
-    const s = page(SEC); headOv(s, full ? '단계별 일정' : '액션 일정', full ? 'Phase Schedule' : 'Schedule', desc + (full ? '' : '  ·  상태일 ' + dayDot)); toc(s, full ? '단계별 일정' : '액션 일정');
-    if (full) { phaseChart(s, ph.rows, 2.06, Math.min(0.515, 4.2 / Math.max(ph.rows.length, 1)), false); const rest = blocks.slice(blocks.indexOf(ph) + 1); if (rest.some(b => b.k === 'tbl')) flow(SEC, '액션 일정', 'Schedule', '상태일 ' + dayDot + ' 기준', rest, '업무 목록'); return; }
-    // 요약: the phases, and under them the late work and what begins soon — as many rows as the page holds
-    const rh = Math.min(0.3, 2.6 / Math.max(ph.rows.length, 1)); let y = phaseChart(s, ph.rows, 1.86, rh, true) + 0.22;
+  // the schedule's chart (forty-ninth round, owner: "그래프도 같이 위에 나오게 ... 디자인은 내가첨부한 가이드 대로"): the page lays it out
+  // once for every file (schXGanttLayout in schedule/ui/95-gantt-export.js: rectangles, lines, diamonds and texts in inches); here
+  // its items become shapes in the template's typeface, so the chart stays editable in PowerPoint
+  function ganttDraw(s: any, lay: any, x: number, y: number) { const FW: any = { 3: F3, 4: F4, 5: F5, 6: F6, 7: F7 };
+    for (const it of (lay && lay.items) || []) {
+      if (it.t === 'r') s.addShape(ST.rect, { x: x + it.x, y: y + it.y, w: Math.max(0.004, it.w), h: Math.max(0.004, it.h), fill: { color: it.fill }, line: it.line ? { color: it.line.c, width: it.line.pt } : { type: 'none' } });
+      else if (it.t === 'l') s.addShape(ST.line, { x: x + Math.min(it.x1, it.x2), y: y + Math.min(it.y1, it.y2), w: Math.abs(it.x2 - it.x1), h: Math.abs(it.y2 - it.y1), line: { color: it.c, width: it.pt, dashType: it.dash ? 'dash' : 'solid' } });
+      else if (it.t === 'd') s.addShape(ST.diamond, { x: x + it.cx - it.s / 2, y: y + it.cy - it.s / 2, w: it.s, h: it.s, fill: { color: it.fill }, line: it.line ? { color: it.line.c, width: it.line.pt } : { type: 'none' } });
+      else if (it.t === 'x') tx(s, it.s, x + it.x, y + it.y, Math.max(0.05, it.w), Math.max(0.05, it.h), { fontFace: FW[it.wt] || F4, fontSize: it.pt, color: it.c, align: it.al === 'r' ? 'right' : it.al === 'c' ? 'center' : 'left', valign: it.va === 't' ? 'top' : 'middle', wrap: false }); } }
+  // 요약: the chart of the phases, the late work and what begins soon under it, on one page. FULL: the chart of the phases on
+  // its page, the late and the coming work as lists, then every phase — its chart on a page, then the list of its tasks.
+  function actPages(SEC: string, blocks: any[], full: boolean) { const ov = blocks.find(b => b.k === 'img' && b.ppt && !b.gantt.phase), phs = ov ? ov.gantt.rows : [], total = phs.reduce((a: number, r: any) => a + Number(r.n || 0), 0), desc = `개발 단계 ${phs.length}개 · 업무 ${total}건  ·  상태일 ${dayDot}`;
+    const s = page(SEC); headOv(s, '액션 일정', 'Schedule', desc); toc(s, '액션 일정');
+    if (full) { if (ov) ganttDraw(s, ov.ppt.full, L, 1.9);
+      const cuts = blocks.map((b, i) => b.k === 'brk' ? i : -1).filter(i => i >= 0), head = blocks.slice(0, cuts.length ? cuts[0] : blocks.length).filter(b => b.k !== 'img');
+      if (head.some(b => b.k === 'tbl')) flow(SEC, '액션 일정', 'Schedule', '상태일 ' + dayDot + ' 기준', head, '지연·예정 업무');
+      let after = cuts.length ? blocks.length : -1;
+      blocks.forEach((b, i) => { if (!(b.k === 'img' && b.ppt && b.gantt.phase)) return; const G = b.gantt, ps = page(SEC);
+        headOv(ps, G.title, '', `업무 ${G.n}건 · 진행률 ${G.pct}%  ·  상태일 ${dayDot}`); toc(ps, G.title); ganttDraw(ps, b.ppt.full, L, 1.9);
+        const t = blocks[i + 1]; if (t && t.k === 'tbl') { flow(SEC, G.title, '', `업무 ${G.n}건`, [{ k: 'p', runs: [{ t: G.title + ' 업무 목록', b: true }] }, Object.assign({}, t, { widths: [0.75, 3.7, 1.1, 1.1, 0.8, 1.3] })]); after = i + 2; } else after = i + 1; });
+      const rest = after >= 0 ? blocks.slice(after).filter(b => b.k !== 'img' && b.k !== 'brk') : []; if (rest.some(b => b.k === 'tbl')) flow(SEC, '액션 일정', 'Schedule', '일정 미연결 액션', rest, '일정 미연결 액션');
+      return; }
+    let y = 1.86; if (ov) { ganttDraw(s, ov.ppt.sum, L, y); y += ov.ppt.sum.h + 0.2; }
     const named = (re: RegExp) => { const i = blocks.findIndex(b => b.k === 'p' && re.test(textOf(b))); return i >= 0 && blocks[i + 1] && blocks[i + 1].k === 'tbl' ? { t: textOf(blocks[i]), b: blocks[i + 1] } : null; }, late = named(/^지연 업무/), soon = named(/시작하는 업무/);
-    const room = BOT - y - 0.36; if (room < 0.31 * 2) return; const two = late && soon;
+    const room = BOT - y - 0.36; if (room < 0.29 * 2) return; const two = late && soon;
     const put = (g: any, x: number, w: number, cols: number[], pickCols: number[], title: string) => { const rows = g.b.rows.map((r: any[]) => pickCols.map(i => r[i])), yy = y + 0.36, r = table(s, x, yy, w, pickCols.map(i => g.b.head[i]), rows, cols, { rowH: 0.29, firstSz: 10, sz: 9.5, headSz: 10.5, maxY: BOT }); tx(s, '▶ ' + title + (r.n < rows.length ? `  (앞의 ${r.n}건)` : ''), x - 0.036, y, w, 0.243, { fontFace: F7, fontSize: 12 }); };
     if (late) put(late, L + 0.009, two ? 4.55 : CW - 0.02, [0.55, 2.45, 1.0, 0.55], [0, 1, 2, 3], late.t);
     if (soon) put(soon, two ? 5.57 : L + 0.009, two ? 5.15 : CW - 0.02, [0.5, 2.3, 0.95, 0.95, 0.6], [0, 1, 2, 3, 4], soon.t.replace('진행 중이거나 ', '')); }

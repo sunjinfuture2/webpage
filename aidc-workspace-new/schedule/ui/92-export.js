@@ -57,7 +57,7 @@ function schXProjParts(pid){ const m=schHas(pid)&&schReady(pid)?schModel(pid):nu
   const pk=m?m.plan.procurement.length:0, gs=m?schGates(pid,m):[], gOk=gs.filter(g=>g.st==='승인').length, gRest=gs.length-gOk, pn=(h.partners||[]).length, few=(n,c)=>n>c?`앞의 ${c}건 (전체 ${n}건)`:`${n}건`;
   return [{k:'state',t:'진행 현황 요약',n:1,sum:'핵심 문장 · 주요 지표',full:'지표 전체 (승인게이트 · 외부설비 · 기준일까지)'},
     {k:'ov',t:'사업 개요',n:ov+txt,sum:'지표 · 개요 · 표 · 추진 일정',full:'입지 · 사업 구조 · 추진 현황 · 리스크까지'},
-    {k:'act',t:'액션 일정',n:tasks.length,sum:`단계별 진행 · 지연 ${Math.min(late,8)}건 · 60일 안 ${Math.min(soon,10)}건`,full:`지연 ${late}건 · 60일 안 ${soon}건 · 전체 업무 ${tasks.length}건 목록`},
+    {k:'act',t:'액션 일정',n:tasks.length,sum:`일정 그래프 · 지연 ${Math.min(late,8)}건 · 60일 안 ${Math.min(soon,10)}건`,full:`단계마다 그래프와 목록 · 전체 업무 ${tasks.length}건`},
     {k:'proc',t:'외부설비 조달',n:pk,sum:`${few(pk,8)} · 설치완료 · 확약 상태`,full:`전체 ${pk}건 · 예상 PO · 공급사까지`},
     {k:'gate',t:'승인게이트',n:gs.length,sum:`승인 ${gOk} / ${gs.length}${gRest?` · 남은 게이트 ${Math.min(gRest,8)}건`:''}`,full:`전체 ${gs.length}건 · 연결 업무까지`},
     {k:'evid',t:'근거 및 확약',n:ev,sum:'구분별 건수',full:`구분별 목록 ${ev}건`},
@@ -86,10 +86,16 @@ function schXProjDoc(pid,opt){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(
     sections.push({k:'state',h:'진행 현황',blocks:[...(say.length?[schXP(say.join(' '))]:[]),schXT(['항목','내용'],rows,[1900,5300])]}); }
   if(has('ov')){ const b=schXOverview(pid,fullOf('ov')); if(b.length)sections.push({k:'ov',h:'사업 개요',blocks:b}); }
   if(has('act')&&m&&tasks.length){ const b=[], full=fullOf('act');
-    b.push(schXP('단계별 진행',{b:1})); b.push(schXT(['개발 단계','업무','완료','진행률','기간'],m.phases.filter(g=>g.tasks.length).map(g=>{ const pr=schProgress(m,g.tasks); let a='9999',z=''; for(const t of g.tasks){ const x=res(t); if(x.start<a)a=x.start; if(x.finish>z)z=x.finish; } return [schPhaseLabel(g),g.tasks.length,pr.done,schPct(pr)+'%',`${schXDay(a)} ~ ${schXDay(z)}`]; }),[2700,700,700,800,2300]));
+    // (forty-ninth round, owner: "그래프도 같이 위에 나오게", "풀버전으로 하면 각 단계별로 그래프가 1장씩, 그 사이에 리스트가 나오는 형태")
+    // the chart of the phases stands first (schedule/ui/95-gantt-export.js); in FULL every phase follows on a page of its own: its
+    // chart, then the list of its tasks. A chart block is {k:'img', gantt, wide}: Word and the print window make its picture,
+    // the PPT module draws it as shapes.
+    b.push({k:'img',name:'액션 일정 그래프',wide:1,gantt:schXGanttData(m,'')});
     if(late.length){ b.push(schXP(`지연 업무 ${late.length}건`,{b:1})); b.push(schXT(['WBS','업무','예상 완료','지연','담당','지연 사유'],cut('act',late,8).map(t=>[schNo(t),t.name,schXDay(res(t).finish),D.diffDays(today,res(t).finish)+'일',who(t),t.why||'']),[700,2500,1100,700,1100,1100])); b.push(...more('act',late,8)); }
     if(soon.length){ b.push(schXP(`진행 중이거나 ${opt.days||60}일 안에 시작하는 업무 ${soon.length}건`,{b:1})); b.push(schXT(['WBS','업무','시작','완료','상태','담당'],cut('act',soon,10).map(t=>[schNo(t),t.name,schXDay(res(t).start),t.kind==='milestone'?'':schXDay(res(t).finish),schStatus(t),who(t)]),[700,2700,1100,1100,700,900])); b.push(...more('act',soon,10)); }
-    if(full&&opt.act!=='near'){ b.push(schXP(`전체 업무 ${tasks.length}건`,{b:1})); b.push(schXT(['WBS','단계','업무','시작','완료','상태','담당'],tasks.map(t=>[schNo(t),schPhaseLabel(m.phases.find(g=>g.code===t.phase)),t.name,schXDay(res(t).start),t.kind==='milestone'?'':schXDay(res(t).finish),schStatus(t),who(t)]),[650,1300,2300,950,950,650,900])); }
+    if(full&&opt.act!=='near')for(const g of m.phases){ const G=schXGanttData(m,g.code); if(!G)continue;
+      b.push({k:'brk'}); b.push(schXP(`${G.title} · 업무 ${G.n}건 · 진행률 ${G.pct}%`,{b:1})); b.push({k:'img',name:G.title+' 일정 그래프',wide:1,gantt:G});
+      b.push(schXT(['WBS','업무','시작','완료','상태','담당'],g.tasks.map(t=>[schNo(t),t.name,schXDay(res(t).start),t.kind==='milestone'?'':schXDay(res(t).finish),schStatus(t),who(t)]),[700,2700,1100,1100,700,900])); }
     const loose=liveItems('action',pid).filter(i=>!i.own&&!i.task); if(loose.length){ b.push(schXP(`일정 미연결 액션 ${loose.length}건`,{b:1})); if(full)b.push(schXT(['제목','시작','종료','상태','담당자'],loose.map(i=>[oneLine(i.title),schXDay(i.date),schXDay(itemEnd(i)),schItemSt(i),(i.people||[]).map(userName).join(', ')]),[3300,1000,1000,800,1100])); }
     sections.push({k:'act',h:'액션 일정',blocks:b}); }
   if(has('proc')&&m&&m.plan.procurement.length){ const all=m.plan.procurement, F=fullOf('proc'), day=(id,f)=>{ const x=m.res.tasks[id]; return x?schXDay(x[f]):''; };
@@ -141,6 +147,7 @@ function schXPptHead(pid){ const P=PROJECTS[pid], h=headOf(pid), r=schRepOf(pid)
 function schXPptOf(ctx){ const base={dept:String(SETTINGS.org||'').replace(/\s*AI\s*Data\s*Center\s*$/i,'').trim()||SETTINGS.wsName||'',author:typeof userName==='function'?userName(sharedUser)||'':sharedName||'',today:TODAY};
   if(ctx.main)return Object.assign(base,{kind:'main',asof:typeof META_FLAGS.repAsof==='string'?META_FLAGS.repAsof:'',sheets:ctx.w.sheets?(ctx.w.sheets==='full'?'full':'sum'):'',projects:ctx.w.sheets?ctx.ids.map(schXPptHead):[],count:ctx.ids.length});
   const pid=ctx.pid, m=schHas(pid)&&schReady(pid)?schModel(pid):null, full={}; schXProjDoc(pid,{parts:ctx.parts,form:'full'}).sections.forEach(s=>{ full[s.k]=s.blocks; });
+  (full.act||[]).forEach(b=>{ if(b.k==='img'&&b.gantt)schXGanttPpt(b); });   // the charts laid out for the slides (forty-ninth round)
   return Object.assign(base,{kind:'proj',proj:schXPptHead(pid),parts:ctx.parts.slice(),forms:Object.assign({},ctx.forms),full,op:m&&m.res.operationDate||''}); }
 async function schExpPptx(doc,ctx){ const P=await schPptx(), logos=await schXLogos(); return new Blob([await P.make(Object.assign({},doc,{ppt:ctx?schXPptOf(ctx):null}),logos)],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}); }
 function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[pid])return; closePop();
@@ -155,7 +162,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     <div class="xq-body" style="--xqn:${parts.length}"><div class="xq-opts">${main?`<div class="xq-sec"><h5>${st()}범위</h5><div class="xq-cards">${nShown!==nAll?card('xw-scope','shown','지금 목록',`${nShown}건 · 검색 · 조건 적용`,true):''}${card('xw-scope','all','전체 프로젝트',`${nAll}건`,nShown===nAll)}${nFocus&&nFocus!==nAll?card('xw-scope','focus','집중 추진만',`${nFocus}건`,false):''}</div></div>`:''}
       <div class="xq-sec" data-xwparts><h5>${st()}넣을 내용<span class="xq-pre"><button type="button" data-xwall="pick">전체 선택</button><button type="button" data-xwall="sum">모두 요약</button><button type="button" data-xwall="full">모두 FULL</button></span></h5><div class="xq-rows">${parts.map(row).join('')}</div></div></div>
       <div class="xq-side"><h5>구성</h5><ul class="xq-list" data-xwlist></ul><p class="xq-tot" data-xwtot></p>
-        <h5>${st()}파일</h5><div class="xq-files">${fcard('docx','Word','.docx',true)}${fcard('pptx','PPT','.pptx',false)}${fcard('xlsx','엑셀',main?'.xlsx':'일정 전체',false,main?'목록과 프로젝트별 시트 — 그대로 다시 올릴 수 있는 형식':'일정 · 리스트 · 관계 · 외부설비 · 승인게이트 · 근거 및 확약을 시트별로 모두')}</div>
+        <h5>${st()}파일</h5><div class="xq-files">${fcard('docx','Word','.docx',true)}${fcard('pptx','PPT','.pptx',false)}${fcard('xlsx','엑셀','.xlsx',false,main?'목록과 프로젝트별 시트 — 그대로 다시 올릴 수 있는 형식':'가이드 엑셀 형식 — 고른 항목을 요약 / FULL대로 시트로. FULL 시트는 그대로 다시 올릴 수 있습니다')}</div>
         <label class="xq-pdf"><input type="checkbox" data-xwpdf><span>PDF로도 저장</span></label>
         <div class="np-bt"><button data-xw="x">취소</button><button class="pri" data-xw="ok">${svg('i-sch-fdn',13,13)}내보내기</button></div></div></div></div>`;
   document.body.appendChild(d); const $n=s=>d.querySelector(s), val=n=>(d.querySelector(`input[name="${n}"]:checked`)||{}).value||'', picked=()=>[...d.querySelectorAll('[data-xwp]:checked')].map(x=>x.dataset.xwp), close=()=>d.remove();
@@ -165,7 +172,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
     for(const p of parts){ const r=$n(`[data-xwrow="${p.k}"]`), on=ps.includes(p.k), fix=main&&xl&&!docs&&p.k==='sheets', seg=r.querySelector('.xq-seg'); r.classList.toggle('on',on); r.classList.toggle('none',!p.n); r.classList.toggle('fix',fix); if(seg)seg.classList.toggle('full',forms[p.k]==='full');
       for(const b of r.querySelectorAll('[data-xwf]')){ const cur=b.dataset.xwf===forms[p.k]; b.classList.toggle('on',cur); b.setAttribute('aria-pressed',String(cur)); b.disabled=!on||fix; }
       r.querySelector('[data-xwsay]').textContent=!p.n?'내용 없음':fix?'개요 전체 (다시 올릴 수 있는 형식)':p.one||p[forms[p.k]]; }
-    const only=xl&&!docs&&!main;   // a project's 엑셀 alone: the schedule data whole, whatever is ticked
+    const only=false;   // (forty-ninth round) a project's 엑셀 follows the parts and forms like the other files (schXlSpec)
     $n('[data-xwparts]').classList.toggle('dim',only); const able=parts.filter(p=>p.n).map(p=>p.k); $n('[data-xwall="pick"]').textContent=able.every(k=>ps.includes(k))?'전체 해제':'전체 선택';
     if(only){ list='<li class="all">일정 자료 전체 (시트별)</li>'; }
     else if(!ps.length){ list='<li class="nil">고른 항목이 없습니다</li>'; }
@@ -187,7 +194,7 @@ function schExpWin(kind,pid){ if($('#dlg'))return; if(kind==='proj'&&!PROJECTS[p
       // one file after the other, a moment apart (a browser lets several downloads through when they do not come at once)
       if(fs.includes('docx')){ toast('Word 문서를 만드는 중입니다…',12000); schExpSave(mk().file+'.docx',await schExpDocx(mk())); made.push('Word'); await pause(); }
       if(fs.includes('pptx')){ toast('PPT 파일을 만드는 중입니다…',20000); schExpSave(mk().file+'.pptx',await schExpPptx(mk(),main?{main:true,ids,w}:{pid,parts:ps,forms:fm})); made.push('PPT'); await pause(); }
-      if(fs.includes('xlsx')){ if(main){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,w),w.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); } else await schXlsxSection(pid,'gantt',''); made.push('엑셀'); await pause(); }
+      if(fs.includes('xlsx')){ let xok=true; if(main){ toast('엑셀 파일을 만드는 중입니다…',20000); const X=await schXlsx(), bytes=await X.makeBook(schXMainSheets(ids,w),w.list?'프로젝트 목록':undefined); schExpSave(`AIDC 프로젝트 개발검토 리스트_${schToday()}.xlsx`,new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); } else xok=await schXlGuideSave(pid,ps,fm); if(xok)made.push('엑셀'); await pause(); }
       if(made.length)toast(`${made.join(' · ')} 파일을 내려받았습니다.`,3600);
       if(wantPdf)schExpPrint(mk()); }
     catch(err){ console.error(err); toast('내보내지 못했습니다: '+String(err&&err.message||err),4200); } });

@@ -1378,3 +1378,54 @@ SUNJIN AIDC Workspace 로 해줘. 그리고 자동로그인 체크 할수있게 
   `live_sessions.keep` and gives the file cookie no Max-Age for such a login. Not ticked at first; the browser remembers the
   last choice (`aidc-auto`). A page of an older build sends nothing and is kept, as before. A browser set to restore the
   last session may keep cookies without an end date after a restart (the browser's own choice).
+
+## The schedule's chart in the reports (owner, 2026-11-26, forty-ninth round)
+
+"ppt나 워드로 내보내기 했을떄 액션 일정 내보내기 하면 그래프도 같이 위에 나오게 해줘 디자인은 내가첨부한 가이드 대로 해서. 풀버전으로
+하면 각 단계별로 그래프가 1장씩, 그 사이에 리스트가 나오는 형태로".
+
+- 액션 일정 in Word / PDF / PPT starts with the gantt of the phases: a bar per phase with its end date, the milestones as
+  diamonds under it, today as an orange dashed line, the expected opening as a grey one, the phase's count and progress at the
+  left. In FULL every phase follows on a page of its own: its chart (a bar per task — grey done, orange late, red CP, dark the
+  rest; a milestone a diamond), then the list of its tasks. The old table "단계별 진행" is gone (the chart carries it).
+- One layout for every file: schedule/ui/95-gantt-export.js — schXGanttData (what), schXGanttLayout (rectangles, lines,
+  diamonds, texts in inches). The PPT module draws the items as shapes in the template's typeface (pptx.ts ganttDraw, so the
+  chart can be edited in PowerPoint); Word and the print window get a picture of the same items (schXGanttPng, 200 dpi,
+  Pretendard in place of the template's typeface) across the whole width of the sheet (`wide`, SCH_DOC.text). Change the look
+  in the layout, never in one file only. The blocks: `{k:'img', gantt, wide}` and `{k:'brk'}` (a page break before a phase).
+- The range of a chart: from the first month to one month past the last end, at most to seven months past the expected
+  opening (the chart of the phases) and at most four years; what runs on is cut with "→ end date" and a note in the legend.
+- A phase of many tasks still gets ONE page (the owner's word): its rows grow thin and the names small (74 tasks: about 4.5pt on
+  a slide). Splitting such a phase over two pages is a choice for the owner.
+
+## The Excel format (owner, 2026-11-26, forty-ninth round: "엑셀은 … 요거 대로 각 요약형태랑 풀버전 뜯어만들어. 이걸 반대로 넣었을때도
+정상적으로 데이터가 입력될수 있게 형식 가이드로 등록도 하고")
+
+The 엑셀 of a project's export window follows the parts that are ticked and the form of each, in the form of the owner's guide
+workbook (v0.9.1 — confidential, NOT in the repository; its rules are kept as numbers in schedule/ui/96-xlsx-export.js
+SCH_XG_HEAD / SCH_XG_LOOK and schedule/xlsx.ts makeGuideBook). schXlSpec builds what each sheet holds, makeGuideBook writes it.
+
+| part | 요약 (for reading) | FULL (loads back as it is) |
+|---|---|---|
+| 진행 현황 요약 | 검토요약: 기준일, 운영개시 예상, 진행률, 지연, CP / 근접 | 검토요약: the workbook's own rows (sourceProjectSummary) with 기준일 and the counts brought up to date |
+| 액션 일정 | 마스터스케줄: the phases only, as a gantt | 마스터스케줄 (phases and tasks), 단계별업무분장 (32 columns), 업무연결 (19 columns) |
+| 외부설비 조달 | 외부설비 조달대장: 7 columns | 외부설비 조달대장: the guide's 27 columns |
+| 승인게이트 | 승인게이트: 5 columns | 승인게이트: the guide's 9 columns |
+| 근거 및 확약 | 근거 및 확약 요약 (count per kind) | 책임경계, 전제와참고자료, 원자료대조, NVIS일정검토, 오프테이커 후보검토, 보완·확약관리 |
+| 사업 개요 / 미팅 / 협력업체 | sheets of their own (사업개요, 미팅, 협력업체) | the same, whole — never read back |
+
+- The guide's manner: sheet names, order, title (row 1 or 2, Arial 16 bold #17365D), notes (#617188), the head in the guide's
+  row (#203D62, white, bold; 업무연결 / 보완·확약관리 #203C60), bands #F1F5F9 where the guide has them, the guide's widths, frozen
+  corners, no grid lines. 마스터스케줄 as in the guide: head in row 5 (months over the days), the days' serials in the thin row 6,
+  five rows a phase (band #E1E8F0, line #172B4D) and five a task (bar on the three middle rows: CP #C62828 when the slack is 0
+  days or less, 주의 #EBA43A up to 14 days, #4472A5 the rest; progress #1B3658 on the middle row), one column a day (0.3125).
+  What is not taken over: formulas (values only), conditional formats (the cells are painted), 운영영향 분석 (the app calculates),
+  lists of allowed values.
+- Values: 시작일 / 완료일 = the managed dates (members' changes included), 예상 시작일 / 예상 완료일 = the engine's forecast,
+  WBS = the task's KEY (`wbs`, never `schNo`: a task is matched by it when the file comes back), the rows of 단계별업무분장 in the
+  plan's own order. A gate / commitment / assumption a member added comes out as an ordinary row ("추가"); loaded back, the
+  member's own copy is taken out (schUpMerge), so nothing stands twice.
+- 요약 or FULL is written into a hidden sheet `__AIDC_EXPORT` (`{project, exported, forms:{sheet:'sum'|'full'}}`); readSheets
+  leaves every 요약 sheet out with the note "요약형으로 내보낸 시트라 보기용입니다…". A FULL file loaded back changes nothing
+  (checked on 판교: 233 tasks, 511 relations, every record — "변경 없음").
+- tests: schedule-16 checks both (charts per phase; FULL back = same, 요약 = nothing). Brought in step, not run.

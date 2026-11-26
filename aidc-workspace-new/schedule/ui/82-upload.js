@@ -107,7 +107,14 @@ function schUpMerge(pid,reads){ const A=AIDCSchedule, D=A.dates, m=schModel(pid)
   if(when)src.statusDate=when; if(sum)src.sourceProjectSummary=sum;
   src.sourceFile=[...new Set(reads.map(r=>r.name))].join(', ').slice(0,300); src.sourceSha256=(T||L||reads[0]).sha||'';
   let newBase; try{newBase=A.planFromSource(src);}catch(e){return {error:String(e&&e.message||e),warn,has};}
-  const rec=schUpReconcile(root,oldBase,newBase,old,src,has), next=Object.assign({},root); for(const [k,v] of Object.entries(rec.changes)){if(v===null)delete next[k];else next[k]=v;}
+  const rec=schUpReconcile(root,oldBase,newBase,old,src,has);
+  // (forty-ninth round) what a member added in the app (a gate, a commitment, an assumption) comes back from an exported FULL file
+  // as an ordinary row of its sheet: the added one is then taken out, so that nothing stands twice
+  const tt=v=>String(v||'').replace(/\s+/g,' ').trim();
+  for(const [k,v] of Object.entries(root)){ if(!v||typeof v!=='object')continue;
+    if(k.startsWith('e:u:')&&R[v.kind]&&(src[v.kind]||[]).some(r=>tt(r.fields[v.kind==='commitmentReviews'?'검토 항목':'항목'])===tt(v.title)))rec.changes[k]=null;
+    else if(k.startsWith('g:u:')&&R.gates&&(src.gates||[]).some(r=>tt(r.fields['승인 사항'])===tt(v.title)))rec.changes[k]=null; }
+  const next=Object.assign({},root); for(const [k,v] of Object.entries(rec.changes)){if(v===null)delete next[k];else next[k]=v;}
   for(const [k,v] of Object.entries(root)){ if(!k.startsWith('sc:')||!v||!v.ov)continue; const r2=schUpReconcile(v.ov,oldBase,newBase,old,src,has); if(!Object.keys(r2.changes).length)continue;   // a scenario holds changes of its own: the same rule
     const ov=Object.assign({},v.ov); for(const [a,b] of Object.entries(r2.changes)){if(b===null)delete ov[a];else ov[a]=b;} rec.changes[k]=Object.assign({},v,{ov}); }
   let plan,res; try{ plan=A.applyOverrides(newBase,next);
