@@ -2164,8 +2164,8 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 
 /* Shared overview/list values, lighter action state, and an unassigned person's empty profile. */
 .person-empty{display:inline-flex;align-items:center;vertical-align:middle;flex:none}
-.person-empty .avatar{margin-left:0}
-:is(#sch-actions,.sch-list,.sch-props,.sn-node) .sch-st.action-state{font-weight:500}
-:is(#sch-actions,.sch-list,.sch-props,.sn-node) .sch-st.action-state .si{font-size:.85em}
+.person-empty .avatar{display:inline-block;width:15.4px;height:15.4px;margin-left:0}
+:is(#sch-actions,.sch-list,.sch-props,.action-props,.sn-node) .sch-st.action-state{font-weight:500}
+:is(#sch-actions,.sch-list,.sch-props,.action-props,.sn-node) .sch-st.action-state .si{font-size:.85em}
 .rcard .tt.research-preview-title{display:block;-webkit-line-clamp:unset}
 .rcard .research-title-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}

@@ -32,7 +32,7 @@ const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em clas
 // Keep the full address in the overview; only derive the administrative area for lists.
 function schRepShortAddress(value){
  const full=String(value||'').trim(), clean=full.replace(/^대한민국\s+/,'').split(/[\n(（]/)[0].trim(), parts=clean.split(/\s+/);
- const province=/^(서울(?:특별시)?|부산(?:광역시)?|대구(?:광역시)?|인천(?:광역시)?|광주(?:광역시)?|대전(?:광역시)?|울산(?:광역시)?|세종(?:특별자치시)?|경기(?:도)?|강원(?:도|특별자치도)?|충북|충남|충청북도|충청남도|전북|전남|전라북도|전라남도|전북특별자치도|경북|경남|경상북도|경상남도|제주(?:도|특별자치도)?)$/;
+ const province=/^(서울(?:특별시|시)?|부산(?:광역시|시)?|대구(?:광역시|시)?|인천(?:광역시|시)?|광주(?:광역시|시)?|대전(?:광역시|시)?|울산(?:광역시|시)?|세종(?:특별자치시)?|경기(?:도)?|강원(?:도|특별자치도)?|충북|충남|충청북도|충청남도|전북|전남|전라북도|전라남도|전북특별자치도|경북|경남|경상북도|경상남도|제주(?:도|특별자치도)?)$/;
  if(!province.test(parts[0]||''))return full;
  const out=[parts[0]];
  if(parts[1]&&/^[가-힣]+[시군구]$/.test(parts[1])){
