@@ -2202,6 +2202,7 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 }
 .phead .rtb .r.th > :is(b,span,i){color:var(--table-label);font-weight:500}
 :is(.phead,.sch-dlg) table :is(th,td){border-color:var(--table-row-rule)}
+:is(.phead,.sch-dlg) table thead th{background:var(--table-head);color:var(--table-label)}
 /* The requested one-pixel reduction applies only to action state values. */
 :is(#sch-actions,.sch-list,.sch-props,.action-props) .sch-st.action-state{font-size:calc(1em - 1px)}
 .sn-node .dd .sch-st.action-state{font-size:12.5px}

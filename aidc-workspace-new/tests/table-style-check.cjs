@@ -23,9 +23,9 @@ const {newUser}=require('./h.cjs');
  }
  await p.evaluate(()=>{const d=document.createElement('div');d.id='table-fixtures';d.innerHTML='<div class="mp-tbl act"><div class="hd"><span>설정</span><span>일자</span></div><div class="rw"><span>테스트 내용</span><span>2026</span></div></div><div class="gset"><div class="list"><div class="hd"><span>항목</span><span>내용</span></div><div class="rw"><span>내용</span></div></div></div>';document.body.append(d);});
  await check('project desktop');
- await p.setViewportSize({width:1536,height:960});await check('project 1536px');
+ await p.setViewportSize({width:1536,height:960});await p.waitForTimeout(350);await check('project 1536px');
  await p.evaluate(()=>go('main'));await check('main');
- await p.setViewportSize({width:390,height:844});await check('main narrow');
+ await p.setViewportSize({width:390,height:844});await p.waitForFunction(()=>document.documentElement.classList.contains('mob'));await p.waitForTimeout(350);await check('main narrow');
  await p.evaluate(()=>document.documentElement.classList.add('dark'));await check('dark');
  assert.deepEqual(errs.filter(e=>!e.includes('Failed to fetch')),[]);
  await browser.close();
