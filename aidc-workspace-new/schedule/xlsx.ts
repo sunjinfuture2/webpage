@@ -280,4 +280,40 @@ async function readCells(file: File) {
   return { name: file.name, sheets };
 }
 
-(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, makeGuideBook, readSheets, readCells };
+
+// Upload2 reads a rectangular sheet without guide-specific names or WBS rules.
+async function readUpload2(file: File) {
+  if (!/\.xlsx$/i.test(file.name)) throw new Error('엑셀(.xlsx) 파일을 선택해주세요.');
+  if (file.size > 25*1024*1024) throw new Error('25MB 이하 파일을 선택해주세요.');
+  const ExcelJS=(await import('exceljs')).default, book=new ExcelJS.Workbook();
+  try { await book.xlsx.load(await file.arrayBuffer()); } catch { throw new Error('엑셀을 열지 못했습니다. 암호 또는 파일 손상을 확인해주세요.'); }
+  const sheets:any[]=[];
+  for (const ws of book.worksheets as any[]) {
+    if (ws.state==='veryHidden'||ws.name.startsWith('__')) continue;
+    if (ws.rowCount>5000||ws.columnCount>128) throw new Error(ws.name+': 최대 5,000행·128열까지 지원합니다. 범위를 줄여주세요.');
+    const rows:string[][]=[], errors:Record<string,string>={};
+    const val=(v:any,r:number,c:number):string=>{
+      if(v==null)return '';
+      if(v instanceof Date)return isNaN(+v)?'':v.toISOString().slice(0,10);
+      if(typeof v==='object'){
+        if(v.error){errors[r+':'+c]='셀 오류: '+v.error;return '';}
+        if(v.formula!==undefined||v.sharedFormula!==undefined){
+          if(v.result==null){errors[r+':'+c]='수식 계산값이 없습니다. 엑셀에서 계산 후 저장해주세요.';return '';}
+          return val(v.result,r,c);
+        }
+        if(v.richText)return v.richText.map((t:any)=>t.text).join('');
+        if(v.text!==undefined)return String(v.text);
+        return '';
+      } return String(v).trim();
+    };
+    for(let r=1;r<=ws.rowCount;r++){const row:string[]=[];
+      for(let c=1;c<=ws.columnCount;c++){const cell=ws.getCell(r,c);row.push(cell.isMerged&&cell.master.address!==cell.address?'':val(cell.value,r,c));}
+      rows.push(row);
+    }
+    sheets.push({name:ws.name,rows,errors});
+  }
+  if(!sheets.length)throw new Error('읽을 시트가 없습니다.');
+  return {name:file.name,sheets};
+}
+
+(globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, makeGuideBook, readSheets, readCells, readUpload2 };

@@ -78,7 +78,7 @@ function schActionBody(pid){ const m=schModel(pid);
   else f=`<div class="seg"><button class="${SCHU.netMode==='all'?'on':''}" data-sch="netmode" data-k="all">${g?esc(schPhaseLabel(g)):'전체 단계'}</button><button class="${SCHU.netMode==='focus'?'on':''}" data-sch="netmode" data-k="focus">선택 업무 중심</button></div>`
     +(SCHU.netMode==='focus'?sf('netDepth',SCHU.netDepth+'단계 연결',false)+sf('netDir',({both:'선행+후행',before:'선행만',after:'후행만'})[SCHU.netDir],false):sf('phase',g?schPhaseLabel(g):'전체 단계',!!g));
   const note=m.err?`<div class="sch-note">일정 관계가 서로 맞지 않아 최근에 추가한 관계 일부를 빼고 계산했습니다: ${esc(m.err)}</div>`:(schScenario(pid)?`<div class="sch-note">시나리오 “${esc((SCHED[pid]['sc:'+schScenario(pid)]||{}).name||'')}”를 보고 있습니다. 여기서 고친 내용은 기본 계획에 반영되지 않습니다. <button class="sh-btn" data-sch="scn-off" style="margin-left:8px;height:22px;padding:0 9px;font-size:12px">기본 계획으로</button></div>`:'');
-  return `<div class="sch-filters ${SCHU.tab==='net'?'net':''}">${f}<div class="right">${schInfo('all')}${schUpBtn('act')}</div></div>${note}${SCHU.tab==='gantt'?'<div class="sch-gantt" id="sch-gantt"><div class="sg-scroll"></div></div>':SCHU.tab==='list'?schListHtml(pid,m):schNetShell(pid,m)}`; }
+  return `<div class="sch-filters ${SCHU.tab==='net'?'net':''}">${f}<div class="right">${schInfo('all')}${schUpBtn('act')}${schUp2Btn()}</div></div>${note}${SCHU.tab==='gantt'?'<div class="sch-gantt" id="sch-gantt"><div class="sg-scroll"></div></div>':SCHU.tab==='list'?schListHtml(pid,m):schNetShell(pid,m)}`; }
 
 // The page's pager look, but with its own attribute (the page's own handler would take data-pg for one of its lists).
 // Pages: the first and the last one ("<<", ">>"), one back and one on, and the numbers ten at a time (1-10, 11-20, ...).
