@@ -1,4 +1,4 @@
-name: Check requested display changes
+name: Check table visual geometry
 on:
   push:
     branches: ['codex/upload2-trial']
@@ -24,4 +24,4 @@ jobs:
           trap 'tail -n 20 "$RUNNER_TEMP/member-check.log"' EXIT
           npx wrangler dev --local --compatibility-date 2026-10-13 --ip 127.0.0.1 --port 8787 > "$RUNNER_TEMP/member-check.log" 2>&1 &
           for i in $(seq 1 60); do if curl --silent --fail http://127.0.0.1:8787/ > /dev/null; then break; fi; sleep 1; done
-          node tests/project-display-check.cjs
+          node tests/table-style-check.cjs
