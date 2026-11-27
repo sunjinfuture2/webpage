@@ -46,9 +46,11 @@ console.log('PASS deletion persists, names retained, removed login blocked, self
 await p.evaluate(()=>{closeModal();const el=document.createElement('div');el.id='qa-scroll';el.style='position:fixed;top:50px;left:50px;height:100px;width:200px;overflow:auto;z-index:99999';el.innerHTML='<button id="qa-anchor">filter</button><div style="height:800px"></div>';document.body.append(el);openPop(document.querySelector('#qa-anchor'),'<div style="height:600px">options</div>');popEl.style.maxHeight='100px';popEl.style.overflow='auto';});
 await p.evaluate(()=>{popEl.scrollTop=50;});await p.waitForTimeout(150);
 assert.equal(await p.evaluate(()=>!!popEl),true);
+const beforeTop=await p.evaluate(()=>parseFloat(popEl.style.top));
 await p.evaluate(()=>document.querySelector('#qa-scroll').scrollTop=50);await p.waitForTimeout(150);
-assert.equal(await p.evaluate(()=>!!popEl),false);
-console.log('PASS own menu scrolling stays open; anchor scrolling closes popup');
+assert.equal(await p.evaluate(()=>!!popEl),true);
+assert.equal(await p.evaluate(()=>parseFloat(popEl.style.top)),beforeTop-50);
+console.log('PASS own menu scrolling stays open; popup remains attached to scrolling anchor');
 assert.deepEqual(errors,[]);
 await browser.close();console.log('ALL FOCUSED CHECKS PASSED');
 })().catch(e=>{console.error(e);process.exit(1)});

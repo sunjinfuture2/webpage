@@ -62,11 +62,28 @@ async function memDeleteSelected(ids) {
   } catch(err) {toast(err.message||'멤버를 삭제하지 못했습니다.');}
   finally {memDeleting=false;if($('#mbody .mem'))renderPaneBase('members');}
 }
-/* A portal menu must not stay at an unrelated viewport position as its anchor scrolls away.
-   Scroll inside the menu remains available, including nested option lists. */
+/* Keep an open portal attached to its trigger, not to the viewport.
+   Preserve the initial placement (including above-trigger menus), without clamping it back
+   into view while scrolling. The menu's own option scrolling does not move it. */
+const memAnchoredOpenPop = openPop;
+openPop = function(anchor,html,opt={}) {
+  const p=memAnchoredOpenPop(anchor,html,opt);
+  if(p._anchor) {
+    const r=p._anchor.getBoundingClientRect();
+    p._scrollOrigin={left:r.left,top:r.top,x:parseFloat(p.style.left)||0,y:parseFloat(p.style.top)||0};
+  }
+  return p;
+};
+function memPositionOpenPop() {
+  const p=popEl, a=p&&p._anchor, o=p&&p._scrollOrigin;
+  if(!a||!o||!a.isConnected)return;
+  const r=a.getBoundingClientRect();
+  p.style.left=(o.x+r.left-o.left)+'px';
+  p.style.top=(o.y+r.top-o.top)+'px';
+}
 document.addEventListener('scroll',e=>{
   if(!popEl||popEl.contains(e.target))return;
   const a=popEl._anchor;
-  if(a&&(e.target===document||e.target===window||(e.target.contains&&e.target.contains(a))))closePop();
+  if(a&&(e.target===document||e.target===window||(e.target.contains&&e.target.contains(a))))memPositionOpenPop();
 },true);
-window.addEventListener('resize',()=>{if(popEl&&popEl._anchor)closePop();});
+window.addEventListener('resize',memPositionOpenPop);
