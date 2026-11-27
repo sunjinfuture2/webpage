@@ -23,6 +23,9 @@ async function file(rows,name='다른양식.xlsx',sheet='회사 일정표'){cons
  assert.equal(await p.evaluate(()=>SCHUP2.preview.adds),1);
  assert.equal(await p.evaluate(()=>SCHUP2.preview.remove.length),0);
  assert.equal(await p.evaluate(()=>JSON.stringify(SCHED.pangyo||{})),orig);
+ await p.locator('[data-u2choice][data-field="name"]').first().uncheck();
+ assert.equal(await p.evaluate(()=>SCHUP2.preview.diff[0].t.name),first.name);
+ await p.locator('[data-u2choice][data-field="name"]').first().check();
  const missing=await p.evaluate(()=>SCHUP2.preview.missing.length);assert.ok(missing>0);
  await p.locator('[data-u2="close"]').click();
  assert.equal(await p.evaluate(()=>JSON.stringify(SCHED.pangyo||{})),orig);
@@ -72,6 +75,19 @@ async function file(rows,name='다른양식.xlsx',sheet='회사 일정표'){cons
  assert.ok((await p.locator('.u2-error').allTextContents()).join(' ').includes('검토 중 일정이 변경'));
  assert.equal(await p.evaluate(id=>schTask('pangyo',id).name,first.id),'다른 사용자의 변경');
  console.log('PASS stale preview blocks overwrite');
+ 
+ await p.locator('[data-u2="close"]').click();
+ const other=await p.evaluate(()=>Object.keys(PROJECTS).find(k=>k!=='pangyo'));
+ await p.evaluate(id=>go('project:'+id),other);await p.waitForFunction(id=>schReady(id),other);
+ const emptyFile=await file([['번호','업무명','시작일','완료일','개발단계'],['NEW-A','계약 업무','2027-05-01','2027-05-02','신규 계약단계'],['NEW-B','설계 업무','2027-05-03','2027-05-04','신규 설계단계']]);
+ await p.locator('[data-upload2]').click();await p.locator('[data-u2file]').setInputFiles(emptyFile);await p.locator('[data-u2map="name"]').waitFor();await p.locator('[data-u2="review"]').click();
+ assert.equal(await p.evaluate(()=>SCHUP2.preview.errors.length),0);
+ await p.locator('[data-u2="apply"]').click();await p.locator('#dlg.sch-up2').waitFor({state:'detached'});
+ const stages=await p.evaluate(id=>schModel(id).plan.tasks.filter(t=>t.name==='계약 업무'||t.name==='설계 업무').map(t=>t.phase),other);
+ assert.equal(new Set(stages).size,2);
+ await p.reload();await p.waitForFunction(id=>sharedReady&&schReady(id),other);
+ assert.ok(await p.evaluate(id=>schModel(id).plan.tasks.some(t=>t.name==='계약 업무'),other));
+ console.log('PASS per-field keep choice and new project upload with distinct stage groups and persistence');
  const serious=errs.filter(e=>!e.includes('Failed to fetch'));assert.deepEqual(serious,[]);
  await browser.close();console.log('UPLOAD2 CHECKS PASSED');
 })().catch(e=>{console.error(e);process.exit(1)});

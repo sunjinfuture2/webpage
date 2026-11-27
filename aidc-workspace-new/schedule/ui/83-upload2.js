@@ -65,6 +65,9 @@ function u2ReadRows(){
 }
 function u2Build(){
  const u=SCHUP2,m=schModel(u.pid),draft=copy(m.plan),by=new Map(draft.tasks.map(t=>[t.id,t])),used=new Set(),errors=[],diff=[],aliases={...((SCHED[u.pid]||{}).up2keys||{})};
+ const phases=new Map(m.phases.map(g=>[u2norm(g.label),{code:g.code,label:g.label}]));
+ let nextPhase=Math.max(0,...m.phases.map(g=>Number(g.code.replace(/^W/,''))||0));
+ const phaseFor=label=>{const code=m.phases.find(g=>u2norm(g.code)===u2norm(label));if(code)return {code:code.code,label:code.label};const key=u2norm(label);if(!phases.has(key))phases.set(key,{code:'W'+(++nextPhase),label});return phases.get(key);};
  let adds=0,updates=0,skips=0;const fields=U2_FIELDS.filter(x=>x[0]!=='key');
  for(const r of u.rows||[]){
   if(r.target==='skip'){skips++;continue;}
@@ -76,7 +79,7 @@ function u2Build(){
   if(isNew){
    if(!r.values.name)bad.push('새 업무는 업무명이 필요합니다.');
    if(!r.values.plannedStart||!r.values.plannedFinish)bad.push('새 업무는 시작일과 완료일이 필요합니다.');
-   const phase=draft.tasks.find(q=>q.phaseLabel===r.values.phaseLabel)?.phase||'W1';
+   const phase=r.values.phaseLabel?phaseFor(r.values.phaseLabel).code:'W1';
    t=AIDCSchedule.newTask(draft,phase);t.id=r.id;t.order=Math.max(0,...draft.tasks.map(q=>+q.order||0))+1;
    if(/^W\d+\.\d+$/i.test(r.key)&&!draft.tasks.some(q=>u2norm(q.wbs)===u2norm(r.key))){t.wbs=r.key.toUpperCase();t.phase=t.wbs.split('.')[0];}
   }
@@ -89,7 +92,7 @@ function u2Build(){
    if(same(t[key]??null,next??null))continue;
    const selected=r.choices[key]===undefined?!blank:r.choices[key];
    changes.push({key,label,old:t[key],next,blank,selected});
-   if(isNew||selected)t[key]=copy(next);
+   if(isNew||selected){if(key==='phaseLabel'){const ph=phaseFor(next);t.phase=ph.code;t.phaseLabel=ph.label;}else t[key]=copy(next);}
   }
   if(t&&t.plannedFinish<t.plannedStart)bad.push('완료일이 시작일보다 빠릅니다.');
   if(t&&t.kind==='milestone'&&t.plannedStart!==t.plannedFinish)bad.push('마일스톤은 시작일과 완료일이 같아야 합니다.');
@@ -124,7 +127,7 @@ function u2Draw(){
   const sheets=u.book.sheets,sh=u2Sheet(),head=sh.rows[u.head]||[];
   h+='<p>'+esc(u.book.name)+'</p><div class="u2-controls"><label>시트 <select data-u2sheet>'+sheets.map((s,i)=>'<option value="'+i+'" '+(i===u.sheet?'selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select></label><label>머리글 행 <input data-u2head type="number" min="1" max="'+Math.max(1,sh.rows.length)+'" value="'+(u.head+1)+'"></label><button data-u2="file">다른 파일</button></div>';
   h+='<div class="u2-map">'+U2_FIELDS.map(([k,label])=>'<label>'+label+'<select data-u2map="'+k+'"><option value="-1">연결 안 함 · 기존값 유지</option>'+head.map((v,i)=>'<option value="'+i+'" '+(u.map[k]===i?'selected':'')+'>'+String.fromCharCode(65+Math.floor(i/26)-1).replace('@','')+(i<26?'': '')+String.fromCharCode(65+i%26)+'열 · '+esc(v||'(제목 없음)')+'</option>').join('')+'</select></label>').join('')+'</div>';
-  h+='<p class="u2-muted">업무명 열은 필수입니다. 신규 업무는 시작일·완료일도 필요합니다. 연결하지 않은 열은 변경하지 않습니다.</p><details><summary>원본 미리보기</summary><div class="u2-scroll"><table>'+sh.rows.slice(u.head,u.head+6).map((r,i)=>'<tr><th>'+(u.head+i+1)+'</th>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</table></div></details>';
+  h+='<p class="u2-muted">업무명 열은 필수입니다. 신규 업무는 시작일·완료일도 필요합니다. 연결하지 않은 열은 변경하지 않습니다. 같은 열 구성의 연결 설정은 이 브라우저에서 기억합니다.</p><details><summary>원본 미리보기</summary><div class="u2-scroll"><table>'+sh.rows.slice(u.head,u.head+6).map((r,i)=>'<tr><th>'+(u.head+i+1)+'</th>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</table></div></details>';
  }else{
   const p=u2Build();u.preview=p;
   h+='<p>'+esc(u.book.name)+' · '+esc(u2Sheet().name)+'</p><p class="u2-count">신규 '+p.adds+' · 변경 '+p.updates+' · 파일에 없음 '+p.missing.length+' (기본 유지) · 제외 '+p.skips+'</p>';
