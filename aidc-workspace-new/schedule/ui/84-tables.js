@@ -43,7 +43,7 @@ function schMeetTable(pid){ const rows=schMeetRows(pid), total=Math.max(1,Math.c
   let h=`<div class="tbl sch-proc sch-vtbl vt-meet"><div class="hd">${tm('date','날짜',!!c.when,c.sort==='old')}${th('시간')}${tm('name','미팅명',false,c.sort==='name')}${th('장소')}${th('안건')}${tm('who','참석자',!!c.who,false)}${tm('guest','외부 참석',!!c.guest,false)}${tm('file','회의록',!!c.file,false)}</div>`;
   for(const m of page){ const p=meetParts(m), ppl=m.people||[], cell=v=>{const t=oneLine(v);return `<div class="tx" title="${esc(t)}"><span class="e">${esc(t)}</span></div>`;};   // (thirty-eighth round, owner: "써진 항목없으면 -로 표기하지 말고 그냥 비워놔") nothing is written for what is not there
     h+=`<div class="rw ${S.panel===m.id?'sel':''}" data-open="${esc(m.id)}"><div class="w">${esc(schD(m.date)||'-')}</div><div class="tm">${esc(meetTimeTxt(p.time))}</div><div class="nm" title="${esc(oneLine(m.title))}">${dotsHtml(m,'tdots')}<span class="e">${esc(oneLine(m.title)||'(제목 없음)')}</span></div>${cell(p.place)}${cell(p.agenda)}
-      <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.length?ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:''):'<span class="sch-role none">미지정</span>'}</div>${cell(p.guests)}
+      <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.length?ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:''):emptyPerson()}</div>${cell(p.guests)}
       <div class="fl">${hasFiles(m)?`<button class="sh-btn" data-act="dl" data-id="${esc(m.id)}" title="회의록 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
   if(!rows.length)h+=`<div class="none">${schMeetFiltered()?'조건에 맞는 미팅이 없습니다.':'등록된 미팅이 없습니다. + 버튼으로 새 미팅을 만드세요.'}</div>`;
   return h+`<div class="ft"></div></div>${rows.length>SCH_V_PER?schVPager('meet',S.mtPage,total):''}`; }
@@ -62,7 +62,7 @@ function schResTable(rows){ const th=t=>`<span><em>${t}</em></span>`;
   for(const r of rows){ const ppl=r.people||[], ttl=schResearchBodyTitle(r);
     h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="w">${esc(dateShow(r))}</div><div class="nm" title="${esc(ttl)}">${dotsHtml(r,'tdots')}<span class="e">${schResearchPreviewTitle(r)}</span></div>
       <div class="res-state">${stIcon(r.st||'prog')}</div><div class="res-priority"><span class="pri pri-${esc(r.pri||'mid')}">${esc(priTxt[r.pri||'mid']||'중간')}</span></div>
-      <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:'')}</div>
+      <div class="who" title="${esc(ppl.map(userName).join(', '))}">${ppl.slice(0,2).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')+(ppl.length>2?`<em class="more-n">+${ppl.length-2}</em>`:ppl.length?'':emptyPerson())}</div>
       <div class="tx"><span class="e">${esc(modDate(r)?modTxt(r,true):'')}</span></div>
       <div class="fl url">${r.url?schUrlCell(r.url):''}${hasFiles(r)?`<button class="sh-btn" data-act="dl" data-id="${esc(r.id)}" title="첨부 다운로드">다운로드 ${svg('i-dl',10,11,'color:#4f4f4f;margin-top:1px')}</button>`:''}</div></div>`; }
   if(!rows.length)h+=`<div class="none">${S.q.research?'검색 결과가 없습니다.':Object.keys(S.rf||{}).some(k=>k!=='sort')?'조건에 맞는 리서치가 없습니다.':'등록된 리서치가 없습니다.'}</div>`;

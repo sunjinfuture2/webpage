@@ -29,12 +29,24 @@ const schRepTxt=s=>esc(s||'').replace(/(확인 필요|보완 필요)/g,'<em clas
 // (twenty-sixth round: the overview no longer shows these cells as a block of their own — "요약쪽은 메인페이지 … 그 내용이 같이 연동되기만
 // 하면 돼". A cell left empty follows the sheet: the rows 위치 · 사업주체 · 대지면적 · 연면적 of the table, the first 핵심 지표 that speaks of IT /
 // 수전; a cell that is filled in — the short form the list has — wins.)
+// Keep the full address in the overview; only derive the administrative area for lists.
+function schRepShortAddress(value){
+ const full=String(value||'').trim(), clean=full.replace(/^대한민국\s+/,'').split(/[\n(（]/)[0].trim(), parts=clean.split(/\s+/);
+ const province=/^(서울(?:특별시)?|부산(?:광역시)?|대구(?:광역시)?|인천(?:광역시)?|광주(?:광역시)?|대전(?:광역시)?|울산(?:광역시)?|세종(?:특별자치시)?|경기(?:도)?|강원(?:도|특별자치도)?|충북|충남|충청북도|충청남도|전북|전남|전라북도|전라남도|전북특별자치도|경북|경남|경상북도|경상남도|제주(?:도|특별자치도)?)$/;
+ if(!province.test(parts[0]||''))return full;
+ const out=[parts[0]];
+ if(parts[1]&&/^[가-힣]+[시군구]$/.test(parts[1])){
+  out.push(parts[1]);
+  if(/시$/.test(parts[1])&&parts[2]&&/^[가-힣]+구$/.test(parts[2]))out.push(parts[2]);
+ }
+ return out.join(' ');
+}
 function schRepOf(k){ const p=PROJECTS[k]||{}, h=PHEAD[k]||{}, s=x=>typeof x==='string'?x.trim():'', sc=i=>scaleOf(h,i,p[SCALE_FB[i]]), it=sc(1), pw=sc(2);
-  const rows=Array.isArray(h.rows)?h.rows.filter(Array.isArray):[], row=l=>s((rows.find(r=>norm(r[0])===norm(l))||[])[1]);
+  const rows=Array.isArray(h.rows)?h.rows.filter(Array.isArray):[], row=l=>{const found=rows.find(r=>norm(r[0])===norm(l));return found?s(found[1]):null;};
   const kp=(Array.isArray(h.kpi)?h.kpi.filter(Array.isArray):[]).find(r=>/IT|수전|전력/i.test(String(r[1]||'')));
   return { grp:REP_GRPS.includes(h.grp)?h.grp:'', focus:!!h.focus, sub:s(h.sub), first:s(h.first), asof:s(h.asof), stage:normStatus(p.status),
-    site:s(h.lsite)||row('위치')||siteOf(p,h), dev:s(h.ldev)||row('사업주체')||s(h.dev), area:s(h.larea)||row('대지면적'), gfa:s(h.lgfa)||row('연면적')||sc(0),
-    load:s(h.lload)||s(kp&&kp[0])||(it&&pw?`${it} (수전 ${pw})`:it||pw), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
+    site:schRepShortAddress(row('위치')??(s(h.loc)||s(h.lsite)||siteOf(p,h))), dev:row('사업주체')??(s(h.ldev)||s(h.dev)), area:row('대지면적')??s(h.larea), gfa:row('연면적')??(s(h.lgfa)||sc(0)),
+    load:kp?s(kp[0]):(it&&pw?`${it} (수전 ${pw})`:it||pw||s(h.lload)), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
 // 2024.04.22 / 2025.12 / "2026.11.12 수신" -> a key that orders them (a month alone comes before its days, as in the list)
 const schRepKey=s=>{ const m=String(s||'').match(/(\d{4})(?:\D{1,3}(\d{1,2}))?(?:\D{1,3}(\d{1,2}))?/); return m?[m[1],m[2],m[3]].filter(Boolean).map(x=>x.padStart(2,'0')).join('.'):'9999'; };
 function schRepSort(ids){ const o=id=>{const i=PROJ_ORDER.indexOf(id);return i<0?1e6:i;}, g=id=>{const i=REP_GRPS.indexOf((PHEAD[id]||{}).grp);return i<0?REP_GRPS.length:i;}, f=id=>schRepKey((PHEAD[id]||{}).first);
@@ -72,7 +84,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schRepTitleTools(schAIHead
   const kp=(a,cls)=>`<div class="rkp ${cls}">${d[a].map((r,i)=>`<div class="k">${cell('b',`${a}:${i}:0`,'값',r[0])}${cell('span',`${a}:${i}:1`,'무엇의 값인지',r[1])}${del(a,i)}</div>`).join('')}${!d[a].length&&!E?nil:''}${add(a,'지표')}</div>`;
   // The cells of the main page's list are not a block of the overview (twenty-sixth round): read, they follow the sheet (schRepOf); while
   // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
-  const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,R[rk]&&!d[k]?R[rk]:(ph||'입력'),d[k],'v')}</label>`;
+  const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b><span class="v">${esc(R[rk])||'<span class="nil">-</span>'}</span></label>`;
   const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a>${E&&k.startsWith('partner:')?`<button type="button" class="partner-unlink" data-partner-unlink="${k.slice(8)}" title="협력업체 연결 제거" aria-label="협력업체 연결 제거">×</button>`:''}</span>`;
   // a block: `t` is one of the sheet's blocks (a key of REP_TTL) or, for a block of the page's own, its title as it is. A block of
   // the sheet writes the title the project gave it (schRepTtl), which can be changed while the overview is edited (thirty-sixth
@@ -83,10 +95,10 @@ function schRepHead(pid){ if(schAIProject(pid))return schRepTitleTools(schAIHead
   // the first line: what the project is at the left (.rml); at the right (.rmr) the two buttons and, below them, the two dates, a line each.
   const meta=`<div class="rmeta"><div class="rml">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
      <span class="m st ${E?'stpick':''}" ${E?'data-pickstatus':''}><b>추진 단계</b>${statusBadge(p.status)}${chev}</span><i class="sep"></i>
-     <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)||'<span class="nil">미지정</span>'}</span>${chev}</span></div>
+     <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)}</span>${chev}</span></div>
      <div class="rmr"><div class="rbt"><button class="sh-btn edit ${E?'on save':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button>`:`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button>`}</div>
        <div class="rdt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}<b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</div></div></div>`;
-  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">프로젝트 카드와 표에 나오는 값입니다. 비워 두면 아래 표 · 지표의 값(흐리게 보이는 값)을 그대로 씁니다.</small>`,'rcells'):'';
+  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">아래 사업 개요 표와 핵심 지표에서 수정하면 자동 반영됩니다. 위치는 메인 목록에서 시·군·구까지만 표시합니다.</small>`,'rcells'):'';
   // the two rows of figures
   const stats=`<div class="rstats">${blk('kpi',kp('kpi',''))}${blk('fin',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>`)}</div>`;   // (thirty-sixth round) no files on the two rows of figures   // (twenty-ninth round) the note under the figures (finNote) and the line 출처 (src) are not shown or edited any more; both stay in the record
   // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)

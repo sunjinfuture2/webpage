@@ -17,7 +17,7 @@ function schMainTest(r){ const c=schMf();
   if(c.proj&&r.proj!==c.proj)return false; if(c.kind&&(c.kind==='ms')!==r.ms)return false; if(c.pri&&r.pri!==c.pri)return false; if(c.st&&r.st!==c.st)return false;
   if(c.who&&(c.who==='none'?r.ppl.length>0:!r.ppl.includes(c.who)))return false; if(c.url&&(c.url==='y')!==!!urlHref(r.url))return false;
   return schSpanTest(c,r.ps||'',r.pf||r.ps||'')&&schDueTest(c,r.end,r.done); }
-const SCH_MSORT={proj:r=>pname(proj(r.proj)),wbs:r=>r.order,name:r=>norm(r.title),plan:r=>(r.ps||'')+(r.pf||''),fin:r=>schMainFin(r)||'9',pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>SCH_STATUSES.indexOf(r.st),who:r=>userName(r.ppl[0])||'~',due:r=>r.end||'9'};
+const SCH_MSORT={proj:r=>pname(proj(r.proj)),wbs:r=>r.wbs,name:r=>norm(r.title),plan:r=>(r.ps||'')+(r.pf||''),fin:r=>schMainFin(r)||'9',pri:r=>({high:0,mid:1,low:2})[r.pri]??9,st:r=>SCH_STATUSES.indexOf(r.st),who:r=>userName(r.ppl[0])||'~',due:r=>r.end||'9'};
 const SCH_MF_NAMES={...SCH_CF_NAMES};
 // the finish a row shows: none for a milestone and for an action without an end date
 const schMainFin=r=>r.ms?'':r.item?(r.item.end&&r.item.end>r.item.date?r.item.end:''):(r.pf||'');
@@ -33,7 +33,7 @@ function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest)
   for(const r of rows){ const n=notes[r.proj]||(notes[r.proj]=schNotices(r.proj)); r.red=n.red.has(r.id); r.green=n.green.has(r.id); r.dots=schDotsHtml(n,r.id); }
   const key=SCH_MSORT[k];
   // without a chosen order: changed ones (red), those that start today (green), then what is not finished, nearest deadline first
-  rows.sort(key?(a,b)=>{const x=key(a),y=key(b);return (x<y?-1:x>y?1:0)*dir||(a.end||'').localeCompare(b.end||'');}:(a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||(a.end||'9').localeCompare(b.end||'9')||a.order-b.order);
+  rows.sort(key?(a,b)=>{const x=key(a),y=key(b);return (k==='wbs'?schWbsCompare(x,y,dir):(x<y?-1:x>y?1:0)*dir)||(a.end||'').localeCompare(b.end||'');}:(a,b)=>(b.red-a.red)||(b.green-a.green)||(a.done-b.done)||(a.end||'9').localeCompare(b.end||'9')||a.order-b.order);
   const total=Math.max(1,Math.ceil(rows.length/S.actPer)); S.actPage=Math.min(Math.max(1,S.actPage),total); const page=rows.slice((S.actPage-1)*S.actPer,S.actPage*S.actPer);
   const on={proj:!!c.proj,name:!!c.kind,plan:!!c.plan,pri:!!c.pri,st:!!c.st,who:!!c.who,due:!!c.due,url:!!c.url};
   const th=(kk,t)=>`<span data-mcol="${kk}" class="${k===kk?'sorted':''} ${k===kk&&dir<0?'up':''} ${on[kk]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
@@ -44,7 +44,7 @@ function schMainActions(){ const all=schMainRows(), rows=all.filter(schMainTest)
   for(const r of page){ const p=proj(r.proj);
     h+=`<div class="rw ${S.panel===r.id?'sel':''}" data-open="${esc(r.id)}"><div class="pj">${pill(p,'nosq')}</div><div class="w">${esc(r.wbs||'-')}</div><div class="nm">${r.dots}<span class="gut">${r.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc(r.title)}</span></div>
       <div class="rg">${schD(r.ps||r.pf)||'<span class="nil">-</span>'}</div><div class="rg">${schMainFin(r)?schD(schMainFin(r)):'<span class="nil">-</span>'}</div><div><span class="pri pri-${r.pri}">${priTxt[r.pri]}</span></div><div>${schStIcon(r.st)}</div>
-      <div class="who">${r.ppl.length?r.ppl.slice(0,2).map(u=>`<span data-user="${esc(u)}">${av()}${esc(userName(u))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="dd">${r.done?'':schDdayHtml(r.end,false,schMainWhy(r))}</div><div class="url">${urlCell(r.url)}</div></div>`; }
+      <div class="who">${r.ppl.length?r.ppl.slice(0,2).map(u=>`<span data-user="${esc(u)}">${av()}${esc(userName(u))}</span>`).join(''):emptyPerson()}</div><div class="dd">${r.done?'':schDdayHtml(r.end,false,schMainWhy(r))}</div><div class="url">${urlCell(r.url)}</div></div>`; }
   if(!page.length)h+=`<div class="none">${S.q.action||Object.keys(c).length?'조건에 맞는 액션이 없습니다.':'등록된 액션이 없습니다.'}</div>`;
   return h+`<div class="ft"></div></div>${pager(S.actPage,total,'pg-act').replace('class="pager','style="margin-top:32px" class="pager')}`; }
 // A picker of the row of filters (the look of the project page's: a word, a line below, a chevron).

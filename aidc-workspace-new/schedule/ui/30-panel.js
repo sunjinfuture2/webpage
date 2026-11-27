@@ -33,7 +33,7 @@ function schItemProps(it,E,full){ if(!schOwn(it))return null; const pid=it.proj,
     V('마일스톤',f('kind',`<span class="plain">${ms?'<i class="sch-ms" style="margin:0 7px 1px 1px"></i>예':'아니오'}</span>`,'마일스톤 여부')),
     V('참고 자료',`<span class="chips sl-refs">${refs.map(x=>`<span class="sl-ref">${chipFull(x)}${E?`<button data-schp="unref" data-k="${esc(x.id)}" title="연결 해제">${svg('i-x',7,7)}</button>`:''}</span>`).join('')}${E?'<span class="chip add" data-schp="addref">+ 미팅 · 리서치 연결</span>':(refs.length?'':none('없음'))}</span>`)];
   const ppl=schPeople(t);
-  const R=[V('담당자',f('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>','담당 멤버')),
+  const R=[V('담당자',f('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:emptyPerson(),'담당 멤버')),
     V('상태'+schInfo('status'),f('status',schStIcon(schStatus(t)))),V('중요도',f('pri',schPriHtml(m,t))),
     V('URL',t.url&&urlHref(t.url)?`<a class="url" href="${esc(urlHref(t.url))}" target="_blank" rel="noopener" data-stop>${esc(t.url)}</a>${E?`<button class="copy-url" data-schp="f" data-k="url" title="주소 변경">${schChev()}</button>`:''}`:f('url',ph('주소 입력')))];
   let more='';

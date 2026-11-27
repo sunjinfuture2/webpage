@@ -105,9 +105,9 @@ function schLateWhy(m,t){ const P=AIDCSchedule.progress, r=m.res.tasks[t.id], to
 function schLateWhyItem(i){ const end=itemEnd(i), today=schToday(); if(!i||i.st==='done'||!end||!(end<today))return ''; const out=[]; if(i.why)out.push(i.why);
   out.push(i.actualStart?`${schD(i.actualStart)} 착수 · 기한 ${schD(end)} 경과 (완료 처리 전)`:`기한 ${schD(end)} 경과 · 실제 시작일 미입력`); const s=schItemSt(i); if(s==='보류'||s==='확인 전')out.push('상태: '+s); return out.join('\n'); }
 /* ---------- list ---------- */
-const SCH_SORT={wbs:(m,t)=>t.order,name:(m,t)=>t.name,plan:(m,t)=>t.plannedStart+t.plannedFinish,fin:(m,t)=>t.kind==='milestone'?'9':t.plannedFinish||'9',pri:(m,t)=>({high:0,mid:1,low:2})[schPri(m,t)],st:(m,t)=>SCH_STATUSES.indexOf(schStatus(t)),
+const SCH_SORT={wbs:(m,t)=>schNo(t),name:(m,t)=>t.name,plan:(m,t)=>t.plannedStart+t.plannedFinish,fin:(m,t)=>t.kind==='milestone'?'9':t.plannedFinish||'9',pri:(m,t)=>({high:0,mid:1,low:2})[schPri(m,t)],st:(m,t)=>SCH_STATUSES.indexOf(schStatus(t)),
   who:(m,t)=>schPeople(t).map(userName).join(',')||'~',due:(m,t)=>m.res.tasks[t.id].finish};
-const SCH_SORT_I={wbs:i=>i._ord||1e9,name:i=>i.title||'',plan:i=>(i.date||'')+(itemEnd(i)||''),fin:i=>i.end&&i.end>i.date&&!i.ms?i.end:'9',pri:i=>({high:0,mid:1,low:2})[i.pri||'mid'],st:i=>SCH_STATUSES.indexOf(schItemSt(i)),who:i=>(i.people||[]).map(userName).join(',')||'~',due:i=>itemEnd(i)||''};
+const SCH_SORT_I={wbs:i=>i.phase?schPhaseNo(i.phase):'',name:i=>i.title||'',plan:i=>(i.date||'')+(itemEnd(i)||''),fin:i=>i.end&&i.end>i.date&&!i.ms?i.end:'9',pri:i=>({high:0,mid:1,low:2})[i.pri||'mid'],st:i=>SCH_STATUSES.indexOf(schItemSt(i)),who:i=>(i.people||[]).map(userName).join(',')||'~',due:i=>itemEnd(i)||''};
 const schLoose=(pid,m)=>schUnlinked(pid).filter(i=>!(i.phase&&m.phases.some(g=>g.code===i.phase)));   // actions that belong to no phase and no task
 // One table: the tasks of the schedule (their linked actions under them) and, after them, the actions that are not linked to it.
 // The latter are also a choice of their own in the phase picker ("일정 미연결", below the last phase).
@@ -116,7 +116,7 @@ function schListHtml(pid,m){ const P=AIDCSchedule.progress, q=(SCHU.q||'').trim(
   { const end=new Map(m.phases.map(g=>[g.code,g.tasks.length?Math.max(...g.tasks.map(t=>t.order))+.9:1e8+(Number(schPhaseNo(g.code))||0)]));
     rows=rows.concat(schUnlinked(pid).filter(i=>{const ph=i.phase&&end.has(i.phase)?i.phase:'';i._ord=ph?end.get(ph):1e9;return (none?!ph:!SCHU.phase||ph===SCHU.phase)&&schItemTest(i,q);}).sort(newestFirst).map(i=>({i}))); }
   const fT=SCH_SORT[SCHU.sort]||SCH_SORT.wbs, fI=SCH_SORT_I[SCHU.sort]||SCH_SORT_I.wbs;
-  rows=rows.map((r,n)=>({...r,n,key:r.t?fT(m,r.t):fI(r.i)})).sort((a,b)=>(a.key<b.key?-1:a.key>b.key?1:0)*SCHU.dir||a.n-b.n);
+  rows=rows.map((r,n)=>({...r,n,key:r.t?fT(m,r.t):fI(r.i)})).sort((a,b)=>(SCHU.sort==='wbs'||!SCH_SORT[SCHU.sort]?schWbsCompare(a.key,b.key,SCHU.dir):(a.key<b.key?-1:a.key>b.key?1:0)*SCHU.dir)||a.n-b.n);
   const total=Math.max(1,Math.ceil(rows.length/SCHU.per)); SCHU.page=Math.min(Math.max(1,SCHU.page),total); const page=rows.slice((SCHU.page-1)*SCHU.per,SCHU.page*SCHU.per);
   const on={wbs:!!SCHU.phase,name:!!c.kind,plan:!!c.plan,pri:!!c.pri,st:!!c.st,who:!!SCHU.who,due:!!c.due,url:!!c.url};
   const th=(k,t)=>`<span data-sch="col" data-k="${k}" class="${SCHU.sort===k?'sorted':''} ${SCHU.sort===k&&SCHU.dir<0?'up':''} ${on[k]?'flt':''}" title="눌러서 정렬 · 조건 선택">${t}${svg('i-chev-d',8,4)}</span>`;
@@ -153,7 +153,7 @@ function schColMenu(el,pid,m,v){ const c=schCf(), go=()=>{SCHU.page=1;schRefresh
 function schItemRow(x,cls,wbs){ const done=x.st==='done', end=itemEnd(x), u=urlHref(x.url);
   return `<div class="rw ${cls} ${S.panel===x.id?'sel':''}" data-open="${x.id}"><div class="w">${esc(wbs)}</div><div class="nm">${PROJECTS[x.proj]?schDotsHtml(schNotices(x.proj),x.id):''}<span class="gut">${x.ms?'<i class="sch-ms" style="margin:0"></i>':''}</span><span class="tx">${esc((x.title||'(제목 없음)').split('\n').join(' '))}</span></div>
     <div class="rg">${schD(x.date)||'<span class="nil">-</span>'}</div><div class="rg">${end>x.date&&!x.ms?schD(end):'<span class="nil">-</span>'}</div><div><span class="pri pri-${x.pri||'mid'}">${priTxt[x.pri||'mid']}</span></div><div>${schStIcon(schItemSt(x))}</div>
-    <div class="who">${(x.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')||'<span class="sch-role none">미지정</span>'}</div><div class="dd">${schDdayHtml(end,done,schLateWhyItem(x))}</div><div class="url">${schUrlCell(x.url)}</div></div>`; }
+    <div class="who">${(x.people||[]).map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')||emptyPerson()}</div><div class="dd">${schDdayHtml(end,done,schLateWhyItem(x))}</div><div class="url">${schUrlCell(x.url)}</div></div>`; }
 
 /* ---------- gantt ---------- */
 // Sizes are those of the design file (261118, page 9), measured on a 4x render: the outline is 508 wide, the header 40.75

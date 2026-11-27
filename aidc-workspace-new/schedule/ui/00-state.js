@@ -137,6 +137,19 @@ const schKeyNo=t=>Number(String(t&&t.wbs||'').split('.')[1])||0;
 const schNoOf=t=>(t&&Number(t.no))||schKeyNo(t);
 const schWk=t=>t?(Number(t.no)?String(t.wbs).split('.')[0]+'.'+Number(t.no):String(t.wbs||'')):'';     // in the workbook's form (W1.5)
 const schNo=t=>schWbs(schWk(t));
+
+const SCH_WBS_COLLATOR=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
+function schWbsCompare(a,b,dir=1){
+ const normalize=v=>String(v??'').trim().replace(/^W/i,'').replace(/-/g,'.');
+ const x=normalize(a),y=normalize(b),empty=v=>!v||v==='.';
+ if(empty(x)||empty(y))return empty(x)===empty(y)?0:empty(x)?1:-1;
+ const xs=x.split('.'),ys=y.split('.');
+ for(let i=0;i<Math.max(xs.length,ys.length);i++){
+  if(i>=xs.length)return -dir;if(i>=ys.length)return dir;
+  const n=SCH_WBS_COLLATOR.compare(xs[i],ys[i]);if(n)return n*dir;
+ }return 0;
+}
+
 const schPhaseNo=c=>String(c||'').replace(/^W/,'');
 const schPhaseName=l=>String(l||'').replace(/^\d+\s*/,'');                          // "1 사업정의·RFP" -> "사업정의·RFP"
 const schPhaseLabel=g=>`${schPhaseNo(g.code)}) ${schPhaseName(g.label)}`;
@@ -151,7 +164,7 @@ const SCH_MARK_OF={'확인 전':'ask','준비 중':'plan','검토 요청':'prog'
 const schMark=(kind,label,cls,attrs)=>`<span class="sch-st st-${kind} ${cls||''}" ${attrs||''}><i class="si"><svg class="si-${kind}" aria-hidden="true"><use href="#i-st-${kind}"/></svg></i>${esc(label)}</span>`;
 const schStateMark=(label,cls,attrs)=>schMark(SCH_MARK_OF[label]||'plan',label,cls,attrs);
 const schStatus=t=>{const P=AIDCSchedule.progress;return P.isDone(t)?'완료':(t.status==='완료'?'진행':t.status||'계획');};
-const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st);
+const schStIcon=st=>schMark((SCH_ST[st]||SCH_ST['계획']).c,st,'action-state');
 // D-day of a task that is not finished: against its forecast finish. Late ones read "n일 지연".
 function schDday(finish,done){ if(done||!finish)return null; const n=AIDCSchedule.dates.diffDays(finish,schToday()); return {n,txt:n===0?'D-Day':n>0?'D-'+n:Math.abs(n)+'일 지연',hot:n<=30,late:n<0}; }
 // The "n일 지연" mark of a panel: while the panel is being edited (수정) a press on it asks for the reason of the delay (owner, 2026-11-23).
@@ -164,7 +177,7 @@ const schPeople=t=>Array.isArray(t.people)?t.people:[];
 // Assignees: members once they are set, else the role that carries the task out in the source plan, in grey.
 const schRole=t=>((t.roles||{}).R||'').trim();
 function schWhoHtml(t,mode){ const ppl=schPeople(t); if(ppl.length)return mode==='stack'?avstack(ppl,3):ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('');
-  return '<span class="sch-role none">미지정</span>'; }   // owner, 2026-11-19: nothing else is written where nobody is assigned
+  return emptyPerson(); }   // owner, 2026-11-19: nothing else is written where nobody is assigned
 // the whole page knows that the preview is on (styles of the item panel that only the preview changes hang on this)
 if(schPreview())document.documentElement.classList.add('sch-on');
 const schTaskTitle=t=>`${schNo(t)}) ${t.name}`;

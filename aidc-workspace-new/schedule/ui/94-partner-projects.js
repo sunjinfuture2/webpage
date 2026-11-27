@@ -35,8 +35,9 @@ function schResearchCategoryLabel(key,it){
 }
 function schResearchPreviewTags(it){return schResTagsOf(it).map(t=>schResearchCategoryLabel(t,it));}
 function schResearchPreviewText(it){return schResearchPreviewTags(it).map(t=>'['+t+']').concat(schResearchBodyTitle(it)).join(' ');}
-function schResearchPreviewTitle(it){
- return schResearchPreviewTags(it).map(t=>'<strong class="research-prefix">['+esc(t)+']</strong> ').join('')+
+function schResearchPreviewTitle(it,card=false){
+ const tags=schResearchPreviewTags(it);
+ return tags.map(t=>'<strong class="research-prefix">['+esc(t)+']</strong> ').join('')+(card&&tags.length?'<br class="research-title-break">':'')+
  '<span class="research-title-text">'+esc(schResearchBodyTitle(it)||'(제목 없음)')+'</span>';
 }
 function schResearchPrepareEdit(it){

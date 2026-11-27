@@ -2161,3 +2161,11 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
    형태로 보이는 곳에만 구분이랑 그외 제목까지 굵은 폰트굵기로 통일"); the table keeps its bold 구분 and regular title */
 .rcard .research-prefix,.rcard .research-title-text{font-weight:600}
 
+
+/* Shared overview/list values, lighter action state, and an unassigned person's empty profile. */
+.person-empty{display:inline-flex;align-items:center;vertical-align:middle;flex:none}
+.person-empty .avatar{margin-left:0}
+:is(#sch-actions,.sch-list,.sch-props,.sn-node) .sch-st.action-state{font-weight:500}
+:is(#sch-actions,.sch-list,.sch-props,.sn-node) .sch-st.action-state .si{font-size:.85em}
+.rcard .tt.research-preview-title{display:block;-webkit-line-clamp:unset}
+.rcard .research-title-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}

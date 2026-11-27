@@ -50,7 +50,7 @@ function schProcHtml(pid,m){ const q=(SCHU.lq||'').trim(); const list=m.plan.pro
     h+=`<div class="rw ${S.panel===`sp-${pid}-${x.id}`?'sel':''}" data-open="sp-${pid}-${esc(x.id)}"><div class="w">${x.sourceIndex<0?'추가':esc(schPkgNo(x))}</div><div class="nm">${esc(x.name)}</div><div class="lk">${po?`<a data-open="${schItemId(po.id)}" title="${esc(schTaskTitle(po))}">${schNo(po)}${svg('i-sch-ext',9,9)}</a>`:'-'}</div>
       <div class="rg">${pr&&ins?schRange(pr.start,ins.finish):'-'}</div><div class="dl"><span class="sf-e" data-schc="pdelay" data-k="${esc(x.id)}" title="PO 추가지연 (일) 변경">${x.delay?x.delay+'일':'-'}</span></div>
       <div>${schStateMark(x.commitment||'미확약','sf-e',`data-schc="pcommit" data-k="${esc(x.id)}" title="확약 상태 변경"`)}</div>
-      <div class="who">${ppl.length?ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):'<span class="sch-role none">미지정</span>'}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
+      <div class="who">${ppl.length?ppl.map(k=>`<span data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join(''):emptyPerson()}</div><div class="sl">${ins&&ins.slack!==null?ins.slack+'일':'<span style="color:#c4c4c4">대상 외</span>'}</div>
       <div class="lead">${x.leadWeeks!==null?`${+(+x.leadWeeks).toFixed(1)}주${dl?` <small>${schD(dl)} 납품</small>`:''}`:'-'}</div></div>`; }
   if(!list.length)h+=`<div class="none">조건에 맞는 설비가 없습니다.</div>`;
   return h+`<div class="ft"></div></div>`; }
@@ -95,7 +95,7 @@ function schPanelHtml(id){ const mm=/^s([pget])-([^-]+)-(.+)$/.exec(id||''); if(
     const ins=m.res.tasks[x.installTaskId], ppl=Array.isArray(x.people)?x.people:[], dl=m.res.deliveries[x.id];
     return wrap('action','외부설비 조달 · '+esc(x.sourceIndex<0?'추가':x.id),x.name,[
       ...(x.sourceIndex<0?[R('설비 이름',e('name',`<span class="plain wrap">${esc(x.name)}</span>`))]:[]),
-      R('확약 상태',e('commitment',schStateMark(x.commitment||'미확약'))),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:'<span class="sch-role none" style="font-size:14px">미지정</span>')),
+      R('확약 상태',e('commitment',schStateMark(x.commitment||'미확약'))),R('담당자',e('people',ppl.length?`<span class="people">${ppl.map(k=>`<span class="who" data-user="${esc(k)}">${av()}${esc(userName(k))}</span>`).join('')}</span>`:emptyPerson())),
       R('PO 추가지연',e('delay',x.delay?x.delay+'일':ph('없음'),'계약·PO 업무에 더하는 지연 일수')),R('확약 납기',e('leadWeeks',x.leadWeeks!==null?(+(+x.leadWeeks).toFixed(2))+'주':ph('미입력'),'공급사가 확약한 납기 (주)')+(dl?`<span class="plain" style="color:#8e8e8e;margin-left:8px">확약 기준 예상 납품 ${schD(dl)}</span>`:'')),
       R('납기 기산조건',e('trigger',esc(x.trigger||'미확정'))+(x.trigger&&x.trigger!=='PO 발행'&&x.trigger!=='미확정'?`<span class="plain" style="margin:0 6px;color:#c4c4c4">충족일</span>`+e('triggerDate',x.triggerDate?schD(x.triggerDate):ph('입력')):'')),R('별도 운송',e('transport',x.transport?x.transport+'일':ph('없음'))),
       R('공급사·계약상태',e('supplier',x.supplier?`<span class="plain wrap">${esc(x.supplier)}</span>`:ph('입력')),true),R('견적·조건 증빙',e('evidence',x.evidence?`<span class="plain wrap">${esc(x.evidence)}</span>`:ph('입력')),true),
