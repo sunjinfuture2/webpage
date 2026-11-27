@@ -46,7 +46,7 @@ function schRepOf(k){ const p=PROJECTS[k]||{}, h=PHEAD[k]||{}, s=x=>typeof x==='
   const kp=(Array.isArray(h.kpi)?h.kpi.filter(Array.isArray):[]).find(r=>/IT|수전|전력/i.test(String(r[1]||'')));
   return { grp:REP_GRPS.includes(h.grp)?h.grp:'', focus:!!h.focus, sub:s(h.sub), first:s(h.first), asof:s(h.asof), stage:normStatus(p.status),
     site:schRepShortAddress(row('위치')??(s(h.loc)||s(h.lsite)||siteOf(p,h))), dev:row('사업주체')??(s(h.ldev)||s(h.dev)), area:row('대지면적')??s(h.larea), gfa:row('연면적')??(s(h.lgfa)||sc(0)),
-    load:kp?s(kp[0]):(it&&pw?`${it} (수전 ${pw})`:it||pw||s(h.lload)), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
+    load:row('IT LOAD')??(kp?s(kp[0]):s(h.lload)||(it&&pw?`${it} (수전 ${pw})`:it||pw)), memo:s(h.memo), owner:s(h.owner)||s(p.owner) }; }
 // 2024.04.22 / 2025.12 / "2026.11.12 수신" -> a key that orders them (a month alone comes before its days, as in the list)
 const schRepKey=s=>{ const m=String(s||'').match(/(\d{4})(?:\D{1,3}(\d{1,2}))?(?:\D{1,3}(\d{1,2}))?/); return m?[m[1],m[2],m[3]].filter(Boolean).map(x=>x.padStart(2,'0')).join('.'):'9999'; };
 function schRepSort(ids){ const o=id=>{const i=PROJ_ORDER.indexOf(id);return i<0?1e6:i;}, g=id=>{const i=REP_GRPS.indexOf((PHEAD[id]||{}).grp);return i<0?REP_GRPS.length:i;}, f=id=>schRepKey((PHEAD[id]||{}).first);
@@ -58,6 +58,63 @@ const schRepRegion=k=>(schRepOf(k).site.replace(/^[^가-힣A-Za-z]+/,'').split(/
 // in the title 프로젝트: how many are listed — the number alone, in the title's size, light grey (owner, 2026-11-24: "프로젝트 17 +";
 // the day the list is of is no longer written there, the Excel file still names it)
 function schRepCount(){ return `<span class="rep-n" title="목록에 있는 프로젝트 수">${schProjFilter(orderedProjects()).length}</span>`; }
+
+
+const REP_SHARED_FIELDS={
+ lsite:{label:'위치',row:'위치'},ldev:{label:'사업주체',row:'사업주체'},
+ larea:{label:'대지면적',row:'대지면적'},lgfa:{label:'연면적',row:'연면적'},lload:{label:'IT LOAD',row:'IT LOAD'}
+};
+function schRepSharedGroup(label){
+ const s=String(label||'').replace(/\s+/g,'').toUpperCase();
+ if(/^(위치|대상위치|소재지|주소)(?:$|[:(（])/.test(s))return 'lsite';
+ if(/^(사업주체|사업시행자)(?:$|[:(（])/.test(s))return 'ldev';
+ if(/^대지면적(?:$|[:(（㎡]|M[²2])/.test(s))return 'larea';
+ if(/^연면적(?:$|[:(（㎡]|M[²2])/.test(s))return 'lgfa';
+ if(/^IT(?:LOAD|용량|부하|\/|·)/.test(s))return 'lload';
+ return '';
+}
+function schRepSharedKey(h,key,root){
+ if(REP_SHARED_FIELDS[key])return key;
+ const m=/^rows:(\d+):1$/.exec(key||'');if(!m)return '';
+ const label=root?.querySelector('[data-k="rows:'+m[1]+':0"]');
+ return schRepSharedGroup(label?.textContent??h.rows?.[+m[1]]?.[0]);
+}
+function schRepSharedField(h,key,root){
+ const m=/^kpi:(\d+):0$/.exec(key||'');
+ if(m){const label=root?.querySelector('[data-k="kpi:'+m[1]+':1"]');return schRepSharedGroup(label?.textContent??h.kpi?.[+m[1]]?.[1]);}
+ return schRepSharedKey(h,key,root);
+}
+function schRepEditSharedValue(h,key){
+ const row=(h.rows||[]).find(r=>schRepSharedGroup(r[0])===key);
+ if(row)return String(row[1]||'');
+ const kp=(h.kpi||[]).find(r=>schRepSharedGroup(r[1])===key);
+ return String(kp?kp[0]:h[key]||'');
+}
+function schRepSyncSharedInput(e){
+ const el=e.target?.closest?.('.phead.rep:not(.ai-overview) [contenteditable="true"][data-k]');
+ if(!el||!S.editProj||e.isComposing)return;
+ const h=PHEAD[S.proj],root=el.closest('.phead'),key=el.dataset.k,group=schRepSharedField(h,key,root);if(!group)return;
+ const value=el.textContent.replace(/\u00a0/g,' '),trimmed=value.trim();
+ h[group]=trimmed;
+ if(group==='lsite')h.loc=trimmed;if(group==='ldev')h.dev=trimmed;
+ for(const [arr,labelIndex,valueIndex] of [['rows',0,1],['kpi',1,0]]){
+  (h[arr]||[]).forEach((row,i)=>{
+   const label=root.querySelector('[data-k="'+arr+':'+i+':'+labelIndex+'"]')?.textContent??row[labelIndex];
+   if(schRepSharedGroup(label)===group)row[valueIndex]=trimmed;
+  });
+ }
+ // If a new overview has no corresponding row or metric, keep the value in its normal overview table.
+ if(!(h.rows||[]).some(r=>schRepSharedGroup(r[0])===group)&&!(h.kpi||[]).some(r=>schRepSharedGroup(r[1])===group)){
+  h.rows=h.rows||[];const i=h.rows.length;h.rows.push([REP_SHARED_FIELDS[group].row,trimmed]);
+  const table=root.querySelector('.rcols .rc1 .rtb');
+  if(table){const row=document.createElement('div');row.className='r';row.innerHTML='<b class="editable" contenteditable="true" data-k="rows:'+i+':0" data-ph="구분">'+esc(REP_SHARED_FIELDS[group].row)+'</b><span class="editable" contenteditable="true" data-k="rows:'+i+':1" data-ph="내용">'+esc(trimmed)+'</span><button class="rx" data-repdel="rows:'+i+'" title="이 줄 삭제" aria-label="이 줄 삭제">✕</button>';const add=table.querySelector('[data-repadd="rows"]');table.insertBefore(row,add);}
+ }
+ root.querySelectorAll('[contenteditable="true"][data-k]').forEach(other=>{
+  if(other!==el&&schRepSharedField(h,other.dataset.k,root)===group)other.textContent=value;
+ });
+}
+document.addEventListener('input',schRepSyncSharedInput);
+document.addEventListener('compositionend',schRepSyncSharedInput);
 
 /* ---------- the overview of a project ---------- */
 // the blocks of the sheet and the titles they have unless the project gave one its own (`ttl` in the record: {<block>: title})
@@ -84,13 +141,13 @@ function schRepHead(pid){ if(schAIProject(pid))return schRepTitleTools(schAIHead
   const kp=(a,cls)=>`<div class="rkp ${cls}">${d[a].map((r,i)=>`<div class="k">${cell('b',`${a}:${i}:0`,'값',r[0])}${cell('span',`${a}:${i}:1`,'무엇의 값인지',r[1])}${del(a,i)}</div>`).join('')}${!d[a].length&&!E?nil:''}${add(a,'지표')}</div>`;
   // The cells of the main page's list are not a block of the overview (twenty-sixth round): read, they follow the sheet (schRepOf); while
   // the overview is edited they can be given a short form of their own, the placeholder showing what the list uses otherwise.
-  const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b><span class="v">${esc(R[rk])||'<span class="nil">-</span>'}</span></label>`;
+  const R=schRepOf(pid), lf=(label,k,rk,ph)=>`<label><b>${label}</b>${cell('span',k,ph||'입력',schRepEditSharedValue(d,k),'v')}</label>`;
   const lk=(t,k)=>`<span class="lk">${schPartnerMark(t)}<a class="${EC}" ${E?edk(k,'업체명'):`data-partnername="${esc(t)}" title="협력업체 정보 보기"`}>${esc(t)}</a>${E&&k.startsWith('partner:')?`<button type="button" class="partner-unlink" data-partner-unlink="${k.slice(8)}" title="협력업체 연결 제거" aria-label="협력업체 연결 제거">×</button>`:''}</span>`;
   // a block: `t` is one of the sheet's blocks (a key of REP_TTL) or, for a block of the page's own, its title as it is. A block of
   // the sheet writes the title the project gave it (schRepTtl), which can be changed while the overview is edited (thirty-sixth
   // round, owner: "수정 눌렀을때 핵심 지표, 사업성 지표같은 소제목들 텍스트도 수정가능하게"); `fk` says that files can be put to it.
-  const blk=(t,body,cls,fk)=>{ const key=REP_TTL[t]?t:'', ttl=key?schRepTtl(d,key):t;
-    return `<div class="rb ${cls||''}"${fk&&E?` data-fzone="${fk}"`:''}><div class="rt">${key&&E?`<span class="editable" contenteditable="true" data-k="ttl:${key}" data-ph="${esc(REP_TTL[key])}" title="소제목 수정">${esc(ttl)}</span>`:esc(ttl)}</div>${body}${key?schRepFileRows(d,key,E,!!fk):''}</div>`; };
+  const blk=(t,body,cls,fk,hint)=>{ const key=REP_TTL[t]?t:'', ttl=key?schRepTtl(d,key):t;
+    return `<div class="rb ${cls||''}"${fk&&E?` data-fzone="${fk}"`:''}><div class="rt">${key&&E?`<span class="editable" contenteditable="true" data-k="ttl:${key}" data-ph="${esc(REP_TTL[key])}" title="소제목 수정">${esc(ttl)}</span>`:esc(ttl)}${hint?`<small class="rhint rep-inline-hint">${esc(hint)}</small>`:''}</div>${body}${key?schRepFileRows(d,key,E,!!fk):''}</div>`; };
   // (thirty-fourth round, owner: "수정이랑 개요업로드를 최초자료일, 기준일 있는 곳으로 … 최초자료일이랑 기준일은 버튼 아래에 오게 하고 두 줄짜리로")
   // the first line: what the project is at the left (.rml); at the right (.rmr) the two buttons and, below them, the two dates, a line each.
   const meta=`<div class="rmeta"><div class="rml">${no?`<span class="m no">No. ${no}</span>`:''}<span class="m grp ${E?'pk':''}" ${E?'data-reppick="grp"':''}>${esc(REP_GRPS.includes(d.grp)?d.grp:'구분 없음')}${chev}</span>${E?`<button type="button" class="m fo ${d.focus?'on':''}" data-repfocus title="현재 집중 추진 중인 프로젝트로 표시합니다">집중 추진</button>`:d.focus?'<span class="m fo on">집중 추진</span>':''}
@@ -98,7 +155,7 @@ function schRepHead(pid){ if(schAIProject(pid))return schRepTitleTools(schAIHead
      <span class="m who ${E?'pk':''}" ${E?'data-pickowner':''}><b>담당자</b>${av()}<span>${esc(d.owner)}</span>${chev}</span></div>
      <div class="rmr"><div class="rbt"><button class="sh-btn edit ${E?'on save':''}" data-editproj>${E?'저장':'수정'}</button>${E?`<button class="cancel" data-canceledit>취소</button>`:`<button class="sh-btn upx" data-schup title="PDF 또는 엑셀 문서로 이 프로젝트의 사업개요를 채웁니다">${svg('i-sch-fup',13,13)}개요 업로드</button>`}</div>
        <div class="rdt"><b>최초자료일</b>${cell('span','first','2026.01.01',d.first||(E?'':'-'))}<b>기준일</b>${cell('span','asof','2026.01.01',d.asof||(E?'':'-'))}</div></div></div>`;
-  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div><small class="rhint">아래 사업 개요 표와 핵심 지표에서 수정하면 자동 반영됩니다. 위치는 메인 목록에서 시·군·구까지만 표시합니다.</small>`,'rcells'):'';
+  const list=E?blk('메인 페이지 목록에 표시되는 값',`<div class="rlf">${lf('위치','lsite','site','시·도 시·군·구')}${lf('사업주체','ldev','dev')}${lf('대지면적(m²)','larea','area')}${lf('연면적(m²)','lgfa','gfa')}${lf('IT LOAD (수전용량)','lload','load')}</div>`,'rcells',null,'아래 사업 개요 표와 핵심 지표에서 수정하면 자동 반영됩니다. 위치는 메인 목록에서 시·군·구까지만 표시합니다.'):'';
   // the two rows of figures
   const stats=`<div class="rstats">${blk('kpi',kp('kpi',''))}${blk('fin',`<div style="--pc:${esc(p.color||'#1c1c1c')}">${kp('fin','fin')}</div>`)}</div>`;   // (thirty-sixth round) no files on the two rows of figures   // (twenty-ninth round) the note under the figures (finNote) and the line 출처 (src) are not shown or edited any more; both stay in the record
   // the map stands where the place is written: inside the row 위치 of the table (not for a place that is not known)

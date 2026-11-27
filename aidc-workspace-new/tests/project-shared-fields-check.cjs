@@ -1,0 +1,48 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+const {newUser}=require('./h.cjs');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ const {page:p,errs}=await newUser(browser,'SYNCQA','동기화검증',{url:'http://127.0.0.1:8787/?v=2'});
+ await p.evaluate(()=>go('project:pangyo'));await p.waitForFunction(()=>schReady('pangyo'));
+ await p.evaluate(()=>{const h=headOf('pangyo');h.rows=[['위치','경기 성남시 분당구 백현동 404-1 (사옥)'],['사업주체','기존업체'],['대지면적','100㎡'],['연면적','200㎡'],['IT LOAD','3MW']];h.kpi=[['100㎡','대지면적 (부지)'],['200㎡','연면적 (건물)'],['3MW','IT / 총 수전 (설계)']];h.larea='과거값';});
+ await p.evaluate(()=>sharedFlush(true));await p.evaluate(()=>render(true));
+ await p.locator('[data-editproj]').click();await p.waitForFunction(()=>S.editProj);
+ assert.ok(await p.locator('[data-k="larea"]').isEditable());
+ assert.equal(await p.locator('[data-k="lsite"]').textContent(),'경기 성남시 분당구 백현동 404-1 (사옥)');
+ const groups=[['larea',2,0,'333㎡','444㎡','555㎡'],['lgfa',3,1,'666㎡','777㎡','888㎡'],['lload',4,2,'4MW','5MW','6MW']];
+ for(const [key,row,kpi,top,kval,rval] of groups){
+  const up=p.locator('[data-k="'+key+'"]'),rw=p.locator('[data-k="rows:'+row+':1"]'),kp=p.locator('[data-k="kpi:'+kpi+':0"]');
+  await up.fill(top);assert.equal(await rw.textContent(),top);assert.equal(await kp.textContent(),top);
+  await kp.fill(kval);assert.equal(await up.textContent(),kval);assert.equal(await rw.textContent(),kval);
+  await rw.fill(rval);assert.equal(await up.textContent(),rval);assert.equal(await kp.textContent(),rval);
+ }
+ await p.locator('[data-k="lsite"]').fill('강원 춘천시 동면 지내리 907 일원 (수열클러스터)');
+ assert.equal(await p.locator('[data-k="rows:0:1"]').textContent(),'강원 춘천시 동면 지내리 907 일원 (수열클러스터)');
+ await p.locator('[data-k="rows:1:1"]').fill('새로운업체');assert.equal(await p.locator('[data-k="ldev"]').textContent(),'새로운업체');
+ assert.equal(await p.locator('.rlf label > b').first().evaluate(e=>getComputedStyle(e).fontWeight),'700');
+ const pos=await p.locator('.rcells > .rt').evaluate(e=>{const range=document.createRange();range.selectNodeContents(e.firstChild);return {a:range.getBoundingClientRect().right,b:e.querySelector('.rep-inline-hint').getBoundingClientRect().left};});assert.ok(pos.b>pos.a);
+ console.log('PASS editable top, KPI and overview rows synchronize all three directions without changing full address; bold labels and right-aligned hint');
+ const {page:q,errs:errs2}=await newUser(browser,'SYNCREADER','열람검증',{url:'http://127.0.0.1:8787/?v=2'});
+ await q.evaluate(()=>go('project:pangyo'));await q.waitForFunction(()=>schReady('pangyo'));
+ await q.locator('[data-editproj].editing-lock').waitFor();
+ assert.ok(await q.locator('[data-editproj]').isDisabled());
+ assert.equal(await q.locator('[data-editproj] .editing-lock-name').textContent(),'동기화검증');
+ assert.equal(await q.locator('[data-editproj] .editing-lock-icon').count(),1);
+ assert.equal(await q.locator('[data-editproj]').evaluate(e=>getComputedStyle(e).fontWeight),'400');
+ assert.equal(await q.locator('[data-editproj] strong').evaluate(e=>getComputedStyle(e).fontWeight),'700');
+ console.log('PASS actual second user sees disabled project lock, padlock and only editor name bold');
+ await p.locator('[data-editproj]').click();await p.waitForFunction(()=>!S.editProj);
+ await p.reload();await p.waitForFunction(()=>sharedReady&&schReady('pangyo'));
+ assert.deepEqual(await p.evaluate(()=>{const h=headOf('pangyo'),r=schRepOf('pangyo');return [h.rows[2][1],h.kpi[0][0],h.larea,r.area,r.gfa,r.load,r.site];}),['555㎡','555㎡','555㎡','555㎡','888㎡','6MW','강원 춘천시']);
+ await q.evaluate(()=>sharedRefresh());await q.waitForFunction(()=>!document.querySelector('[data-editproj]')?.disabled);
+ assert.equal(await q.locator('[data-editproj] .editing-lock-icon').count(),0);
+ await p.locator('[data-editproj]').click();await p.waitForFunction(()=>S.editProj);
+ await p.locator('[data-k="larea"]').fill('');assert.equal(await p.locator('[data-k="kpi:0:0"]').textContent(),'');assert.equal(await p.locator('[data-k="rows:2:1"]').textContent(),'');
+ await p.locator('[data-canceledit]').click();await p.waitForFunction(()=>!S.editProj);
+ assert.equal(await p.evaluate(()=>schRepOf('pangyo').area),'555㎡');
+ console.log('PASS save/reopen keeps synchronized values; blank value propagates; cancel restores original; released lock removes icon');
+ const lock=await p.evaluate(()=>{const h=sharedLockLabel({employee:'SYNCQA',co:['x']});const d=document.createElement('div');d.innerHTML=h;return {names:d.querySelectorAll('strong').length,text:d.textContent};});
+ assert.equal(lock.names,1);assert.equal(lock.text,'동기화검증님 외 1명이 수정 중입니다');
+ assert.deepEqual([...errs,...errs2].filter(e=>!e.includes('Failed to fetch')),[]);
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

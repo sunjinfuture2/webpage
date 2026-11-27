@@ -1,3 +1,8 @@
+
+function sharedLockLabel(lock){
+ const icon='<svg class="editing-lock-icon" width="13" height="14" viewBox="0 0 16 18" aria-hidden="true"><rect x="2" y="7" width="12" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 7V4.5a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 10v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+ return icon+'<span class="editing-lock-text"><strong class="editing-lock-name">'+esc(userName(lock.employee))+'</strong>님'+(lock.co&&lock.co.length?' 외 '+lock.co.length+'명':'')+'이 수정 중입니다</span>';
+}
 /* Shared client: login, server sync, edit locks, conflict recovery and routing.
    build-shared.mjs injects this file into the app script at the LOGIN marker, so it uses the app's globals (ITEMS, S, render, …). */
 const CLIENT_VERSION=4;                       // must be >= MIN_CLIENT in shared-worker.mjs
@@ -445,10 +450,10 @@ async function sharedBeginEdit(id){if(!sharedReady)return false;if(!sharedBase[i
 async function sharedRelease(id){if(!ownedLocks.has(id))return;try{const r=await postJson('/api/lock',{id,action:'release'});if(r.ok){ownedLocks.delete(id);sharedMeta(await r.json());}}catch{}}
 function sharedUi(){if(!sharedReady)return;
  for(const [id,pin] of [[S.panel,$('#panel-pin')],[S.full,$('#item-pin')]]){const it=id&&ITEMS.find(x=>x.id===id);if(!it||pin.dataset.id!==id)continue;const l=otherLock('item:'+id);
-  for(const b of $$('[data-ed="edit"]',pin)){b.disabled=!!l;b.textContent=l?userName(l.employee)+'님이 수정 중입니다':'수정';b.title=l?'다른 사용자의 편집이 끝나면 수정할 수 있습니다.':'';}
+  for(const b of $$('[data-ed="edit"]',pin)){b.disabled=!!l;b.classList.toggle('editing-lock',!!l);if(l)b.innerHTML=sharedLockLabel(l);else b.textContent='수정';b.title=l?'다른 사용자의 편집이 끝나면 수정할 수 있습니다.':'';}
   for(const el of $$('.ititle[data-f="title"],.ibody[data-f="body"]:not([data-nb])',pin))el.contentEditable=canEditItem(it)?'true':'false';
   for(const b of $$('[data-pick], [data-ed="trash"]',pin)){b.style.opacity=l?'.5':'';b.title=l?userName(l.employee)+'님이 수정 중입니다':'';}}
- const p=otherLock('project:'+S.proj);for(const b of $$('[data-editproj]')){b.disabled=!!p;b.textContent=p?userName(p.employee)+'님이 수정 중입니다':S.editProj?'저장':'수정';}
+ const p=otherLock('project:'+S.proj);for(const b of $$('[data-editproj]')){b.disabled=!!p;b.classList.toggle('editing-lock',!!p);if(p)b.innerHTML=sharedLockLabel(p);else b.textContent=S.editProj?'저장':'수정';}
  $('#tb-user .nm').textContent=sharedName;const n=$('#mnav .me .nm');if(n)n.textContent=sharedName;
 }
 let renewTimer=0;

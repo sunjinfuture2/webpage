@@ -2136,7 +2136,7 @@ function itemHtml(it,mode){ // mode 'panel'|'full'
   const pk=k=>E?`data-pick="${k}"`:'';
   const last=`<span class="last">최종: ${esc(modTxt(it))}${lastBy(it)}</span>`;
   let head='';
-  if(lock) head=`<button class="lock sh-btn" disabled>${esc(userName(lock.employee))}님${lock.co&&lock.co.length?` 외 ${lock.co.length}명`:''}이 수정 중입니다</button>${nbCanJoin(it)?'<button class="sh-btn pub edit nb-join" data-ed="join" title="같은 본문을 동시에 수정합니다">함께 수정</button>':''}${last}`;
+  if(lock) head=`<button class="lock sh-btn editing-lock" disabled>${sharedLockLabel(lock)}</button>${nbCanJoin(it)?'<button class="sh-btn pub edit nb-join" data-ed="join" title="같은 본문을 동시에 수정합니다">함께 수정</button>':''}${last}`;
   else if(it.editing) head=`<button class="sh-btn pub edit save" data-ed="save">저장</button><button class="cancel" data-ed="cancel">취소</button><span class="nb-co" data-co="${esc(it.id)}">${nbCoHtml(it.id)}</span>`;
   else if(isPub(it)) head=`<button class="sh-btn pub edit" data-ed="edit">수정</button>${last}`;
   else if(E) head=`<button class="sh-btn pub ${it.title?'ready':''}" data-ed="publish">게시</button><span class="last">${it.status==='draft'?'초안 · 게시하기 전에는 목록에 보이지 않습니다':'게시하면 다른 멤버에게 보입니다'}</span>`;

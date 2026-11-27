@@ -2207,3 +2207,12 @@ html.dark .pt-project-picker .it.sel{background:#2a2a2a}
 :is(#sch-actions,.sch-list,.sch-props,.action-props) .sch-st.action-state{font-size:calc(1em - 1px)}
 .sn-node .dd .sch-st.action-state{font-size:12.5px}
 /* TABLE_VISUAL_THEME_END */
+
+/* Editable shared overview values; the full address is kept while the main list abbreviates it. */
+.phead.rep .rcells > .rt{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px}
+.phead.rep .rcells > .rt > .rep-inline-hint{margin:0 0 0 auto;font-size:12px;font-weight:400;line-height:1.5;color:#8e8e8e}
+.phead.rep .rlf label > b{font-weight:700}
+button.editing-lock{font-weight:400}
+button.editing-lock .editing-lock-name{font-weight:700}
+button.editing-lock .editing-lock-icon{flex:none;vertical-align:-2px;margin-right:4px}
+@media(max-width:700px){.phead.rep .rcells > .rt > .rep-inline-hint{margin-left:0}}
