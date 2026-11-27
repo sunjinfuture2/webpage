@@ -178,7 +178,12 @@ html.mp-calm *,html.mp-calm *::before,html.mp-calm *::after{transition:none!impo
 .mem .mem-delete:hover:not(:disabled){background:#fff0f0}
 .mem .mem-delete:disabled{opacity:.45;cursor:default}
 .mem .mem-count{font-size:12px;color:var(--t2);margin-right:8px}
-.mem.mem-selectable input[type=checkbox]{appearance:auto;width:15px;height:15px;margin:0 10px 0 0;flex:0 0 15px;vertical-align:middle;accent-color:#555;cursor:pointer}
+.mem.mem-selectable input[type=checkbox]{appearance:none;-webkit-appearance:none;box-sizing:border-box;display:inline-grid;place-content:center;width:13px;height:13px;margin:0 10px 0 0;padding:0;flex:0 0 13px;vertical-align:middle;border:1px solid #555;border-radius:2px;background:#fff;cursor:pointer}
+.mem.mem-selectable input[type=checkbox]:checked,.mem.mem-selectable input[type=checkbox]:indeterminate{background:#555;border-color:#555}
+.mem.mem-selectable input[type=checkbox]:checked::after{content:"";width:3px;height:6px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:translateY(-1px) rotate(45deg)}
+.mem.mem-selectable input[type=checkbox]:indeterminate::after{content:"";width:7px;height:1.5px;background:#fff;transform:none;border:0}
+.mem.mem-selectable input[type=checkbox]:focus-visible{outline:2px solid #555;outline-offset:2px}
+.mem.mem-selectable input[type=checkbox]:disabled{opacity:.4}
 .mem.mem-selectable input:disabled{cursor:default}
 .mem.mem-selectable .tbl .hd>span:first-child{display:flex;align-items:center}
 .mem.mem-selectable .tbl .rw .us{grid-template-columns:145px 1fr}
@@ -186,4 +191,4 @@ html.mp-calm *,html.mp-calm *::before,html.mp-calm *::after{transition:none!impo
 .mem.mem-selectable .tbl .rw .us .nm{margin-left:0}
 .mem-confirm .box .bt button.pri{background:#d32f2f;color:#fff;border:1px solid #d32f2f}
 
-.mem.mem-selectable .tbl .hd>span:first-child>em:first-of-type{left:25px}
+.mem.mem-selectable .tbl .hd>span:first-child>em:first-of-type{left:23px}
