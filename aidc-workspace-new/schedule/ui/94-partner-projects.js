@@ -1,3 +1,22 @@
+// Column filters use live list data across all pages, never unused category history.
+function schPartnerFilterRows(except){
+ return PARTNERS.filter(p=>!p.trash&&
+  (except==='project'||!S.partnerProject||schPartnerProjects(p).includes(S.partnerProject))&&
+  (except==='category'||!S.partnerCat||partnerCategories(p.cat).includes(S.partnerCat))&&
+  matchQ(S.q.partner,p.name,p.cat,p.desc,p.body,p.site));
+}
+function schPartnerFilterProjects(){
+ const used=new Set(schPartnerFilterRows('project').flatMap(schPartnerProjects));
+ return orderedProjects().filter(id=>!PROJECTS[id].trash&&used.has(id));
+}
+function schPartnerFilterCategories(){
+ return [...new Set(schPartnerFilterRows('category').flatMap(p=>partnerCategories(p.cat)))].sort((a,b)=>a.localeCompare(b,'ko'));
+}
+const schPartnerCategoryTableBase=partnerTable;
+partnerTable=function(rows){
+ return schPartnerCategoryTableBase(rows).replace('<span><em>구분</em></span>',
+ '<span data-pt-category-filter><em>구분</em>'+svg('i-chev-d',8,4)+'</span>');
+};
 /* Research preview and shared partner/project relationships.
    PHEAD[project].partners is the single source of membership; partner rows derive their project tags. */
 function schResearchLeading(it){
@@ -81,12 +100,16 @@ document.addEventListener('click',async e=>{
  const off=e.target.closest&&e.target.closest('[data-pt-project-off]');
  if(off){e.preventDefault();e.stopImmediatePropagation();if(off.disabled)return;off.disabled=true;const pt=PARTNERS.find(p=>p.id===off.dataset.ptProjectOff&&!p.trash);
   try{if(pt&&await schPartnerToggleProject(pt,off.dataset.pid)){const scroll=$('#content').scrollTop;render(true);$('#content').scrollTop=scroll;if(S.panel===pt.id){const tags=$('#panel-pin .pt-projects');if(tags)tags.innerHTML=schPartnerProjectTags(pt,true);}}}finally{off.disabled=false;}return;}
- const el=e.target.closest&&e.target.closest('[data-pt-project-pick],[data-pt-project-filter],[data-pt-project-clear]');if(!el)return;
+ const el=e.target.closest&&e.target.closest('[data-pt-project-pick],[data-pt-project-filter],[data-pt-project-clear],[data-pt-category-filter]');if(!el)return;
  e.preventDefault();e.stopImmediatePropagation();
+ if(el.hasAttribute('data-pt-category-filter')){
+  menuPop(el,[{t:'전체 구분',k:'all',sel:!S.partnerCat,fn:()=>{S.partnerCat=null;S.ptPage=1;ptKeep(()=>render(true));}},
+   ...schPartnerFilterCategories().map((cat,i)=>({t:cat,k:'cat'+i,sel:S.partnerCat===cat,fn:()=>{S.partnerCat=cat;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});return;
+ }
  if(el.hasAttribute('data-pt-project-pick')){schPartnerProjectPick(el,PARTNERS.find(p=>p.id===el.dataset.ptProjectPick&&!p.trash));return;}
  if(el.hasAttribute('data-pt-project-clear')){S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));return;}
  menuPop(el,[{t:'전체 프로젝트',k:'all',sel:!S.partnerProject,fn:()=>{S.partnerProject='';S.ptPage=1;ptKeep(()=>render(true));}},
- ...orderedProjects().filter(id=>!PROJECTS[id].trash).map(id=>({t:PROJECTS[id].full||PROJECTS[id].tag,k:id,sel:S.partnerProject===id,fn:()=>{S.partnerProject=id;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});
+ ...schPartnerFilterProjects().map(id=>({html:pill({...PROJECTS[id],tag:PROJECTS[id].full||PROJECTS[id].tag},'nosq'),k:id,sel:S.partnerProject===id,fn:()=>{S.partnerProject=id;S.ptPage=1;ptKeep(()=>render(true));}}))],{cls:'sch-colmenu'});
 },true);
 
 document.addEventListener('click',e=>{

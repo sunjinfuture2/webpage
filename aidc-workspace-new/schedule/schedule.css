@@ -2088,8 +2088,8 @@ html.dark .pop.lp .lp-srch{background:#2a2a2a}
 .tbl.archive.pv .hd span[data-arcol]{position:relative;gap:8px;min-width:0}
 .tbl.archive.pv .hd span[data-arcol] em{position:static!important;left:auto!important;flex:1;min-width:0}
 .tbl.archive.pv .hd span[data-arcol] svg{position:static!important;margin-left:auto;margin-right:8px}
-.tbl.partners .hd [data-pt-project-filter]{display:flex;align-items:center;gap:8px;cursor:pointer}
-.tbl.partners .hd [data-pt-project-filter] em{position:static;left:auto}
+.tbl.partners .hd [data-pt-project-filter],.tbl.partners .hd [data-pt-category-filter]{display:flex;align-items:center;gap:8px;cursor:pointer}
+.tbl.partners .hd [data-pt-project-filter] em,.tbl.partners .hd [data-pt-category-filter] em{position:static;left:auto}
 .tbl.partners .pt-projects,.partner-content .pt-projects{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 0;min-width:0}
 .pt-project-tag{border:0;border-radius:5px;padding:3px 8px;background:#edf3e9;color:#43802c;font-size:12px;line-height:18px;cursor:pointer;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .pt-project-add{border:1px solid #ddd;border-radius:4px;width:21px;height:21px;font-size:15px;color:#888;cursor:pointer;background:transparent}
