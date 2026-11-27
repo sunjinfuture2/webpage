@@ -61,7 +61,7 @@ function u2ReadRows(){
   u.rows.push(r);
  }
  if(!u.rows.length)throw Error('머리글 아래에 읽을 행이 없습니다.');
- u.removed=new Set();u.fail='';
+ u.removed=new Set();u.reviewPage=1;u.fail='';
 }
 function u2Build(){
  const u=SCHUP2,m=schModel(u.pid),draft=copy(m.plan),by=new Map(draft.tasks.map(t=>[t.id,t])),used=new Set(),errors=[],diff=[],aliases={...((SCHED[u.pid]||{}).up2keys||{})};
@@ -133,9 +133,11 @@ function u2Draw(){
   h+='<p>'+esc(u.book.name)+' · '+esc(u2Sheet().name)+'</p><p class="u2-count">신규 '+p.adds+' · 변경 '+p.updates+' · 파일에 없음 '+p.missing.length+' (기본 유지) · 제외 '+p.skips+'</p>';
   h+='<p class="u2-muted">기존 업무를 연결하면 본문·댓글·첨부와 내부 번호를 유지합니다. 체크된 값만 엑셀 값으로 바뀝니다. 빈칸은 기본 유지합니다.</p>';
   const tasks=schModel(u.pid).plan.tasks;
-  h+=p.diff.map(({r,t,isNew,changes,errors})=>'<section class="u2-row"><b>'+r.row+'행 · '+esc(r.values.name||r.key||'(업무명 없음)')+'</b><select data-u2target="'+r.row+'"><option value="choose" '+(r.target==='choose'?'selected':'')+'>연결할 업무를 선택해주세요</option><option value="new" '+(r.target==='new'?'selected':'')+'>새 업무 추가</option><option value="skip">이 행 제외</option>'+tasks.map(q=>'<option value="'+esc(q.id)+'" '+(r.target===q.id?'selected':'')+'>'+esc(q.wbs+' · '+q.name)+'</option>').join('')+'</select>'+errors.map(e=>'<p class="u2-error">'+esc(e)+'</p>').join('')+
+  const pages=Math.max(1,Math.ceil(p.diff.length/20));u.reviewPage=Math.min(pages,Math.max(1,u.reviewPage||1));
+  h+='<div class="u2-controls"><button data-u2="prev" '+(u.reviewPage===1?'disabled':'')+'>이전</button><span>'+u.reviewPage+' / '+pages+' · 행별 검토</span><button data-u2="next" '+(u.reviewPage===pages?'disabled':'')+'>다음</button></div>';
+  h+=p.diff.slice((u.reviewPage-1)*20,u.reviewPage*20).map(({r,t,isNew,changes,errors})=>'<section class="u2-row"><b>'+r.row+'행 · '+esc(r.values.name||r.key||'(업무명 없음)')+'</b><select data-u2target="'+r.row+'"><option value="choose" '+(r.target==='choose'?'selected':'')+'>연결할 업무를 선택해주세요</option><option value="new" '+(r.target==='new'?'selected':'')+'>새 업무 추가</option><option value="skip">이 행 제외</option>'+tasks.map(q=>'<option value="'+esc(q.id)+'" '+(r.target===q.id?'selected':'')+'>'+esc(q.wbs+' · '+q.name)+'</option>').join('')+'</select>'+errors.map(e=>'<p class="u2-error">'+esc(e)+'</p>').join('')+
   (isNew?'<p>'+esc(r.values.plannedStart||'시작일 없음')+' ~ '+esc(r.values.plannedFinish||'완료일 없음')+'</p>':'')+
-  changes.map(c=>'<label class="u2-change"><input type="checkbox" data-u2choice="'+r.row+'" data-field="'+c.key+'" '+(c.selected||isNew?'checked':'')+' '+(isNew?'disabled':'')+'><b>'+c.label+'</b><span>'+esc(c.key==='progress'&&c.old!=null?Math.round(c.old*100)+'%':u2value(c.old)||'(없음)')+' → '+esc(c.blank?'빈칸으로 지우기':c.key==='progress'?Math.round(c.next*100)+'%':u2value(c.next))+'</span></label>').join('')+(r.blank.length?'<p class="u2-muted">빈칸: '+r.blank.map(k=>U2_FIELDS.find(f=>f[0]===k)[1]).join(', ')+' · 체크하지 않으면 유지</p>':'')+'</section>').join('');
+  changes.map(c=>'<label class="u2-change"><input type="checkbox" data-u2choice="'+r.row+'" data-field="'+c.key+'" '+(c.selected||isNew?'checked':'')+' '+(isNew?'disabled':'')+'><b>'+c.label+'</b><span>'+esc(c.key==='progress'&&c.old!=null?Math.round(c.old*100)+'%':u2value(c.old)||'(없음)')+' → '+esc(c.blank?(c.key==='status'?'계획으로 초기화':'빈칸으로 지우기'):c.key==='progress'?Math.round(c.next*100)+'%':u2value(c.next))+'</span></label>').join('')+(r.blank.length?'<p class="u2-muted">빈칸: '+r.blank.map(k=>U2_FIELDS.find(f=>f[0]===k)[1]).join(', ')+' · 체크하지 않으면 유지</p>':'')+'</section>').join('');
   const skipped=u.rows.filter(r=>r.target==='skip');if(skipped.length)h+='<details><summary>제외한 행 '+skipped.length+'개</summary>'+skipped.map(r=>'<p>'+r.row+'행 '+esc(r.values.name||r.key)+' <button data-u2restore="'+r.row+'">다시 검토</button></p>').join('')+'</details>';
   h+='<details><summary>파일에 없는 기존 업무 '+p.missing.length+'개 · 유지가 기본</summary><p>삭제를 선택하면 연결 관계도 제거됩니다. 조달 등에 연결된 업무는 삭제가 차단됩니다.</p>'+p.missing.map(t=>'<label class="u2-change"><input type="checkbox" data-u2delete="'+esc(t.id)+'" '+(u.removed.has(t.id)?'checked':'')+'>삭제 선택: '+esc(t.wbs+' · '+t.name)+'</label>').join('')+'</details>';
   if(p.result)h+='<p>운영개시 예상: '+esc(p.oldResult.operationDate||'미정')+' → '+esc(p.result.operationDate||'미정')+'</p>';
@@ -187,7 +189,7 @@ function u2Open(pid){
  d.addEventListener('click',e=>{
   const b=e.target.closest('[data-u2],[data-u2restore]');if(!b||SCHUP2?.busy)return;
   if(b.dataset.u2restore){SCHUP2.rows.find(r=>r.row===+b.dataset.u2restore).target='choose';u2Draw();return;}
-  const k=b.dataset.u2;if(k==='close')u2Close();else if(k==='file'){SCHUP2.book=null;u2ResetReview();u2Draw();}
+  const k=b.dataset.u2;if(k==='prev'||k==='next'){SCHUP2.reviewPage+=(k==='next'?1:-1);u2Draw();return;}if(k==='close')u2Close();else if(k==='file'){SCHUP2.book=null;u2ResetReview();u2Draw();}
   else if(k==='back'){u2ResetReview();u2Draw();}else if(k==='review'){try{u2ReadRows();}catch(e){SCHUP2.fail=e.message;}u2Draw();}else if(k==='apply')u2Apply();
  });
  u2Draw();

@@ -88,6 +88,12 @@ async function file(rows,name='다른양식.xlsx',sheet='회사 일정표'){cons
  await p.reload();await p.waitForFunction(id=>sharedReady&&schReady(id),other);
  assert.ok(await p.evaluate(id=>schModel(id).plan.tasks.some(t=>t.name==='계약 업무'),other));
  console.log('PASS per-field keep choice and new project upload with distinct stage groups and persistence');
+ 
+ const large=await file([['업무명','시작일','완료일'],...Array.from({length:25},(_,i)=>['신규'+i,'2027-06-01','2027-06-02'])]);
+ await p.locator('[data-upload2]').click();await p.locator('[data-u2file]').setInputFiles(large);await p.locator('[data-u2map="name"]').waitFor();await p.locator('[data-u2="review"]').click();
+ assert.equal(await p.locator('.u2-row').count(),20);assert.equal(await p.evaluate(()=>SCHUP2.preview.adds),25);
+ await p.locator('[data-u2="next"]').click();assert.equal(await p.locator('.u2-row').count(),5);
+ await p.locator('[data-u2="close"]').click();console.log('PASS review pagination retains every row');
  const serious=errs.filter(e=>!e.includes('Failed to fetch'));assert.deepEqual(serious,[]);
  await browser.close();console.log('UPLOAD2 CHECKS PASSED');
 })().catch(e=>{console.error(e);process.exit(1)});
