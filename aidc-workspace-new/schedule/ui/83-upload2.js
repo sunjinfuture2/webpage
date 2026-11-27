@@ -19,6 +19,14 @@ function u2Day(v){
  if(!m)return null;const d=m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0'), t=new Date(d+'T00:00:00Z');return !isNaN(+t)&&t.toISOString().slice(0,10)===d?d:null;
 }
 function u2AutoMap(row){const out={};for(const [key,,aliases] of U2_FIELDS){const hits=row.map((v,i)=>aliases.includes(u2norm(v))?i:-1).filter(i=>i>=0);out[key]=hits.length===1?hits[0]:-1;}return out;}
+function u2Column(i){let out='';for(i++;i>0;i=Math.floor((i-1)/26))out=String.fromCharCode(65+(i-1)%26)+out;return out;}
+function u2DefaultSheet(book){
+ let best=-1,at=0;
+ book.sheets.forEach((sh,i)=>{let score=0;sh.rows.slice(0,100).forEach(r=>{const m=u2AutoMap(r);score=Math.max(score,Object.values(m).filter(c=>c>=0).length+(m.name>=0?3:0));});
+ if(/액션|업무|task|action/i.test(sh.name))score+=2;
+ if(score>best){best=score;at=i;}
+ });return at;
+}
 function u2Sheet(){return SCHUP2.book.sheets[SCHUP2.sheet];}
 function u2MapKey(){return 'aidc-upload2-map:'+JSON.stringify((u2Sheet().rows[SCHUP2.head]||[]).map(u2norm));}
 function u2ChooseSheet(){
@@ -61,7 +69,7 @@ function u2ReadRows(){
   u.rows.push(r);
  }
  if(!u.rows.length)throw Error('머리글 아래에 읽을 행이 없습니다.');
- u.removed=new Set();u.reviewPage=1;u.fail='';
+ u.removed=new Set();u.reviewPage=1;u.reviewFilter='all';u.fail='';
 }
 function u2Build(){
  const u=SCHUP2,m=schModel(u.pid),draft=copy(m.plan),by=new Map(draft.tasks.map(t=>[t.id,t])),used=new Set(),errors=[],diff=[],aliases={...((SCHED[u.pid]||{}).up2keys||{})};
@@ -116,28 +124,54 @@ function u2Build(){
 function u2Close(){if(SCHUP2?.busy)return;SCHUP2=null;$('#dlg.sch-up2')?.remove();}
 async function u2File(file){
  const u=SCHUP2;if(!file||u.busy)return;u.busy=true;u.fail='';u2Draw();
- try{const X=await schXlsx(),book=await X.readUpload2(file);if(SCHUP2!==u)return;u.book=book;u.sheet=0;u2ChooseSheet();}
+ try{const X=await schXlsx(),book=await X.readUpload2(file);if(SCHUP2!==u)return;u.book=book;u.sheet=u2DefaultSheet(book);u2ChooseSheet();}
  catch(e){u.fail=e.message;}finally{if(SCHUP2===u){u.busy=false;u2Draw();}}
 }
+
+const u2Display=(key,value)=>value==null||value===''||(Array.isArray(value)&&!value.length)?'(없음)':key==='progress'?Math.round(value*100)+'%':u2value(value);
+function u2RowKind(d){return d.errors.length?'error':d.isNew?'new':d.changes.some(c=>!c.blank||c.selected)?'changed':'same';}
+const U2_KIND={all:'전체',new:'추가',changed:'변경',same:'동일',error:'확인 필요'};
+function u2CompareRow(d,tasks){
+ const {r,t,isNew,changes,errors}=d,kind=u2RowKind(d),old=tasks.find(q=>q.id===r.target);
+ const mapped=U2_FIELDS.filter(([k])=>k!=='key'&&SCHUP2.map[k]>=0);
+ let h='<section class="u2-row u2-'+kind+'" data-kind="'+kind+'"><div class="u2-rowtitle"><b>'+r.row+'행 · '+esc(r.values.name||r.key||'(업무명 없음)')+'</b><span class="u2-badge">'+U2_KIND[kind]+'</span></div>';
+ h+='<p class="u2-muted">엑셀 번호: '+esc(r.key||'(없음)')+' · 기존 액션: '+esc(old?old.wbs+' · '+old.name:isNew?'없음 · 신규 생성':'연결 필요')+'</p>';
+ h+='<select aria-label="'+r.row+'행 연결할 액션" data-u2target="'+r.row+'"><option value="choose" '+(r.target==='choose'?'selected':'')+'>연결할 업무를 선택해주세요</option><option value="new" '+(isNew?'selected':'')+'>새 업무 추가</option><option value="skip">이 행 제외</option>'+tasks.map(q=>'<option value="'+esc(q.id)+'" '+(r.target===q.id?'selected':'')+'>'+esc(q.wbs+' · '+q.name)+'</option>').join('')+'</select>';
+ h+=errors.map(e=>'<p class="u2-error">'+esc(e)+'</p>').join('');
+ h+='<div class="u2-compare-wrap"><table class="u2-compare"><thead><tr><th>반영</th><th>항목</th><th>기존 액션 값</th><th>업로드2 엑셀 값</th><th>적용 후 값</th></tr></thead><tbody>';
+ for(const [key,label] of mapped){
+  const c=changes.find(c=>c.key===key),blank=r.blank.includes(key),rawError=u2Sheet().errors[r.row+':'+(SCHUP2.map[key]+1)];
+  const incoming=rawError?'셀 오류':blank?'(빈칸)':u2Display(key,r.values[key]);
+  const changed=!!c&&(!c.blank||c.selected),checked=isNew||!!c?.selected;
+  h+='<tr class="'+(changed?'u2-different':'')+'"><td>'+(c?'<input aria-label="'+r.row+'행 '+label+' 반영" type="checkbox" data-u2choice="'+r.row+'" data-field="'+key+'" '+(checked?'checked':'')+' '+(isNew?'disabled':'')+'>':isNew?'추가':'—')+'</td><th>'+label+'</th><td>'+esc(isNew?'(기존 업무 없음)':u2Display(key,old?.[key]))+'</td><td>'+esc(incoming)+'</td><td>'+esc(u2Display(key,t?.[key]))+(!isNew&&c&&!checked?'<small>기존 값 유지</small>':!isNew&&blank&&!c?'<small>빈칸 · 기존 값 유지</small>':!isNew&&!c?'<small>동일</small>':c?.blank?'<small>'+(key==='status'?'계획으로 초기화':'값 지우기')+'</small>':'')+'</td></tr>';
+ }
+ h+='</tbody></table></div>';
+ if(isNew)h+='<p class="u2-muted">연결하지 않은 항목은 새 액션의 기본값을 사용합니다.</p>';
+ return h+'</section>';
+}
+
 function u2Draw(){
  const u=SCHUP2,box=$('#dlg.sch-up2 .box');if(!u||!box)return;const top=box.scrollTop;
  let h='<h3>액션 업로드2</h3><p class="u2-muted">파일 선택 → 열 연결 → 변경 내용 확인 → 적용</p>';
+ if(u.book?.skipped?.length)h+='<details class="u2-sheet-warnings"><summary>읽기 제외 시트 '+u.book.skipped.length+'개 · 다른 시트는 사용 가능</summary>'+u.book.skipped.map(s=>'<p>'+esc(s.name)+' — '+esc(s.reason)+'</p>').join('')+'</details>';
  if(!u.book){h+='<label class="u2-drop">엑셀(.xlsx) 파일 선택<input type="file" data-u2file accept=".xlsx"></label><p>기존 업로드와 별개로 액션 목록을 가져옵니다. 관계도·조달·게이트는 기존 업로드를 사용해주세요.</p>';}
  else if(!u.rows){
   const sheets=u.book.sheets,sh=u2Sheet(),head=sh.rows[u.head]||[];
   h+='<p>'+esc(u.book.name)+'</p><div class="u2-controls"><label>시트 <select data-u2sheet>'+sheets.map((s,i)=>'<option value="'+i+'" '+(i===u.sheet?'selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select></label><label>머리글 행 <input data-u2head type="number" min="1" max="'+Math.max(1,sh.rows.length)+'" value="'+(u.head+1)+'"></label><button data-u2="file">다른 파일</button></div>';
-  h+='<div class="u2-map">'+U2_FIELDS.map(([k,label])=>'<label>'+label+'<select data-u2map="'+k+'"><option value="-1">연결 안 함 · 기존값 유지</option>'+head.map((v,i)=>'<option value="'+i+'" '+(u.map[k]===i?'selected':'')+'>'+String.fromCharCode(65+Math.floor(i/26)-1).replace('@','')+(i<26?'': '')+String.fromCharCode(65+i%26)+'열 · '+esc(v||'(제목 없음)')+'</option>').join('')+'</select></label>').join('')+'</div>';
+  h+='<div class="u2-map">'+U2_FIELDS.map(([k,label])=>'<label>'+label+'<select data-u2map="'+k+'"><option value="-1">연결 안 함 · 기존값 유지</option>'+head.map((v,i)=>'<option value="'+i+'" '+(u.map[k]===i?'selected':'')+'>'+u2Column(i)+'열 · '+esc(v||'(제목 없음)')+'</option>').join('')+'</select></label>').join('')+'</div>';
   h+='<p class="u2-muted">업무명 열은 필수입니다. 신규 업무는 시작일·완료일도 필요합니다. 연결하지 않은 열은 변경하지 않습니다. 같은 열 구성의 연결 설정은 이 브라우저에서 기억합니다.</p><details><summary>원본 미리보기</summary><div class="u2-scroll"><table>'+sh.rows.slice(u.head,u.head+6).map((r,i)=>'<tr><th>'+(u.head+i+1)+'</th>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</table></div></details>';
  }else{
   const p=u2Build();u.preview=p;
-  h+='<p>'+esc(u.book.name)+' · '+esc(u2Sheet().name)+'</p><p class="u2-count">신규 '+p.adds+' · 변경 '+p.updates+' · 파일에 없음 '+p.missing.length+' (기본 유지) · 제외 '+p.skips+'</p>';
-  h+='<p class="u2-muted">기존 업무를 연결하면 본문·댓글·첨부와 내부 번호를 유지합니다. 체크된 값만 엑셀 값으로 바뀝니다. 빈칸은 기본 유지합니다.</p>';
+  const counts={new:0,changed:0,same:0,error:0};p.diff.forEach(d=>counts[u2RowKind(d)]++);
+  h+='<p>'+esc(u.book.name)+' · '+esc(u2Sheet().name)+'</p><p class="u2-count">추가 '+counts.new+' · 변경 '+counts.changed+' · 동일 '+counts.same+' · 엑셀에 없음 '+p.missing.length+' · 확인 필요 '+counts.error+' · 제외 '+p.skips+'</p>';
+  h+='<p class="u2-muted">아래 표에서 기존 액션과 엑셀 값을 비교하세요. 체크한 항목만 반영하며, 빈칸과 엑셀에 없는 업무는 기본 유지합니다. 열 연결을 하지 않은 항목은 비교·수정하지 않습니다.</p>';
+  h+='<p class="u2-apply-summary">현재 적용 예정: 추가 '+p.adds+'건 / 수정 '+p.updates+'건 / 삭제 '+p.remove.length+'건</p>';
   const tasks=schModel(u.pid).plan.tasks;
-  const pages=Math.max(1,Math.ceil(p.diff.length/20));u.reviewPage=Math.min(pages,Math.max(1,u.reviewPage||1));
-  h+='<div class="u2-controls"><button data-u2="prev" '+(u.reviewPage===1?'disabled':'')+'>이전</button><span>'+u.reviewPage+' / '+pages+' · 행별 검토</span><button data-u2="next" '+(u.reviewPage===pages?'disabled':'')+'>다음</button></div>';
-  h+=p.diff.slice((u.reviewPage-1)*20,u.reviewPage*20).map(({r,t,isNew,changes,errors})=>'<section class="u2-row"><b>'+r.row+'행 · '+esc(r.values.name||r.key||'(업무명 없음)')+'</b><select data-u2target="'+r.row+'"><option value="choose" '+(r.target==='choose'?'selected':'')+'>연결할 업무를 선택해주세요</option><option value="new" '+(r.target==='new'?'selected':'')+'>새 업무 추가</option><option value="skip">이 행 제외</option>'+tasks.map(q=>'<option value="'+esc(q.id)+'" '+(r.target===q.id?'selected':'')+'>'+esc(q.wbs+' · '+q.name)+'</option>').join('')+'</select>'+errors.map(e=>'<p class="u2-error">'+esc(e)+'</p>').join('')+
-  (isNew?'<p>'+esc(r.values.plannedStart||'시작일 없음')+' ~ '+esc(r.values.plannedFinish||'완료일 없음')+'</p>':'')+
-  changes.map(c=>'<label class="u2-change"><input type="checkbox" data-u2choice="'+r.row+'" data-field="'+c.key+'" '+(c.selected||isNew?'checked':'')+' '+(isNew?'disabled':'')+'><b>'+c.label+'</b><span>'+esc(c.key==='progress'&&c.old!=null?Math.round(c.old*100)+'%':u2value(c.old)||'(없음)')+' → '+esc(c.blank?(c.key==='status'?'계획으로 초기화':'빈칸으로 지우기'):c.key==='progress'?Math.round(c.next*100)+'%':u2value(c.next))+'</span></label>').join('')+(r.blank.length?'<p class="u2-muted">빈칸: '+r.blank.map(k=>U2_FIELDS.find(f=>f[0]===k)[1]).join(', ')+' · 체크하지 않으면 유지</p>':'')+'</section>').join('');
+  h+='<div class="u2-controls">'+Object.entries(U2_KIND).map(([k,label])=>'<button data-u2filter="'+k+'" aria-pressed="'+((u.reviewFilter||'all')===k)+'">'+label+' '+(k==='all'?p.diff.length:counts[k])+'</button>').join('')+'</div>';
+  const filtered=p.diff.filter(d=>!u.reviewFilter||u.reviewFilter==='all'||u2RowKind(d)===u.reviewFilter);
+  const pages=Math.max(1,Math.ceil(filtered.length/20));u.reviewPage=Math.min(pages,Math.max(1,u.reviewPage||1));
+  h+='<div class="u2-controls"><button data-u2="prev" '+(u.reviewPage===1?'disabled':'')+'>이전</button><span>'+u.reviewPage+' / '+pages+' · 행별 검토 (필터는 표시만 변경)</span><button data-u2="next" '+(u.reviewPage===pages?'disabled':'')+'>다음</button></div>';
+  h+=filtered.slice((u.reviewPage-1)*20,u.reviewPage*20).map(d=>u2CompareRow(d,tasks)).join('')||'<p>해당하는 행이 없습니다.</p>';
   const skipped=u.rows.filter(r=>r.target==='skip');if(skipped.length)h+='<details><summary>제외한 행 '+skipped.length+'개</summary>'+skipped.map(r=>'<p>'+r.row+'행 '+esc(r.values.name||r.key)+' <button data-u2restore="'+r.row+'">다시 검토</button></p>').join('')+'</details>';
   h+='<details><summary>파일에 없는 기존 업무 '+p.missing.length+'개 · 유지가 기본</summary><p>삭제를 선택하면 연결 관계도 제거됩니다. 조달 등에 연결된 업무는 삭제가 차단됩니다.</p>'+p.missing.map(t=>'<label class="u2-change"><input type="checkbox" data-u2delete="'+esc(t.id)+'" '+(u.removed.has(t.id)?'checked':'')+'>삭제 선택: '+esc(t.wbs+' · '+t.name)+'</label>').join('')+'</details>';
   if(p.result)h+='<p>운영개시 예상: '+esc(p.oldResult.operationDate||'미정')+' → '+esc(p.result.operationDate||'미정')+'</p>';
@@ -187,7 +221,8 @@ function u2Open(pid){
   u2Draw();
  });
  d.addEventListener('click',e=>{
-  const b=e.target.closest('[data-u2],[data-u2restore]');if(!b||SCHUP2?.busy)return;
+  const b=e.target.closest('[data-u2],[data-u2restore],[data-u2filter]');if(!b||SCHUP2?.busy)return;
+  if(b.dataset.u2filter){SCHUP2.reviewFilter=b.dataset.u2filter;SCHUP2.reviewPage=1;u2Draw();return;}
   if(b.dataset.u2restore){SCHUP2.rows.find(r=>r.row===+b.dataset.u2restore).target='choose';u2Draw();return;}
   const k=b.dataset.u2;if(k==='prev'||k==='next'){SCHUP2.reviewPage+=(k==='next'?1:-1);u2Draw();return;}if(k==='close')u2Close();else if(k==='file'){SCHUP2.book=null;u2ResetReview();u2Draw();}
   else if(k==='back'){u2ResetReview();u2Draw();}else if(k==='review'){try{u2ReadRows();}catch(e){SCHUP2.fail=e.message;}u2Draw();}else if(k==='apply')u2Apply();
@@ -195,4 +230,4 @@ function u2Open(pid){
  u2Draw();
 }
 document.addEventListener('click',e=>{if(e.target.closest('[data-upload2]')){e.preventDefault();e.stopPropagation();u2Open(S.proj);}});
-(function(){const s=document.createElement('style');s.textContent='.sch-up2 .box{width:min(1000px,calc(100vw - 48px));max-height:90vh;overflow:auto;padding:24px}.sch-up2 h3{font-size:21px;margin:0 0 12px}.sch-up2 p{font-size:13px;line-height:1.6;margin:8px 0}.sch-up2 select,.sch-up2 input[type=number]{border:1px solid #ccc;border-radius:4px;background:#fff;color:#333;padding:7px;font:inherit;max-width:100%}.u2-controls,.u2-map{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0}.u2-map>label{display:grid;gap:5px;width:calc(50% - 14px);font-size:13px}.u2-controls input{width:70px}.u2-drop{display:block;border:1px dashed #aaa;padding:30px;margin:20px 0}.u2-drop input{display:block;margin-top:14px}.u2-muted{color:#888}.u2-row{border:1px solid #ddd;border-radius:6px;padding:14px;margin:12px 0}.u2-row>select{display:block;width:100%;margin:10px 0}.u2-change{display:flex;align-items:center;gap:10px;font-size:13px;margin:9px 0}.u2-change input{appearance:auto;flex:none;width:14px;height:14px;accent-color:#777}.u2-change b{min-width:65px}.u2-error{color:#c33;font-size:13px;line-height:1.6}.u2-scroll{overflow:auto;max-height:220px}.u2-scroll td,.u2-scroll th{padding:6px;border:1px solid #ddd;white-space:nowrap;font-size:12px}.sch-up2 details{margin:14px 0;font-size:13px}.sch-up2 .bt{position:sticky;bottom:-24px;background:white;padding:15px 0;margin-top:18px;display:flex;justify-content:flex-end;gap:10px}.sch-up2 button:disabled{opacity:.45;cursor:default}';document.head.append(s);})();
+(function(){const s=document.createElement('style');s.textContent='.sch-up2 .box{width:min(1000px,calc(100vw - 48px));max-height:90vh;overflow:auto;padding:24px}.sch-up2 h3{font-size:21px;margin:0 0 12px}.sch-up2 p{font-size:13px;line-height:1.6;margin:8px 0}.sch-up2 select,.sch-up2 input[type=number]{border:1px solid #ccc;border-radius:4px;background:#fff;color:#333;padding:7px;font:inherit;max-width:100%}.u2-controls,.u2-map{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0}.u2-map>label{display:grid;gap:5px;width:calc(50% - 14px);font-size:13px}.u2-controls input{width:70px}.u2-drop{display:block;border:1px dashed #aaa;padding:30px;margin:20px 0}.u2-drop input{display:block;margin-top:14px}.u2-muted{color:#888}.u2-row{border:1px solid #ddd;border-radius:6px;padding:14px;margin:12px 0}.u2-row>select{display:block;width:100%;margin:10px 0}.u2-change{display:flex;align-items:center;gap:10px;font-size:13px;margin:9px 0}.u2-change input{appearance:auto;flex:none;width:14px;height:14px;accent-color:#777}.u2-change b{min-width:65px}.u2-error{color:#c33;font-size:13px;line-height:1.6}.u2-scroll{overflow:auto;max-height:220px}.u2-scroll td,.u2-scroll th{padding:6px;border:1px solid #ddd;white-space:nowrap;font-size:12px}.sch-up2 details{margin:14px 0;font-size:13px}.sch-up2 .bt{position:sticky;bottom:-24px;background:white;padding:15px 0;margin-top:18px;display:flex;justify-content:flex-end;gap:10px}.sch-up2 button:disabled{opacity:.45;cursor:default}.u2-rowtitle{display:flex;justify-content:space-between;gap:12px;align-items:center}.u2-badge{border-radius:4px;padding:3px 9px;white-space:nowrap;background:#eee;color:#555;font-size:12px}.u2-new .u2-badge{background:#e7f4e9;color:#25633a}.u2-changed .u2-badge{background:#fff1d7;color:#865500}.u2-error .u2-badge{background:#ffe8e8;color:#a32222}.u2-compare-wrap{overflow:auto}.u2-compare{border-collapse:collapse;table-layout:fixed;width:100%;min-width:680px;font-size:13px}.u2-compare td,.u2-compare th{padding:9px;border:1px solid #e2e2e2;vertical-align:top;text-align:left;overflow-wrap:anywhere;white-space:pre-wrap;font-weight:400}.u2-compare thead th{background:#f5f5f5;font-weight:600}.u2-compare th:first-child{width:42px}.u2-compare th:nth-child(2){width:65px}.u2-compare input{appearance:auto;width:14px;height:14px;accent-color:#666}.u2-compare tr.u2-different td:nth-child(4){background:#fff6e4}.u2-compare tr.u2-different td:last-child{background:#eef7ed}.u2-compare small{display:block;color:#777;margin-top:5px}.u2-controls button[aria-pressed=true]{background:#333;color:#fff}.u2-apply-summary{font-weight:600}.u2-sheet-warnings{background:#fff6e4;padding:10px}.sch-up2 .u2-count{font-weight:600}@media(max-width:600px){.sch-up2 .box{width:calc(100vw - 20px);padding:14px}.u2-map>label{width:100%}.sch-up2 select,.sch-up2 input[type=number]{font-size:16px}}';document.head.append(s);})();

@@ -284,14 +284,24 @@ async function readCells(file: File) {
 // Upload2 reads a rectangular sheet without guide-specific names or WBS rules.
 async function readUpload2(file: File) {
   if (!/\.xlsx$/i.test(file.name)) throw new Error('엑셀(.xlsx) 파일을 선택해주세요.');
-  if (file.size > 25*1024*1024) throw new Error('25MB 이하 파일을 선택해주세요.');
+  if (file.size > 25*1024*1024) throw new Error('파일 크기가 '+(file.size/1024/1024).toFixed(1)+'MB입니다. 25MB 이하 파일을 선택해주세요.');
   const ExcelJS=(await import('exceljs')).default, book=new ExcelJS.Workbook();
   try { await book.xlsx.load(await file.arrayBuffer()); } catch { throw new Error('엑셀을 열지 못했습니다. 암호 또는 파일 손상을 확인해주세요.'); }
-  const sheets:any[]=[];
+  const sheets:any[]=[], skipped:{name:string;reason:string}[]=[];
   for (const ws of book.worksheets as any[]) {
     if (ws.state==='veryHidden'||ws.name.startsWith('__')) continue;
-    if (ws.rowCount>5000||ws.columnCount>128) throw new Error(ws.name+': 최대 5,000행·128열까지 지원합니다. 범위를 줄여주세요.');
-    const rows:string[][]=[], errors:Record<string,string>={};
+    // Count meaningful cells only, not styled empty cells or merged-cell copies.
+    let lastRow=0,lastCol=0;
+    const meaningful=(cell:any)=>!(cell.isMerged&&cell.master.address!==cell.address)&&cell.value!=null&&
+      !(typeof cell.value==='string'&&!cell.value.trim());
+    ws.eachRow((row:any,r:number)=>row.eachCell((cell:any,c:number)=>{
+      if(meaningful(cell)){lastRow=Math.max(lastRow,r);lastCol=Math.max(lastCol,c);}
+    }));
+    if(!lastRow){skipped.push({name:ws.name,reason:'값이 없는 시트'});continue;}
+    if(lastRow>10000||lastCol>2048||lastRow*lastCol>2000000){
+      skipped.push({name:ws.name,reason:'실제 데이터 범위 '+lastRow.toLocaleString()+'행 × '+lastCol.toLocaleString()+'열. 이 시트만 제외했습니다(최대 10,000행·2,048열·200만 칸).'});continue;
+    }
+    const rows:string[][]=Array.from({length:lastRow},()=>Array(lastCol).fill('')), errors:Record<string,string>={};
     const val=(v:any,r:number,c:number):string=>{
       if(v==null)return '';
       if(v instanceof Date)return isNaN(+v)?'':v.toISOString().slice(0,10);
@@ -306,14 +316,13 @@ async function readUpload2(file: File) {
         return '';
       } return String(v).trim();
     };
-    for(let r=1;r<=ws.rowCount;r++){const row:string[]=[];
-      for(let c=1;c<=ws.columnCount;c++){const cell=ws.getCell(r,c);row.push(cell.isMerged&&cell.master.address!==cell.address?'':val(cell.value,r,c));}
-      rows.push(row);
-    }
+    ws.eachRow((row:any,r:number)=>{if(r>lastRow)return;row.eachCell((cell:any,c:number)=>{
+      if(c<=lastCol&&meaningful(cell))rows[r-1][c-1]=val(cell.value,r,c);
+    });});
     sheets.push({name:ws.name,rows,errors});
   }
-  if(!sheets.length)throw new Error('읽을 시트가 없습니다.');
-  return {name:file.name,sheets};
+  if(!sheets.length)throw new Error('읽을 수 있는 시트가 없습니다. '+skipped.map(s=>s.name+': '+s.reason).join(' / '));
+  return {name:file.name,sheets,skipped};
 }
 
 (globalThis as any).AIDCScheduleXlsx = { importFile, makeXlsx, makeBook, makeGuideBook, readSheets, readCells, readUpload2 };
