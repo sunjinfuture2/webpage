@@ -41,6 +41,15 @@ const {newUser}=require('./h.cjs');
  await p.locator('[data-canceledit]').click();await p.waitForFunction(()=>!S.editProj);
  assert.equal(await p.evaluate(()=>schRepOf('pangyo').area),'555㎡');
  console.log('PASS save/reopen keeps synchronized values; blank value propagates; cancel restores original; released lock removes icon');
+
+ const rid=await p.evaluate(()=>liveItems('research')[0].id);
+ await p.evaluate(id=>openPanel(id),rid);await p.locator('#panel-pin [data-ed="edit"]').click();await p.waitForFunction(id=>item(id).editing,rid);
+ await q.evaluate(id=>openPanel(id),rid);await q.locator('#panel-pin .editing-lock').waitFor();
+ assert.equal(await q.locator('#panel-pin .editing-lock .editing-lock-name').textContent(),'동기화검증');
+ assert.equal(await q.locator('#panel-pin .editing-lock').evaluate(e=>getComputedStyle(e).fontWeight),'400');
+ assert.equal(await q.locator('#panel-pin .editing-lock .editing-lock-icon').count(),1);
+ await p.locator('#panel-pin [data-ed="cancel"]').click();
+ console.log('PASS actual item editing lock also shows icon and only name bold');
  const lock=await p.evaluate(()=>{const h=sharedLockLabel({employee:'SYNCQA',co:['x']});const d=document.createElement('div');d.innerHTML=h;return {names:d.querySelectorAll('strong').length,text:d.textContent};});
  assert.equal(lock.names,1);assert.equal(lock.text,'동기화검증님 외 1명이 수정 중입니다');
  assert.deepEqual([...errs,...errs2].filter(e=>!e.includes('Failed to fetch')),[]);
